@@ -30,7 +30,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class AttributeSubscriber implements SubscriberInterface
 {
-    const redirectCookieString = 'ShopwarePluginsCoreSelfHealingRedirect';
+    public const redirectCookieString = 'ShopwarePluginsCoreSelfHealingRedirect';
 
     /**
      * @var ContainerInterface
@@ -86,7 +86,7 @@ class AttributeSubscriber implements SubscriberInterface
                 $response->sendResponse();
                 exit();
             }
-            die(sprintf("Failed to create the attribute models, please check the permissions of the '%s' directory", $generator->getPath()));
+            exit(sprintf("Failed to create the attribute models, please check the permissions of the '%s' directory", $generator->getPath()));
         }
     }
 

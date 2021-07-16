@@ -54,7 +54,7 @@ use Shopware\Components\QueryAliasMapper;
 
 class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
 {
-    const AGGREGATION_SIZE = 5000;
+    public const AGGREGATION_SIZE = 5000;
 
     /**
      * @var QueryAliasMapper
@@ -154,7 +154,6 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
 
         $arguments = [
             'index' => $index->getName(),
-            'type' => PropertyMapping::TYPE,
             'body' => $search->toArray(),
             'rest_total_hits_as_int' => true,
             'track_total_hits' => true,
@@ -178,22 +177,22 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
      *
      * @return Group[]
      */
-    private function hydrateProperties($data, $optionIds)
+    private function hydrateProperties(array $data, array $optionIds): array
     {
         $groups = [];
         foreach ($data as $row) {
             $group = $this->hydrator->createPropertyGroup($row['_source']);
 
-            $options = array_filter($group->getOptions(), function (Option $option) use ($optionIds) {
-                return in_array($option->getId(), $optionIds);
+            $options = array_filter($group->getOptions(), static function (Option $option) use ($optionIds) {
+                return \in_array($option->getId(), $optionIds);
             });
 
-            usort($options, function (Option $a, Option $b) {
+            usort($options, static function (Option $a, Option $b) {
                 if ($a->getPosition() !== $b->getPosition()) {
-                    return $a->getPosition() > $b->getPosition();
+                    return $a->getPosition() <=> $b->getPosition();
                 }
 
-                return $a->getName() > $b->getName();
+                return $a->getName() <=> $b->getName();
             });
 
             $group->setOptions($options);
@@ -242,13 +241,13 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
                 $listItem = new MediaListItem(
                     $option->getId(),
                     $option->getName(),
-                    in_array($option->getId(), $actives),
+                    \in_array($option->getId(), $actives),
                     $option->getMedia(),
                     $option->getAttributes()
                 );
 
-                $isActive = ($isActive || $listItem->isActive());
-                $useMedia = ($useMedia || $listItem->getMedia() !== null);
+                $isActive = $isActive || $listItem->isActive();
+                $useMedia = $useMedia || $listItem->getMedia() !== null;
                 $items[] = $listItem;
             }
 

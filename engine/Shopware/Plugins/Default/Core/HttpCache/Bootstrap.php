@@ -336,10 +336,8 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
 
     /**
      * Do http caching jobs
-     *
-     * @param Enlight_Controller_ActionEventArgs $args
      */
-    public function onPreDispatch(\Enlight_Controller_ActionEventArgs $args)
+    public function onPreDispatch(Enlight_Controller_ActionEventArgs $args)
     {
         $this->action = $args->getSubject();
         $this->request = $args->getRequest();
@@ -373,7 +371,7 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
             return null;
         }
 
-        if (!in_array($this->request->getModuleName(), ['frontend', 'widgets'], true)) {
+        if (!\in_array($this->request->getModuleName(), ['frontend', 'widgets'], true)) {
             return null;
         }
 
@@ -394,7 +392,7 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
     /**
      * On post dispatch we try to find affected articleIds displayed during this request
      */
-    public function onPostDispatch(\Enlight_Controller_ActionEventArgs $args)
+    public function onPostDispatch(Enlight_Controller_ActionEventArgs $args)
     {
         $view = $args->getSubject()->View();
         if (!$this->request->isDispatched()
@@ -431,11 +429,9 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      *
      * Clears the file-based http-cache storage directory
      *
-     * @param Shopware_Components_Cron_CronJob $job
-     *
      * @return string
      */
-    public function onClearHttpCache(\Shopware_Components_Cron_CronJob $job)
+    public function onClearHttpCache(Shopware_Components_Cron_CronJob $job)
     {
         if ($this->clearCache()) {
             return "Cleared HTTP-Cache\n";
@@ -452,7 +448,7 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      * Shopware()->Events()->notify('Shopware_Plugins_HttpCache_ClearCache');
      * </code>
      */
-    public function onClearCache(\Enlight_Event_EventArgs $args)
+    public function onClearCache(Enlight_Event_EventArgs $args)
     {
         $result = $this->clearCache();
 
@@ -472,7 +468,7 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
      * );
      * </code>
      */
-    public function onInvalidateCacheId(\Enlight_Event_EventArgs $args)
+    public function onInvalidateCacheId(Enlight_Event_EventArgs $args)
     {
         $cacheId = $args->get('cacheId');
         if (!$cacheId) {
@@ -576,7 +572,7 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
         } elseif ($remove) {
             // Remove $noCacheTag from $newCacheTags
             $newCacheTags = array_diff($existingTags, [$newTag]);
-        } elseif (!$remove && !in_array($newTag, $existingTags)) {
+        } elseif (!$remove && !\in_array($newTag, $existingTags)) {
             // Add $noCacheTag to $newCacheTags
             $newCacheTags = $existingTags;
             $newCacheTags[] = $newTag;
@@ -635,7 +631,7 @@ class Shopware_Plugins_Core_HttpCache_Bootstrap extends Shopware_Components_Plug
         if ($entity instanceof \Doctrine\ORM\Proxy\Proxy) {
             $entityName = get_parent_class($entity);
         } else {
-            $entityName = get_class($entity);
+            $entityName = \get_class($entity);
         }
 
         if (Shopware()->Events()->notifyUntil(

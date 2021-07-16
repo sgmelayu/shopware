@@ -22,7 +22,11 @@
  * our trademarks remain entirely with us.
  */
 
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Model\QueryBuilder;
 
 /**
@@ -62,7 +66,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
      * Contains the repository class of the configured
      * doctrine model.
      *
-     * @var \Shopware\Components\Model\ModelRepository
+     * @var ModelRepository
      */
     protected $repository;
 
@@ -70,7 +74,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
      * Contains the global shopware entity manager.
      * The manager is used for each doctrine entity operation.
      *
-     * @var \Shopware\Components\Model\ModelManager
+     * @var ModelManager
      */
     protected $manager;
 
@@ -149,7 +153,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
      * Allows to set the repository property of this class.
      * The repository is used for find queries for the configured model.
      */
-    public function setRepository(\Shopware\Components\Model\ModelRepository $repository)
+    public function setRepository(ModelRepository $repository)
     {
         $this->repository = $repository;
     }
@@ -158,7 +162,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
      * Allows to set the manager property of this class.
      * The manager is used for each data operation with doctrine models.
      */
-    public function setManager(\Shopware\Components\Model\ModelManager $manager)
+    public function setManager(ModelManager $manager)
     {
         $this->manager = $manager;
     }
@@ -167,7 +171,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
      * Returns the instance of the global shopware entity manager.
      * Used for each data operation with doctrine models.
      *
-     * @return \Shopware\Components\Model\ModelManager
+     * @return ModelManager
      */
     public function getManager()
     {
@@ -595,7 +599,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
     /**
      * Helper function to get the repository of the configured model.
      *
-     * @return \Shopware\Components\Model\ModelRepository
+     * @return ModelRepository
      */
     protected function getRepository()
     {
@@ -723,7 +727,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
         $builder->select($association);
         $builder->from($model, $association);
 
-        if (strlen($search) > 0) {
+        if ($search !== '') {
             $where = [];
 
             $fields = $this->getModelFields($model, $association);
@@ -817,7 +821,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
              */
             if ($mapping['type'] === ClassMetadataInfo::ONE_TO_ONE) {
                 $mappingData = $data[$mapping['fieldName']];
-                if (is_array($mappingData) && array_key_exists(0, $mappingData)) {
+                if (\is_array($mappingData) && \array_key_exists(0, $mappingData)) {
                     $data[$mapping['fieldName']] = $data[$mapping['fieldName']][0];
                 }
             }
@@ -988,12 +992,12 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
         $conditions = [];
         foreach ($sort as $condition) {
             //check if the passed field is a valid doctrine model field of the configured model.
-            if (!array_key_exists($condition['property'], $fields)) {
+            if (!\array_key_exists($condition['property'], $fields)) {
                 continue;
             }
 
             //check if the developer limited the sortable fields and the passed property defined in the sort fields parameter.
-            if (!empty($whiteList) && !in_array($condition['property'], $whiteList)) {
+            if (!empty($whiteList) && !\in_array($condition['property'], $whiteList)) {
                 continue;
             }
             $condition['property'] = $fields[$condition['property']]['alias'];
@@ -1050,7 +1054,7 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
             if ($condition['property'] === 'search') {
                 foreach ($fields as $name => $field) {
                     //check if the developer limited the filterable fields and the passed property defined in the filter fields parameter.
-                    if (!empty($whiteList) && !in_array($name, $whiteList)) {
+                    if (!empty($whiteList) && !\in_array($name, $whiteList)) {
                         continue;
                     }
 
@@ -1062,9 +1066,9 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
                         'value' => $value,
                     ];
                 }
-            } elseif (array_key_exists($condition['property'], $fields)) {
+            } elseif (\array_key_exists($condition['property'], $fields)) {
                 //check if the developer limited the filterable fields and the passed property defined in the filter fields parameter.
-                if (!empty($whiteList) && !in_array($condition['property'], $whiteList)) {
+                if (!empty($whiteList) && !\in_array($condition['property'], $whiteList)) {
                     continue;
                 }
 
@@ -1086,15 +1090,12 @@ abstract class Shopware_Controllers_Backend_Application extends Shopware_Control
     /**
      * Helper function to create the query builder paginator.
      *
-     * @param Doctrine\ORM\QueryBuilder $builder
-     * @param int                       $hydrationMode
+     * @param int $hydrationMode
      *
-     * @return \Doctrine\ORM\Tools\Pagination\Paginator
+     * @return Paginator
      */
-    protected function getQueryPaginator(
-        \Doctrine\ORM\QueryBuilder $builder,
-        $hydrationMode = \Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY
-    ) {
+    protected function getQueryPaginator(QueryBuilder $builder, $hydrationMode = AbstractQuery::HYDRATE_ARRAY)
+    {
         $query = $builder->getQuery();
         $query->setHydrationMode($hydrationMode);
 

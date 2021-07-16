@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
@@ -55,7 +57,7 @@ class HandlerRegistry
             }
         }
 
-        throw new \RuntimeException(sprintf('%s class not supported', get_class($condition)));
+        throw new \RuntimeException(sprintf('%s class not supported', \get_class($condition)));
     }
 
     /**

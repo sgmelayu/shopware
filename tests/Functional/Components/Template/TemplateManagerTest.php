@@ -39,8 +39,11 @@ class TemplateManagerTest extends TestCase
      */
     public function testCloningTemplateManagerWithEnabledSmartySecurity()
     {
+        /** @var string $rootDir */
+        $rootDir = Shopware()->Container()->getParameter('kernel.root_dir');
+
         // Create a dummy file
-        $tempDir = Shopware()->Container()->getParameter('kernel.root_dir') . '/media/temp';
+        $tempDir = $rootDir . '/media/temp';
         $tempFile = $tempDir . '/template.tpl';
         file_put_contents($tempFile, 'test');
 
@@ -58,8 +61,11 @@ class TemplateManagerTest extends TestCase
      */
     public function testFetchInvalidExtends()
     {
+        /** @var string $rootDir */
+        $rootDir = Shopware()->Container()->getParameter('kernel.root_dir');
+
         // Create a dummy file
-        $tempDir = Shopware()->Container()->getParameter('kernel.root_dir') . '/media/temp/frontend/detail2/';
+        $tempDir = $rootDir . '/media/temp/frontend/detail2/';
 
         if (!file_exists($tempDir)) {
             mkdir($tempDir, 0777, true);
@@ -70,7 +76,7 @@ class TemplateManagerTest extends TestCase
 
         /** @var \Enlight_Template_Manager $templateManager */
         $templateManager = clone Shopware()->Container()->get(\Enlight_Template_Manager::class);
-        $templateManager->addTemplateDir(Shopware()->Container()->getParameter('kernel.root_dir') . '/media/temp/');
+        $templateManager->addTemplateDir($rootDir . '/media/temp/');
 
         $this->expectException(\SmartyException::class);
         $this->expectExceptionMessage('Unknown path');
@@ -96,8 +102,8 @@ class TemplateManagerTest extends TestCase
         $template->setCompileDir($cacheDirectory);
         $template->fetch('string:foobar');
 
-        $dirPermissions = (fileperms($cacheDirectory) & 0777);
-        $filePermissions = (fileperms($cacheFile) & 0666);
+        $dirPermissions = fileperms($cacheDirectory) & 0777;
+        $filePermissions = fileperms($cacheFile) & 0666;
 
         static::assertFileExists($cacheDirectory);
         static::assertFileExists($cacheFile);

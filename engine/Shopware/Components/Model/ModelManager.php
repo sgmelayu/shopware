@@ -117,7 +117,7 @@ class ModelManager extends EntityManager
             $entity = iterator_to_array($entity);
         }
 
-        if (is_array($entity)) {
+        if (\is_array($entity)) {
             return array_map([$this, 'serializeEntity'], $entity);
         }
 
@@ -214,7 +214,7 @@ class ModelManager extends EntityManager
             if (strpos($tableName, '_attributes') === false) {
                 continue;
             }
-            if (!empty($tableNames) && !in_array($tableName, $tableNames, true)) {
+            if (!empty($tableNames) && !\in_array($tableName, $tableNames, true)) {
                 continue;
             }
             $attributeMetaData[] = $metaData;
@@ -322,17 +322,25 @@ class ModelManager extends EntityManager
             $entity->__load();
             $className = get_parent_class($entity);
         } else {
-            $className = get_class($entity);
+            $className = \get_class($entity);
         }
         $metadata = $this->getClassMetadata($className);
         $data = [];
         $inflector = new Inflector(new NoopWordInflector(), new NoopWordInflector());
 
         foreach ($metadata->fieldMappings as $field => $mapping) {
+            if (!($metadata->reflFields[$field] instanceof \ReflectionProperty)) {
+                throw new \InvalidArgumentException(sprintf('Expected an instance of %s', \ReflectionProperty::class));
+            }
+
             $data[$field] = $metadata->reflFields[$field]->getValue($entity);
         }
 
         foreach ($metadata->associationMappings as $field => $mapping) {
+            if (!($metadata->reflFields[$field] instanceof \ReflectionProperty)) {
+                throw new \InvalidArgumentException(sprintf('Expected an instance of %s', \ReflectionProperty::class));
+            }
+
             $key = $inflector->tableize($field);
             if ($mapping['isCascadeDetach']) {
                 $data[$key] = $metadata->reflFields[$field]->getValue($entity);

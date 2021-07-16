@@ -32,7 +32,7 @@ if (file_exists($this->DocPath() . 'config_' . $this->Environment() . '.php')) {
     $customConfig = [];
 }
 
-if (!is_array($customConfig)) {
+if (!\is_array($customConfig)) {
     throw new Enlight_Exception('The custom configuration file must return an array.');
 }
 
@@ -428,12 +428,6 @@ return array_replace_recursive([
         'orderNumberRegex' => '/^[a-zA-Z0-9-_.]+$/',
     ],
     'backward_compatibility' => [
-        /*
-         * @deprecated since Shopware 5.5
-         *
-         * Sorting of plugins is active by default in 5.6 and this parameter will be removed with Shopware 5.7
-         */
-        'predictable_plugin_order' => true,
     ],
     'logger' => [
         'level' => $this->Environment() !== 'production' ? Logger::DEBUG : Logger::ERROR,

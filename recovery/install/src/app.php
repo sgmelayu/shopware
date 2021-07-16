@@ -41,12 +41,13 @@ use Shopware\Recovery\Install\Service\ThemeService;
 use Shopware\Recovery\Install\Service\TranslationService;
 use Shopware\Recovery\Install\Struct\DatabaseConnectionInformation;
 use Shopware\Recovery\Install\Struct\LicenseUnpackRequest;
+use Slim\Slim;
 
 $config = require __DIR__ . '/../config/production.php';
 $container = new Container();
 $container->register(new ContainerProvider($config));
 
-/** @var \Slim\Slim $app */
+/** @var Slim $app */
 $app = $container->offsetGet('slim.app');
 
 // After instantiation
@@ -91,11 +92,11 @@ function selectLanguage(array $allowedLanguages)
         $selectedLanguage = explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
         $selectedLanguage = strtolower(substr($selectedLanguage[0], 0, 2));
     }
-    if (empty($selectedLanguage) || !in_array($selectedLanguage, $allowedLanguages)) {
+    if (empty($selectedLanguage) || !\in_array($selectedLanguage, $allowedLanguages)) {
         $selectedLanguage = 'de';
     }
 
-    if (isset($_REQUEST['language']) && in_array($_REQUEST['language'], $allowedLanguages)) {
+    if (isset($_REQUEST['language']) && \in_array($_REQUEST['language'], $allowedLanguages)) {
         $selectedLanguage = $_REQUEST['language'];
         unset($_SESSION['parameters']['c_config_shop_language'],
             $_SESSION['parameters']['c_config_shop_currency'],
@@ -103,7 +104,7 @@ function selectLanguage(array $allowedLanguages)
         $_SESSION['language'] = $selectedLanguage;
 
         return $selectedLanguage;
-    } elseif (isset($_SESSION['language']) && in_array($_SESSION['language'], $allowedLanguages)) {
+    } elseif (isset($_SESSION['language']) && \in_array($_SESSION['language'], $allowedLanguages)) {
         $selectedLanguage = $_SESSION['language'];
 
         return $selectedLanguage;
@@ -142,7 +143,7 @@ function localeForLanguage($language)
     return strtolower($language) . '_' . strtoupper($language);
 }
 
-function prefixSessionVars(\Slim\Slim $app)
+function prefixSessionVars(Slim $app)
 {
     // Save post parameters starting with 'c_' to session
     $params = $app->request()->params();
@@ -180,7 +181,7 @@ $app->view()->setData('parameters', $_SESSION['parameters']);
 
 $app->setCookie('installed-locale', localeForLanguage($selectedLanguage), time() + 7200, '/');
 
-$app->error(function (\Exception $e) use ($app) {
+$app->error(function (Exception $e) use ($app) {
     if (!$app->request()->isAjax()) {
         throw $e;
     }
@@ -223,7 +224,7 @@ $app->map('/license', function () use ($app, $menuHelper, $container) {
     $tosUrls = $container->offsetGet('config')['tos.urls'];
     $tosUrl = $tosUrls['en'];
 
-    if (array_key_exists($container->offsetGet('install.language'), $tosUrls)) {
+    if (\array_key_exists($container->offsetGet('install.language'), $tosUrls)) {
         $tosUrl = $tosUrls[$container->offsetGet('install.language')];
     }
 
@@ -519,10 +520,10 @@ $app->map('/finish/', function () use ($app, $menuHelper, $container) {
 
     $schema = 'http';
     // This is for supporting Apache 2.2
-    if (array_key_exists('HTTPS', $_SERVER) && strtolower($_SERVER['HTTPS']) === 'on') {
+    if (\array_key_exists('HTTPS', $_SERVER) && strtolower($_SERVER['HTTPS']) === 'on') {
         $schema = 'https';
     }
-    if (array_key_exists('REQUEST_SCHEME', $_SERVER)) {
+    if (\array_key_exists('REQUEST_SCHEME', $_SERVER)) {
         $schema = $_SERVER['REQUEST_SCHEME'];
     }
 

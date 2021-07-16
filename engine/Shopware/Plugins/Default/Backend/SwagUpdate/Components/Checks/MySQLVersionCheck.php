@@ -31,7 +31,7 @@ use ShopwarePlugins\SwagUpdate\Components\Validation;
 
 class MySQLVersionCheck implements CheckInterface
 {
-    const CHECK_TYPE = 'mysqlversion';
+    public const CHECK_TYPE = 'mysqlversion';
 
     /**
      * @var Connection
@@ -67,7 +67,7 @@ class MySQLVersionCheck implements CheckInterface
 
         $minMySQLVersion = $requirement['value'];
 
-        $validVersion = (version_compare($version, $minMySQLVersion) >= 0);
+        $validVersion = version_compare($version, $minMySQLVersion) >= 0;
 
         $successMessage = $this->namespace->get('controller/check_mysqlversion_success', 'Min MySQL Version: %s, your version %s');
         $failMessage = $this->namespace->get('controller/check_mysqlversion_failure', 'Min MySQL Version %s, your version %s');

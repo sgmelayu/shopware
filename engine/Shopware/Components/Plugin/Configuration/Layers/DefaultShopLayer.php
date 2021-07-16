@@ -35,7 +35,7 @@ class DefaultShopLayer extends AbstractShopConfigurationLayer
 
     protected function configureQuery(QueryBuilder $builder, ?int $shopId, string $pluginName): QueryBuilder
     {
-        $shopIdKey = 'shopId' . crc32(strval($shopId) ?? '');
+        $shopIdKey = 'shopId' . crc32(\strval($shopId) ?? '');
         $pluginNameKey = 'pluginName' . crc32($pluginName);
 
         return $builder
@@ -48,6 +48,18 @@ class DefaultShopLayer extends AbstractShopConfigurationLayer
 
     protected function isLayerResponsible(?int $shopId): bool
     {
-        return $shopId === 1 || $shopId === null;
+        if ($shopId === 1 || $shopId === null) {
+            return true;
+        }
+
+        $queryBuilder = $this->connection->createQueryBuilder();
+
+        return $queryBuilder->select('1')
+                ->from('s_core_shops')
+                ->andWhere($queryBuilder->expr()->eq('id', ':id'))
+                ->andWhere($queryBuilder->expr()->gt('`default`', 0))
+                ->setParameter('id', $shopId)
+                ->execute()->fetchColumn() !== false
+            ;
     }
 }

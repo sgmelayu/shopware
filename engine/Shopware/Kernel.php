@@ -51,7 +51,9 @@ use Shopware\Bundle\OrderBundle\OrderBundle;
 use Shopware\Bundle\PluginInstallerBundle\PluginInstallerBundle;
 use Shopware\Bundle\PluginInstallerBundle\Service\PluginInitializer;
 use Shopware\Bundle\SearchBundle\SearchBundle;
+use Shopware\Bundle\SearchBundleDBAL\DependencyInjection\Compiler\DBALHandlerCompilerPass;
 use Shopware\Bundle\SearchBundleDBAL\SearchBundleDBAL;
+use Shopware\Bundle\SearchBundleES\DependencyInjection\Compiler\ESHandlerCompilerPass;
 use Shopware\Bundle\SearchBundleES\SearchBundleES;
 use Shopware\Bundle\SitemapBundle\SitemapBundle;
 use Shopware\Bundle\StaticContentBundle\StaticContentBundle;
@@ -75,6 +77,7 @@ use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\Console\DependencyInjection\AddConsoleCommandPass;
 use Symfony\Component\DependencyInjection\Compiler\PassConfig;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Dumper\XmlDumper;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use Symfony\Component\Form\DependencyInjection\FormPass;
@@ -283,7 +286,7 @@ class Kernel extends SymfonyKernel
             $key = empty($prefix) ? $key : $prefix . $key;
             if (is_scalar($value)) {
                 ini_set($key, $value);
-            } elseif (is_array($value)) {
+            } elseif (\is_array($value)) {
                 $this->setPhpSettings($value, $key . '.');
             }
         }
@@ -336,7 +339,7 @@ class Kernel extends SymfonyKernel
      */
     public function getRootDir()
     {
-        return dirname(__DIR__, 2);
+        return \dirname(__DIR__, 2);
     }
 
     /**
@@ -395,7 +398,7 @@ class Kernel extends SymfonyKernel
      */
     public function getHttpCacheConfig()
     {
-        return is_array($this->config['httpcache']) ? $this->config['httpcache'] : [];
+        return \is_array($this->config['httpcache']) ? $this->config['httpcache'] : [];
     }
 
     /**
@@ -403,7 +406,7 @@ class Kernel extends SymfonyKernel
      */
     public function getElasticSearchConfig()
     {
-        return is_array($this->config['es']) ? $this->config['es'] : [];
+        return \is_array($this->config['es']) ? $this->config['es'] : [];
     }
 
     /**
@@ -486,12 +489,7 @@ class Kernel extends SymfonyKernel
 
         $plugins = $initializer->initializePlugins();
 
-        /*
-         * @deprecated since 5.5, is true by default since 5.6 will be removed in Shopware 5.7
-         */
-        if ($this->config['backward_compatibility']['predictable_plugin_order'] === true) {
-            ksort($plugins);
-        }
+        ksort($plugins);
 
         $this->bundles = array_merge($this->bundles, $plugins);
 
@@ -593,6 +591,11 @@ class Kernel extends SymfonyKernel
         }
 
         $cache->write($content, $container->getResources());
+
+        $xmlDumper = new XmlDumper($container);
+        $xml = $xmlDumper->dump(['class' => $class, 'base_class' => $baseClass]);
+
+        file_put_contents($this->getCacheDir() . '/container.xml', $xml);
     }
 
     /**
@@ -673,6 +676,8 @@ class Kernel extends SymfonyKernel
         $container->addCompilerPass(new ControllerCompilerPass());
         $container->addCompilerPass(new RegisterControllerArgumentLocatorsPass('argument_resolver.service', 'shopware.controller'));
         $container->addCompilerPass(new VersionCompilerPass());
+        $container->addCompilerPass(new DBALHandlerCompilerPass());
+        $container->addCompilerPass(new ESHandlerCompilerPass());
 
         $container->setParameter('active_plugins', $this->activePlugins);
 
@@ -691,7 +696,7 @@ class Kernel extends SymfonyKernel
         foreach ($options as $key => $option) {
             $container->setParameter($alias . '.' . $key, $option);
 
-            if (is_array($option)) {
+            if (\is_array($option)) {
                 $this->addShopwareConfig($container, $alias . '.' . $key, $option);
             }
         }
@@ -776,7 +781,7 @@ class Kernel extends SymfonyKernel
 
     private function loadPlugins(ContainerBuilder $container): void
     {
-        if (count($this->bundles) === 0) {
+        if (\count($this->bundles) === 0) {
             return;
         }
 

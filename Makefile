@@ -15,6 +15,12 @@ endif
 
 init: .make.init
 
+clean-setup:
+	bash ./var/cache/clear_cache.sh
+	rm -rf web/cache/*.js
+	rm -rf web/cache/*.css
+	rm -rf web/sitemap/shop*
+
 clear-cache: .make.console.executable
 	./bin/console sw:cache:clear
 
@@ -22,6 +28,9 @@ check-code: check-phpstan check-php-cs-fixer
 
 check-php-cs-fixer:
 	./vendor/bin/php-cs-fixer fix --dry-run -v --allow-risky=yes --format=junit | tee php-cs-fixer.xml
+
+fix-code-style:
+	php -d memory_limit=-1 ./vendor/bin/php-cs-fixer fix --allow-risky=yes -v
 
 check-phpstan:
 	php -d memory_limit=4G ./vendor/bin/phpstan analyze -c .phpstan.neon --no-progress --error-format=table
@@ -38,6 +47,7 @@ test-mink: init .make.config.build.mink
 test-phpunit: init
 	./vendor/bin/phpunit --config tests/phpunit_unit.xml.dist --log-junit build/artifacts/test-log.xml
 	./vendor/bin/phpunit --config tests/phpunit.xml.dist --log-junit build/artifacts/test-log.xml --exclude-group=elasticSearch
+	./vendor/bin/phpunit --config recovery/common/phpunit.xml.dist --log-junit build/artifacts/test-log.xml
 
 test-phpunit-elasticsearch: elasticsearch-populate
 	./vendor/bin/phpunit --config tests/phpunit.xml.dist --log-junit build/artifacts/test-log.xml --exclude-group=skipElasticSearch --group=elasticSearch
@@ -82,6 +92,7 @@ debug-config-test: .make.config.build.debug
 .make.install:
 	@echo "Read additional variables from $(ENV_FILE)"
 	composer install
+	composer install -d recovery/common
 	./bin/console sw:database:setup --steps=drop,create,import,importDemodata
 	./bin/console sw:cache:clear
 	./bin/console sw:database:setup --steps=setupShop --shop-url=http://$(SW_HOST)$(SW_BASE_PATH)

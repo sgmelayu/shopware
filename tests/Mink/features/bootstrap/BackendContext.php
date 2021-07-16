@@ -65,9 +65,9 @@ class BackendContext extends SubContext
      */
     public function theModuleShouldOpenAWindow()
     {
-        $page = $this->getPage('Backend');
+        $this->getPage('Backend');
 
-        $this->spin(function ($context) use ($page) {
+        $this->spin(function ($context) {
             $context->getPage('Backend')->verifyModule();
 
             return true;

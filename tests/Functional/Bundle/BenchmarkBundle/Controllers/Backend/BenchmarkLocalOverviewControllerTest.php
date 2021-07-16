@@ -28,12 +28,12 @@ use Shopware\Tests\Functional\Bundle\BenchmarkBundle\Controllers\Backend\Mocks\V
 
 class BenchmarkLocalOverviewControllerTest extends BenchmarkControllerTestCase
 {
-    const CONTROLLER_NAME = \Shopware_Controllers_Backend_BenchmarkLocalOverview::class;
+    public const CONTROLLER_NAME = \Shopware_Controllers_Backend_BenchmarkLocalOverview::class;
 
     /**
      * @group BenchmarkBundle
      */
-    public function testRenderAction_should_load_start()
+    public function testRenderActionShouldLoadStart()
     {
         /** @var \Shopware_Controllers_Backend_BenchmarkLocalOverview $controller */
         $controller = $this->getController();
@@ -51,7 +51,7 @@ class BenchmarkLocalOverviewControllerTest extends BenchmarkControllerTestCase
     /**
      * @group BenchmarkBundle
      */
-    public function testRenderAction_should_load_custom()
+    public function testRenderActionShouldLoadCustom()
     {
         /** @var \Shopware_Controllers_Backend_BenchmarkLocalOverview $controller */
         $controller = $this->getController();

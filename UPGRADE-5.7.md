@@ -2,13 +2,40 @@
 
 This changelog references changes done in Shopware 5.7 patch versions.
 
+## 5.7.2
+
+[View all changes from v5.7.1...v5.7.2](https://github.com/shopware/shopware/compare/v5.7.1...v5.7.2)
+
+### Changes
+
+* Updated `league/flysystem` to 1.1.4
+
+## 5.7.1
+
+[View all changes from v5.7.0...v5.7.1](https://github.com/shopware/shopware/compare/v5.7.0...v5.7.1)
+
+### Additions
+
+* Added service alias from `Template` to `template`
+* Added service alias from `Loader` to `loader`
+
+### Changes
+
+* Changed the visibility of services from tags `shopware_emotion.component_handler`, `criteria_request_handler` and `sitemap_url_provider` to public
+* Changed following columns type from `date` to `datetime`
+  * `s_order_basket.datum`
+  * `s_order_comparisons.datum`
+  * `s_order_notes.datum`
+
+## 5.7.0
+
 [View all changes from v5.6.1...v5.7.0](https://github.com/shopware/shopware/compare/v5.6.1...v5.7.0)
 
 ### Breaks
 
 * Do not use the `count()` smarty function in your templates anymore, since this will break with PHP version > 8.0. Use `|count` modifier instead!
 * Replaced `psh` and `ant` with an `Makefile`. See updated README.md for installation workflow.
-* Changed min PHP version to 7.3
+* Changed min PHP version to 7.4
 * Changed min Elasticsearch version to 7
 * Added new required methods `saveCustomUrls` and `saveExcludedUrls` to interface `Shopware\Bundle\SitemapBundle\ConfigHandler\ConfigHandlerInterface`
 * Changed Symfony version to 4.4
@@ -23,6 +50,7 @@ This changelog references changes done in Shopware 5.7 patch versions.
 * Changed FPDI version to 2.2.0
 * Changed mPDF version to 8.0.7
 * Migrated Zend components to new Laminas
+* Elasticsearch indices doesn't use anymore types
 
 ### Additions
 
@@ -37,6 +65,8 @@ This changelog references changes done in Shopware 5.7 patch versions.
 * Added support for MySQL 8 `sql_require_primary_key`
 * Added `attribute` to users listing in API
 * Added new blocks `document_index_head_logo` and `document_index_head_wrapper` to `themes/Frontend/Bare/documents/index.tpl`
+* Added `unmapped_type` to `integer` in `engine/Shopware/Bundle/SearchBundleES/SortingHandler/ManualSortingHandler.php`
+* Added a notice to registration form when a shipment blocked country has been selected
 
 ### Changes
 
@@ -82,6 +112,9 @@ This changelog references changes done in Shopware 5.7 patch versions.
 * Changed `\Shopware_Controllers_Backend_ProductStream::loadPreviewAction` to return formatted prices
 * Changed `sw:plugin:activate` exit code from 1 to 0, when it's already installed.
 * Changed `\Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\CategoryGateway::get` it accepts now only integers as id
+* Changed `sw:es:index:populate` to accept multiple shop ids with `--shopId={1,2}`
+* Changed `\Shopware\Bundle\ESIndexingBundle\Product\ProductProvider` to consider cheapest price configuration
+* Changed `\Shopware\Bundle\PluginInstallerBundle\Service\PluginInstaller` to remove also menu translations
 
 ### Removals
 

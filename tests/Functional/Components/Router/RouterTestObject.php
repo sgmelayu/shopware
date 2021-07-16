@@ -1,4 +1,6 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
@@ -68,6 +70,6 @@ class RouterTestObject extends Enlight_Components_Test_TestCase
 
         $this->expectException(\InvalidArgumentException::class);
 
-        $url = $localRouter->assemble([$cls]);
+        $localRouter->assemble([$cls]);
     }
 }
