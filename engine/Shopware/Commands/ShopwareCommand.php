@@ -1,33 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use Exception;
 use Shopware\Components\DependencyInjection\Container;
 use Shopware\Components\DependencyInjection\ContainerAwareInterface;
 use Shopware\Components\Model\ModelManager;
-use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Model\QueryBuilder;
 use Shopware\Models\Plugin\Plugin;
 use Shopware\Models\Shop\Locale;
@@ -46,7 +46,7 @@ abstract class ShopwareCommand extends Command implements ContainerAwareInterfac
     /**
      * {@inheritdoc}
      */
-    public function setContainer(Container $container = null)
+    public function setContainer(?Container $container = null)
     {
         $this->container = $container;
     }
@@ -95,13 +95,13 @@ abstract class ShopwareCommand extends Command implements ContainerAwareInterfac
             if ($output->getVerbosity() === OutputInterface::VERBOSITY_VERBOSE) {
                 $errorName = isset($errorNameMap[$errno]) ? $errorNameMap[$errno] : $errno;
 
-                $message = sprintf("Error: %s, \nFile: %s\nLine: %s, Message:\n%s\n", $errorName, $errfile, $errline, $errstr);
+                $message = \sprintf("Error: %s, \nFile: %s\nLine: %s, Message:\n%s\n", $errorName, $errfile, $errline, $errstr);
                 $output->writeln('<comment>' . $message . '</comment>');
 
                 $output->writeln('<comment>Error stack:</comment>');
                 $stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 10);
                 foreach ($stack as $trace) {
-                    $output->writeln(sprintf(' %s%s%s() at <info>%s:%s</info>', isset($trace['class']) ? $trace['class'] : '', isset($trace['type']) ? $trace['type'] : '', isset($trace['function']) ? $trace['function'] : '', isset($trace['file']) ? $trace['file'] : '', isset($trace['line']) ? $trace['line'] : ''));
+                    $output->writeln(\sprintf(' %s%s%s() at <info>%s:%s</info>', $trace['class'] ?? '', $trace['type'] ?? '', $trace['function'], $trace['file'] ?? '', $trace['line'] ?? ''));
                 }
                 $output->writeln('');
                 $output->writeln('');
@@ -146,7 +146,7 @@ abstract class ShopwareCommand extends Command implements ContainerAwareInterfac
 
     /**
      * @param string           $input
-     * @param string           $modelClass
+     * @param class-string     $modelClass
      * @param string           $property
      * @param array|mixed|null $conditionCallback
      *
@@ -160,14 +160,14 @@ abstract class ShopwareCommand extends Command implements ContainerAwareInterfac
             $queryBuilder = $queryBuilder->andWhere($queryBuilder->expr()->like("$alias.$property", ":$parameterAlias"))
                 ->setParameter($parameterAlias, $likePattern);
 
-            return is_callable($conditionCallback) ? call_user_func($conditionCallback, $queryBuilder, $alias) : $queryBuilder;
+            return \is_callable($conditionCallback) ? \call_user_func($conditionCallback, $queryBuilder, $alias) : $queryBuilder;
         };
 
         return $this->queryProperty($modelClass, $property, $checkForPrefix);
     }
 
     /**
-     * @param string           $modelClass
+     * @param class-string     $modelClass
      * @param string           $property
      * @param array|mixed|null $conditionCallback
      *
@@ -177,19 +177,17 @@ abstract class ShopwareCommand extends Command implements ContainerAwareInterfac
     {
         $alias = uniqid('modelAlias');
 
-        /* @var ModelManager $em */
         try {
-            $em = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class);
-        } catch (\Exception $e) {
+            $em = $this->getContainer()->get(ModelManager::class);
+        } catch (Exception $e) {
             return [];
         }
 
-        /** @var ModelRepository $repository */
         $repository = $em->getRepository($modelClass);
         $queryBuilder = $repository->createQueryBuilder($alias);
 
-        if (is_callable($conditionCallback)) {
-            $queryBuilder = call_user_func($conditionCallback, $queryBuilder, $alias);
+        if (\is_callable($conditionCallback)) {
+            $queryBuilder = \call_user_func($conditionCallback, $queryBuilder, $alias);
         }
 
         $result = $queryBuilder->select(["$alias.$property"])

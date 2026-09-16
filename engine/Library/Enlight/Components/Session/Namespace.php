@@ -24,7 +24,6 @@ use Symfony\Component\HttpFoundation\Session\Session;
  *
  * The Enlight_Components_Session_Namespace extends the Symfony Session with an easy array access.
  *
- *
  * @license     http://enlight.de/license     New BSD License
  */
 class Enlight_Components_Session_Namespace extends Session implements ArrayAccess
@@ -46,7 +45,7 @@ class Enlight_Components_Session_Namespace extends Session implements ArrayAcces
      */
     public function __set($name, $value)
     {
-        return $this->set($name, $value);
+        $this->set($name, $value);
     }
 
     /**
@@ -85,7 +84,10 @@ class Enlight_Components_Session_Namespace extends Session implements ArrayAcces
      * @param mixed $key a key to check for
      *
      * @return bool returns true on success or false on failure
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetExists($key)
     {
         return $this->has($key);
@@ -94,8 +96,13 @@ class Enlight_Components_Session_Namespace extends Session implements ArrayAcces
     /**
      * Unset the given offset.
      *
-     * @param string $key key to unset
+     * @param mixed $key key to unset
+     *
+     * @return void
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetUnset($key)
     {
         $this->remove($key);
@@ -107,7 +114,10 @@ class Enlight_Components_Session_Namespace extends Session implements ArrayAcces
      * @param mixed $key the offset to retrieve
      *
      * @return mixed can return all value types
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetGet($key)
     {
         return $this->get($key);
@@ -118,7 +128,12 @@ class Enlight_Components_Session_Namespace extends Session implements ArrayAcces
      *
      * @param mixed $key   the offset to assign the value to
      * @param mixed $value the value to set
+     *
+     * @return void
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetSet($key, $value)
     {
         $this->set($key, $value);
@@ -127,11 +142,12 @@ class Enlight_Components_Session_Namespace extends Session implements ArrayAcces
     /**
      * Clear session
      *
-     * @deprecated since 5.7, and will be removed with 5.9. Use clear instead.
+     * @deprecated since 5.7, and will be removed with 5.8. Use clear instead.
      */
     public function unsetAll()
     {
-        trigger_error('Enlight_Components_Session_Namespace::unsetAll is deprecated since 5.7 and will be removed with 5.9. Use Enlight_Components_Session_Namespace::clear instead', E_USER_DEPRECATED);
+        trigger_error('Enlight_Components_Session_Namespace::unsetAll is deprecated since 5.7 and will be removed with 5.8. Use Enlight_Components_Session_Namespace::clear instead', E_USER_DEPRECATED);
+
         return $this->clear();
     }
 
@@ -139,5 +155,46 @@ class Enlight_Components_Session_Namespace extends Session implements ArrayAcces
     {
         parent::clear();
         $this->set('sessionId', $this->getId());
+    }
+
+    public function start()
+    {
+        // Generally `start()` is called by Shopware's session factories
+        // - Shopware_Plugins_Backend_Auth_Bootstrap::onInitResourceBackendSession()
+        // - Shopware\Components\DependencyInjection\Bridge\Session::createSession()
+        // In case the session is started somewhere else we need to ensure no other session is active. The same logic as
+        // in Shopware's factories is used here.
+        // This behaviour is analogue to Zend: https://github.com/shopware5/shopware/blob/cbc212ca4642878cac62193d3a2f41e08f4849a2/engine/Library/Zend/Session.php#L413
+        $container = Shopware()->Container();
+        self::ensureFrontendSessionClosed($container);
+        self::ensureBackendSessionClosed($container);
+
+        return parent::start();
+    }
+
+    public static function ensureFrontendSessionClosed($container)
+    {
+        self::ensureSessionClosed($container, 'session');
+    }
+
+    public static function ensureBackendSessionClosed($container)
+    {
+        self::ensureSessionClosed($container, 'backendsession');
+    }
+
+    /**
+     * Saves the session and ensures it can be reused.
+     *
+     * This method can be used to ensure other sessions are closed before starting a new session, because the other
+     * sessions would use the session id of the new session and thus write their data into the wrong session.
+     */
+    private static function ensureSessionClosed($container, $sessionServiceName)
+    {
+        $session = $container->initialized($sessionServiceName) ? $container->get($sessionServiceName) : null;
+        if ($session && $session->isStarted()) {
+            $session->save();
+            // The empty session id signals that upon starting a session the session cookie is used.
+            $session->setId('');
+        }
     }
 }

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleES\FacetHandler;
@@ -38,10 +38,7 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class CombinedConditionFacetHandler implements HandlerInterface, ResultHydratorInterface
 {
-    /**
-     * @var CombinedConditionQueryBuilder
-     */
-    private $combinedConditionQueryBuilder;
+    private CombinedConditionQueryBuilder $combinedConditionQueryBuilder;
 
     public function __construct(CombinedConditionQueryBuilder $combinedConditionQueryBuilder)
     {
@@ -65,17 +62,7 @@ class CombinedConditionFacetHandler implements HandlerInterface, ResultHydratorI
         Search $search,
         ShopContextInterface $context
     ) {
-        /** @var CombinedConditionFacet $criteriaPart */
-        $query = $this->combinedConditionQueryBuilder->build(
-            $criteriaPart->getConditions(),
-            $criteria,
-            $context
-        );
-
-        $filter = new FilterAggregation($criteriaPart->getName());
-        $filter->setFilter($query);
-
-        $search->addAggregation($filter);
+        $this->addQuery($criteriaPart, $criteria, $search, $context);
     }
 
     /**
@@ -92,7 +79,7 @@ class CombinedConditionFacetHandler implements HandlerInterface, ResultHydratorI
         }
 
         foreach ($elasticResult['aggregations'] as $key => $aggregation) {
-            if (strpos($key, 'combined_facet_') === false) {
+            if (!str_contains($key, 'combined_facet_')) {
                 continue;
             }
 
@@ -104,8 +91,10 @@ class CombinedConditionFacetHandler implements HandlerInterface, ResultHydratorI
                 continue;
             }
 
-            /** @var CombinedConditionFacet $facet */
             $facet = $criteria->getFacet($key);
+            if (!$facet instanceof CombinedConditionFacet) {
+                continue;
+            }
 
             $result->addFacet(
                 new BooleanFacetResult(
@@ -116,5 +105,23 @@ class CombinedConditionFacetHandler implements HandlerInterface, ResultHydratorI
                 )
             );
         }
+    }
+
+    private function addQuery(
+        CombinedConditionFacet $criteriaPart,
+        Criteria $criteria,
+        Search $search,
+        ShopContextInterface $context
+    ): void {
+        $query = $this->combinedConditionQueryBuilder->build(
+            $criteriaPart->getConditions(),
+            $criteria,
+            $context
+        );
+
+        $filter = new FilterAggregation($criteriaPart->getName());
+        $filter->setFilter($query);
+
+        $search->addAggregation($filter);
     }
 }

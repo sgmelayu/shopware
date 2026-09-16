@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Notification
@@ -37,10 +36,10 @@
 //{block name="backend/notification/view/main/window"}
 Ext.define('Shopware.apps.Notification.view.main.Window', {
     extend: 'Enlight.app.Window',
-    alias : 'widget.notification-main-window',
-    title : '{s name="title"}Notification{/s}',
-    layout:{
-        type:'border'
+    alias: 'widget.notification-main-window',
+    title: '{s name="title"}Notification{/s}',
+    layout: {
+        type: 'border'
     },
     width: 950,
     height: '90%',
@@ -48,9 +47,9 @@ Ext.define('Shopware.apps.Notification.view.main.Window', {
     stateful: true,
     stateId: 'shopware-notification-main-window',
     defaults: {
-        layout:'fit',
+        layout: 'fit',
         border: false,
-        split:true
+        split: true
     },
 
     /**
@@ -75,15 +74,15 @@ Ext.define('Shopware.apps.Notification.view.main.Window', {
         var me = this;
         return Ext.create('Ext.panel.Panel', {
             title: '{s name="notification/article/panel/title"}Articles with notifications{/s}',
-            items:[
+            items: [
                 {
-                    xtype:'notification-notification-article',
-                    articleStore:me.articleStore
+                    xtype: 'notification-notification-article',
+                    articleStore: me.articleStore
                 }
             ],
-            layout:'fit',
+            layout: 'fit',
             border: false,
-            split:true,
+            split: true,
             region: 'center'
         });
     },
@@ -98,17 +97,17 @@ Ext.define('Shopware.apps.Notification.view.main.Window', {
         var me = this;
         return Ext.create('Ext.panel.Panel', {
             title: '{s name="notification/customer/panel/title"}Customer registered for Notification{/s}',
-            items:[
+            items: [
                 {
-                    xtype:'notification-notification-customer',
-                    customerStore:me.customerStore
+                    xtype: 'notification-notification-customer',
+                    customerStore: me.customerStore
                 }
             ],
-            layout:'fit',
+            layout: 'fit',
             border: false,
-            split:true,
+            split: true,
             region: 'east',
-            width:475
+            width: 475
         });
     }
 });

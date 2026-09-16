@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Translation
@@ -35,9 +34,9 @@
  * todo@all: Documentation
  */
 //{block name="backend/translation/view/main/form"}
-Ext.define('Shopware.apps.Translation.view.main.Form',
-/** @lends Ext.form.Panel# */
-{
+Ext.define('Shopware.apps.Translation.view.main.Form', {
+    /** @lends Ext.form.Panel# */
+
     extend: 'Ext.form.Panel',
     alias: 'widget.translation-main-form',
     bodyPadding: 10,
@@ -66,7 +65,7 @@ Ext.define('Shopware.apps.Translation.view.main.Form',
      * Form elements
      * @array
      */
-    items : [],
+    items: [],
 
     /**
      * Initializes the component and builds up the main interface
@@ -78,9 +77,9 @@ Ext.define('Shopware.apps.Translation.view.main.Form',
         var me = this, items = [];
         me.originalTitle = me.title;
         Ext.each(me.translatableFields, function(currentField) {
-           var elementType = currentField.xtype || '';
+            var elementType = currentField.xtype || '';
 
-           switch(elementType) {
+            switch (elementType) {
                 case 'ace-editor' :
                 case 'codemirror' :
                 case 'codemirrorfield' :

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -38,7 +37,7 @@ Ext.define('Shopware.apps.Config.view.form.Unit', {
             xtype: 'config-base-table',
             store: 'form.Unit',
             columns: me.getColumns()
-        },{
+        }, {
             xtype: 'config-base-detail',
             items: me.getFormItems(),
             plugins: [{
@@ -72,7 +71,7 @@ Ext.define('Shopware.apps.Config.view.form.Unit', {
             fieldLabel: '{s name="unit/detail/name_label"}Name{/s}',
             translatable: true,
             allowBlank: false
-        },{
+        }, {
             name: 'unit',
             fieldLabel: '{s name="unit/detail/unit_label"}Unit{/s}',
             translatable: true,

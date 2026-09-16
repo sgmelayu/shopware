@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\CustomerSearchBundleDBAL\ConditionHandler;
@@ -37,6 +37,11 @@ class SearchTermConditionHandler implements ConditionHandlerInterface
     }
 
     public function handle(ConditionInterface $condition, QueryBuilder $query)
+    {
+        $this->addCondition($condition, $query);
+    }
+
+    private function addCondition(SearchTermCondition $condition, QueryBuilder $query): void
     {
         $fields = [
             'customer.email',
@@ -59,7 +64,6 @@ class SearchTermConditionHandler implements ConditionHandlerInterface
             'customer.ordered_products',
         ];
 
-        /* @var SearchTermCondition $condition */
         $terms = $this->splitTerm($condition->getTerm());
 
         foreach ($terms as $index => $term) {
@@ -76,11 +80,9 @@ class SearchTermConditionHandler implements ConditionHandlerInterface
     /**
      * Parse a string / search term into a keyword array
      *
-     * @param string $string
-     *
-     * @return array
+     * @return array<string>
      */
-    private function splitTerm($string)
+    private function splitTerm(string $string): array
     {
         $string = str_replace(
             ['Ü', 'ü', 'ä', 'Ä', 'ö', 'Ö', 'ß'],
@@ -91,12 +93,19 @@ class SearchTermConditionHandler implements ConditionHandlerInterface
         $string = mb_strtolower(html_entity_decode($string), 'UTF-8');
 
         // Remove not required chars from string
-        $string = trim(preg_replace("/[^\pL_0-9]/u", ' ', $string));
+        $replaced = preg_replace("/[^\pL_0-9]/u", ' ', $string);
+        if (!\is_string($replaced)) {
+            return [];
+        }
+        $string = trim($replaced);
 
         // Parse string into array
         $wordsTmp = preg_split('/ /', $string, -1, PREG_SPLIT_NO_EMPTY);
+        if (!\is_array($wordsTmp)) {
+            return [];
+        }
 
-        if (count($wordsTmp)) {
+        if (\count($wordsTmp)) {
             $words = array_unique($wordsTmp);
         } elseif (!empty($string)) {
             $words = [$string];

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -107,17 +106,17 @@ Ext.define('Shopware.apps.Index.controller.Widgets', {
         }
 
         Shopware.app.Application.addSubApplication({
-                name: 'Shopware.apps.PluginManager',
-                params: {
-                    hidden: true
-                }
-            },
-            undefined,
-            function() {
-                Shopware.app.Application.addSubApplication({
-                    name: 'Shopware.apps.UpdateWizard'
-                });
+            name: 'Shopware.apps.PluginManager',
+            params: {
+                hidden: true
             }
+        },
+        undefined,
+        function() {
+            Shopware.app.Application.addSubApplication({
+                name: 'Shopware.apps.UpdateWizard'
+            });
+        }
         );
     },
 
@@ -588,19 +587,19 @@ Ext.define('Shopware.apps.Index.controller.Widgets', {
             Ext.MessageBox.confirm(
                 '{s name="footer/notification/modal_title" namespace="backend/index/view/detail"}Show notifications on desktop?{/s}',
                 '{s name="footer/notification/modal_content" namespace="backend/index/view/detail"}To show growl notifications, {/s}', function (response) {
-                if (response !== 'yes') {
-                    return false;
-                }
-
-                Notification.requestPermission().then( function (result) {
-                    if (result === 'denied' ){
-                        Ext.MessageBox.alert('{s name="footer/notification/denied_title" namespace="backend/index/view/detail"}Denied{/s}',
-                            '{s name="footer/notification/denied_content" namespace="backend/index/view/detail"}If you change your mind later, please go to your browser settings for this site.{/s}');
+                    if (response !== 'yes') {
+                        return false;
                     }
 
-                    me.notificationBtn.addCls('btn-over');
+                    Notification.requestPermission().then( function (result) {
+                        if (result === 'denied' ){
+                            Ext.MessageBox.alert('{s name="footer/notification/denied_title" namespace="backend/index/view/detail"}Denied{/s}',
+                                '{s name="footer/notification/denied_content" namespace="backend/index/view/detail"}If you change your mind later, please go to your browser settings for this site.{/s}');
+                        }
+
+                        me.notificationBtn.addCls('btn-over');
+                    });
                 });
-            });
 
             return;
         }

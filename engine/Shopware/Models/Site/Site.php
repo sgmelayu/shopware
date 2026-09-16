@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Site;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 use Shopware\Models\Attribute\Site as SiteAttribute;
@@ -122,7 +124,7 @@ class Site extends ModelEntity
     /**
      * @var string
      *
-     * @ORM\Column(name="meta_keywords", type="string", nullable=false)
+     * @ORM\Column(name="meta_keywords", type="text", nullable=false)
      */
     private $metaKeywords;
 
@@ -169,14 +171,14 @@ class Site extends ModelEntity
     private $target;
 
     /**
-     * @var string
+     * @var string|null
      *
-     * @ORM\Column(name="shop_ids", type="string", nullable=false)
+     * @ORM\Column(name="shop_ids", type="string", nullable=true)
      */
     private $shopIds;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="changed", type="datetime", nullable=false)
      */
@@ -201,7 +203,7 @@ class Site extends ModelEntity
     private $parent;
 
     /**
-     * @var int|null
+     * @var int
      *
      * @ORM\Column(name="parentID", type="integer", nullable=false)
      */
@@ -209,7 +211,7 @@ class Site extends ModelEntity
 
     public function __construct()
     {
-        $this->changed = new \DateTime();
+        $this->changed = new DateTime();
     }
 
     /**
@@ -617,14 +619,14 @@ class Site extends ModelEntity
     }
 
     /**
-     * @param \DateTimeInterface|string $changed
+     * @param DateTimeInterface|string $changed
      *
      * @return Site
      */
     public function setChanged($changed = 'now')
     {
-        if (!$changed instanceof \DateTimeInterface) {
-            $this->changed = new \DateTime($changed);
+        if (!$changed instanceof DateTimeInterface) {
+            $this->changed = new DateTime($changed);
         } else {
             $this->changed = $changed;
         }
@@ -633,7 +635,7 @@ class Site extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getChanged()
     {
@@ -643,7 +645,7 @@ class Site extends ModelEntity
     /**
      * Returns the unexploded shop ids string (ex: |1|2|)
      *
-     * @return string
+     * @return string|null
      */
     public function getShopIds()
     {
@@ -664,17 +666,13 @@ class Site extends ModelEntity
         $explodedShopIds = explode('|', trim($this->shopIds, '|'));
 
         // cast to ints
-        $explodedShopIds = array_map(function ($elem) {
-            return (int) $elem;
-        }, $explodedShopIds);
-
-        return $explodedShopIds;
+        return array_map('\intval', $explodedShopIds);
     }
 
     /**
      * Set the unexploded shop ids string (ex: |1|2|)
      *
-     * @param string $shopIds
+     * @param string|null $shopIds
      *
      * @return Site
      */

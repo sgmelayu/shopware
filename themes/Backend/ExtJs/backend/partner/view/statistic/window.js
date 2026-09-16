@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Partner
@@ -47,7 +46,7 @@ Ext.define('Shopware.apps.Partner.view.statistic.Window', {
      * Display no footer button for the detail window
      * @boolean
      */
-    footerButton:false,
+    footerButton: false,
     width: 925,
 
     /**
@@ -69,18 +68,18 @@ Ext.define('Shopware.apps.Partner.view.statistic.Window', {
      *
      * @return void
      */
-    registerEvents:function () {
+    registerEvents: function () {
         this.addEvents(
-                /**
-                 * Event will be fired wenn the downloadStatistic Button is clicked
-                 *
-                 * @event downloadStatistic
-                 * @param [object] View - Associated Ext.view.Table
-                 * @param [integer] rowIndex - Row index
-                 * @param [integer] colIndex - Column index
-                 * @param [object] item - Associated HTML DOM node
-                 */
-                'downloadStatistic'
+            /**
+             * Event will be fired wenn the downloadStatistic Button is clicked
+             *
+             * @event downloadStatistic
+             * @param [object] View - Associated Ext.view.Table
+             * @param [integer] rowIndex - Row index
+             * @param [integer] colIndex - Column index
+             * @param [object] item - Associated HTML DOM node
+             */
+            'downloadStatistic'
         );
 
         return true;
@@ -89,31 +88,30 @@ Ext.define('Shopware.apps.Partner.view.statistic.Window', {
     /**
      * creates the form panel
      */
-    createPanel:function () {
+    createPanel: function () {
         var me = this;
         return Ext.create('Ext.panel.Panel', {
-            layout:{
-                layout:'fit',
-                type:'vbox',
-                align:'stretch'
+            layout: {
+                layout: 'fit',
+                type: 'vbox',
+                align: 'stretch'
             },
-            defaults:{ flex:1 },
-            items:[
+            defaults: { flex: 1 },
+            items: [
                 {
-                    xtype:'partner-statistic-chart',
-                    region:'center',
-                    store:me.statisticChartStore.load()
+                    xtype: 'partner-statistic-chart',
+                    region: 'center',
+                    store: me.statisticChartStore.load()
                 },
                 {
-                    xtype:'partner-statistic-list',
-                    listStore:me.statisticListStore.load()
+                    xtype: 'partner-statistic-list',
+                    listStore: me.statisticListStore.load()
                 }
             ],
-            dockedItems:[ me.createToolbar() ]
+            dockedItems: [ me.createToolbar() ]
 
         });
     },
-
 
     /**
      * Creates the toolbar for the order tab.
@@ -121,39 +119,37 @@ Ext.define('Shopware.apps.Partner.view.statistic.Window', {
      *
      * @return [Ext.toolbar.Toolbar] - Toolbar for the order tab which contains the from and to date field to filter the chart
      */
-    createToolbar:function () {
+    createToolbar: function () {
         var me = this,
             today = new Date();
 
         me.fromDateField = Ext.create('Ext.form.field.Date', {
-            labelWidth:45,
-            name:'fromDate',
-            fieldLabel:'{s name="statistic/window/date/from"}From{/s}',
-            value:new Date(today.getFullYear() - 1, today.getMonth() , today.getDate())
+            labelWidth: 45,
+            name: 'fromDate',
+            fieldLabel: '{s name="statistic/window/date/from"}From{/s}',
+            value: new Date(today.getFullYear() - 1, today.getMonth(), today.getDate())
         });
 
         me.toDateField = Ext.create('Ext.form.field.Date', {
-            labelWidth:30,
-            name:'toDate',
-            fieldLabel:'{s name="statistic/window/date/to"}To{/s}',
-            value:today
+            labelWidth: 30,
+            name: 'toDate',
+            fieldLabel: '{s name="statistic/window/date/to"}To{/s}',
+            value: today
         });
 
-
-
         return Ext.create('Ext.toolbar.Toolbar', {
-            ui:'shopware-ui',
+            ui: 'shopware-ui',
             padding: '10 0 5',
-            items:[
-                { xtype:'tbspacer', width:10 },
+            items: [
+                { xtype: 'tbspacer', width: 10 },
                 me.fromDateField,
-                { xtype:'tbspacer', width:10 },
+                { xtype: 'tbspacer', width: 10 },
                 me.toDateField,
-                { xtype:'tbspacer', width:10 },
+                { xtype: 'tbspacer', width: 10 },
                 {
-                    iconCls:'sprite-drive-download',
-                    text:'{s name="statistic/button/download_csv"}Download statistics{/s}',
-                    action:'downloadStatistic'
+                    iconCls: 'sprite-drive-download',
+                    text: '{s name="statistic/button/download_csv"}Download statistics{/s}',
+                    action: 'downloadStatistic'
                 }
             ]
         });

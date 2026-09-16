@@ -1,40 +1,39 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL;
 
-use Shopware\Bundle\StoreFrontBundle\Struct\ProductContextInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware_Components_Config;
 
 class PriceHelper implements PriceHelperInterface
 {
-    const STATE_INCLUDES_CHEAPEST_PRICE = 'cheapest_price';
+    public const STATE_INCLUDES_CHEAPEST_PRICE = 'cheapest_price';
 
-    const STATE_INCLUDES_DEFAULT_PRICE = 'default_price';
+    public const STATE_INCLUDES_DEFAULT_PRICE = 'default_price';
 
-    const STATE_INCLUDES_AVAILABLE_VARIANT = 'available_variant';
+    public const STATE_INCLUDES_AVAILABLE_VARIANT = 'available_variant';
 
     /**
      * @var Shopware_Components_Config
@@ -49,7 +48,7 @@ class PriceHelper implements PriceHelperInterface
     /**
      * {@inheritdoc}
      */
-    public function getSelection(ProductContextInterface $context)
+    public function getSelection(ShopContextInterface $context)
     {
         $fallback = $context->getFallbackCustomerGroup();
         $current = $context->getCurrentCustomerGroup();
@@ -66,26 +65,26 @@ class PriceHelper implements PriceHelperInterface
 
         $taxCase = $this->buildTaxCase($context);
 
-        //rounded to filter this value correctly
+        // rounded to filter this value correctly
         // => 2,99999999 displayed as 3,- € but won't be displayed with a filter on price >= 3,- €
         return 'ROUND(' .
 
-            //customer group price (with fallback switch)
+            // customer group price (with fallback switch)
             $priceField .
 
-            //multiplied with the variant min purchase
+            // multiplied with the variant min purchase
             ($considerMinPurchase ? ' * availableVariant.minpurchase' : '') .
 
-            //multiplied with the percentage price group discount
+            // multiplied with the percentage price group discount
             ' * ((100 - IFNULL(priceGroup.discount, 0)) / 100)' .
 
-            //multiplied with the product tax if the current customer group should see gross prices
+            // multiplied with the product tax if the current customer group should see gross prices
             ($current->displayGrossPrices() ? ' * (( ' . $taxCase . ' + 100) / 100)' : '') .
 
-            //multiplied with the percentage discount of the current customer group
+            // multiplied with the percentage discount of the current customer group
             ($discount ? ' * ' . (100 - (float) $discount) / 100 : '') .
 
-            //multiplied with the shop currency factor
+            // multiplied with the shop currency factor
             ($currency->getFactor() ? ' * ' . $currency->getFactor() : '') .
 
         ', 2)';
@@ -177,8 +176,8 @@ class PriceHelper implements PriceHelperInterface
         if ($this->config->get('hideNoInStock')) {
             $stockCondition = <<< SQL
 AND (
-      (availableVariant.laststock * availableVariant.instock) 
-      >= 
+      (availableVariant.laststock * availableVariant.instock)
+      >=
       (availableVariant.laststock * availableVariant.minpurchase)
 )
 SQL;

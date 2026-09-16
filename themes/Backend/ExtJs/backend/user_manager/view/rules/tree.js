@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    UserManager
@@ -116,12 +115,12 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
         me.on('checkchange', function (node, checked) {
             me.suspendLayouts();
             if (checked) {
-                if(!Ext.isEmpty(node.get('requirements'))) {
+                if (!Ext.isEmpty(node.get('requirements'))) {
                     me.checkRequiredNodes(node, true);
                 }
 
                 Ext.each(node.childNodes, function(childNode) {
-                    if(!Ext.isEmpty(childNode.get('requirements'))) {
+                    if (!Ext.isEmpty(childNode.get('requirements'))) {
                         me.checkRequiredNodes(childNode, true);
                     }
                     childNode.set('checked', true);
@@ -146,7 +145,7 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
         Ext.each(node.get('requirements'), function(nodeId) {
             me.getStore().getRootNode().eachChild(function(element) {
                 element.eachChild(function (child) {
-                    if(child.data.helperId === nodeId) {
+                    if (child.data.helperId === nodeId) {
                         if (child && child.get('checked') !== check) {
                             child.set('checked', true);
                             child.parentNode.expand();
@@ -282,7 +281,7 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
             displayField: 'name',
             forceSelection: true,
             editable: false,
-            allowBlank:false,
+            allowBlank: false,
             labelWidth: 50,
             emptyText: me.snippets.role.empty,
             fieldLabel: me.snippets.role.label,
@@ -302,9 +301,9 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
         /* {if {acl_is_allowed privilege=update}} */
         me.saveRoleButton = Ext.create('Ext.button.Button', {
             text: me.snippets.saveRole,
-            disabled:true,
+            disabled: true,
             name: 'saveRolePrivileges',
-            iconCls:'sprite-disk',
+            iconCls: 'sprite-disk',
             handler: function() {
                 me.fireEvent('saveRolePrivileges', me.store, me.roleCombo.getValue(), me.getChecked());
             }
@@ -318,7 +317,7 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
         /* {if {acl_is_allowed privilege=create}} */
         me.addResourceButton = Ext.create('Ext.button.Button', {
             text: me.snippets.addResource,
-            iconCls:'sprite-plus-circle-frame',
+            iconCls: 'sprite-plus-circle-frame',
             handler: function() {
                 me.fireEvent('addResource', me.store);
             }
@@ -333,7 +332,7 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
         /* {if {acl_is_allowed privilege=create}} */
         me.addPrivilegeButton = Ext.create('Ext.button.Button', {
             text: me.snippets.addPrivilege,
-            iconCls:'sprite-plus-circle-frame',
+            iconCls: 'sprite-plus-circle-frame',
             disabled: true,
             handler: function() {
                 var selected = me.selModel.selected;
@@ -349,18 +348,18 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
         /* {/if} */
 
         return Ext.create('Ext.toolbar.Toolbar', {
-            dock:'top',
+            dock: 'top',
             ui: 'shopware-ui',
             items: [
                 me.roleCombo,
-        /* {if {acl_is_allowed privilege=update}} */
-                { xtype:'tbspacer', width:6 },
+                /* {if {acl_is_allowed privilege=update}} */
+                { xtype: 'tbspacer', width: 6 },
                 me.saveRoleButton,
-        /* {/if} */
-        /* {if {acl_is_allowed privilege=create}} */
+                /* {/if} */
+                /* {if {acl_is_allowed privilege=create}} */
                 me.addResourceButton,
                 me.addPrivilegeButton,
-        /* {/if} */
+                /* {/if} */
             ]
         });
     },
@@ -375,7 +374,7 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
 
         return [{
             xtype: 'treecolumn',
-            text: me.snippets.columns.name ,
+            text: me.snippets.columns.name,
             flex: 1,
             sortable: true,
             dataIndex: 'name'
@@ -386,14 +385,14 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
             width: 50,
             text: me.snippets.columns.action,
             items: [{
-                iconCls:'sprite-minus-circle-frame',
-                action:'deleteNode',
+                iconCls: 'sprite-minus-circle-frame',
+                action: 'deleteNode',
                 tooltip: '{s name="rules/column/action_delete"}{/s}',
                 /**
                  * Remove button handler to fire the deletePrivilege or deleteResource event which is handled
                  * in the rules controller.
                  */
-                handler:function (view, rowIndex, colIndex, item, opts, record) {
+                handler: function (view, rowIndex, colIndex, item, opts, record) {
                     if (record.get('type') === 'privilege') {
                         me.fireEvent('deletePrivilege', record, me.store);
                     } else {
@@ -404,7 +403,6 @@ Ext.define('Shopware.apps.UserManager.view.rules.Tree', {
         }
         /* {/if} */];
     }
-
 
 });
 //{/block}

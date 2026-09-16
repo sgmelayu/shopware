@@ -1,32 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\AbstractQuery;
-use Shopware\Bundle\SearchBundle;
+use Shopware\Bundle\MediaBundle\MediaServiceInterface;
 use Shopware\Bundle\SearchBundle\Condition\VariantCondition;
 use Shopware\Bundle\SearchBundle\Criteria;
+use Shopware\Bundle\SearchBundle\FacetResultInterface;
+use Shopware\Bundle\SearchBundle\ProductNumberSearchInterface;
 use Shopware\Bundle\SearchBundle\ProductNumberSearchResult;
+use Shopware\Bundle\SearchBundle\ProductSearchInterface;
+use Shopware\Bundle\SearchBundle\ProductSearchResult;
 use Shopware\Bundle\SearchBundle\Sorting\PopularitySorting;
 use Shopware\Bundle\SearchBundle\Sorting\ReleaseDateSorting;
 use Shopware\Bundle\SearchBundle\SortingInterface;
@@ -35,18 +40,20 @@ use Shopware\Bundle\StoreFrontBundle\Service\AdditionalTextServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ConfiguratorServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\Core\ConfiguratorService;
-use Shopware\Bundle\StoreFrontBundle\Service\Core\ListingLinkRewriteService;
+use Shopware\Bundle\StoreFrontBundle\Service\ListingLinkRewriteServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ProductNumberServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ProductServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\PropertyServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\VariantListingPriceServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
 use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
 use Shopware\Bundle\StoreFrontBundle\Struct\Product;
-use Shopware\Bundle\StoreFrontBundle\Struct\ProductContextInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware\Components\Compatibility\LegacyEventManager;
 use Shopware\Components\Compatibility\LegacyStructConverter;
+use Shopware\Components\ProductStream\CriteriaFactoryInterface;
+use Shopware\Components\ProductStream\Repository;
 use Shopware\Components\QueryAliasMapper;
 use Shopware\Models\Article\Article;
 use Shopware\Models\Article\Repository as ArticleRepository;
@@ -57,9 +64,10 @@ use Shopware\Models\Media\Media;
 use Shopware\Models\Media\Repository as MediaRepository;
 
 /**
+ * @phpstan-type ListingArray array{sArticles: array<string, array<string, mixed>>, criteria: Criteria, facets: array<FacetResultInterface>, sPage: int, pageIndex: int, pageSizes: array<int>, sPerPage: int|null, sNumberArticles: int, shortParameters: array<string, string>, sTemplate: string|null, sSort: int}
  * Shopware Class that handle products
  */
-class sArticles implements \Enlight_Hook
+class sArticles implements Enlight_Hook
 {
     /**
      * Pointer to sSystem object
@@ -91,120 +99,62 @@ class sArticles implements \Enlight_Hook
     /**
      * @var ArticleRepository
      */
-    protected $articleRepository = null;
+    protected $articleRepository;
 
     /**
      * @var MediaRepository
      */
-    protected $mediaRepository = null;
+    protected $mediaRepository;
+
+    private ContextServiceInterface $contextService;
+
+    private Shopware_Components_Config $config;
+
+    private ListProductServiceInterface $listProductService;
+
+    private ProductServiceInterface $productService;
+
+    private ConfiguratorServiceInterface $configuratorService;
+
+    private PropertyServiceInterface $propertyService;
+
+    private AdditionalTextServiceInterface $additionalTextService;
+
+    private ProductSearchInterface $searchService;
+
+    private Enlight_Event_EventManager $eventManager;
+
+    private Enlight_Components_Db_Adapter_Pdo_Mysql $db;
+
+    private Connection $connection;
+
+    private LegacyStructConverter $legacyStructConverter;
+
+    private LegacyEventManager $legacyEventManager;
+
+    private QueryAliasMapper $queryAliasMapper;
+
+    private Enlight_Controller_Front $frontController;
+
+    private ProductNumberSearchInterface $productNumberSearch;
+
+    private Enlight_Components_Session_Namespace $session;
+
+    private StoreFrontCriteriaFactoryInterface $storeFrontCriteriaFactory;
 
     /**
-     * @var ContextServiceInterface
+     * @var array<int>
      */
-    private $contextService;
+    private array $cachePromotions = [];
 
-    /**
-     * @var Shopware_Components_Config
-     */
-    private $config;
+    private sArticlesComparisons $productComparisons;
 
-    /**
-     * @var ListProductServiceInterface
-     */
-    private $listProductService;
+    private ProductNumberServiceInterface $productNumberService;
 
-    /**
-     * @var ProductServiceInterface
-     */
-    private $productService;
-
-    /**
-     * @var ConfiguratorServiceInterface
-     */
-    private $configuratorService;
-
-    /**
-     * @var PropertyServiceInterface
-     */
-    private $propertyService;
-
-    /**
-     * @var AdditionalTextServiceInterface
-     */
-    private $additionalTextService;
-
-    /**
-     * @var SearchBundle\ProductSearch
-     */
-    private $searchService;
-
-    /**
-     * @var Enlight_Event_EventManager
-     */
-    private $eventManager;
-
-    /**
-     * @var Enlight_Components_Db_Adapter_Pdo_Mysql
-     */
-    private $db;
-
-    /**
-     * @var LegacyStructConverter
-     */
-    private $legacyStructConverter;
-
-    /**
-     * @var LegacyEventManager
-     */
-    private $legacyEventManager;
-
-    /**
-     * @var QueryAliasMapper
-     */
-    private $queryAliasMapper;
-
-    /**
-     * @var Enlight_Controller_Front|null
-     */
-    private $frontController;
-
-    /**
-     * @var SearchBundle\ProductNumberSearchInterface
-     */
-    private $productNumberSearch;
-
-    /**
-     * @var Enlight_Components_Session_Namespace
-     */
-    private $session;
-
-    /**
-     * @var StoreFrontCriteriaFactoryInterface
-     */
-    private $storeFrontCriteriaFactory;
-
-    /**
-     * @var array
-     */
-    private $cachePromotions = [];
-
-    /**
-     * @var sArticlesComparisons
-     */
-    private $productComparisons;
-
-    /**
-     * @var ProductNumberServiceInterface
-     */
-    private $productNumberService;
-
-    /**
-     * @var ListingLinkRewriteService
-     */
-    private $listingLinkRewriteService;
+    private ListingLinkRewriteServiceInterface $listingLinkRewriteService;
 
     public function __construct(
-        Category $category = null,
+        ?Category $category = null,
         $translationId = null,
         $customerGroupId = null
     ) {
@@ -215,25 +165,26 @@ class sArticles implements \Enlight_Hook
         $this->translationId = $translationId ?: (!Shopware()->Shop()->getDefault() ? Shopware()->Shop()->getId() : null);
         $this->customerGroupId = $customerGroupId ?: ((int) Shopware()->Modules()->System()->sUSERGROUPDATA['id']);
 
-        $this->config = $container->get(\Shopware_Components_Config::class);
+        $this->config = $container->get(Shopware_Components_Config::class);
         $this->db = $container->get('db');
+        $this->connection = $container->get(Connection::class);
         $this->eventManager = $container->get('events');
-        $this->contextService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class);
-        $this->listProductService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface::class);
-        $this->productService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\ProductServiceInterface::class);
-        $this->productNumberSearch = $container->get(\Shopware\Bundle\SearchBundle\ProductNumberSearchInterface::class);
-        $this->configuratorService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\ConfiguratorServiceInterface::class);
-        $this->propertyService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\PropertyServiceInterface::class);
-        $this->additionalTextService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\AdditionalTextServiceInterface::class);
-        $this->searchService = $container->get(\Shopware\Bundle\SearchBundle\ProductSearchInterface::class);
+        $this->contextService = $container->get(ContextServiceInterface::class);
+        $this->listProductService = $container->get(ListProductServiceInterface::class);
+        $this->productService = $container->get(ProductServiceInterface::class);
+        $this->productNumberSearch = $container->get(ProductNumberSearchInterface::class);
+        $this->configuratorService = $container->get(ConfiguratorServiceInterface::class);
+        $this->propertyService = $container->get(PropertyServiceInterface::class);
+        $this->additionalTextService = $container->get(AdditionalTextServiceInterface::class);
+        $this->searchService = $container->get(ProductSearchInterface::class);
         $this->queryAliasMapper = $container->get(QueryAliasMapper::class);
         $this->frontController = $container->get('front');
         $this->legacyStructConverter = $container->get(LegacyStructConverter::class);
         $this->legacyEventManager = $container->get(LegacyEventManager::class);
         $this->session = $container->get('session');
-        $this->storeFrontCriteriaFactory = $container->get(\Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactoryInterface::class);
-        $this->productNumberService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\ProductNumberServiceInterface::class);
-        $this->listingLinkRewriteService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\ListingLinkRewriteServiceInterface::class);
+        $this->storeFrontCriteriaFactory = $container->get(StoreFrontCriteriaFactoryInterface::class);
+        $this->productNumberService = $container->get(ProductNumberServiceInterface::class);
+        $this->listingLinkRewriteService = $container->get(ListingLinkRewriteServiceInterface::class);
 
         $this->productComparisons = new sArticlesComparisons($this, $container);
     }
@@ -299,7 +250,7 @@ class sArticles implements \Enlight_Hook
      */
     public function sGetComparisonProperties($articles)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Use the sArticlesComparisons::sGetComparisonProperties instead.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Use the sArticlesComparisons::sGetComparisonProperties instead.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return $this->productComparisons->sGetComparisonProperties($articles);
     }
@@ -316,7 +267,7 @@ class sArticles implements \Enlight_Hook
      */
     public function sFillUpComparisonArticles($properties, $articles)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Use sArticlesComparisons::sFillUpComparisonArticles instead.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Use sArticlesComparisons::sFillUpComparisonArticles instead.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return $this->productComparisons->sFillUpComparisonArticles($properties, $articles);
     }
@@ -330,13 +281,12 @@ class sArticles implements \Enlight_Hook
      */
     public function sGetArticleProperties($articleId)
     {
-        $orderNumber = $this->getOrderNumberByProductId($articleId);
+        $orderNumber = $this->getOrderNumberByProductId((int) $articleId);
         if (!$orderNumber) {
             return [];
         }
 
         $productContext = $this->contextService->getShopContext();
-        /** @var ProductContextInterface $productContext */
         $product = $this->listProductService->get($orderNumber, $productContext);
         if (!$product || !$product->hasProperties()) {
             return [];
@@ -372,7 +322,7 @@ class sArticles implements \Enlight_Hook
             $sVoteStars = 0;
         }
 
-        $sVoteStars = $sVoteStars / 2;
+        $sVoteStars /= 2;
 
         if ($this->config['sVOTEUNLOCK']) {
             $active = 0;
@@ -397,8 +347,7 @@ class sArticles implements \Enlight_Hook
             $shopId = $container->get('shop')->getId();
         }
 
-        $connection = $container->get(\Doctrine\DBAL\Connection::class);
-        $query = $connection->createQueryBuilder();
+        $query = $this->connection->createQueryBuilder();
         $query->insert('s_articles_vote');
         $query->values([
             'articleID' => ':productId',
@@ -429,7 +378,7 @@ class sArticles implements \Enlight_Hook
             throw new Enlight_Exception('sSaveComment #00: Could not save comment');
         }
 
-        $insertId = $connection->lastInsertId();
+        $insertId = $this->connection->lastInsertId();
         if (!isset($this->session['sArticleCommentInserts'])) {
             $this->session['sArticleCommentInserts'] = new ArrayObject();
         }
@@ -438,24 +387,24 @@ class sArticles implements \Enlight_Hook
     }
 
     /**
-     * @deprecated in 5.6, will be removed in 5.7 without replacement
+     * @deprecated in 5.6, will be removed in 5.8 without replacement
      *
      * Get id from all products, that belongs to a specific supplier
      *
      * @param int $supplierID Supplier id (s_articles.supplierID)
      *
-     * @return array|void
+     * @return array
      */
     public function sGetArticlesBySupplier($supplierID = null)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if (!empty($supplierID)) {
             $this->frontController->Request()->setQuery('sSearch', $supplierID);
         }
 
         if (!$this->frontController->Request()->getQuery('sSearch')) {
-            return;
+            return [];
         }
         $sSearch = (int) $this->frontController->Request()->getQuery('sSearch');
 
@@ -466,13 +415,13 @@ class sArticles implements \Enlight_Hook
     }
 
     /**
-     * @param Criteria $criteria
+     * @param int|null $categoryId
      *
      * @throws Enlight_Exception
      *
-     * @return array|bool|mixed
+     * @return ListingArray|false
      */
-    public function sGetArticlesByCategory($categoryId = null, Criteria $criteria = null)
+    public function sGetArticlesByCategory($categoryId = null, ?Criteria $criteria = null)
     {
         if (Shopware()->Events()->notifyUntil('Shopware_Modules_Articles_sGetArticlesByCategory_Start', [
             'subject' => $this,
@@ -484,20 +433,21 @@ class sArticles implements \Enlight_Hook
         $context = $this->contextService->getShopContext();
 
         $request = Shopware()->Container()->get('front')->Request();
+        if (!$request instanceof Enlight_Controller_Request_Request) {
+            throw new RuntimeException('Required request not available');
+        }
 
-        if (!$criteria) {
+        if (!$criteria instanceof Criteria) {
             $criteria = $this->storeFrontCriteriaFactory->createListingCriteria($request, $context);
         }
 
         $result = $this->getListing($categoryId, $context, $request, $criteria);
 
-        $result = $this->legacyEventManager->fireArticlesByCategoryEvents($result, $categoryId, $this);
-
-        return $result;
+        return $this->legacyEventManager->fireArticlesByCategoryEvents($result, $categoryId, $this);
     }
 
     /**
-     * @deprecated in 5.6, will be removed in 5.7 without replacement
+     * @deprecated in 5.6, will be removed in 5.8 without replacement
      *
      * Get supplier by id
      *
@@ -511,7 +461,7 @@ class sArticles implements \Enlight_Hook
      */
     public function sGetSupplierById($id)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $id = (int) $id;
         $categoryId = (int) $this->frontController->Request()->getQuery('sCategory');
@@ -560,15 +510,15 @@ class sArticles implements \Enlight_Hook
 
         // Calculate global discount
         if ($this->sSYSTEM->sUSERGROUPDATA['mode'] && $this->sSYSTEM->sUSERGROUPDATA['discount']) {
-            $price = $price - ($price / 100 * $this->sSYSTEM->sUSERGROUPDATA['discount']);
+            $price -= ($price / 100 * $this->sSYSTEM->sUSERGROUPDATA['discount']);
         }
         if ($this->sSYSTEM->sCurrency['factor']) {
-            $price = $price * (float) $this->sSYSTEM->sCurrency['factor'];
+            $price *= (float) $this->sSYSTEM->sCurrency['factor'];
         }
 
         // Condition Output-Netto AND NOT overwrite by customer-group
         // OR Output-Netto NOT SET AND tax-settings provided by customer-group
-        if ((!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id'])) {
+        if (!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']) {
             $price = $this->sFormatPrice($price);
         } else {
             $price = $this->sFormatPrice(round($price * (100 + $tax) / 100, 3));
@@ -584,8 +534,7 @@ class sArticles implements \Enlight_Hook
      */
     public function getTaxRateByConditions($taxId)
     {
-        $context = $this->contextService->getShopContext();
-        $taxRate = $context->getTaxRule($taxId);
+        $taxRate = $this->contextService->getShopContext()->getTaxRule($taxId);
         if ($taxRate) {
             return number_format($taxRate->getTax(), 2);
         }
@@ -622,7 +571,7 @@ class sArticles implements \Enlight_Hook
         }
         // Calculating global discount
         if ($this->sSYSTEM->sUSERGROUPDATA['mode'] && $this->sSYSTEM->sUSERGROUPDATA['discount']) {
-            $price = $price - ($price / 100 * $this->sSYSTEM->sUSERGROUPDATA['discount']);
+            $price -= ($price / 100 * $this->sSYSTEM->sUSERGROUPDATA['discount']);
         }
 
         // Support tax rate defined by certain conditions
@@ -645,12 +594,12 @@ class sArticles implements \Enlight_Hook
         // Condition Output-Netto AND NOT overwrite by customer-group
         // OR Output-Netto NOT SET AND tax-settings provided by customer-group
         if ($doNotRound == true) {
-            if ((!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id'])) {
+            if (!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']) {
             } else {
                 $price = $price * (100 + $tax) / 100;
             }
         } else {
-            if ((!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id'])) {
+            if (!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']) {
                 $price = round($price, 2);
             } else {
                 $price = round($price * (100 + $tax) / 100, 2);
@@ -713,7 +662,7 @@ class sArticles implements \Enlight_Hook
      */
     public function sCheckIfEsd($id, $detailsID, $realtime = false)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         // Check if this product is esd-only (check in variants, too -> later)
         $id = (int) $id;
@@ -748,6 +697,7 @@ class sArticles implements \Enlight_Hook
      */
     public function getProductNavigation($orderNumber, $categoryId, Enlight_Controller_Request_RequestHttp $request)
     {
+        $categoryId = (int) $categoryId;
         $context = $this->contextService->getShopContext();
 
         $criteria = $this->createProductNavigationCriteria($categoryId, $context, $request);
@@ -792,7 +742,11 @@ class sArticles implements \Enlight_Hook
                       AND objectlanguage=" . Shopware()->Shop()->getId();
             $translation = $this->db->fetchOne($sql);
             if (!empty($translation)) {
-                $translation = unserialize($translation, ['allowed_classes' => false]);
+                $translation = @unserialize($translation, ['allowed_classes' => false]);
+
+                if ($translation === false) {
+                    $translation = [];
+                }
             }
             if (!empty($translation[$id])) {
                 $unit = array_merge($unit, $translation[$id]);
@@ -851,7 +805,7 @@ class sArticles implements \Enlight_Hook
         $getGroups = $this->db->fetchAll($sql, [(int) $groupID, $customergroup]);
         $priceMatrix = [];
 
-        if (count($getGroups)) {
+        if (\count($getGroups)) {
             foreach ($getGroups as $group) {
                 $priceMatrix[$group['discountstart']] = ['percent' => $group['discount']];
                 if (!empty($group['discount'])) {
@@ -867,7 +821,7 @@ class sArticles implements \Enlight_Hook
                 return;
             }
 
-            if (!empty($doMatrix) && count($priceMatrix) == 1) {
+            if (!empty($doMatrix) && \count($priceMatrix) == 1) {
                 return;
             }
 
@@ -900,7 +854,7 @@ class sArticles implements \Enlight_Hook
                     $getBlockPricings[$i]['to'] = $percent['to'];
                     if ($i === 0 && $ignore) {
                         $getBlockPricings[$i]['price'] = $this->sCalculatingPrice(
-                            ($listprice / 100 * (100)),
+                            $listprice / 100 * 100,
                             $articleData['tax'],
                             $articleData['taxID'],
                             $articleData
@@ -911,7 +865,7 @@ class sArticles implements \Enlight_Hook
                             $percent['percent'] -= $divPercent;
                         }
                         $getBlockPricings[$i]['price'] = $this->sCalculatingPrice(
-                            ($listprice / 100 * (100 - $percent['percent'])),
+                            $listprice / 100 * (100 - $percent['percent']),
                             $articleData['tax'],
                             $articleData['taxID'],
                             $articleData
@@ -954,7 +908,7 @@ class sArticles implements \Enlight_Hook
         $returnArrayIfConfigurator = false,
         $checkLiveshopping = false
     ) {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if ($group != $this->sSYSTEM->sUSERGROUP) {
             $fetchGroup = $group;
@@ -991,7 +945,7 @@ class sArticles implements \Enlight_Hook
             [$fetchGroup, $article]
         );
 
-        if (count($queryCheapestPrice) > 1) {
+        if (\count($queryCheapestPrice) > 1) {
             $cheapestPrice = $queryCheapestPrice[0]['price'];
             if (empty($cheapestPrice)) {
                 // No Price for this customer-group fetch defaultprice
@@ -1009,7 +963,7 @@ class sArticles implements \Enlight_Hook
                 ";
 
                 $queryCheapestPrice = $this->db->fetchAll($sql);
-                if (count($queryCheapestPrice) > 1) {
+                if (\count($queryCheapestPrice) > 1) {
                     $cheapestPrice = $queryCheapestPrice[0]['price'];
                 } else {
                     $cheapestPrice = 0;
@@ -1037,7 +991,7 @@ class sArticles implements \Enlight_Hook
 
         $getGroups = $this->db->fetchAll($sql, [$pricegroup, $this->sSYSTEM->sUSERGROUP]);
 
-        //if there are no discounts for this customergroup don't show "ab:"
+        // if there are no discounts for this customergroup don't show "ab:"
         if (empty($getGroups)) {
             return $cheapestPrice;
         }
@@ -1085,7 +1039,7 @@ class sArticles implements \Enlight_Hook
      * Get one product with all available data
      *
      * @param int         $id          article id
-     * @param string|null $sCategoryID
+     * @param int|null    $sCategoryID
      * @param string|null $number
      *
      * @return array
@@ -1143,7 +1097,7 @@ class sArticles implements \Enlight_Hook
              * 2. $number is equals to $productNumber (if the order number is invalid or inactive fallback to main variant)
              * 3. $configuration is empty (Customer hasn't not set an own configuration)
              */
-            if ($providedNumber && $providedNumber == $productNumber && empty($configuration) || $type === 0) {
+            if ($providedNumber && $providedNumber == $productNumber && empty($selection) || $type === 0) {
                 $selection = $product->getSelectedOptions();
             }
         }
@@ -1153,21 +1107,19 @@ class sArticles implements \Enlight_Hook
             $categoryId = Shopware()->Modules()->Categories()->sGetCategoryIdByArticleId($id);
         }
 
-        $legacyProduct = $this->getLegacyProduct(
+        return $this->getLegacyProduct(
             $product,
             $categoryId,
             $selection
         );
-
-        return $legacyProduct;
     }
 
     /**
      * calculates the reference price with the base price data
      *
-     * @param string $price         | the final price which will be shown
-     * @param float  $purchaseUnit
-     * @param float  $referenceUnit
+     * @param string|float $price         | the final price which will be shown
+     * @param string|float $purchaseUnit
+     * @param string|float $referenceUnit
      *
      * @return float
      */
@@ -1176,9 +1128,13 @@ class sArticles implements \Enlight_Hook
         $purchaseUnit = (float) $purchaseUnit;
         $referenceUnit = (float) $referenceUnit;
 
-        $price = (float) str_replace(',', '.', $price);
+        if (\is_string($price)) {
+            $price = (float) str_replace(',', '.', $price);
+        } elseif (!\is_float($price)) {
+            throw new UnexpectedValueException('Parameter price needs to be of type "float" or a numeric string');
+        }
 
-        if ($purchaseUnit == 0 || $referenceUnit == 0) {
+        if ($purchaseUnit === 0.0 || $referenceUnit === 0.0) {
             return 0;
         }
 
@@ -1199,8 +1155,8 @@ class sArticles implements \Enlight_Hook
         $price = str_replace('.', ',', (string) $price); // Replaces points with commas
         $commaPos = strpos((string) $price, ',');
         if ($commaPos) {
-            $part = substr((string) $price, $commaPos + 1, strlen((string) $price) - $commaPos);
-            switch (strlen($part)) {
+            $part = (string) substr((string) $price, $commaPos + 1, \strlen((string) $price) - $commaPos);
+            switch (\strlen($part)) {
                 case 1:
                     $price .= '0';
                     break;
@@ -1228,13 +1184,13 @@ class sArticles implements \Enlight_Hook
     public function sRound($moneyfloat = null)
     {
         if (is_numeric($moneyfloat)) {
-            $moneyfloat = sprintf('%F', $moneyfloat);
+            $moneyfloat = \sprintf('%F', $moneyfloat);
         }
-        $money_str = explode('.', $moneyfloat);
+        $money_str = explode('.', (string) $moneyfloat);
         if (empty($money_str[1])) {
             $money_str[1] = 0;
         }
-        $money_str[1] = substr($money_str[1], 0, 3); // convert to rounded (to the nearest thousandth) string
+        $money_str[1] = substr((string) $money_str[1], 0, 3); // convert to rounded (to the nearest thousandth) string
 
         $value = (float) ($money_str[0] . '.' . $money_str[1]);
 
@@ -1249,7 +1205,7 @@ class sArticles implements \Enlight_Hook
     /**
      * @param string $ordernumber
      *
-     * @return array|false
+     * @return array<string, mixed>|false
      */
     public function sGetProductByOrdernumber($ordernumber)
     {
@@ -1260,29 +1216,26 @@ class sArticles implements \Enlight_Hook
             return false;
         }
 
-        $getPromotionResult = $this->getPromotion(null, $ordernumber);
-
-        $getPromotionResult = Shopware()->Events()->filter(
+        return Shopware()->Events()->filter(
             'Shopware_Modules_Articles_sGetProductByOrdernumber_FilterResult',
-            $getPromotionResult,
+            $this->getPromotion(null, $ordernumber),
             ['subject' => $this, 'value' => $ordernumber]
         );
-
-        return $getPromotionResult;
     }
 
     /**
      * Get basic product data in various modes (firmly defined by id, random, top, new)
      *
-     * @param string $mode      Modus (fix, random, top, new)
-     * @param int    $category  filter by category
-     * @param int    $value     product id / ordernumber for firmly definied products
-     * @param bool   $withImage
+     * @param string                    $mode      Modus (fix, random, top, new)
+     * @param int                       $category  filter by category
+     * @param int|string|numeric-string $value     product id / order number for firmly defined products
+     * @param bool                      $withImage
      *
-     * @return array|false
+     * @return array<string, mixed>|false
      */
     public function sGetPromotionById($mode, $category = 0, $value = 0, $withImage = false)
     {
+        $category = (int) $category;
         $notifyUntil = $this->eventManager->notifyUntil(
             'Shopware_Modules_Articles_GetPromotionById_Start',
             [
@@ -1297,9 +1250,9 @@ class sArticles implements \Enlight_Hook
             return false;
         }
 
-        $value = $this->getPromotionNumberByMode($mode, $category, $value, $withImage);
+        $value = $this->getPromotionNumberByMode($mode, $category, $value);
 
-        if (!$value) {
+        if ($value === '') {
             return false;
         }
 
@@ -1325,9 +1278,8 @@ class sArticles implements \Enlight_Hook
         $text = preg_replace('@<(script|style)[^>]*?>.*?</\\1>@si', '', $text);
         $text = preg_replace('!<[^>]*?>!u', ' ', $text);
         $text = preg_replace('/\s\s+/u', ' ', $text);
-        $text = trim($text);
 
-        return $text;
+        return trim((string) $text);
     }
 
     /**
@@ -1405,7 +1357,7 @@ class sArticles implements \Enlight_Hook
      */
     public function getArticleListingCover($articleId, $forceMainImage = false)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Use the sArticles::sGetArticlePictures instead.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Use the sArticles::sGetArticlePictures instead.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return $this->sGetArticlePictures($articleId, true, 0, null, false, false, $forceMainImage);
     }
@@ -1486,7 +1438,7 @@ class sArticles implements \Enlight_Hook
         // First we add all variant images, this images has a higher priority as the normal product images
         foreach ($variantImages as $variantImage) {
             // If the image wasn't added already, we can add the image
-            if (!in_array($variantImage['id'], $addedImages)) {
+            if (!\in_array($variantImage['id'], $addedImages)) {
                 // First we have to convert the image data, to resolve the image path and get the thumbnail configuration
                 $image = $this->getDataOfProductImage($variantImage, $articleAlbum);
 
@@ -1500,7 +1452,7 @@ class sArticles implements \Enlight_Hook
         foreach ($productImages as $productImage) {
             // Add only normal images without any configuration
             // If the image wasn't added already, we can add the image
-            if (!in_array($productImage['id'], $addedImages)) {
+            if (!\in_array($productImage['id'], $addedImages)) {
                 // First we have to convert the image data, to resolve the image path and get the thumbnail configuration
                 $image = $this->getDataOfProductImage($productImage, $articleAlbum);
 
@@ -1547,7 +1499,7 @@ class sArticles implements \Enlight_Hook
      * @param bool   $returnAll   Return only name or additional data, too
      * @param bool   $translate   Disables the translation of the product if set to false
      *
-     * @return string|array|false
+     * @return ($returnAll is true ? array{id: numeric-string, main_detail_id: numeric-string, did: numeric-string, articleName: string, additionaltext: string, configurator_set_id: numeric-string} : string)|false
      */
     public function sGetArticleNameByOrderNumber($orderNumber, $returnAll = false, $translate = true)
     {
@@ -1621,15 +1573,16 @@ class sArticles implements \Enlight_Hook
      * @param int  $articleId
      * @param bool $returnAll
      *
-     * @return string name
+     * @return ($returnAll is true ? array{id: numeric-string, main_detail_id: numeric-string, did: numeric-string, articleName: string, configurator_set_id: numeric-string} : string)|false
      */
     public function sGetArticleNameByArticleId($articleId, $returnAll = false)
     {
-        $ordernumber = $this->db->fetchOne('
-            SELECT ordernumber FROM s_articles_details WHERE kind=1 AND articleID=?
-        ', [$articleId]);
+        $orderNumber = (string) $this->db->fetchOne(
+            'SELECT ordernumber FROM s_articles_details WHERE kind=1 AND articleID=?',
+            [$articleId]
+        );
 
-        return $this->sGetArticleNameByOrderNumber($ordernumber, $returnAll);
+        return $this->sGetArticleNameByOrderNumber($orderNumber, $returnAll);
     }
 
     /**
@@ -1643,7 +1596,7 @@ class sArticles implements \Enlight_Hook
      */
     public function sGetArticleTaxById($id)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $checkForProduct = $this->db->fetchRow(
             'SELECT s_core_tax.tax AS tax
@@ -1672,7 +1625,7 @@ class sArticles implements \Enlight_Hook
      */
     public function sGetTranslations($data, $object)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Use sArticle::sGetTranslation instead.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Use sArticle::sGetTranslation instead.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if (Shopware()->Shop()->get('skipbackend') || empty($data)) {
             return $data;
@@ -1738,14 +1691,19 @@ class sArticles implements \Enlight_Hook
 
         foreach ($translations as $translation) {
             $productId = (int) $translation['objectkey'];
-            $object = unserialize($translation['objectdata'], ['allowed_classes' => false]);
+            $object = @unserialize($translation['objectdata'], ['allowed_classes' => false]);
+
+            if ($object === false) {
+                $object = [];
+            }
+
             foreach ($object as $translateKey => $value) {
                 if (isset($map[$translateKey])) {
                     $key = $map[$translateKey];
                 } else {
                     $key = $translateKey;
                 }
-                if (!empty($value) && array_key_exists($key, $data[$productId])) {
+                if (!empty($value) && \array_key_exists($key, $data[$productId])) {
                     $data[$productId][$key] = $value;
                 }
             }
@@ -1821,7 +1779,11 @@ class sArticles implements \Enlight_Hook
         ";
         $objectData = $this->db->fetchOne($sql, [$id]);
         if (!empty($objectData)) {
-            $objectData = unserialize($objectData, ['allowed_classes' => false]);
+            $objectData = @unserialize($objectData, ['allowed_classes' => false]);
+
+            if ($objectData === false) {
+                $objectData = [];
+            }
         } else {
             $objectData = [];
         }
@@ -1835,6 +1797,11 @@ class sArticles implements \Enlight_Hook
             $objectFallback = $this->db->fetchOne($sql);
             if (!empty($objectFallback)) {
                 $objectFallback = unserialize($objectFallback, ['allowed_classes' => false]);
+
+                if ($objectFallback === false) {
+                    $objectFallback = [];
+                }
+
                 $objectData = array_merge($objectFallback, $objectData);
             }
         }
@@ -1862,7 +1829,6 @@ class sArticles implements \Enlight_Hook
     public function sGetConfiguratorImage($sArticle, $sCombination = '')
     {
         if (!empty($sArticle['sConfigurator']) || !empty($sCombination)) {
-            $foundImage = false;
             $configuratorImages = false;
             $mainKey = 0;
 
@@ -1870,20 +1836,23 @@ class sArticles implements \Enlight_Hook
                 if (!empty($sArticle['image']['res']['description'])) {
                     $sArticle['image']['description'] = $sArticle['image']['res']['description'];
                 }
-                $sArticle['image']['relations'] = $sArticle['image']['res']['relations'];
-                foreach ($sArticle['sConfigurator'] as $key => $group) {
-                    foreach ($group['values'] as $key2 => $option) {
-                        $groupVal = $group['groupnameOrig'] ? $group['groupnameOrig'] : $group['groupname'];
+                $sArticle['image']['relations'] = $sArticle['image']['res']['relations'] ?? null;
+                foreach ($sArticle['sConfigurator'] as $group) {
+                    foreach ($group['values'] as $option) {
+                        $groupVal = $group['groupnameOrig'] ?? $group['groupname'];
                         $groupVal = str_replace(['/', ' '], '', $groupVal);
-                        $optionVal = $option['optionnameOrig'] ? $option['optionnameOrig'] : $option['optionname'];
+                        $optionVal = $option['optionnameOrig'] ?? $option['optionname'];
                         $optionVal = str_replace(['/', ' '], '', $optionVal);
                         if (!empty($option['selected'])) {
-                            $referenceImages[strtolower($groupVal . ':' . str_replace(' ', '', $optionVal))] = true;
+                            $replacedOptionVal = str_replace(' ', '', $optionVal);
+                            \assert(\is_string($replacedOptionVal));
+                            $referenceImages[strtolower(\sprintf('%s:%s', $groupVal, $replacedOptionVal))] = true;
                         }
                     }
                 }
-                foreach (array_merge($sArticle['images'], [count($sArticle['images']) => $sArticle['image']]) as $value) {
-                    if (preg_match('/(.*){(.*)}/', $value['relations'])) {
+
+                foreach (array_merge($sArticle['images'] ?? [], [\count($sArticle['images'] ?? []) => $sArticle['image']]) as $value) {
+                    if (preg_match('/(.*){(.*)}/', $value['relations'] ?? '')) {
                         $configuratorImages = true;
 
                         break;
@@ -1911,12 +1880,11 @@ class sArticles implements \Enlight_Hook
             }
 
             if (!empty($configuratorImages)) {
-                $sArticle['images'] = array_merge($sArticle['images'], [count($sArticle['images']) => $sArticle['image']]);
+                $sArticle['images'] = array_merge($sArticle['images'], [\count($sArticle['images']) => $sArticle['image']]);
 
                 unset($sArticle['image']);
 
                 $positions = [];
-                $debug = false;
 
                 foreach ($sArticle['images'] as $imageKey => $image) {
                     if (empty($image['src']['original']) || empty($image['relations'])) {
@@ -1928,11 +1896,11 @@ class sArticles implements \Enlight_Hook
 
                     preg_match('/(.*){(.*)}/', $string, $stringParsed);
 
-                    $relation = $stringParsed[1];
-                    $available = explode('/', $stringParsed[2]);
+                    $relation = $stringParsed[1] ?? '';
+                    $available = explode('/', $stringParsed[2] ?? '');
 
-                    if (!@count($available)) {
-                        $available = [0 => $stringParsed[2]];
+                    if (!@\count($available)) {
+                        $available = [0 => $stringParsed[2] ?? ''];
                     }
 
                     $imageFailedCheck = [];
@@ -1946,19 +1914,13 @@ class sArticles implements \Enlight_Hook
                             $imageFailedCheck[] = true;
                         }
                     }
-                    if ($relation === '||' && count($imageFailedCheck) && count($imageFailedCheck) >= 1 && count($available) >= 1) { // OR combination
-                        if (!empty($debug)) {
-                            echo $string . " matching combination\n";
-                        }
+                    if ($relation === '||' && \count($imageFailedCheck) && \count($imageFailedCheck) >= 1 && \count($available) >= 1) { // OR combination
                         $sArticle['images'][$imageKey]['relations'] = '';
                         $positions[$image['position']] = $imageKey;
-                    } elseif ($relation === '&' && count($imageFailedCheck) === count($available)) { // AND combination
+                    } elseif ($relation === '&' && \count($imageFailedCheck) === \count($available)) { // AND combination
                         $sArticle['images'][$imageKey]['relations'] = '';
                         $positions[$image['position']] = $imageKey;
                     } else {
-                        if (!empty($debug)) {
-                            echo $string . " doesnt match combination\n";
-                        }
                         unset($sArticle['images'][$imageKey]);
                     }
                 }
@@ -1976,7 +1938,8 @@ class sArticles implements \Enlight_Hook
 
         if (!empty($sArticle['images'])) {
             foreach ($sArticle['images'] as $key => $image) {
-                if ($image['relations'] === '&{}' || $image['relations'] === '||{}') {
+                $relations = $image['relations'] ?? '';
+                if ($relations === '&{}' || $relations === '||{}') {
                     $sArticle['images'][$key]['relations'] = '';
                 }
             }
@@ -2035,17 +1998,15 @@ class sArticles implements \Enlight_Hook
             $value = $diff[array_rand($diff)];
         }
 
-        $this->cachePromotions[] = $value;
+        $this->cachePromotions[] = (int) $value;
 
         return $value;
     }
 
     /**
      * Helper function to get access to the media repository.
-     *
-     * @return MediaRepository
      */
-    private function getMediaRepository()
+    private function getMediaRepository(): MediaRepository
     {
         if ($this->mediaRepository === null) {
             $this->mediaRepository = Shopware()->Models()->getRepository(Media::class);
@@ -2056,10 +2017,8 @@ class sArticles implements \Enlight_Hook
 
     /**
      * Helper function to get access to the product repository.
-     *
-     * @return ArticleRepository
      */
-    private function getProductRepository()
+    private function getProductRepository(): ArticleRepository
     {
         if ($this->articleRepository === null) {
             $this->articleRepository = Shopware()->Models()->getRepository(Article::class);
@@ -2069,17 +2028,13 @@ class sArticles implements \Enlight_Hook
     }
 
     /**
-     * @param int $categoryId
-     *
-     * @throws \Exception
-     *
-     * @return Criteria
+     * @throws Exception
      */
     private function createProductNavigationCriteria(
-        $categoryId,
+        int $categoryId,
         ShopContextInterface $context,
         Enlight_Controller_Request_RequestHttp $request
-    ) {
+    ): Criteria {
         $streamId = $this->getStreamIdOfCategory($categoryId);
         if ($streamId === null) {
             return $this->storeFrontCriteriaFactory->createProductNavigationCriteria(
@@ -2089,53 +2044,39 @@ class sArticles implements \Enlight_Hook
             );
         }
 
-        /** @var \Shopware\Components\ProductStream\CriteriaFactoryInterface $factory */
-        $factory = Shopware()->Container()->get(\Shopware\Components\ProductStream\CriteriaFactoryInterface::class);
+        $factory = Shopware()->Container()->get(CriteriaFactoryInterface::class);
         $criteria = $factory->createCriteria($request, $context);
         $criteria->limit(null);
 
-        /** @var \Shopware\Components\ProductStream\RepositoryInterface $streamRepository */
-        $streamRepository = Shopware()->Container()->get(\Shopware\Components\ProductStream\Repository::class);
+        $streamRepository = Shopware()->Container()->get(Repository::class);
         $streamRepository->prepareCriteria($criteria, $streamId);
 
         return $criteria;
     }
 
-    /**
-     * @param int $categoryId
-     *
-     * @return int|null
-     */
-    private function getStreamIdOfCategory($categoryId)
+    private function getStreamIdOfCategory(int $categoryId): ?int
     {
         $streamId = $this->db->fetchOne('SELECT `stream_id` FROM `s_categories` WHERE id = ?', [$categoryId]);
 
-        if ($streamId === null) {
+        if (empty($streamId)) {
             return null;
         }
 
         return (int) $streamId;
     }
 
-    /**
-     * @param string $orderNumber
-     * @param int    $categoryId
-     *
-     * @return array
-     */
     private function buildNavigation(
         ProductNumberSearchResult $searchResult,
-        $orderNumber,
-        $categoryId,
+        string $orderNumber,
+        int $categoryId,
         ShopContextInterface $context
-    ) {
+    ): array {
         $products = array_values($searchResult->getProducts());
 
         if (empty($products)) {
             return [];
         }
 
-        /** @var BaseProduct $currentProduct */
         foreach ($products as $index => $currentProduct) {
             if ($currentProduct->getNumber() != $orderNumber) {
                 continue;
@@ -2146,13 +2087,12 @@ class sArticles implements \Enlight_Hook
 
             $navigation = [];
 
-            if ($previousProduct) {
-                $previousProduct = $this->listProductService->get($previousProduct->getNumber(), $context);
-                $navigation['previousProduct']['orderNumber'] = $previousProduct->getNumber();
-                $navigation['previousProduct']['link'] = $this->config->get('sBASEFILE') . '?sViewport=detail&sDetails=' . $previousProduct->getId() . '&sCategory=' . $categoryId;
-                $navigation['previousProduct']['name'] = $previousProduct->getName();
+            if ($previousProduct && $previousListProduct = $this->listProductService->get($previousProduct->getNumber(), $context)) {
+                $navigation['previousProduct']['orderNumber'] = $previousListProduct->getNumber();
+                $navigation['previousProduct']['link'] = $this->config->get('sBASEFILE') . '?sViewport=detail&sDetails=' . $previousListProduct->getId() . '&sCategory=' . $categoryId;
+                $navigation['previousProduct']['name'] = $previousListProduct->getName();
 
-                $previousCover = $previousProduct->getCover();
+                $previousCover = $previousListProduct->getCover();
                 if ($previousCover) {
                     $navigation['previousProduct']['image'] = $this->legacyStructConverter->convertMediaStruct(
                         $previousCover
@@ -2160,14 +2100,12 @@ class sArticles implements \Enlight_Hook
                 }
             }
 
-            if ($nextProduct) {
-                $nextProduct = $this->listProductService->get($nextProduct->getNumber(), $context);
+            if ($nextProduct && $nextListProduct = $this->listProductService->get($nextProduct->getNumber(), $context)) {
+                $navigation['nextProduct']['orderNumber'] = $nextListProduct->getNumber();
+                $navigation['nextProduct']['link'] = $this->config->get('sBASEFILE') . '?sViewport=detail&sDetails=' . $nextListProduct->getId() . '&sCategory=' . $categoryId;
+                $navigation['nextProduct']['name'] = $nextListProduct->getName();
 
-                $navigation['nextProduct']['orderNumber'] = $nextProduct->getNumber();
-                $navigation['nextProduct']['link'] = $this->config->get('sBASEFILE') . '?sViewport=detail&sDetails=' . $nextProduct->getId() . '&sCategory=' . $categoryId;
-                $navigation['nextProduct']['name'] = $nextProduct->getName();
-
-                $nextCover = $nextProduct->getCover();
+                $nextCover = $nextListProduct->getCover();
                 if ($nextCover) {
                     $navigation['nextProduct']['image'] = $this->legacyStructConverter->convertMediaStruct(
                         $nextCover
@@ -2184,12 +2122,7 @@ class sArticles implements \Enlight_Hook
         return [];
     }
 
-    /**
-     * @param int $categoryId
-     *
-     * @return string
-     */
-    private function buildCategoryLink($categoryId, Enlight_Controller_Request_RequestHttp $request)
+    private function buildCategoryLink(int $categoryId, Enlight_Controller_Request_RequestHttp $request): string
     {
         $params = $this->queryAliasMapper->replaceLongParams($request->getParams());
 
@@ -2212,7 +2145,7 @@ class sArticles implements \Enlight_Hook
 
         $queryPrams = http_build_query($params, '', '&');
 
-        return $this->config->get('sBASEFILE') . '?' . $queryPrams;
+        return \sprintf('%s?%s', $this->config->get('sBASEFILE'), $queryPrams);
     }
 
     /**
@@ -2238,7 +2171,10 @@ class sArticles implements \Enlight_Hook
         return (int) $type;
     }
 
-    private function getPromotionNumberByMode($mode, $category, $value, $withImage)
+    /**
+     * @param int|string|numeric-string $value
+     */
+    private function getPromotionNumberByMode(string $mode, int $category, $value): string
     {
         switch ($mode) {
             case 'top':
@@ -2252,32 +2188,35 @@ class sArticles implements \Enlight_Hook
         }
 
         if (!$value) {
-            return false;
+            return '';
         }
 
-        if (is_numeric($value)) {
-            $number = $this->getOrderNumberByProductId($value);
-            if ($number) {
-                $value = $number;
+        $checkOrderNumber = $this->connection->fetchOne(
+            'SELECT `ordernumber` FROM `s_articles_details` WHERE `ordernumber` = :orderNumber',
+            ['orderNumber' => $value]
+        );
+        if ($checkOrderNumber === false) {
+            $number = $this->getOrderNumberByProductId((int) $value);
+            if ($number !== '') {
+                return $number;
             }
         }
 
-        return $value;
+        return (string) $value;
     }
 
     /**
      * Internal helper function to convert the image data from the database to the frontend structure.
      *
-     * @param array $image
-     * @param Album $productAlbum
+     * @param array<string, mixed>|null $image
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    private function getDataOfProductImage($image, $productAlbum)
+    private function getDataOfProductImage(?array $image, Album $productAlbum): array
     {
         // Initial the data array
         $imageData = [];
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
         if (empty($image['path'])) {
             return $imageData;
@@ -2305,8 +2244,7 @@ class sArticles implements \Enlight_Hook
 
         // Attributes as array as they come from non configurator products
         if (!empty($image['attribute'])) {
-            unset($image['attribute']['id']);
-            unset($image['attribute']['articleImageId']);
+            unset($image['attribute']['id'], $image['attribute']['articleImageId']);
             $imageData['attribute'] = $image['attribute'];
         } else {
             $imageData['attribute'] = [];
@@ -2326,11 +2264,11 @@ class sArticles implements \Enlight_Hook
         }
 
         foreach ($sizes as $key => $size) {
-            if (strpos($size, 'x') === 0) {
-                $size = $size . 'x' . $size;
+            if (str_starts_with($size, 'x')) {
+                $size = \sprintf('%sx%s', $size, $size);
             }
 
-            if ($image['type'] === Media::TYPE_IMAGE || $image['media']['type'] === Media::TYPE_IMAGE) {
+            if (isset($image['type']) && $image['type'] === Media::TYPE_IMAGE || $image['media']['type'] === Media::TYPE_IMAGE) {
                 $imageData['src'][$key] = $mediaService->getUrl('media/image/thumbnail/' . $image['path'] . '_' . $size . '.' . $image['extension']);
 
                 if ($highDpiThumbnails) {
@@ -2360,12 +2298,9 @@ class sArticles implements \Enlight_Hook
      * Returns a minified product which can be used for listings,
      * sliders or emotions.
      *
-     * @param int|null $category
-     * @param string   $number
-     *
-     * @return array|bool
+     * @return array<string, mixed>|false
      */
-    private function getPromotion($category, $number)
+    private function getPromotion(?int $category, string $number)
     {
         $context = $this->contextService->getShopContext();
 
@@ -2383,8 +2318,8 @@ class sArticles implements \Enlight_Hook
             $promotion['linkDetails'] .= "&sCategory=$category";
         }
 
-        //check if the product has a configured property set which stored in s_filter.
-        //the mini product doesn't contains this data so we have to load this lazy.
+        // check if the product has a configured property set which stored in s_filter.
+        // the mini product doesn't contains this data so we have to load this lazy.
         if (!$product->hasProperties()) {
             return $promotion;
         }
@@ -2408,22 +2343,20 @@ class sArticles implements \Enlight_Hook
      * Returns a listing of products. Used for the backward compatibility category listings.
      * This function calls the new shopware core and converts the result to the old listing structure.
      *
-     * @param int $categoryId
-     *
-     * @return array
+     * @return ListingArray
      */
     private function getListing(
-        $categoryId,
+        ?int $categoryId,
         ShopContextInterface $context,
         Enlight_Controller_Request_Request $request,
         Criteria $criteria
-    ) {
+    ): array {
         $conditions = $criteria->getConditionsByClass(VariantCondition::class);
         $conditions = array_filter($conditions, function (VariantCondition $condition) {
             return $condition->expandVariants();
         });
 
-        if (count($conditions) > 0) {
+        if (\count($conditions) > 0) {
             $this->config->offsetSet('forceArticleMainImageInListing', 0);
             $searchResult = $this->searchService->search($criteria, $context);
             $this->config->offsetSet('forceArticleMainImageInListing', 1);
@@ -2441,12 +2374,13 @@ class sArticles implements \Enlight_Hook
 
             $product['description_long'] = $this->sOptimizeText($product['description_long']);
 
-            $products[$product['ordernumber']] = $product;
+            $products[(string) $product['ordernumber']] = $product;
         }
 
         $products = $this->listingLinkRewriteService->rewriteLinks($criteria, $products, $context);
 
         $pageSizes = explode('|', $this->config->get('numberArticlesToShow'));
+        $pageSizes = array_map('\intval', $pageSizes);
         $sPage = (int) $request->getParam('sPage', 1);
 
         return [
@@ -2459,8 +2393,8 @@ class sArticles implements \Enlight_Hook
             'sPerPage' => $criteria->getLimit(),
             'sNumberArticles' => $searchResult->getTotalCount(),
             'shortParameters' => $this->queryAliasMapper->getQueryAliases(),
-            'sTemplate' => $request->getParam('sTemplate'),
-            'sSort' => $request->getParam('sSort', $this->config->get('defaultListingSorting')),
+            'sTemplate' => $request->getParam('sTemplate') ? (string) $request->getParam('sTemplate') : null,
+            'sSort' => (int) $request->getParam('sSort', $this->config->get('defaultListingSorting')),
         ];
     }
 
@@ -2468,11 +2402,11 @@ class sArticles implements \Enlight_Hook
      * Helper function which loads a full product struct and converts the product struct
      * to the shopware 3 array structure.
      *
-     * @param int $categoryId
+     * @param array<int, int> $selection
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    private function getLegacyProduct(Product $product, $categoryId, array $selection)
+    private function getLegacyProduct(Product $product, int $categoryId, array $selection): array
     {
         $data = $this->legacyStructConverter->convertProductStruct($product);
         $data['categoryID'] = $categoryId;
@@ -2528,7 +2462,7 @@ class sArticles implements \Enlight_Hook
         );
 
         $isSelectionSpecified = false;
-        if (isset($data['isSelectionSpecified']) || array_key_exists('isSelectionSpecified', $data)) {
+        if (isset($data['isSelectionSpecified']) || \array_key_exists('isSelectionSpecified', $data)) {
             $isSelectionSpecified = $data['isSelectionSpecified'];
         }
 
@@ -2545,9 +2479,9 @@ class sArticles implements \Enlight_Hook
             );
         }
 
-        $service = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\VariantListingPriceServiceInterface::class);
+        $service = Shopware()->Container()->get(VariantListingPriceServiceInterface::class);
 
-        $result = new SearchBundle\ProductSearchResult(
+        $result = new ProductSearchResult(
             [$product->getNumber() => $product],
             1,
             [],
@@ -2563,9 +2497,7 @@ class sArticles implements \Enlight_Hook
 
         $data['price'] = $product->getListingPrice()->getCalculatedPrice();
 
-        $data = $this->legacyEventManager->fireArticleByIdEvents($data, $this);
-
-        return $data;
+        return $this->legacyEventManager->fireArticleByIdEvents($data, $this);
     }
 
     /**
@@ -2615,21 +2547,24 @@ class sArticles implements \Enlight_Hook
      */
     private function getDescriptionKeywords($longDescription)
     {
-        //sDescriptionKeywords
+        // sDescriptionKeywords
         $string = strip_tags(html_entity_decode($longDescription, ENT_COMPAT | ENT_HTML401, 'UTF-8'));
         $string = str_replace(',', '', $string);
         $words = preg_split('/ /', $string, -1, PREG_SPLIT_NO_EMPTY);
+        if (!\is_array($words)) {
+            $words = [];
+        }
         $badWords = explode(',', $this->config->get('badwords'));
         $words = array_count_values(array_diff($words, $badWords));
         foreach (array_keys($words) as $word) {
-            if (strlen($word) < 2) {
+            if (\strlen($word) < 2) {
                 unset($words[$word]);
             }
         }
         arsort($words);
 
         return htmlspecialchars(
-            implode(', ', array_slice(array_keys($words), 0, 20)),
+            implode(', ', \array_slice(array_keys($words), 0, 20)),
             ENT_QUOTES,
             'UTF-8',
             false
@@ -2645,34 +2580,34 @@ class sArticles implements \Enlight_Hook
      * Array elements of the configuration selection can be empty, if the user resets the
      * different group selections.
      *
-     * @return array
+     * @param array<int|string, int|string> $selection
+     *
+     * @return array<int, int>
      */
-    private function getCurrentSelection(array $selection)
+    private function getCurrentSelection(array $selection): array
     {
-        if (empty($selection) && $this->frontController && $this->frontController->Request()->has('group')) {
+        if (empty($selection) && $this->frontController->Request()->has('group')) {
             $selection = $this->frontController->Request()->getParam('group');
         }
 
+        $formattedSelection = [];
         foreach ($selection as $groupId => $optionId) {
             $groupId = (int) $groupId;
             $optionId = (int) $optionId;
 
             if ($groupId <= 0 || $optionId <= 0) {
-                unset($selection[$groupId]);
+                continue;
             }
+
+            $formattedSelection[$groupId] = $optionId;
         }
 
-        return $selection;
+        return $formattedSelection;
     }
 
-    /**
-     * @param int $productId
-     *
-     * @return string
-     */
-    private function getOrderNumberByProductId($productId)
+    private function getOrderNumberByProductId(int $productId): string
     {
-        return $this->db->fetchOne(
+        return (string) $this->db->fetchOne(
             'SELECT ordernumber
              FROM s_articles_details
                 INNER JOIN s_articles

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Property
@@ -43,9 +42,9 @@ Ext.define('Shopware.apps.Property.view.main.SetAssignGrid', {
      * @object
      */
     snippets: {
-        columnName:          '{s name="set/assign/column_name"}Name{/s}',
+        columnName: '{s name="set/assign/column_name"}Name{/s}',
         tooltipDeleteAssignment: '{s name="set/assign/tooltip_delete_value"}Delete assignment{/s}',
-        dragText:            '{s name="set/assign/drag_text"}Drag and drop to reorganize{/s}'
+        dragText: '{s name="set/assign/drag_text"}Drag and drop to reorganize{/s}'
     },
 
     /**
@@ -80,7 +79,7 @@ Ext.define('Shopware.apps.Property.view.main.SetAssignGrid', {
      *
      * @return void
      */
-    registerEvents:function () {
+    registerEvents: function () {
         this.addEvents(
             /**
              * Event will be fired when the user clicks the delete icon in the
@@ -93,7 +92,6 @@ Ext.define('Shopware.apps.Property.view.main.SetAssignGrid', {
             'deleteAssignment'
         );
     },
-
 
     /**
      * Creates the grid columns
@@ -147,7 +145,7 @@ Ext.define('Shopware.apps.Property.view.main.SetAssignGrid', {
         return Ext.create('Ext.toolbar.Toolbar', {
             ui: 'shopware-ui',
             items: [
-                { xtype:'tbspacer', height:30 }
+                { xtype: 'tbspacer', height: 30 }
             ]
         });
     }

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/index/view/widgets"}
@@ -102,7 +101,6 @@ Ext.define('Shopware.apps.Index.view.widgets.Rating', {
         me.createTaskRunner();
         me.callParent(arguments);
 
-
         Shopware.app.Application.on('vote-save-successfully', function () {
             me.refreshView();
         })
@@ -137,7 +135,7 @@ Ext.define('Shopware.apps.Index.view.widgets.Rating', {
     refreshView: function() {
         var me = this;
 
-        if(!me.ratingStore) {
+        if (!me.ratingStore) {
             return false;
         }
         me.ratingStore.load();
@@ -169,7 +167,7 @@ Ext.define('Shopware.apps.Index.view.widgets.Rating', {
             xtype: 'actioncolumn',
             width: 80,
             items: [{
-                iconCls:'sprite-pencil',
+                iconCls: 'sprite-pencil',
                 tooltip: me.snippets.tooltips.rating,
                 handler: function(view, rowIndex, colIndex, item, event, record) {
                     Shopware.app.Application.addSubApplication({
@@ -189,7 +187,7 @@ Ext.define('Shopware.apps.Index.view.widgets.Rating', {
      * @param [string] - The order time value
      * @return [string] - The passed value, formatted with Ext.util.Format.date()
      */
-    dateColumn:function (value) {
+    dateColumn: function (value) {
         if ( value === Ext.undefined ) {
             return value;
         }

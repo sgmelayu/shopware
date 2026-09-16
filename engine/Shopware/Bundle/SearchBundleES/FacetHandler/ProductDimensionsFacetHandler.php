@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleES\FacetHandler;
@@ -71,13 +71,16 @@ class ProductDimensionsFacetHandler implements HandlerInterface, ResultHydratorI
             return;
         }
 
-        $facets = ['width', 'height', 'length', 'weight'];
         foreach ($criteria->getFacets() as $criteriaFacet) {
-            if (!in_array($criteriaFacet->getName(), $facets, true)) {
+            if (!$criteriaFacet instanceof WeightFacet
+                && !$criteriaFacet instanceof WidthFacet
+                && !$criteriaFacet instanceof LengthFacet
+                && !$criteriaFacet instanceof HeightFacet
+            ) {
                 continue;
             }
 
-            if (!array_key_exists($criteriaFacet->getName(), $elasticResult['aggregations'])) {
+            if (!\array_key_exists($criteriaFacet->getName(), $elasticResult['aggregations'])) {
                 continue;
             }
 
@@ -93,11 +96,10 @@ class ProductDimensionsFacetHandler implements HandlerInterface, ResultHydratorI
     }
 
     /**
-     * @param WeightFacet|WidthFacet|LengthFacet|HeightFacet|FacetInterface $facet
-     *
-     * @return RangeFacetResult|null
+     * @param WeightFacet|WidthFacet|LengthFacet|HeightFacet $facet
+     * @param array<string, string>                          $stats
      */
-    private function createRangeFacet(FacetInterface $facet, array $stats, Criteria $criteria)
+    private function createRangeFacet(FacetInterface $facet, array $stats, Criteria $criteria): ?RangeFacetResult
     {
         $name = $facet->getName();
 
@@ -118,20 +120,20 @@ class ProductDimensionsFacetHandler implements HandlerInterface, ResultHydratorI
             $activeMax = $condition->$method();
         }
 
-        if ($min == $max) {
+        if ($min === $max) {
             return null;
         }
 
-        $label = $facet->getLabel();
+        $label = $facet->getLabel() ?? '';
 
         return new RangeFacetResult(
             $name,
             $criteria->hasCondition($name),
             $label,
-            (float) $min,
-            (float) $max,
-            (float) $activeMin,
-            (float) $activeMax,
+            $min,
+            $max,
+            $activeMin,
+            $activeMax,
             $minField,
             $maxField,
             [],

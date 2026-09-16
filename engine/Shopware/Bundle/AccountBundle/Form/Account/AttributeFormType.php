@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AccountBundle\Form\Account;
 
+use Exception;
 use Psr\Log\LoggerInterface;
 use Shopware\Bundle\AttributeBundle\Service\CrudServiceInterface;
 use Shopware\Components\Model\ModelEntity;
@@ -34,6 +35,9 @@ use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ * @extends AbstractType<ModelEntity>
+ */
 class AttributeFormType extends AbstractType
 {
     /**
@@ -74,6 +78,11 @@ class AttributeFormType extends AbstractType
         $resolver->setDefaults(['allow_extra_fields' => true]);
     }
 
+    /**
+     * @param array{data_class: class-string<ModelEntity>} $options
+     *
+     * @return void
+     */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $metaData = $this->entityManager->getClassMetadata($options['data_class']);
@@ -89,7 +98,7 @@ class AttributeFormType extends AbstractType
             $builder->add($field);
         }
 
-        //set default value for all attribute fields to prevent null override if a field isn't in the submit data
+        // set default value for all attribute fields to prevent null override if a field isn't in the submit data
         $builder->addEventListener(FormEvents::POST_SET_DATA, function (FormEvent $event) use ($attributes, $metaData) {
             try {
                 $form = $event->getForm();
@@ -110,7 +119,7 @@ class AttributeFormType extends AbstractType
                         $form->add($field, null, ['empty_data' => $data->$method()]);
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->logger->error($e->getMessage());
             }
         });

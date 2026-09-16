@@ -22,22 +22,18 @@
  *
  * @see http://framework.zend.com/manual/de/zend.currency.options.html
  *
- * @param float        $value    Value can have a coma as a decimal separator
- * @param array|string $config
- * @param string       $position where the currency symbol should be displayed
+ * @param float|string                $value    Value can have a coma as a decimal separator
+ * @param array<string, mixed>|string $config
+ * @param string|null                 $position where the currency symbol should be displayed
  *
- * @return float|string
+ * @return string
  */
 function smarty_modifier_currency($value, $config = null, $position = null)
 {
-    if (!Shopware()->Container()->has('currency')) {
-        return $value;
-    }
-
-    if (!empty($config) && is_string($config)) {
+    if (!empty($config) && \is_string($config)) {
         $config = strtoupper($config);
-        if (defined('Zend_Currency::' . $config)) {
-            $config = ['display' => constant('Zend_Currency::' . $config)];
+        if (\defined('Zend_Currency::' . $config)) {
+            $config = ['display' => \constant('Zend_Currency::' . $config)];
         } else {
             $config = [];
         }
@@ -45,17 +41,16 @@ function smarty_modifier_currency($value, $config = null, $position = null)
         $config = [];
     }
 
-    if (!empty($position) && is_string($position)) {
+    if (!empty($position) && \is_string($position)) {
         $position = strtoupper($position);
-        if (defined('Zend_Currency::' . $position)) {
-            $config['position'] = constant('Zend_Currency::' . $position);
+        if (\defined('Zend_Currency::' . $position)) {
+            $config['position'] = \constant('Zend_Currency::' . $position);
         }
     }
 
     $currency = Shopware()->Container()->get('currency');
-    $formattedValue = (float) str_replace(',', '.', $value);
+    $formattedValue = (float) str_replace(',', '.', (string) $value);
     $formattedValue = $currency->toCurrency($formattedValue, $config);
-    $formattedValue = mb_convert_encoding($formattedValue, 'HTML-ENTITIES', 'UTF-8');
 
     return htmlentities($formattedValue, ENT_COMPAT, 'UTF-8', false);
 }

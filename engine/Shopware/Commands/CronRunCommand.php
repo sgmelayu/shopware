@@ -1,37 +1,41 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use DateTime;
 use Enlight_Components_Cron_Job;
 use Enlight_Components_Cron_Manager;
+use Exception;
+use RuntimeException;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Zend_Date;
 
 class CronRunCommand extends ShopwareCommand implements CompletionAwareInterface
 {
@@ -104,7 +108,7 @@ EOF
         if (!empty($cronjob)) {
             try {
                 $this->runSingleCronjob($output, $manager, $cronjob, $force);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $output->writeln('<error>' . $e->getMessage() . '</error>');
                 $output->writeln('Please use the action name of a cronjob. You can see existing cronjobs in shopware backend or via <info>sw:cron:list</info> command.');
 
@@ -152,11 +156,11 @@ EOF
             return true;
         }
 
-        /** @var \Zend_Date $nextRun */
+        /** @var Zend_Date $nextRun */
         $nextRun = $job->getNext();
-        $nextRun = new \DateTime($nextRun->getIso());
+        $nextRun = new DateTime($nextRun->getIso());
 
-        return $nextRun <= new \DateTime();
+        return $nextRun <= new DateTime();
     }
 
     /**
@@ -167,7 +171,7 @@ EOF
      *
      * @param string $action
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      *
      * @return Enlight_Components_Cron_Job
      */
@@ -189,6 +193,6 @@ EOF
             return $job;
         }
 
-        throw new \RuntimeException(sprintf('Cron not found by action name "%s".', $action));
+        throw new RuntimeException(\sprintf('Cron not found by action name "%s".', $action));
     }
 }

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
@@ -45,16 +45,6 @@ class RobotsTxtGenerator implements RobotsTxtGeneratorInterface
     private $baseUrls = [];
 
     /**
-     * @var string
-     */
-    private $host = [];
-
-    /**
-     * @var bool
-     */
-    private $secure = false;
-
-    /**
      * @var Context[]
      */
     private $routerContext = [];
@@ -71,14 +61,12 @@ class RobotsTxtGenerator implements RobotsTxtGeneratorInterface
 
     public function setAllow(string $allow): void
     {
-        if (in_array($allow, $this->disallows, true)) {
+        if (\in_array($allow, $this->disallows, true)) {
             $index = array_search($allow, $this->disallows);
             unset($this->disallows[$index]);
-
-            return;
         }
 
-        if (in_array($allow, $this->allows, true)) {
+        if (\in_array($allow, $this->allows, true)) {
             return;
         }
 
@@ -87,14 +75,12 @@ class RobotsTxtGenerator implements RobotsTxtGeneratorInterface
 
     public function setDisallow(string $disallow): void
     {
-        if (in_array($disallow, $this->allows, true)) {
+        if (\in_array($disallow, $this->allows, true)) {
             $index = array_search($disallow, $this->allows);
             unset($this->allows[$index]);
-
-            return;
         }
 
-        if (in_array($disallow, $this->disallows, true)) {
+        if (\in_array($disallow, $this->disallows, true)) {
             return;
         }
 
@@ -108,12 +94,10 @@ class RobotsTxtGenerator implements RobotsTxtGeneratorInterface
 
     public function setHost(string $host): void
     {
-        $this->host = $host;
     }
 
     public function setSecure(bool $secure): void
     {
-        $this->secure = $secure;
     }
 
     /**
@@ -193,6 +177,11 @@ class RobotsTxtGenerator implements RobotsTxtGeneratorInterface
         }
     }
 
+    /**
+     * @param array<int, Context> $routerContext
+     *
+     * @return RobotsTxtGenerator
+     */
     public function setRouterContext(array $routerContext)
     {
         $this->routerContext = $routerContext;

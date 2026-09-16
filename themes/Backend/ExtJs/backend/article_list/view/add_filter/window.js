@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/article_list/main"}
@@ -123,7 +122,6 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Window', {
     initComponent: function () {
         var me = this;
 
-
         me.dockedItems = [{
             xtype: 'toolbar',
             dock: 'bottom',
@@ -146,7 +144,6 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Window', {
 
     getItems: function() {
         var me = this;
-
 
         return [{
             xtype: 'form',
@@ -196,7 +193,6 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Window', {
         };
     },
 
-
     /**
      * Creates the save and cancel button for the form panel.
      *
@@ -206,12 +202,11 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Window', {
         var me = this,
             buttons = [ '->' ];
 
-
         var cancelButton = Ext.create('Ext.button.Button', {
             text: '{s name="cancel"}Cancel{/s}',
             scope: me,
             cls: 'secondary',
-            handler:function () {
+            handler: function () {
                 me.down('form').getForm().reset();
                 me.down('grid').getStore().removeAll();
                 // Make sure, that the dropdown is hidden, when the window is closed
@@ -246,7 +241,7 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Window', {
                 tabConfig: {
                     tooltip: '{s name="addFilter/advancedTooltip"}In advanced mode, you can define and combine your conditions very free{/s}'
                 }
-            },{
+            }, {
                 xtype: 'multi-edit-add-filter-grid',
                 internalTitle: 'simple',
                 filterableColumns: me.filterableColumns,

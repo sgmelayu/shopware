@@ -18,6 +18,7 @@
  */
 
 use Shopware\Components\Cart\ConditionalLineItemServiceInterface;
+use Shopware\Components\ShopRegistrationServiceInterface;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -26,7 +27,6 @@ use Symfony\Component\HttpFoundation\Response;
  * The Enlight_Components_Test_Controller_TestCase extends the basic Enlight_Components_Test_TestCase
  * with controller specified functions to grant an easily access to standard controller actions.
  *
- *
  * @license    http://enlight.de/license     New BSD License
  */
 abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Components_Test_TestCase
@@ -34,40 +34,44 @@ abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Compo
     /**
      * Instance of the Front resource
      *
-     * @var Enlight_Controller_Front
+     * @var Enlight_Controller_Front|null
      */
     protected $_front;
 
     /**
      * Instance of the View resource
      *
-     * @var Enlight_Template_Manager
+     * @var Enlight_Template_Manager|null
      */
     protected $_template;
 
     /**
      * Instance of the enlight view. Is filled in the dispatch function with the template.
      *
-     * @var Enlight_View_Default
+     * @var Enlight_View_Default|null
      */
     protected $_view;
 
     /**
      * Instance of the enlight request. Filled in the dispatch function.
      *
-     * @var Enlight_Controller_Request_Request
+     * @var Enlight_Controller_Request_RequestTestCase|null
      */
     protected $_request;
 
     /**
      * Instance of the enlight response. Filled in the dispatch function.
      *
-     * @var Enlight_Controller_Response_Response
+     * @var Enlight_Controller_Response_ResponseTestCase|null
      */
     protected $_response;
 
     /**
      * Magic get method
+     *
+     * @param string $name
+     *
+     * @return Enlight_Controller_Request_RequestTestCase|Enlight_Controller_Response_ResponseTestCase|Enlight_Controller_Front|null
      */
     public function __get($name)
     {
@@ -87,7 +91,7 @@ abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Compo
     /**
      * Tests set up method
      */
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -126,6 +130,9 @@ abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Compo
 
         if ($followRedirects && $this->Response()->getStatusCode() === Response::HTTP_FOUND) {
             $link = parse_url($this->Response()->getHeader('Location'), PHP_URL_PATH);
+            if ($link === false) {
+                throw new RuntimeException('Could not redirect as the "Location" header is not set');
+            }
             $this->resetResponse();
             $cookies = $this->Response()->getCookies();
             $this->resetRequest();
@@ -143,6 +150,8 @@ abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Compo
 
     /**
      * Reset all instances, resources and init the internal view, template and front properties
+     *
+     * @return void
      */
     public function reset()
     {
@@ -183,6 +192,9 @@ abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Compo
                 continue;
             }
             $container->get('events')->addSubscriber($plugin);
+        }
+        if ($container->initialized('shop')) {
+            $container->get(ShopRegistrationServiceInterface::class)->resetTemplate($container->get('shop'));
         }
     }
 
@@ -250,6 +262,10 @@ abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Compo
      */
     public function View()
     {
+        if (!$this->_view instanceof Enlight_View_Default) {
+            throw new RuntimeException('View property is not set');
+        }
+
         return $this->_view;
     }
 
@@ -270,7 +286,7 @@ abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Compo
     /**
      * Retrieve test case response object
      *
-     * @return Enlight_Controller_Response_ResponseHttp
+     * @return Enlight_Controller_Response_ResponseTestCase
      */
     public function Response()
     {
@@ -279,17 +295,5 @@ abstract class Enlight_Components_Test_Controller_TestCase extends Enlight_Compo
         }
 
         return $this->_response;
-    }
-
-    /**
-     * Allows to set a Shopware config
-     *
-     * @param string $name
-     */
-    protected function setConfig($name, $value)
-    {
-        Shopware()->Container()->get('config_writer')->save($name, $value);
-        Shopware()->Container()->get('cache')->clean();
-        Shopware()->Container()->get('config')->setShop(Shopware()->Shop());
     }
 }

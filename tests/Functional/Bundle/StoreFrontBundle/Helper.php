@@ -1,176 +1,109 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\ESIndexingBundle\Console\ProgressHelperInterface;
-use Shopware\Bundle\StoreFrontBundle;
-use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\ConfiguratorGateway;
-use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\ProductConfigurationGateway;
-use Shopware\Bundle\StoreFrontBundle\Struct\Customer\Group;
+use Enlight_Components_Db_Adapter_Pdo_Mysql;
+use Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\Customer\Group as CustomerGroupStruct;
+use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
 use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
-use Shopware\Components\Api\Resource;
+use Shopware\Bundle\StoreFrontBundle\Struct\Tax as TaxStruct;
+use Shopware\Components\Api\Resource\Article as ProductResource;
+use Shopware\Components\Api\Resource\Category as CategoryResource;
+use Shopware\Components\Api\Resource\Translation;
+use Shopware\Components\Api\Resource\Variant as VariantResource;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Random;
-use Shopware\Kernel;
-use Shopware\Models;
+use Shopware\Models\Article\Article as ProductModel;
 use Shopware\Models\Article\Configurator\Group as ConfiguratorGroup;
-use Shopware\Models\Tax\Tax;
+use Shopware\Models\Article\Configurator\Option;
+use Shopware\Models\Article\Supplier;
+use Shopware\Models\Category\Category;
+use Shopware\Models\Customer\Group as CustomerGroup;
+use Shopware\Models\Price\Discount;
+use Shopware\Models\Price\Group as PriceGroup;
+use Shopware\Models\Shop\Currency;
+use Shopware\Models\Shop\Shop as ShopModel;
+use Shopware\Models\Tax\Tax as TaxModel;
+use Shopware\Tests\Functional\Bundle\StoreFrontBundle\Helper\ProgressHelper;
+use Shopware_Components_Config;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class Helper
 {
-    /**
-     * @var Converter
-     */
-    protected $converter;
+    protected Converter $converter;
 
-    /**
-     * @var \Enlight_Components_Db_Adapter_Pdo_Mysql
-     */
-    private $db;
+    private ContainerInterface $container;
 
-    /**
-     * @var \Shopware\Components\Model\ModelManager
-     */
-    private $entityManager;
+    private Enlight_Components_Db_Adapter_Pdo_Mysql $db;
 
-    /**
-     * @var \Shopware\Components\Api\Resource\Article
-     */
-    private $articleApi;
+    private ModelManager $entityManager;
 
-    /**
-     * @var \Shopware\Components\Api\Resource\Translation
-     */
-    private $translationApi;
+    private ProductResource $articleApi;
 
-    /**
-     * @var Resource\Variant
-     */
-    private $variantApi;
+    private Translation $translationApi;
 
-    /**
-     * @var \Shopware\Components\Api\Resource\Category
-     */
-    private $categoryApi;
+    private VariantResource $variantApi;
 
-    private $createdProducts = [];
+    private CategoryResource $categoryApi;
 
-    private $createdManufacturers = [];
+    private Connection $connection;
 
-    private $createdCategories = [];
-
-    private $createdCustomerGroups = [];
-
-    private $createdTaxes = [];
-
-    private $createdCurrencies = [];
-
-    private $createdConfiguratorGroups = [];
-
-    private $propertyNames = [];
-
-    public function __construct()
+    public function __construct(?ContainerInterface $container = null)
     {
-        $this->db = Shopware()->Db();
-        $this->entityManager = Shopware()->Models();
+        $this->container = $container ?? Shopware()->Container();
+        $this->db = $this->container->get('db');
+        $this->connection = $this->container->get(Connection::class);
+        $this->entityManager = $this->container->get('models');
         $this->converter = new Converter();
 
-        $api = new Resource\Article();
-        $api->setManager($this->entityManager);
-        $this->articleApi = $api;
-
-        $variantApi = new Resource\Variant();
-        $variantApi->setManager($this->entityManager);
-        $this->variantApi = $variantApi;
-
-        $translation = new Resource\Translation();
-        $translation->setManager($this->entityManager);
-        $this->translationApi = $translation;
-
-        $categoryApi = new Resource\Category();
-        $categoryApi->setManager($this->entityManager);
-        $this->categoryApi = $categoryApi;
-    }
-
-    public function getProductConfigurator(
-        StoreFrontBundle\Struct\ListProduct $listProduct,
-        StoreFrontBundle\Struct\ShopContext $context,
-        array $selection = [],
-        ProductConfigurationGateway $productConfigurationGateway = null,
-        ConfiguratorGateway $configuratorGateway = null
-    ) {
-        if ($productConfigurationGateway == null) {
-            $productConfigurationGateway = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Gateway\ProductConfigurationGatewayInterface::class);
-        }
-        if ($configuratorGateway == null) {
-            $configuratorGateway = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Gateway\ConfiguratorGatewayInterface::class);
-        }
-
-        $service = new StoreFrontBundle\Service\Core\ConfiguratorService(
-            $productConfigurationGateway,
-            $configuratorGateway
-        );
-
-        return $service->getProductConfigurator($listProduct, $context, $selection);
+        $this->articleApi = $this->container->get('shopware.api.article');
+        $this->variantApi = $this->container->get('shopware.api.variant');
+        $this->translationApi = $this->container->get('shopware.api.translation');
+        $this->categoryApi = $this->container->get('shopware.api.category');
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\ProductPropertyGateway $productPropertyGateway
+     * @param string[] $numbers
      *
-     * @return StoreFrontBundle\Struct\Property\Set
+     * @return ListProduct[]
      */
-    public function getProductProperties(
-        StoreFrontBundle\Struct\ListProduct $product,
-        StoreFrontBundle\Struct\ShopContext $context,
-        StoreFrontBundle\Gateway\DBAL\ProductPropertyGateway $productPropertyGateway = null
-    ) {
-        if ($productPropertyGateway === null) {
-            $productPropertyGateway = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Gateway\ProductPropertyGatewayInterface::class);
-        }
-        $service = new StoreFrontBundle\Service\Core\PropertyService($productPropertyGateway);
-
-        return $service->get($product, $context);
-    }
-
-    /**
-     * @param string $numbers
-     *
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\ListProduct[]
-     */
-    public function getListProducts($numbers, ShopContextInterface $context, array $configs = [])
+    public function getListProducts(array $numbers, ShopContextInterface $context, array $configs = []): array
     {
-        $config = Shopware()->Container()->get(\Shopware_Components_Config::class);
+        $config = $this->container->get(Shopware_Components_Config::class);
         $originals = [];
         foreach ($configs as $key => $value) {
             $originals[$key] = $config->get($key);
             $config->offsetSet($key, $value);
         }
 
-        $service = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface::class);
-        $result = $service->getList($numbers, $context);
+        $result = $this->container->get(ListProductServiceInterface::class)->getList($numbers, $context);
         foreach ($originals as $key => $value) {
             $config->offsetSet($key, $value);
         }
@@ -178,35 +111,30 @@ class Helper
         return $result;
     }
 
-    /**
-     * @param string $number
-     *
-     * @return StoreFrontBundle\Struct\ListProduct
-     */
-    public function getListProduct($number, ShopContextInterface $context, array $configs = [])
+    public function getListProduct(string $number, ShopContextInterface $context, array $configs = []): ListProduct
     {
-        return array_shift($this->getListProducts([$number], $context, $configs));
+        $listProducts = $this->getListProducts([$number], $context, $configs);
+
+        return array_shift($listProducts);
     }
 
     /**
      * Creates a simple product which contains all required
-     * data for an quick product creation.
+     * data for a quick product creation.
      *
-     * @param string $number
-     * @param Tax    $tax
-     * @param Group  $customerGroup
-     * @param float  $priceOffset
+     * @param TaxModel|TaxStruct|null $tax
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getSimpleProduct(
-        $number,
+        string $number,
         $tax = null, // Either Model/Tax or Struct/Tax
-        Group $customerGroup = null,
-        $priceOffset = 0.00
-    ) {
-        if (!$tax) {
-            $tax = $this->entityManager->find(Tax::class, 1);
+        ?CustomerGroupStruct $customerGroup = null,
+        float $priceOffset = 0.00
+    ): array {
+        if ($tax === null) {
+            $tax = $this->entityManager->find(TaxModel::class, 1);
+            \assert($tax instanceof TaxModel);
         }
         $key = 'EK';
         if ($customerGroup) {
@@ -228,111 +156,15 @@ class Helper
         return $data;
     }
 
-    public function cleanUp()
-    {
-        foreach ($this->propertyNames as $name) {
-            $this->deleteProperties($name);
-        }
-        $this->removePriceGroup();
-        foreach ($this->createdProducts as $number) {
-            $this->removeArticle($number);
-        }
-
-        foreach ($this->createdCustomerGroups as $key) {
-            $this->deleteCustomerGroup($key);
-        }
-
-        foreach ($this->createdTaxes as $tax) {
-            $this->deleteTax($tax);
-        }
-
-        foreach ($this->createdCurrencies as $currency) {
-            $this->deleteCurrency($currency);
-        }
-
-        foreach ($this->createdCategories as $category) {
-            try {
-                $this->categoryApi->delete($category);
-            } catch (\Exception $e) {
-            }
-        }
-
-        foreach ($this->createdManufacturers as $manufacturerId) {
-            try {
-                $manufacturer = $this->entityManager->find(\Shopware\Models\Article\Supplier::class, $manufacturerId);
-                if (!$manufacturer) {
-                    continue;
-                }
-
-                $this->entityManager->remove($manufacturer);
-                $this->entityManager->flush();
-            } catch (\Exception $e) {
-            }
-        }
-
-        foreach ($this->createdConfiguratorGroups as $groupId) {
-            $group = $this->entityManager->find(ConfiguratorGroup::class, $groupId);
-            if (!$group) {
-                continue;
-            }
-            $this->entityManager->remove($group);
-            $this->entityManager->flush();
-        }
-    }
-
     /**
-     * @param int $number
+     * @param array<string, mixed> $data
      */
-    public function removeArticle($number)
+    public function createProduct(array $data): ProductModel
     {
-        $articleId = $this->db->fetchOne(
-            'SELECT articleID FROM s_articles_details WHERE ordernumber = ?',
-            [$number]
-        );
-
-        if (!$articleId) {
-            return;
-        }
-
-        $article = $this->entityManager->find(\Shopware\Models\Article\Article::class, $articleId);
-
-        if ($article) {
-            $this->entityManager->remove($article);
-            $this->entityManager->flush();
-            $this->entityManager->clear();
-        }
-
-        $detailIds = $this->db->fetchCol(
-            'SELECT id FROM s_articles_details WHERE articleID = ?',
-            [$articleId]
-        );
-
-        if (empty($detailIds)) {
-            return;
-        }
-
-        foreach ($detailIds as $id) {
-            $detail = $this->entityManager->find(\Shopware\Models\Article\Detail::class, $id);
-            if ($detail) {
-                $this->entityManager->remove($detail);
-                $this->entityManager->flush();
-            }
-        }
-        $this->entityManager->clear();
-    }
-
-    /**
-     * @return Models\Article\Article
-     */
-    public function createArticle(array $data)
-    {
-        $this->removeArticle($data['mainDetail']['number']);
-        $this->createdProducts[] = $data['mainDetail']['number'];
-
         return $this->articleApi->create($data);
     }
 
-    public function createArticleTranslation($articleId, $shopId)
+    public function createArticleTranslation(int $articleId, int $shopId): void
     {
         $data = [
             'type' => 'article',
@@ -344,16 +176,14 @@ class Helper
     }
 
     /**
-     * @param string $orderNumber
-     *
-     * @return Models\Article\Article
+     * @param array<string, mixed> $data
      */
-    public function updateArticle($orderNumber, array $data)
+    public function updateProduct(string $orderNumber, array $data): ProductModel
     {
         return $this->articleApi->updateByNumber($orderNumber, $data);
     }
 
-    public function createManufacturerTranslation($manufacturerId, $shopId)
+    public function createManufacturerTranslation(int $manufacturerId, int $shopId): void
     {
         $data = [
             'type' => 'supplier',
@@ -365,7 +195,10 @@ class Helper
         $this->translationApi->create($data);
     }
 
-    public function createPropertyTranslation($properties, $shopId)
+    /**
+     * @param array<string, mixed> $properties
+     */
+    public function createPropertyTranslation(array $properties, int $shopId): void
     {
         $this->translationApi->create([
             'type' => 'propertygroup',
@@ -393,7 +226,10 @@ class Helper
         }
     }
 
-    public function createConfiguratorTranslation($configuratorSet, $shopId)
+    /**
+     * @param array<string, mixed> $configuratorSet
+     */
+    public function createConfiguratorTranslation(array $configuratorSet, int $shopId): void
     {
         foreach ($configuratorSet['groups'] as $group) {
             $this->translationApi->create([
@@ -419,7 +255,7 @@ class Helper
         }
     }
 
-    public function createUnitTranslations(array $unitIds, $shopId, array $translation = [])
+    public function createUnitTranslations(array $unitIds, int $shopId, array $translation = []): void
     {
         $data = [
             'type' => 'config_units',
@@ -443,29 +279,25 @@ class Helper
     }
 
     /**
-     * @param array $discounts
-     *
-     * @return Models\Price\Group
+     * @param array<array{key: string, quantity: int, discount: float}> $discounts
      */
-    public function createPriceGroup($discounts = [])
+    public function createPriceGroup(array $discounts = []): PriceGroup
     {
         if (empty($discounts)) {
             $discounts = [
-                ['key' => 'PHP', 'quantity' => 1,  'discount' => 10],
-                ['key' => 'PHP', 'quantity' => 5,  'discount' => 20],
-                ['key' => 'PHP', 'quantity' => 10, 'discount' => 30],
+                ['key' => 'PHP', 'quantity' => 1,  'discount' => 10.0],
+                ['key' => 'PHP', 'quantity' => 5,  'discount' => 20.0],
+                ['key' => 'PHP', 'quantity' => 10, 'discount' => 30.0],
             ];
         }
 
-        $this->removePriceGroup();
-
-        $priceGroup = new Models\Price\Group();
+        $priceGroup = new PriceGroup();
         $priceGroup->setName('TEST-GROUP');
 
-        $repo = $this->entityManager->getRepository(\Shopware\Models\Customer\Group::class);
+        $repo = $this->entityManager->getRepository(CustomerGroup::class);
         $collection = [];
         foreach ($discounts as $data) {
-            $discount = new Models\Price\Discount();
+            $discount = new Discount();
             $discount->setCustomerGroup(
                 $repo->findOneBy(['key' => $data['key']])
             );
@@ -485,12 +317,7 @@ class Helper
         return $priceGroup;
     }
 
-    /**
-     * @param array $data
-     *
-     * @return Models\Customer\Group
-     */
-    public function createCustomerGroup($data = [])
+    public function createCustomerGroup(array $data = []): CustomerGroup
     {
         $data = array_merge(
             [
@@ -498,32 +325,23 @@ class Helper
                 'name' => 'Unit test',
                 'tax' => true,
                 'taxInput' => true,
-                'mode' => false, //use discounts?
-                'discount' => 0, //percentage discount
+                'mode' => false, // use discounts?
+                'discount' => 0, // percentage discount
             ],
             $data
         );
 
-        $this->deleteCustomerGroup($data['key']);
-
-        $customer = new Models\Customer\Group();
+        $customer = new CustomerGroup();
         $customer->fromArray($data);
 
         $this->entityManager->persist($customer);
         $this->entityManager->flush($customer);
         $this->entityManager->clear();
 
-        $this->createdCustomerGroups[] = $customer->getKey();
-
         return $customer;
     }
 
-    /**
-     * @param array $data
-     *
-     * @return Tax
-     */
-    public function createTax($data = [])
+    public function createTax(array $data = []): TaxModel
     {
         $data = array_merge(
             [
@@ -533,26 +351,19 @@ class Helper
             $data
         );
 
-        $this->deleteTax($data['name']);
-
-        $tax = new Models\Tax\Tax();
+        $tax = new TaxModel();
         $tax->fromArray($data);
 
         $this->entityManager->persist($tax);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $this->createdTaxes[] = $data['name'];
-
         return $tax;
     }
 
-    /**
-     * @return Models\Shop\Currency
-     */
-    public function createCurrency(array $data = [])
+    public function createCurrency(array $data = []): Currency
     {
-        $currency = new Models\Shop\Currency();
+        $currency = new Currency();
 
         $data = array_merge(
             [
@@ -565,57 +376,34 @@ class Helper
             $data
         );
 
-        $this->deleteCurrency($data['name']);
-
         $currency->fromArray($data);
 
         $this->entityManager->persist($currency);
         $this->entityManager->flush();
         $this->entityManager->clear();
 
-        $this->createdCurrencies[] = $data['name'];
-
         return $currency;
     }
 
-    /**
-     * @return Models\Category\Category
-     */
-    public function createCategory(array $data = [])
+    public function createCategory(array $data = []): Category
     {
         $data = array_merge($this->getCategoryData(), $data);
 
-        $this->deleteCategory($data['name']);
-
-        $category = $this->categoryApi->create($data);
-
-        $this->createdCategories[] = $category->getId();
-
-        return $category;
+        return $this->categoryApi->create($data);
     }
 
-    /**
-     * @return Models\Article\Supplier
-     */
-    public function createManufacturer(array $data = [])
+    public function createManufacturer(array $data = []): Supplier
     {
         $data = array_merge($this->getManufacturerData(), $data);
-        $manufacturer = new Models\Article\Supplier();
+        $manufacturer = new Supplier();
         $manufacturer->fromArray($data);
         $this->entityManager->persist($manufacturer);
         $this->entityManager->flush();
 
-        $this->createdManufacturers[] = $manufacturer->getId();
-
         return $manufacturer;
     }
 
-    /**
-     * @param int      $articleId
-     * @param array    $points
-     * @param int|null $shopId
-     */
-    public function createVotes($articleId, $points = [], $shopId = null)
+    public function createVotes(int $articleId, array $points = [], ?int $shopId = null): void
     {
         $data = [
             'id' => null,
@@ -631,22 +419,19 @@ class Helper
 
         foreach ($points as $point) {
             $data['points'] = $point;
-            Shopware()->Db()->insert('s_articles_vote', $data);
+            $this->connection->insert('s_articles_vote', $data);
         }
     }
 
     /**
-     * @param Group  $customerGroup used for the price definition
-     * @param string $number
-     * @param array  $data          contains nested configurator group > option array
-     *
-     * @return array
+     * @param CustomerGroupStruct $customerGroup used for the price definition
+     * @param array               $data          contains nested configurator group > option array
      */
     public function getConfigurator(
-        Group $customerGroup,
-        $number,
+        CustomerGroupStruct $customerGroup,
+        string $number,
         array $data = []
-    ) {
+    ): array {
         if (empty($data)) {
             $data = [
                 'Farbe' => ['rot', 'gelb', 'blau'],
@@ -672,11 +457,7 @@ class Helper
         ];
     }
 
-    /**
-     * @param int   $articleId
-     * @param array $data
-     */
-    public function updateConfiguratorVariants($articleId, $data)
+    public function updateConfiguratorVariants(int $articleId, array $data): void
     {
         foreach ($data as $updateInformation) {
             $options = $updateInformation['options'];
@@ -695,12 +476,9 @@ class Helper
     }
 
     /**
-     * @param int      $articleId
      * @param string[] $optionNames
-     *
-     * @return array
      */
-    public function getProductOptionsByName($articleId, $optionNames)
+    public function getProductOptionsByName(int $articleId, array $optionNames): array
     {
         $query = $this->entityManager->getDBALQueryBuilder();
         $query->select(['options.id', 'options.group_id', 'options.name', 'options.position'])
@@ -722,15 +500,10 @@ class Helper
             ->setParameter('article', $articleId)
             ->setParameter(':names', $optionNames, Connection::PARAM_STR_ARRAY);
 
-        $statement = $query->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $query->execute()->fetchAllAssociative();
     }
 
-    /**
-     * @return array
-     */
-    public function getProductData(array $data = [])
+    public function getProductData(array $data = []): array
     {
         return array_merge(
             [
@@ -757,10 +530,7 @@ class Helper
         );
     }
 
-    /**
-     * @return array
-     */
-    public function getCategoryData()
+    public function getCategoryData(): array
     {
         return [
             'parent' => 3,
@@ -768,24 +538,18 @@ class Helper
         ];
     }
 
-    /**
-     * @return array
-     */
-    public function getManufacturerData()
+    public function getManufacturerData(): array
     {
         return [
             'name' => 'Test-Manufacturer',
         ];
     }
 
-    /**
-     * @return array
-     */
-    public function getVariantData(array $data = [])
+    public function getVariantData(array $data = []): array
     {
         return array_merge(
             [
-                'number' => 'Variant-' . uniqid(Random::getInteger(0, PHP_INT_MAX), true),
+                'number' => 'Variant-' . uniqid((string) Random::getInteger(0, PHP_INT_MAX), true),
                 'supplierNumber' => 'kn12lk3nkl213',
                 'active' => 1,
                 'inStock' => 222,
@@ -806,10 +570,7 @@ class Helper
         );
     }
 
-    /**
-     * @return array
-     */
-    public function getUnitData(array $data = [])
+    public function getUnitData(array $data = []): array
     {
         return array_merge(
             [
@@ -827,13 +588,7 @@ class Helper
         );
     }
 
-    /**
-     * @param string $group
-     * @param int    $priceOffset
-     *
-     * @return array
-     */
-    public function getGraduatedPrices($group = 'EK', $priceOffset = 0)
+    public function getGraduatedPrices(string $group = 'EK', float $priceOffset = 0.0): array
     {
         return [
             [
@@ -842,6 +597,7 @@ class Helper
                 'price' => $priceOffset + 100.00,
                 'customerGroupKey' => $group,
                 'pseudoPrice' => $priceOffset + 110,
+                'regulationPrice' => $priceOffset + 120,
             ],
             [
                 'from' => 11,
@@ -849,6 +605,7 @@ class Helper
                 'price' => $priceOffset + 75.00,
                 'customerGroupKey' => $group,
                 'pseudoPrice' => $priceOffset + 85,
+                'regulationPrice' => $priceOffset + 95,
             ],
             [
                 'from' => 21,
@@ -856,42 +613,31 @@ class Helper
                 'price' => $priceOffset + 50.00,
                 'customerGroupKey' => $group,
                 'pseudoPrice' => $priceOffset + 60,
+                'regulationPrice' => $priceOffset + 70,
             ],
         ];
     }
 
-    /**
-     * @param string $image
-     *
-     * @return array
-     */
     public function getImageData(
-        $image = 'test-spachtelmasse.jpg',
+        string $image = 'test-spachtelmasse.jpg',
         array $data = []
-    ) {
+    ): array {
         return array_merge([
             'main' => 2,
             'link' => 'file://' . __DIR__ . '/fixtures/' . $image,
         ], $data);
     }
 
-    /**
-     * @param Models\Customer\Group $fallbackCustomerGroup
-     * @param Models\Shop\Currency  $currency
-     *
-     * @return TestContext
-     */
     public function createContext(
-        Models\Customer\Group $currentCustomerGroup,
-        Models\Shop\Shop $shop,
+        CustomerGroup $currentCustomerGroup,
+        ShopModel $shop,
         array $taxes,
-        Models\Customer\Group $fallbackCustomerGroup = null,
-        Models\Shop\Currency $currency = null
-    ) {
-        if ($currency == null && $shop->getCurrency()) {
-            $currency = $this->converter->convertCurrency(
-                $shop->getCurrency()
-            );
+        ?CustomerGroup $fallbackCustomerGroup = null,
+        ?Currency $currency = null
+    ): TestContext {
+        if ($currency === null) {
+            \assert($shop->getCurrency() instanceof Currency);
+            $currency = $this->converter->convertCurrency($shop->getCurrency());
         } else {
             $currency = $this->converter->convertCurrency($currency);
         }
@@ -911,14 +657,7 @@ class Helper
         );
     }
 
-    /**
-     * @param int    $groupCount
-     * @param int    $optionCount
-     * @param string $namePrefix
-     *
-     * @return array
-     */
-    public function getProperties($groupCount, $optionCount, $namePrefix = 'Test')
+    public function getProperties(int $groupCount, int $optionCount, string $namePrefix = 'Test'): array
     {
         $properties = $this->createProperties($groupCount, $optionCount, $namePrefix);
         $options = [];
@@ -933,23 +672,14 @@ class Helper
         ];
     }
 
-    /**
-     * @param int $shopId
-     *
-     * @return \Shopware\Models\Shop\Shop
-     */
-    public function getShop($shopId = 1)
+    public function getShop(int $shopId = 1): ShopModel
     {
-        return $this->entityManager->find(
-            'Shopware\Models\Shop\Shop',
-            $shopId
-        );
+        return $this->entityManager->find(ShopModel::class, $shopId);
     }
 
     public function isElasticSearchEnabled(): bool
     {
-        /** @var Kernel $kernel */
-        $kernel = Shopware()->Container()->get('kernel');
+        $kernel = $this->container->get('kernel');
 
         return $kernel->isElasticSearchEnabled();
     }
@@ -961,7 +691,7 @@ class Helper
         }
 
         $this->clearSearchIndex();
-        Shopware()->Container()->get('shopware_elastic_search.shop_indexer')->index($shop, new ProgressHelper());
+        $this->container->get('shopware_elastic_search.shop_indexer')->index($shop, new ProgressHelper());
     }
 
     public function refreshBackendSearchIndex(): void
@@ -971,27 +701,24 @@ class Helper
         }
 
         $this->clearSearchIndex();
-        Shopware()->Container()->get('shopware_es_backend.indexer')->index(new ProgressHelper());
+        $this->container->get('shopware_es_backend.indexer')->index(new ProgressHelper());
     }
 
     public function clearSearchIndex(): void
     {
-        $client = Shopware()->Container()->get('shopware_elastic_search.client');
+        $client = $this->container->get('shopware_elastic_search.client');
         $client->indices()->delete(['index' => '_all']);
     }
 
     /**
      * @param ConfiguratorGroup[] $groups
-     *
-     * @return array
      */
-    public function createConfiguratorSet(array $groups)
+    public function createConfiguratorSet(array $groups): array
     {
         $data = [];
 
         foreach ($groups as $group) {
             $options = [];
-            /** @var Models\Article\Configurator\Option $option */
             foreach ($group->getOptions() as $option) {
                 $options[] = [
                     'id' => $option->getId(),
@@ -1012,11 +739,9 @@ class Helper
     }
 
     /**
-     * @param array $groups
-     *
      * @return ConfiguratorGroup[]
      */
-    public function insertConfiguratorData($groups)
+    public function insertConfiguratorData(array $groups): array
     {
         $data = [];
 
@@ -1024,17 +749,17 @@ class Helper
             $group = new ConfiguratorGroup();
             $group->setName($groupName);
             $group->setPosition($groups);
-            $this->db->executeQuery('DELETE FROM s_article_configurator_groups WHERE name = ?', [$groupName]);
+            $this->connection->executeQuery('DELETE FROM s_article_configurator_groups WHERE name = ?', [$groupName]);
 
-            $collection = [];
+            $collection = new ArrayCollection();
             $optionPos = 1;
             foreach ($options as $optionName) {
-                $this->db->executeQuery('DELETE FROM s_article_configurator_options WHERE name = ?', [$optionName]);
+                $this->connection->executeQuery('DELETE FROM s_article_configurator_options WHERE name = ?', [$optionName]);
 
-                $option = new Models\Article\Configurator\Option();
+                $option = new Option();
                 $option->setName($optionName);
                 $option->setPosition($optionPos);
-                $collection[] = $option;
+                $collection->add($option);
                 ++$optionPos;
             }
             $group->setOptions($collection);
@@ -1044,8 +769,6 @@ class Helper
             $this->entityManager->persist($group);
             $this->entityManager->flush();
             $this->entityManager->clear();
-
-            $this->createdConfiguratorGroups[] = $group->getId();
         }
 
         return $data;
@@ -1054,17 +777,12 @@ class Helper
     /**
      * Helper function which creates all variants for
      * the passed groups with options.
-     *
-     * @param array $groups
-     * @param array $data
-     *
-     * @return array
      */
     public function generateVariants(
-        $groups,
-        $numberPrefix = null,
-        $data = []
-    ) {
+        array $groups,
+        ?string $numberPrefix = null,
+        array $data = []
+    ): array {
         $options = [];
 
         foreach ($groups as $group) {
@@ -1088,7 +806,7 @@ class Helper
             $numberPrefix = 'Unit-Test-Variant-';
         }
 
-        $this->db->executeQuery(
+        $this->connection->executeQuery(
             'DELETE FROM s_articles_details WHERE ordernumber LIKE ?',
             [$numberPrefix . '%']
         );
@@ -1110,31 +828,20 @@ class Helper
         return $variants;
     }
 
-    /**
-     * @param int    $groupCount
-     * @param int    $optionCount
-     * @param string $namePrefix
-     *
-     * @return array
-     */
-    private function createProperties($groupCount, $optionCount, $namePrefix = 'Test')
+    private function createProperties(int $groupCount, int $optionCount, string $namePrefix = 'Test'): array
     {
-        $this->propertyNames[] = $namePrefix;
-
-        $this->deleteProperties($namePrefix);
-
-        $this->db->insert('s_filter', ['name' => $namePrefix . '-Set', 'comparable' => 1]);
+        $this->connection->insert('s_filter', ['name' => $namePrefix . '-Set', 'comparable' => 1]);
         $data = $this->db->fetchRow("SELECT * FROM s_filter WHERE name = '" . $namePrefix . "-Set'");
 
         for ($i = 0; $i < $groupCount; ++$i) {
-            $this->db->insert('s_filter_options', [
+            $this->connection->insert('s_filter_options', [
                 'name' => $namePrefix . '-Gruppe-' . $i,
                 'filterable' => 1,
             ]);
             $group = $this->db->fetchRow("SELECT * FROM s_filter_options WHERE name = '" . $namePrefix . '-Gruppe-' . $i . "'");
 
             for ($i2 = 0; $i2 < $optionCount; ++$i2) {
-                $this->db->insert('s_filter_values', [
+                $this->connection->insert('s_filter_values', [
                     'value' => $namePrefix . '-Option-' . $i . '-' . $i2,
                     'optionID' => $group['id'],
                 ]);
@@ -1144,7 +851,7 @@ class Helper
 
             $data['groups'][] = $group;
 
-            $this->db->insert('s_filter_relations', [
+            $this->connection->insert('s_filter_relations', [
                 'optionID' => $group['id'],
                 'groupID' => $data['id'],
             ]);
@@ -1153,41 +860,7 @@ class Helper
         return $data;
     }
 
-    /**
-     * @param string $namePrefix
-     */
-    private function deleteProperties($namePrefix = 'Test')
-    {
-        $this->db->query("DELETE FROM s_filter WHERE name = '" . $namePrefix . "-Set'");
-
-        $ids = $this->db->fetchCol("SELECT id FROM s_filter_options WHERE name LIKE '" . $namePrefix . "-Gruppe%'");
-        foreach ($ids as $id) {
-            $this->db->query('DELETE FROM s_filter_options WHERE id = ?', [$id]);
-            $this->db->query('DELETE FROM s_filter_relations WHERE optionID = ?', [$id]);
-        }
-
-        $this->db->query("DELETE FROM s_filter_values WHERE value LIKE '" . $namePrefix . "-Option%'");
-    }
-
-    /**
-     * @param string $name
-     */
-    private function deleteCategory($name)
-    {
-        $ids = Shopware()->Db()->fetchCol('SELECT id FROM s_categories WHERE description = ?', [$name]);
-
-        foreach ($ids as $id) {
-            $this->categoryApi->delete($id);
-        }
-    }
-
-    /**
-     * @param int   $articleId
-     * @param array $options
-     *
-     * @return array
-     */
-    private function getVariantsByOptions($articleId, $options)
+    private function getVariantsByOptions(int $articleId, array $options): array
     {
         $ids = $this->getProductOptionsByName($articleId, $options);
         $ids = array_column($ids, 'id');
@@ -1208,95 +881,21 @@ class Helper
             $query->andHaving("options LIKE '%|" . (int) $id . "|%'");
         }
 
-        $statement = $query->execute();
-        $ids = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $ids = $query->execute()->fetchAllAssociative();
 
         return array_column($ids, 'article_id');
     }
 
     /**
-     * @param string $key
-     */
-    private function deleteCustomerGroup($key)
-    {
-        $ids = $this->db->fetchCol('SELECT id FROM s_core_customergroups WHERE groupkey = ?', [$key]);
-        if (!$ids) {
-            return;
-        }
-
-        foreach ($ids as $id) {
-            $customer = $this->entityManager->find('Shopware\Models\Customer\Group', $id);
-            if (!$customer) {
-                continue;
-            }
-            $this->entityManager->remove($customer);
-            $this->entityManager->flush($customer);
-        }
-        $this->entityManager->clear();
-    }
-
-    /**
-     * @param string $name
-     */
-    private function deleteTax($name)
-    {
-        $ids = $this->db->fetchCol('SELECT id FROM s_core_tax WHERE description = ?', [$name]);
-        if (empty($ids)) {
-            return;
-        }
-
-        foreach ($ids as $id) {
-            $tax = $this->entityManager->find('Shopware\Models\Tax\Tax', $id);
-            $this->entityManager->remove($tax);
-            $this->entityManager->flush();
-        }
-        $this->entityManager->clear();
-    }
-
-    /**
-     * @param string $name
-     */
-    private function deleteCurrency($name)
-    {
-        $ids = $this->db->fetchCol('SELECT id FROM s_core_currencies WHERE name = ?', [$name]);
-        if (empty($ids)) {
-            return;
-        }
-
-        foreach ($ids as $id) {
-            $tax = $this->entityManager->find('Shopware\Models\Shop\Currency', $id);
-            $this->entityManager->remove($tax);
-            $this->entityManager->flush();
-        }
-        $this->entityManager->clear();
-    }
-
-    private function removePriceGroup()
-    {
-        $ids = $this->db->fetchCol("SELECT id FROM s_core_pricegroups WHERE description = 'TEST-GROUP'");
-        foreach ($ids as $id) {
-            $group = $this->entityManager->find('Shopware\Models\Price\Group', $id);
-            $this->entityManager->remove($group);
-            $this->entityManager->flush();
-            $this->entityManager->clear();
-        }
-    }
-
-    /**
      * Helper function which combines all array elements
      * of the passed arrays.
-     *
-     * @param array $arrays
-     * @param int   $i
-     *
-     * @return array
      */
-    private function combinations($arrays, $i = 0)
+    private function combinations(array $arrays, int $i = 0): array
     {
         if (!isset($arrays[$i])) {
             return [];
         }
-        if ($i == count($arrays) - 1) {
+        if ($i == \count($arrays) - 1) {
             return $arrays[$i];
         }
 
@@ -1305,7 +904,7 @@ class Helper
 
         foreach ($arrays[$i] as $v) {
             foreach ($tmp as $t) {
-                $result[] = is_array($t) ? array_merge([$v], $t) : [$v, $t];
+                $result[] = \is_array($t) ? array_merge([$v], $t) : [$v, $t];
             }
         }
 
@@ -1313,12 +912,14 @@ class Helper
     }
 
     /**
-     * Combinations merge the result of dimensional arrays not perfectly
+     * Combinations merge the result of dimensional arrays not perfectly,
      * so we have to clean up the first array level.
      *
-     * @param array $combinations
+     * @param array[] $combinations
+     *
+     * @return array[]
      */
-    private function cleanUpCombinations($combinations)
+    private function cleanUpCombinations(array $combinations): array
     {
         foreach ($combinations as &$combination) {
             $combination[] = ['option' => $combination['option'], 'groupId' => $combination['groupId']];
@@ -1329,23 +930,25 @@ class Helper
     }
 
     /**
-     * @param Models\Tax\Tax[] $taxes
+     * @param TaxModel[] $taxes
      *
-     * @return StoreFrontBundle\Struct\Tax[]
+     * @return TaxStruct[]
      */
-    private function buildTaxRules(array $taxes)
+    private function buildTaxRules(array $taxes): array
     {
         $rules = [];
         foreach ($taxes as $model) {
             $key = 'tax_' . $model->getId();
-            $struct = $this->converter->convertTax($model);
-            $rules[$key] = $struct;
+            $rules[$key] = $this->converter->convertTax($model);
         }
 
         return $rules;
     }
 
-    private function getUnitTranslation()
+    /**
+     * @return array<string, string>
+     */
+    private function getUnitTranslation(): array
     {
         return [
             'unit' => 'Dummy Translation',
@@ -1353,7 +956,10 @@ class Helper
         ];
     }
 
-    private function getManufacturerTranslation()
+    /**
+     * @return array<string, string>
+     */
+    private function getManufacturerTranslation(): array
     {
         return [
             'metaTitle' => 'Dummy Translation',
@@ -1363,7 +969,10 @@ class Helper
         ];
     }
 
-    private function getArticleTranslation()
+    /**
+     * @return array<string, string>
+     */
+    private function getArticleTranslation(): array
     {
         return [
             'txtArtikel' => 'Dummy Translation',
@@ -1375,20 +984,5 @@ class Helper
             'txtpackunit' => 'Dummy Translation',
             'metaTitle' => 'Dummy Translation',
         ];
-    }
-}
-
-class ProgressHelper implements ProgressHelperInterface
-{
-    public function start($count, $label = '')
-    {
-    }
-
-    public function advance($step = 1)
-    {
-    }
-
-    public function finish()
-    {
     }
 }

@@ -1,61 +1,59 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service\Core;
 
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Service;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ConfiguratorGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ProductConfigurationGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ConfiguratorServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Configurator\Group;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class ConfiguratorService implements Service\ConfiguratorServiceInterface
+class ConfiguratorService implements ConfiguratorServiceInterface
 {
-    const CONFIGURATOR_TYPE_STANDARD = 0;
-    const CONFIGURATOR_TYPE_SELECTION = 1;
-    const CONFIGURATOR_TYPE_PICTURE = 2;
+    public const CONFIGURATOR_TYPE_STANDARD = 0;
+    public const CONFIGURATOR_TYPE_SELECTION = 1;
+    public const CONFIGURATOR_TYPE_PICTURE = 2;
 
-    /**
-     * @var Gateway\ProductConfigurationGatewayInterface
-     */
-    private $productConfigurationGateway;
+    private ProductConfigurationGatewayInterface $productConfigurationGateway;
 
-    /**
-     * @var Gateway\ConfiguratorGatewayInterface
-     */
-    private $configuratorGateway;
+    private ConfiguratorGatewayInterface $configuratorGateway;
 
     public function __construct(
-        Gateway\ProductConfigurationGatewayInterface $productConfigurationGateway,
-        Gateway\ConfiguratorGatewayInterface $configuratorGateway
+        ProductConfigurationGatewayInterface $productConfigurationGateway,
+        ConfiguratorGatewayInterface $configuratorGateway
     ) {
-        $this->configuratorGateway = $configuratorGateway;
         $this->productConfigurationGateway = $productConfigurationGateway;
+        $this->configuratorGateway = $configuratorGateway;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function getProductConfiguration(Struct\BaseProduct $product, Struct\ShopContextInterface $context)
+    public function getProductConfiguration(BaseProduct $product, ShopContextInterface $context)
     {
         $configuration = $this->getProductsConfigurations([$product], $context);
 
@@ -65,7 +63,7 @@ class ConfiguratorService implements Service\ConfiguratorServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function getProductsConfigurations($products, Struct\ShopContextInterface $context)
+    public function getProductsConfigurations($products, ShopContextInterface $context)
     {
         return $this->productConfigurationGateway->getList($products, $context);
     }
@@ -74,12 +72,12 @@ class ConfiguratorService implements Service\ConfiguratorServiceInterface
      * {@inheritdoc}
      */
     public function getProductConfigurator(
-        Struct\BaseProduct $product,
-        Struct\ShopContextInterface $context,
+        BaseProduct $product,
+        ShopContextInterface $context,
         array $selection
     ) {
         $configurator = $this->configuratorGateway->get($product, $context);
-        $combinations = $this->configuratorGateway->getProductCombinations($product);
+        $availableProductOptions = $this->configuratorGateway->getAvailableConfigurations($product);
 
         $media = [];
         if (((int) $configurator->getType()) === self::CONFIGURATOR_TYPE_PICTURE) {
@@ -89,7 +87,7 @@ class ConfiguratorService implements Service\ConfiguratorServiceInterface
             );
         }
 
-        $onlyOneGroup = count($configurator->getGroups()) === self::CONFIGURATOR_TYPE_SELECTION;
+        $onlyOneGroup = \count($configurator->getGroups()) === self::CONFIGURATOR_TYPE_SELECTION;
 
         foreach ($configurator->getGroups() as $group) {
             $group->setSelected(
@@ -98,18 +96,14 @@ class ConfiguratorService implements Service\ConfiguratorServiceInterface
 
             foreach ($group->getOptions() as $option) {
                 $option->setSelected(
-                    in_array($option->getId(), $selection)
+                    \in_array($option->getId(), $selection, true)
                 );
 
-                $isValid = $this->isCombinationValid(
-                    $group,
-                    $combinations[$option->getId()],
-                    $selection
-                );
+                $isOptionValid = $this->isOptionValid($group, $option->getId(), $selection, $availableProductOptions);
 
                 $option->setActive(
-                    $isValid
-                    || ($onlyOneGroup && isset($combinations[$option->getId()]))
+                    $isOptionValid
+                    || ($onlyOneGroup && isset($availableProductOptions[$option->getId()]))
                 );
 
                 if (isset($media[$option->getId()])) {
@@ -124,27 +118,31 @@ class ConfiguratorService implements Service\ConfiguratorServiceInterface
     }
 
     /**
-     * Checks if the passed combination is compatible with the provided customer configurator
-     * selection.
-     *
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Configurator\Group $group
-     * @param array                                                       $combinations
-     * @param array                                                       $selection
-     *
-     * @return bool
+     * @param array<int, int>                         $selection
+     * @param array<int, array<int, array<int, int>>> $availableProductOptions
      */
-    private function isCombinationValid(Struct\Configurator\Group $group, $combinations, $selection)
+    private function isOptionValid(Group $group, int $id, array $selection, array $availableProductOptions): bool
     {
-        if (empty($combinations)) {
+        if (empty($availableProductOptions)) {
             return false;
         }
 
-        foreach ($selection as $selectedGroup => $selectedOption) {
-            if (!in_array($selectedOption, $combinations) && $selectedGroup !== $group->getId()) {
-                return false;
-            }
+        if (!isset($availableProductOptions[$id])) {
+            return false;
         }
 
-        return true;
+        $searchValue = array_replace($selection, [$group->getId() => $id]);
+
+        foreach ($availableProductOptions[$id] as $combinations) {
+            foreach ($searchValue as $searched) {
+                if (!\in_array($searched, $combinations, true)) {
+                    continue 2;
+                }
+            }
+
+            return true;
+        }
+
+        return false;
     }
 }

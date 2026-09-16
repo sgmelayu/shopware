@@ -1,49 +1,47 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service\Core;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
+use PDO;
+use RuntimeException;
 use Shopware\Bundle\StoreFrontBundle\Service\ProductNumberServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
+use Shopware_Components_Config;
 
 class ProductNumberService implements ProductNumberServiceInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var \Shopware_Components_Config
-     */
-    private $config;
+    private Shopware_Components_Config $config;
 
     public function __construct(
         Connection $connection,
-        \Shopware_Components_Config $config
+        Shopware_Components_Config $config
     ) {
         $this->connection = $connection;
         $this->config = $config;
@@ -61,10 +59,10 @@ class ProductNumberService implements ProductNumberServiceInterface
             ->where('variant.articleID = :id')
             ->setParameter(':id', $productId);
 
-        $number = $query->execute()->fetch(\PDO::FETCH_COLUMN);
+        $number = $query->execute()->fetch(PDO::FETCH_COLUMN);
 
         if (!$number) {
-            throw new \RuntimeException(sprintf('No valid product number found by id %d', $productId));
+            throw new RuntimeException(\sprintf('No valid product number found by id %d', $productId));
         }
 
         return $number;
@@ -77,20 +75,20 @@ class ProductNumberService implements ProductNumberServiceInterface
     {
         $productId = $this->getProductIdByNumber($number);
 
-        if (!$productId) {
-            throw new \RuntimeException(sprintf('No valid product id found for product with number "%s"', $number));
+        if ($productId === 0) {
+            throw new RuntimeException(\sprintf('No valid product id found for product with number "%s"', $number));
         }
 
         if (!$this->isProductAvailableInShop($productId, $context->getShop())) {
-            throw new \RuntimeException(sprintf('Product with number "%s" is not available in current shop', $number));
+            throw new RuntimeException(\sprintf('Product with number "%s" is not available in current shop', $number));
         }
 
-        $selected = null;
+        $selected = '';
         if (!empty($selection)) {
             $selected = $this->getNumberBySelection($productId, $selection);
         }
 
-        if ($selected) {
+        if ($selected !== '') {
             return $selected;
         }
 
@@ -103,8 +101,8 @@ class ProductNumberService implements ProductNumberServiceInterface
         }
 
         $selected = $this->findFallbackById($productId);
-        if (!$selected) {
-            throw new \RuntimeException(sprintf('No active product variant found for product with number "%s" and id "%s"', $number, $productId));
+        if ($selected === '') {
+            throw new RuntimeException(\sprintf('No active product variant found for product with number "%s" and id "%s"', $number, $productId));
         }
 
         return $selected;
@@ -118,20 +116,15 @@ class ProductNumberService implements ProductNumberServiceInterface
         return $pluginActive && $notificationEnabled;
     }
 
-    /**
-     * @param int $productId
-     *
-     * @return string|false
-     */
-    private function findFallbackById($productId)
+    private function findFallbackById(int $productId): string
     {
         $selected = $this->getMainVariantNumberById($productId);
-        if ($selected) {
+        if ($selected !== '') {
             return $selected;
         }
 
         $selected = $this->getAvailableFallbackVariant($productId);
-        if ($selected) {
+        if ($selected !== '') {
             return $selected;
         }
 
@@ -140,12 +133,8 @@ class ProductNumberService implements ProductNumberServiceInterface
 
     /**
      * Returns the product id of the provided order number.
-     *
-     * @param string $number
-     *
-     * @return int|null
      */
-    private function getProductIdByNumber($number)
+    private function getProductIdByNumber(string $number): int
     {
         $query = $this->connection->createQueryBuilder();
         $query->select('variant.articleID')
@@ -153,17 +142,15 @@ class ProductNumberService implements ProductNumberServiceInterface
             ->where('variant.ordernumber = :number')
             ->setParameter(':number', $number);
 
-        return $query->execute()->fetch(\PDO::FETCH_COLUMN);
+        return (int) $query->execute()->fetch(PDO::FETCH_COLUMN);
     }
 
     /**
      * Returns a single order number for the passed product configuration selection.
      *
-     * @param int $productId
-     *
-     * @return string|false
+     * @param array<int, int> $selection
      */
-    private function getNumberBySelection($productId, array $selection)
+    private function getNumberBySelection(int $productId, array $selection): string
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['variant.ordernumber'])
@@ -192,18 +179,10 @@ class ProductNumberService implements ProductNumberServiceInterface
             $query->andWhere('(variant.laststock * variant.instock) >= (variant.laststock * variant.minpurchase)');
         }
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetch(\PDO::FETCH_COLUMN);
+        return (string) $query->execute()->fetch(PDO::FETCH_COLUMN);
     }
 
-    /**
-     * @param string $number
-     *
-     * @return bool
-     */
-    private function isNumberAvailable($number)
+    private function isNumberAvailable(string $number): bool
     {
         $query = $this->getProductNumberQuery();
 
@@ -211,18 +190,12 @@ class ProductNumberService implements ProductNumberServiceInterface
             ->andWhere('(variant.laststock * variant.instock) >= (variant.laststock * variant.minpurchase)')
             ->setParameter(':number', $number);
 
-        $statement = $query->execute();
-        $selected = $statement->fetch(\PDO::FETCH_COLUMN);
+        $selected = $query->execute()->fetch(PDO::FETCH_COLUMN);
 
         return (bool) $selected;
     }
 
-    /**
-     * @param int $productId
-     *
-     * @return string|false
-     */
-    private function getMainVariantNumberById($productId)
+    private function getMainVariantNumberById(int $productId): string
     {
         $query = $this->getProductNumberQuery();
 
@@ -231,19 +204,13 @@ class ProductNumberService implements ProductNumberServiceInterface
             ->andWhere('(variant.laststock * variant.instock) >= (variant.laststock * variant.minpurchase)')
             ->setParameter(':productId', $productId);
 
-        $statement = $query->execute();
-
-        return $statement->fetch(\PDO::FETCH_COLUMN);
+        return (string) $query->execute()->fetch(PDO::FETCH_COLUMN);
     }
 
     /**
      * Returns the first active variant number
-     *
-     * @param int $productId
-     *
-     * @return string|false
      */
-    private function getFallbackVariant($productId)
+    private function getFallbackVariant(int $productId): string
     {
         $query = $this->getProductNumberQuery();
 
@@ -251,17 +218,13 @@ class ProductNumberService implements ProductNumberServiceInterface
         $query->setMaxResults(1);
         $query->setParameter(':productId', $productId);
 
-        return $query->execute()->fetch(\PDO::FETCH_COLUMN);
+        return (string) $query->execute()->fetch(PDO::FETCH_COLUMN);
     }
 
     /**
      * Returns the first active variant number that is available for purchase
-     *
-     * @param int $productId
-     *
-     * @return string|false
      */
-    private function getAvailableFallbackVariant($productId)
+    private function getAvailableFallbackVariant(int $productId): string
     {
         $query = $this->getProductNumberQuery();
 
@@ -270,13 +233,10 @@ class ProductNumberService implements ProductNumberServiceInterface
         $query->setMaxResults(1);
         $query->setParameter(':productId', $productId);
 
-        return $query->execute()->fetch(\PDO::FETCH_COLUMN);
+        return (string) $query->execute()->fetch(PDO::FETCH_COLUMN);
     }
 
-    /**
-     * @return \Doctrine\DBAL\Query\QueryBuilder
-     */
-    private function getProductNumberQuery()
+    private function getProductNumberQuery(): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['variant.ordernumber']);
@@ -289,13 +249,8 @@ class ProductNumberService implements ProductNumberServiceInterface
 
     /**
      * Validates if the product is available in the current shop
-     *
-     * @param int  $productId
-     * @param Shop $shop
-     *
-     * @return string|null
      */
-    private function isProductAvailableInShop($productId, $shop)
+    private function isProductAvailableInShop(int $productId, Shop $shop): bool
     {
         $query = $this->connection->createQueryBuilder();
         $query->select('categories.categoryID')
@@ -306,6 +261,6 @@ class ProductNumberService implements ProductNumberServiceInterface
             ->setParameter(':categoryId', $shop->getCategory()->getId())
             ->setMaxResults(1);
 
-        return $query->execute()->fetch(\PDO::FETCH_COLUMN);
+        return (bool) $query->execute()->fetch(PDO::FETCH_COLUMN);
     }
 }

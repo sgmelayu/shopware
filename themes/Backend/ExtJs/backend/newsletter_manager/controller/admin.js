@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    NewsletterManager
@@ -38,8 +37,8 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
 
     extend: 'Ext.app.Controller',
 
-    refs:[
-        { ref:'recipientGrid', selector:'newsletter-manager-tabs-recipients' }
+    refs: [
+        { ref: 'recipientGrid', selector: 'newsletter-manager-tabs-recipients' }
     ],
 
     snippets: {
@@ -73,7 +72,7 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             errorTitle: '{s name="deleteRecipient/errorTitle"}Error{/s}',
             errorMessage: '{s name="deleteRecipient/errorMessage"}An error occured while deleting the recipient(s){/s}'
         },
-    growl: '{s name="title"}Newsletter Manager{/s}'
+        growl: '{s name="title"}Newsletter Manager{/s}'
     },
 
     /**
@@ -115,7 +114,7 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
      * @param field
      */
     onSearchRecipient: function(field) {
-        if(!field) {
+        if (!field) {
             return;
         }
 
@@ -123,18 +122,18 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             searchString = Ext.String.trim(field.getValue()),
             store = me.subApplication.recipientStore;
 
-            //scroll the store to first page
-            store.currentPage = 1;
+        //scroll the store to first page
+        store.currentPage = 1;
 
-            //If the search-value is empty, reset the filter
-            if ( searchString.length === 0 ) {
-                store.clearFilter();
-            } else {
-                //This won't reload the store
-                store.filters.clear();
-                //Loads the store with a special filter
-                store.filter('filter', searchString);
-            }
+        //If the search-value is empty, reset the filter
+        if ( searchString.length === 0 ) {
+            store.clearFilter();
+        } else {
+            //This won't reload the store
+            store.filters.clear();
+            //Loads the store with a special filter
+            store.filter('filter', searchString);
+        }
     },
 
     /**
@@ -145,7 +144,7 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             store = me.subApplication.recipientStore,
             record = event.record;
 
-        if(record.get('id') == 0) {
+        if (record.get('id') == 0) {
             store.remove(record);
         }
 
@@ -174,7 +173,7 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
         var me = this,
             store = me.subApplication.recipientGroupStore;
 
-        if(!records.length > 0) {
+        if (!records.length > 0) {
             return;
         }
         Ext.MessageBox.confirm('{s name="deleteRecipientGroupTitle"}Delete recipient group(s){/s}', '{s name="deleteRecipientGroupMessage"}Do you really want to delete the selected recipient group(s)?{/s}', function (response) {
@@ -197,10 +196,10 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             found, record;
 
         Ext.MessageBox.prompt('{s name="newGroup"}Create new newsletter group{/s}', '{s name="enterNameOfGroup"}Please enter the name of the new group{/s}', function(btn, newGroupName) {
-            if(btn == 'ok' && newGroupName != '') {
+            if (btn == 'ok' && newGroupName != '') {
                 // Make sure that there is no group with this name
-                found = store.find('name', newGroupName, caseSensitive=false);
-                if(found != -1){
+                found = store.find('name', newGroupName, caseSensitive = false);
+                if (found != -1){
                     Shopware.Notification.createGrowlMessage('{s name="alreadyExisting"}Already existing{/s}', '{s name="groupAlreadyExisting"}A group with this name is already existing{/s}', me.snippets.growl);
                     return;
                 }
@@ -213,17 +212,16 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
                 // persist
                 record.save({
                     callback: function(data, operation){
-                        if(operation.success){
+                        if (operation.success){
                             Shopware.Notification.createGrowlMessage(me.snippets.saveNewsletterGroup.successTitle, me.snippets.saveNewsletterGroup.successMessage, me.snippets.growl);
                             store.reload();
                             me.subApplication.newsletterGroupStore.reload();
-                        }else{
+                        } else {
                             Shopware.Notification.createGrowlMessage(me.snippets.saveNewsletterGroup.errorTitle, me.snippets.saveNewsletterGroup.errorMessage, me.snippets.growl);
                         }
                     }
                 });
             }
-
 
         });
     },
@@ -239,7 +237,7 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             isCustomer = event.record.get('isCustomer');
 
         //editing users is not possible. We have a nice "edit user" button for those
-        if(isCustomer) {
+        if (isCustomer) {
             event.cancel = true;
         }
         columns[1].setValue(event.record.get('email'));
@@ -260,20 +258,20 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
         // make sure, that we have a valid group here...
         newGroup = store.getById(newGroupId);
 
-        if(newGroup instanceof Ext.data.Model) {
+        if (newGroup instanceof Ext.data.Model) {
             record.set('groupId', newGroupId);
             record.set('email', newMail);
             record.save({
                 callback: function(data, operation){
-                    if(operation.success){
+                    if (operation.success){
                         var newRecord = operation.getRecords()[0];
                         Shopware.Notification.createGrowlMessage(me.snippets.saveRecipient.successTitle, me.snippets.saveRecipient.successMessage, me.snippets.growl);
-                        if(record.get('id') == 0){
+                        if (record.get('id') == 0){
                             store.add(record);
                         }
                         record.set(record.data);
                         store.save();
-                    }else{
+                    } else {
                         Shopware.Notification.createGrowlMessage(me.snippets.saveRecipient.errorTitle, me.snippets.saveRecipient.errorMessage, me.snippets.growl);
                     }
                 }
@@ -290,7 +288,7 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
         var me = this,
             store = me.subApplication.recipientStore;
 
-        if(!records.length > 0) {
+        if (!records.length > 0) {
             return;
         }
 
@@ -302,7 +300,6 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             Shopware.Notification.createGrowlMessage(me.snippets.deleteRecipient.successTitle, me.snippets.deleteRecipient.successMessage, me.snippets.growl);
             store.save();
         });
-
 
     },
 
@@ -316,7 +313,7 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             id,
             customer = record.getCustomer();
 
-        if(customer instanceof Ext.data.Store && customer.first() instanceof Ext.data.Model) {
+        if (customer instanceof Ext.data.Store && customer.first() instanceof Ext.data.Model) {
             id = customer.first().get('id');
             Shopware.app.Application.addSubApplication({
                 name: 'Shopware.apps.Customer',
@@ -337,21 +334,21 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             values = form.getValues(),
             record = form.getRecord();
 
-        if(!record instanceof Ext.data.Model){
+        if (!record instanceof Ext.data.Model){
             return;
         }
 
         record.set(values);
         record.save({
             callback: function(data, operation){
-                if(operation.success){
+                if (operation.success){
                     Shopware.Notification.createGrowlMessage(me.snippets.saveSender.successTitle, me.snippets.saveSender.successMessage, me.snippets.growl);
-                    if(record.get('id') == 0){
+                    if (record.get('id') == 0){
                         store.add(record);
                     }
                     store.save();
-//                    me.subApplication.senderStore.reload();
-                }else{
+                    //                    me.subApplication.senderStore.reload();
+                } else {
                     Shopware.Notification.createGrowlMessage(me.snippets.saveSender.errorTitle, me.snippets.saveSender.errorMessage, me.snippets.growl);
                 }
             }
@@ -395,7 +392,7 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
         var me = this,
             store = me.subApplication.senderStore;
 
-        if(!records.length > 0) {
+        if (!records.length > 0) {
             return;
         }
 
@@ -408,7 +405,6 @@ Ext.define('Shopware.apps.NewsletterManager.controller.Admin', {
             //                        Shopware.Notification.createGrowlMessage(me.snippets.deleteSender.errorTitle, me.snippets.deleteSender.errorMessage, me.snippets.growl);
             store.save();
         });
-
 
     }
 

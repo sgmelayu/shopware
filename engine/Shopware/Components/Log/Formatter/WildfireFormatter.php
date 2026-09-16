@@ -1,31 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Log\Formatter;
 
 use Monolog\Formatter\WildfireFormatter as BaseWildfireFormatter;
 use Monolog\Logger;
+use ReflectionClass;
+use UnexpectedValueException;
 
 /**
  * Serializes a log message according to Wildfire's header requirements
@@ -89,6 +91,9 @@ class WildfireFormatter extends BaseWildfireFormatter
         }
 
         $record = $this->normalize($record);
+        if (!\is_array($record)) {
+            throw new UnexpectedValueException('Variable $record must be an array');
+        }
 
         $message = ['message' => $record['message']];
         $handleError = false;
@@ -100,19 +105,19 @@ class WildfireFormatter extends BaseWildfireFormatter
             $message['extra'] = $record['extra'];
             $handleError = true;
         }
-        if (count($message) === 1) {
+        if (\count($message) === 1) {
             $message = reset($message);
         }
 
-        if (isset($record['context']['table'])) {
+        if (\is_array($record['context']) && isset($record['context']['table'])) {
             $type = 'TABLE';
             $label = $record['message'];
             $message = $record['context']['table'];
-        } elseif (isset($record['context']['dump'])) {
+        } elseif (\is_array($record['context']) && isset($record['context']['dump'])) {
             $type = 'INFO';
             $label = $record['message'];
             $message = $this->encodeObject($record['context']['dump']);
-        } elseif (isset($record['context']['trace'])) {
+        } elseif (\is_array($record['context']) && isset($record['context']['trace'])) {
             $type = 'TRACE';
             $label = $record['message'];
 
@@ -133,7 +138,7 @@ class WildfireFormatter extends BaseWildfireFormatter
         }
 
         // Create JSON object describing the appearance of the message in the console
-        $json = $this->toJson(
+        return $this->toJson(
             [
                 [
                     'Type' => $type,
@@ -145,8 +150,6 @@ class WildfireFormatter extends BaseWildfireFormatter
             ],
             $handleError
         );
-
-        return $json;
     }
 
     /**
@@ -162,7 +165,7 @@ class WildfireFormatter extends BaseWildfireFormatter
             return $trace;
         }
 
-        for ($i = 0; $i < count($trace); ++$i) {
+        for ($i = 0; $i < \count($trace); ++$i) {
             if (isset($trace[$i]['args'])) {
                 $trace[$i]['args'] = $this->encodeObject($trace[$i]['args']);
             }
@@ -184,7 +187,7 @@ class WildfireFormatter extends BaseWildfireFormatter
 
         $trace = array_splice($trace, $options['traceOffset']);
 
-        if (!count($trace)) {
+        if (!\count($trace)) {
             return $trace;
         }
 
@@ -207,23 +210,23 @@ class WildfireFormatter extends BaseWildfireFormatter
     {
         $return = [];
 
-        if (is_resource($object)) {
+        if (\is_resource($object)) {
             return '** ' . (string) $object . ' **';
-        } elseif (is_object($object)) {
+        } elseif (\is_object($object)) {
             if ($objectDepth > $this->options['maxObjectDepth']) {
                 return '** Max Object Depth (' . $this->options['maxObjectDepth'] . ') **';
             }
 
             foreach ($this->objectStack as $refVal) {
                 if ($refVal === $object) {
-                    return '** Recursion (' . get_class($object) . ') **';
+                    return '** Recursion (' . \get_class($object) . ') **';
                 }
             }
             $this->objectStack[] = $object;
 
-            $return['__className'] = $class = get_class($object);
+            $return['__className'] = $class = \get_class($object);
 
-            $reflectionClass = new \ReflectionClass($class);
+            $reflectionClass = new ReflectionClass($class);
             $properties = [];
             foreach ($reflectionClass->getProperties() as $property) {
                 $properties[$property->getName()] = $property;
@@ -250,10 +253,10 @@ class WildfireFormatter extends BaseWildfireFormatter
                 }
 
                 if (!(isset($this->objectFilters[$class])
-                    && is_array($this->objectFilters[$class])
-                    && in_array($just_name, $this->objectFilters[$class]))
+                    && \is_array($this->objectFilters[$class])
+                    && \in_array($just_name, $this->objectFilters[$class]))
                 ) {
-                    if (array_key_exists($raw_name, $members) && !$property->isStatic()) {
+                    if (\array_key_exists($raw_name, $members) && !$property->isStatic()) {
                         $return[$name] = $this->encodeObject($members[$raw_name], $objectDepth + 1);
                     } else {
                         if (method_exists($property, 'setAccessible')) {
@@ -283,8 +286,8 @@ class WildfireFormatter extends BaseWildfireFormatter
                     $name = 'undeclared:' . $name;
 
                     if (!(isset($this->objectFilters[$class])
-                        && is_array($this->objectFilters[$class])
-                        && in_array($just_name, $this->objectFilters[$class]))
+                        && \is_array($this->objectFilters[$class])
+                        && \in_array($just_name, $this->objectFilters[$class]))
                     ) {
                         $return[$name] = $this->encodeObject($value, $objectDepth + 1);
                     } else {
@@ -294,7 +297,7 @@ class WildfireFormatter extends BaseWildfireFormatter
             }
 
             array_pop($this->objectStack);
-        } elseif (is_array($object)) {
+        } elseif (\is_array($object)) {
             if ($arrayDepth > $this->options['maxArrayDepth']) {
                 return '** Max Array Depth (' . $this->options['maxArrayDepth'] . ') **';
             }
@@ -304,7 +307,7 @@ class WildfireFormatter extends BaseWildfireFormatter
                 // if the recursion is not reset here as it contains
                 // a reference to itself. This is the only way I have come up
                 // with to stop infinite recursion in this case.
-                if ($key == 'GLOBALS' && is_array($val) && array_key_exists('GLOBALS', $val)) {
+                if ($key == 'GLOBALS' && \is_array($val) && \array_key_exists('GLOBALS', $val)) {
                     $val['GLOBALS'] = '** Recursion (GLOBALS) **';
                 }
                 $return[$key] = $this->encodeObject($val, 1, $arrayDepth + 1);

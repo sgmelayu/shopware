@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Systeminfo
@@ -98,12 +97,12 @@ Ext.define('Shopware.apps.Systeminfo.view.systeminfo.Filelist', {
                 header: '{s name="file_grid/column/name"}Name{/s}',
                 dataIndex: 'name',
                 flex: 1
-            },{
+            }, {
                 header: '{s name="file_grid/column/required"}Available{/s}',
                 dataIndex: 'available',
                 width: '65px',
                 renderer: me.renderStatus
-           },{
+            }, {
                 header: '{s name="file_grid/column/status"}Status{/s}',
                 dataIndex: 'result',
                 width: '65px',
@@ -118,9 +117,9 @@ Ext.define('Shopware.apps.Systeminfo.view.systeminfo.Filelist', {
      * @param value The value of the field
      */
     renderStatus: function(value){
-        if(value==1){
+        if (value == 1){
             return Ext.String.format('<div style="height: 16px; width: 16px" class="sprite-tick"></div>')
-        }else{
+        } else {
             return Ext.String.format('<div style="height: 16px; width: 16px" class="sprite-cross"></div>')
         }
     }

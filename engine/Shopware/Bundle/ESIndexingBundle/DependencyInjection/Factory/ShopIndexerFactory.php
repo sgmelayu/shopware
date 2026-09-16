@@ -1,78 +1,76 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ESIndexingBundle\DependencyInjection\Factory;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Elasticsearch\Client;
+use Enlight_Event_Exception;
+use Exception;
+use Shopware\Bundle\ESIndexingBundle\BacklogProcessorInterface;
+use Shopware\Bundle\ESIndexingBundle\BacklogReader;
+use Shopware\Bundle\ESIndexingBundle\Console\EvaluationHelperInterface;
 use Shopware\Bundle\ESIndexingBundle\DataIndexerInterface;
+use Shopware\Bundle\ESIndexingBundle\IndexFactory;
 use Shopware\Bundle\ESIndexingBundle\MappingInterface;
 use Shopware\Bundle\ESIndexingBundle\SettingsInterface;
 use Shopware\Bundle\ESIndexingBundle\ShopIndexer;
 use Shopware\Bundle\ESIndexingBundle\ShopIndexerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Traversable;
 
 class ShopIndexerFactory
 {
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
+    private ContainerInterface $container;
 
     /**
      * @var DataIndexerInterface[]
      */
-    private $indexer;
+    private array $indexer;
 
     /**
      * @var MappingInterface[]
      */
-    private $mappings;
+    private array $mappings;
 
     /**
      * @var SettingsInterface[]
      */
-    private $settings;
-
-    /**
-     * @var string
-     */
-    private $esVersion;
+    private array $settings;
 
     public function __construct(
-        \Traversable $indexer,
-        \Traversable $mappings,
-        \Traversable $settings,
-        string $esVersion
+        Traversable $indexer,
+        Traversable $mappings,
+        Traversable $settings
     ) {
         $this->indexer = iterator_to_array($indexer, false);
         $this->mappings = iterator_to_array($mappings, false);
         $this->settings = iterator_to_array($settings, false);
-        $this->esVersion = $esVersion;
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return ShopIndexerInterface
      */
@@ -83,16 +81,11 @@ class ShopIndexerFactory
         $indexer = $this->collectIndexer();
         $mappings = $this->collectMappings();
         $settings = $this->collectSettings();
-        /** @var \Elasticsearch\Client $client */
-        $client = $this->container->get(\Elasticsearch\Client::class);
-        /** @var \Shopware\Bundle\ESIndexingBundle\BacklogReaderInterface $backlogReader */
-        $backlogReader = $this->container->get(\Shopware\Bundle\ESIndexingBundle\BacklogReader::class);
-        /** @var \Shopware\Bundle\ESIndexingBundle\BacklogProcessorInterface $backlogProcessor */
-        $backlogProcessor = $this->container->get(\Shopware\Bundle\ESIndexingBundle\BacklogProcessorInterface::class);
-        /** @var \Shopware\Bundle\ESIndexingBundle\IndexFactoryInterface $indexFactory */
-        $indexFactory = $this->container->get(\Shopware\Bundle\ESIndexingBundle\IndexFactory::class);
-        /** @var \Shopware\Bundle\ESIndexingBundle\Console\EvaluationHelperInterface $consoleHelper */
-        $consoleHelper = $this->container->get(\Shopware\Bundle\ESIndexingBundle\Console\EvaluationHelperInterface::class);
+        $client = $this->container->get(Client::class);
+        $backlogReader = $this->container->get(BacklogReader::class);
+        $backlogProcessor = $this->container->get(BacklogProcessorInterface::class);
+        $indexFactory = $this->container->get(IndexFactory::class);
+        $consoleHelper = $this->container->get(EvaluationHelperInterface::class);
 
         return new ShopIndexer(
             $client,
@@ -102,17 +95,16 @@ class ShopIndexerFactory
             $consoleHelper,
             $indexer,
             $mappings,
-            $settings,
-            $this->esVersion
+            $settings
         );
     }
 
     /**
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      *
      * @return DataIndexerInterface[]
      */
-    private function collectIndexer()
+    private function collectIndexer(): array
     {
         $collection = new ArrayCollection();
         $this->container->get('events')->collect(
@@ -124,11 +116,11 @@ class ShopIndexerFactory
     }
 
     /**
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      *
      * @return MappingInterface[]
      */
-    private function collectMappings()
+    private function collectMappings(): array
     {
         $collection = new ArrayCollection();
         $this->container->get('events')->collect(
@@ -140,11 +132,11 @@ class ShopIndexerFactory
     }
 
     /**
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      *
      * @return SettingsInterface[]
      */
-    private function collectSettings()
+    private function collectSettings(): array
     {
         $collection = new ArrayCollection();
         $this->container->get('events')->collect(

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -39,12 +38,12 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
      * Define that the configurator is an extends the Ext.container.Container
      * @string
      */
-    extend:'Ext.panel.Panel',
+    extend: 'Ext.panel.Panel',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.article-variant-configurator',
+    alias: 'widget.article-variant-configurator',
     /**
      * Set css class for this component
      * @string
@@ -54,7 +53,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         toolbar: {
             saveSet: '{s name="variant/configurator/save_set"}Save set{/s}',
             template: '{s name="variant/configurator/template"}Define configurator template{/s}',
@@ -98,9 +97,9 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
             inactiveOptions: '{s name="variant/configurator/option/inactive_options_header"}Inactive options{/s}'
         },
         types: {
-            standard:'{s name="variant/configurator/types/standard"}Standard{/s}',
-            selection:'{s name="variant/configurator/types/selection"}Selection{/s}',
-            picture:'{s name="variant/configurator/types/picture"}Picture{/s}'
+            standard: '{s name="variant/configurator/types/standard"}Standard{/s}',
+            selection: '{s name="variant/configurator/types/selection"}Selection{/s}',
+            picture: '{s name="variant/configurator/types/picture"}Picture{/s}'
         }
     },
 
@@ -119,7 +118,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.typeData = [
             [0, me.snippets.types.standard],
@@ -172,7 +171,6 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
              * @event
              */
             'defineConfiguratorTemplate',
-
 
             /**
              * Event will be fired when the user clicks on the "create" button in the
@@ -278,7 +276,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
             editable: false,
             displayField: 'name',
             store: new Ext.data.SimpleStore({
-                fields:['id', 'name'], data: me.typeData
+                fields: ['id', 'name'], data: me.typeData
             }),
             emptyText: me.snippets.toolbar.empty,
             fieldLabel: me.snippets.toolbar.type,
@@ -339,19 +337,19 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
             cls: 'shopware-toolbar',
             items: [
                 me.typeComboBox,
-                { xtype:'tbspacer', width: 6 },
+                { xtype: 'tbspacer', width: 6 },
                 { xtype: 'tbseparator' },
-                { xtype:'tbspacer', width: 6 },
+                { xtype: 'tbspacer', width: 6 },
                 me.saveSetButton,
-                { xtype:'tbspacer', width: 12 },
+                { xtype: 'tbspacer', width: 12 },
                 me.loadSetButton,
-                { xtype:'tbspacer', width: 6 },
+                { xtype: 'tbspacer', width: 6 },
                 { xtype: 'tbseparator' },
-                { xtype:'tbspacer', width: 6 },
+                { xtype: 'tbspacer', width: 6 },
                 me.dependencyButton,
-                { xtype:'tbspacer', width: 12 },
+                { xtype: 'tbspacer', width: 12 },
                 me.priceVariationButton,
-                { xtype:'tbspacer', width: 12 },
+                { xtype: 'tbspacer', width: 12 },
                 me.templateButton
             ]
         });
@@ -400,8 +398,6 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
         return me.groupGrid;
     },
 
-
-
     /**
      * Creates the drag and drop zone for the Ext.view.View to allow
      */
@@ -444,7 +440,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 },
 
                 //On entry into a target node, highlight that node.
-                onNodeEnter : function(target, dd, e, data){
+                onNodeEnter: function(target, dd, e, data){
                     var record = me.groupGrid.view.getRecord(target);
                     if (record !== data.draggedRecord) {
                         Ext.fly(target).addCls(me.dragOverCls);
@@ -452,13 +448,13 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 },
 
                 //On exit from a target node, unhighlight that node.
-                onNodeOut : function(target, dd, e, data){
+                onNodeOut: function(target, dd, e, data){
                     Ext.fly(target).removeCls(me.dragOverCls);
                 },
 
                 //While over a target node, return the default drop allowed class which
                 //places a "tick" icon into the drag proxy.
-                onNodeOver : function(target, dd, e, data){
+                onNodeOver: function(target, dd, e, data){
                     return (data.draggedRecord instanceof Ext.data.Model);
                 },
 
@@ -467,7 +463,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 //In this case, it is a Record in the GridPanel's Store.
                 //We can use the data set up by the DragZone's getDragData method to read
                 //any data we decided to attach in the DragZone's getDragData method.
-                onNodeDrop : function(target, dd, e, data){
+                onNodeDrop: function(target, dd, e, data){
                     var record = me.groupGrid.view.getRecord(target);
                     me.fireEvent('groupDropped', data.draggedRecord, record)
                 }
@@ -481,13 +477,13 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
      *
      * @return [Ext.selection.CheckboxModel] grid selection model
      */
-    getGroupPanelSelModel:function () {
+    getGroupPanelSelModel: function () {
         var me = this;
         return Ext.create('Ext.selection.CheckboxModel', {
             checkOnly: true,
             showHeaderCheckbox: false,
-            listeners:{
-                select:function (sm, record) {
+            listeners: {
+                select: function (sm, record) {
                     var success = me.fireEvent('groupSelect', record, me);
                     if (success === false) {
                         sm.deselect(record, true);
@@ -496,7 +492,6 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
             }
         });
     },
-
 
     /**
      * Creates the grouping feature for the attribute group grid.
@@ -539,7 +534,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 fieldLabel: me.snippets.groups.name,
                 name: 'name'
             }
-        } , {
+        }, {
             dataIndex: 'description',
             flex: 2,
             text: me.snippets.groups.description,
@@ -550,29 +545,29 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 name: 'description'
             },
             hidden: true
-        },{
+        }, {
             dataIndex: 'optionCount',
             flex: 1,
             text: me.snippets.groups.options.header,
             renderer: me.optionCountColumnRenderer
-        } , {
+        }, {
             /**
              * Special column type which provides clickable icons in each row
              */
-            xtype:'actioncolumn',
-            width:90,
-            items:[{
-                iconCls:'sprite-minus-circle-frame',
-                action:'deleteGroup',
-                tooltip:me.snippets.groups.remove,
+            xtype: 'actioncolumn',
+            width: 90,
+            items: [{
+                iconCls: 'sprite-minus-circle-frame',
+                action: 'deleteGroup',
+                tooltip: me.snippets.groups.remove,
                 handler: function (view, rowIndex, colIndex, item, opts, record) {
                     me.fireEvent('deleteGroup', record);
                 }
-            } , {
-                iconCls:'sprite-pencil',
-                action:'editGroup',
-                tooltip:me.snippets.groups.edit,
-                handler:function (view, rowIndex, colIndex, item, opts, record) {
+            }, {
+                iconCls: 'sprite-pencil',
+                action: 'editGroup',
+                tooltip: me.snippets.groups.edit,
+                handler: function (view, rowIndex, colIndex, item, opts, record) {
                     me.fireEvent('editGroup', record);
                 }
             }]
@@ -589,7 +584,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
         //creates the cycle button for the group panel which contains two options to create or create and activate a group.
         me.createGroupButton = Ext.create('Ext.button.Split', {
             showText: true,
-            action : 'activate',
+            action: 'activate',
             text: me.snippets.groups.createAndActivate,
             name: 'create-group-button',
             handler: function() {
@@ -610,7 +605,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                     }, {
                         xtype: 'menuitem',
                         text: me.snippets.groups.createAndActivate,
-                        action : 'activate',
+                        action: 'activate',
                         handler: function() {
                             me.createGroupButton.setText(me.snippets.groups.createAndActivate);
                             me.createGroupButton.action = 'activate';
@@ -645,7 +640,6 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
             ]
         });
     },
-
 
     /**OPTION PANEL DECLARATION*/
 
@@ -731,7 +725,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 },
 
                 //On entry into a target node, highlight that node.
-                onNodeEnter : function(target, dd, e, data){
+                onNodeEnter: function(target, dd, e, data){
                     var record = me.optionGrid.view.getRecord(target);
                     if (record !== data.draggedRecord) {
                         Ext.fly(target).addCls(me.dragOverCls);
@@ -739,13 +733,13 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 },
 
                 //On exit from a target node, unhighlight that node.
-                onNodeOut : function(target, dd, e, data){
+                onNodeOut: function(target, dd, e, data){
                     Ext.fly(target).removeCls(me.dragOverCls);
                 },
 
                 //While over a target node, return the default drop allowed class which
                 //places a "tick" icon into the drag proxy.
-                onNodeOver : function(target, dd, e, data){
+                onNodeOver: function(target, dd, e, data){
                     return (data.draggedRecord instanceof Ext.data.Model);
                 },
 
@@ -754,7 +748,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 //In this case, it is a Record in the GridPanel's Store.
                 //We can use the data set up by the DragZone's getDragData method to read
                 //any data we decided to attach in the DragZone's getDragData method.
-                onNodeDrop : function(target, dd, e, data){
+                onNodeDrop: function(target, dd, e, data){
                     var record = me.optionGrid.view.getRecord(target);
                     me.fireEvent('optionDropped', data.draggedRecord, record)
                 }
@@ -763,19 +757,18 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
         });
     },
 
-
     /**
      * Creates the grid selection model for checkboxes
      *
      * @return [Ext.selection.CheckboxModel] grid selection model
      */
-    getOptionPanelSelModel:function () {
+    getOptionPanelSelModel: function () {
         var me = this;
         return Ext.create('Ext.selection.CheckboxModel', {
             checkOnly: true,
             showHeaderCheckbox: false,
-            listeners:{
-                select:function (sm, record) {
+            listeners: {
+                select: function (sm, record) {
                     me.fireEvent('optionSelect', record, me);
                 }
             }
@@ -823,25 +816,25 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 fieldLabel: me.snippets.groups.name,
                 name: 'name'
             }
-        } , {
+        }, {
             /**
              * Special column type which provides clickable icons in each row
              */
-            xtype:'actioncolumn',
+            xtype: 'actioncolumn',
             width: 70,
-            items:[
+            items: [
                 {
-                    iconCls:'sprite-minus-circle-frame',
-                    action:'deleteOption',
-                    tooltip:me.snippets.options.remove,
+                    iconCls: 'sprite-minus-circle-frame',
+                    action: 'deleteOption',
+                    tooltip: me.snippets.options.remove,
                     handler: function (view, rowIndex, colIndex, item, opts, record) {
                         me.fireEvent('deleteOption', record);
                     }
                 }, {
-                    iconCls:'sprite-pencil',
-                    action:'editOption',
+                    iconCls: 'sprite-pencil',
+                    action: 'editOption',
                     tooltip: me.snippets.options.edit,
-                    handler:function (view, rowIndex, colIndex, item, opts, record) {
+                    handler: function (view, rowIndex, colIndex, item, opts, record) {
                         me.fireEvent('editOption', record);
                     }
                 }
@@ -859,7 +852,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
         //creates the cycle button for the option panel which contains two options to create or create and activate a option.
         me.createOptionButton = Ext.create('Ext.button.Split', {
             showText: true,
-            action : 'activate',
+            action: 'activate',
             text: me.snippets.groups.createAndActivate,
             name: 'create-option-button',
             handler: function() {
@@ -879,7 +872,7 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
                 }, {
                     xtype: 'menuitem',
                     text: me.snippets.groups.createAndActivate,
-                    action : 'activate',
+                    action: 'activate',
                     handler: function() {
                         me.createOptionButton.setText(me.snippets.groups.createAndActivate);
                         me.createOptionButton.action = 'activate';
@@ -929,16 +922,15 @@ Ext.define('Shopware.apps.Article.view.variant.Configurator', {
 
         if (options && options.getCount() > 0) {
             options.each(function(item) {
-                 if (item.get('active')) {
-                     counter++;
-                 }
+                if (item.get('active')) {
+                    counter++;
+                }
             });
             return counter + info;
         } else {
             return 0 + info;
         }
     }
-
 
 });
 //{/block}

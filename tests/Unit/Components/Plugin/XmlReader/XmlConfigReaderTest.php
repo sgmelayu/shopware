@@ -1,38 +1,40 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Plugin\XmlReader;
 
+use DOMNodeList;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Shopware\Components\Plugin\XmlReader\XmlConfigReader;
+use Shopware\Components\Plugin\XmlReader\XmlReaderBase;
+use Shopware\Tests\TestReflectionHelper;
 
 class XmlConfigReaderTest extends TestCase
 {
-    /**
-     * @var XmlConfigReader
-     */
-    private $configReader;
+    private XmlConfigReader $configReader;
 
     protected function setUp(): void
     {
@@ -43,15 +45,15 @@ class XmlConfigReaderTest extends TestCase
     {
         $result = $this->readFile('config.xml');
 
-        //form label
+        // form label
         static::assertArrayHasKey('label', $result);
         static::assertCount(2, $result['label']);
         static::assertArrayHasKey('en', $result['label']);
         static::assertArrayHasKey('de', $result['label']);
         static::assertEquals('My Form Label', $result['label']['en']);
-        static::assertEquals('Mein Form', $result['label']['de']);
+        static::assertEquals('Meine Form', $result['label']['de']);
 
-        //form description
+        // form description
         static::assertArrayHasKey('description', $result);
         static::assertCount(2, $result['description']);
         static::assertArrayHasKey('en', $result['description']);
@@ -59,10 +61,10 @@ class XmlConfigReaderTest extends TestCase
         static::assertEquals('My Form description', $result['description']['en']);
         static::assertEquals('Meine Form Beschreibung', $result['description']['de']);
 
-        //elements
+        // elements
         static::assertArrayHasKey('elements', $result);
 
-        //first element
+        // first element
         $element1 = $result['elements'][0];
 
         static::assertArrayHasKey('options', $element1);
@@ -72,10 +74,10 @@ class XmlConfigReaderTest extends TestCase
         static::assertEquals('1', $element1['options']['minValue']);
         static::assertEquals('2', $element1['options']['maxValue']);
 
-        //second element store
+        // second element store
         $element2 = $result['elements'][1];
 
-        //element label
+        // element label
         static::assertArrayHasKey('label', $element2);
         static::assertCount(2, $element2['label']);
         static::assertArrayHasKey('en', $element2['label']);
@@ -83,7 +85,7 @@ class XmlConfigReaderTest extends TestCase
         static::assertEquals('My Textfield', $element2['label']['en']);
         static::assertEquals('Mein textfeld', $element2['label']['de']);
 
-        //element description
+        // element description
         static::assertArrayHasKey('description', $element2);
         static::assertCount(2, $element2['description']);
         static::assertArrayHasKey('en', $element2['description']);
@@ -130,11 +132,9 @@ class XmlConfigReaderTest extends TestCase
 
     public function testParseElementNodeListEmpty(): void
     {
-        $reflection = new \ReflectionClass(get_class($this->configReader));
-        $method = $reflection->getMethod('parseElementNodeList');
-        $method->setAccessible(true);
+        $method = TestReflectionHelper::getMethod(\get_class($this->configReader), 'parseElementNodeList');
 
-        $result = $method->invokeArgs($this->configReader, [new \DOMNodeList()]);
+        $result = $method->invokeArgs($this->configReader, [new DOMNodeList()]);
 
         static::assertIsArray($result);
         static::assertCount(0, $result);
@@ -142,36 +142,36 @@ class XmlConfigReaderTest extends TestCase
 
     public function testValidateAttributeScope(): void
     {
-        //default value SCOPE_LOCALE
+        // default value SCOPE_LOCALE
         static::assertEquals(
-            XmlConfigReader::SCOPE_LOCALE,
+            XmlReaderBase::SCOPE_LOCALE,
             XmlConfigReader::validateAttributeScope('')
         );
 
-        //SCOPE_LOCALE
+        // SCOPE_LOCALE
         static::assertEquals(
-            XmlConfigReader::SCOPE_LOCALE,
+            XmlReaderBase::SCOPE_LOCALE,
             XmlConfigReader::validateAttributeScope('locale')
         );
 
-        //SCOPE_SHOP
+        // SCOPE_SHOP
         static::assertEquals(
-            XmlConfigReader::SCOPE_SHOP,
+            XmlReaderBase::SCOPE_SHOP,
             XmlConfigReader::validateAttributeScope('shop')
         );
     }
 
     public function testValidateAttributeScopeThrowsException(): void
     {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Invalid scope "invalid value"');
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Invalid config scope "invalid value" in file ".*\/tests\/Unit\/Components\/Plugin\/XmlReader\/examples\/config\/config_store_extjs\.xml"/');
         XmlConfigReader::validateAttributeScope('invalid value');
     }
 
     private function readFile(string $file): array
     {
         return $this->configReader->read(
-            sprintf('%s/examples/config/%s', __DIR__, $file)
+            \sprintf('%s/examples/config/%s', __DIR__, $file)
         );
     }
 }

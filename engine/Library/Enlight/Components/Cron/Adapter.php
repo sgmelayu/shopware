@@ -24,6 +24,7 @@
  *
  * @category   Enlight
  * @package    Enlight_Cron
+ *
  * @copyright  Copyright (c) 2011, shopware AG (http://www.shopware.de)
  * @license    http://enlight.de/license     New BSD License
  */
@@ -32,21 +33,19 @@ interface Enlight_Components_Cron_Adapter
     /**
      * Updates a cron job in the cron tab
      *
-     * @param Enlight_Components_Cron_Job $job
-     * @return Enlight_Components_Cron_Manager
+     * @return void
      */
     public function updateJob(Enlight_Components_Cron_Job $job);
 
     /**
-     * @param Enlight_Components_Cron_Job $job
-     * @return mixed
+     * @return bool
      */
     public function startJob(Enlight_Components_Cron_Job $job);
 
     /**
      * Returns an array of Enlight_Components_Cron_Job from the crontab
      *
-     * @return Enlight_Components_Cron_Job[]
+     * @return array<int, Enlight_Components_Cron_Job>
      */
     public function getAllJobs();
 
@@ -54,7 +53,8 @@ interface Enlight_Components_Cron_Adapter
      * Returns the next cron job
      *
      * @param bool $force
-     * @return null|Enlight_Components_Cron_Job
+     *
+     * @return Enlight_Components_Cron_Job|null
      */
     public function getNextJob($force = false);
 
@@ -62,8 +62,10 @@ interface Enlight_Components_Cron_Adapter
      * Receives a single Cron job defined by its id from the crontab
      *
      * @abstract
-     * @param Int $id
-     * @return Enlight_Components_Cron_Job
+     *
+     * @param int $id
+     *
+     * @return Enlight_Components_Cron_Job|null
      */
     public function getJobById($id);
 
@@ -71,8 +73,10 @@ interface Enlight_Components_Cron_Adapter
      * Receives a single cron job by its name
      *
      * @abstract
-     * @param String $name
-     * @return Enlight_Components_Cron_Job
+     *
+     * @param string $name
+     *
+     * @return Enlight_Components_Cron_Job|null
      */
     public function getJobByName($name);
 
@@ -80,8 +84,10 @@ interface Enlight_Components_Cron_Adapter
      * Receives a single cron job by its action name
      *
      * @abstract
-     * @param String $action
-     * @return Enlight_Components_Cron_Job
+     *
+     * @param string $action
+     *
+     * @return Enlight_Components_Cron_Job|null
      */
     public function getJobByAction($action);
 
@@ -89,7 +95,7 @@ interface Enlight_Components_Cron_Adapter
      * Adds a job to the crontab
      *
      * @abstract
-     * @param Enlight_Components_Cron_Job $job
+     *
      * @return void
      */
     public function createJob(Enlight_Components_Cron_Job $job);
@@ -98,7 +104,7 @@ interface Enlight_Components_Cron_Adapter
      * Removes an job from the crontab
      *
      * @abstract
-     * @param Enlight_Components_Cron_Job $job
+     *
      * @return void
      */
     public function deleteJob(Enlight_Components_Cron_Job $job);

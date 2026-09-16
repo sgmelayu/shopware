@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Shopware_Config
@@ -43,13 +42,13 @@ Ext.define('Shopware.apps.Config.controller.Document', {
         'form.Document'
     ],
 
-    stores:[
+    stores: [
         'form.Document',
         'detail.Document',
         'form.Number'
     ],
 
-    models:[
+    models: [
         'form.Document',
         'form.DocumentElement'
     ],
@@ -70,7 +69,7 @@ Ext.define('Shopware.apps.Config.controller.Document', {
                         styleField = elementFieldSet.down('textarea[name$=Style]');
 
                     Ext.each(elementFieldSet.items.items, function(item){
-                        if(item.xtype === 'tinymce' || item.xtype === 'textarea'){
+                        if (item.xtype === 'tinymce' || item.xtype === 'textarea'){
                             item.hide();
                             item.setValue(null);
                         }
@@ -90,7 +89,7 @@ Ext.define('Shopware.apps.Config.controller.Document', {
 
     onSelectElement: function(combo, newValue, oldValue){
         //If there is no new value selected, so the event got fired otherwise
-        if(!newValue){
+        if (!newValue){
             return;
         }
         var me = this,
@@ -99,7 +98,7 @@ Ext.define('Shopware.apps.Config.controller.Document', {
             elementStore = elementComboBox.getStore();
         //Checks if there was an value selected before changing it
         //Needed to save the values to the record
-        if(oldValue){
+        if (oldValue){
             var oldRecord = elementStore.getById(oldValue),
                 oldFieldName = oldRecord.get('name'),
                 oldContentField = elementFieldSet.down('tinymce[name=' + oldFieldName + '_Value]'),
@@ -115,7 +114,6 @@ Ext.define('Shopware.apps.Config.controller.Document', {
             newFieldName = newRecord.get('name'),
             newContentField = elementFieldSet.down('tinymce[name=' + newFieldName + '_Value]'),
             newStyleField = elementFieldSet.down('textarea[name=' + newFieldName + '_Style]');
-
 
         //Show the dynamical fields and fill them
         newContentField.show();

@@ -1,30 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use PDO;
 use ReflectionClass;
+use RuntimeException;
 use Shopware\Components\Migrations\AbstractMigration;
 use Shopware\Components\Migrations\Manager;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
@@ -44,11 +46,15 @@ class MigrationsMigrateCommand extends ShopwareCommand implements CompletionAwar
             $meta = new ReflectionClass(AbstractMigration::class);
             $constants = $meta->getConstants();
             $modeConstantKeys = array_filter(array_keys($constants), function ($constantKey) {
-                return strpos($constantKey, 'MODUS_') === 0;
+                return str_starts_with($constantKey, 'MODUS_');
             });
-            $modeConstantPseudoValues = array_pad([], count($modeConstantKeys), 0);
+            $modeConstantPseudoValues = array_pad([], \count($modeConstantKeys), 0);
+            $combined = array_combine($modeConstantKeys, $modeConstantPseudoValues);
+            if (!\is_array($combined)) {
+                throw new RuntimeException('Arrays could not be combined');
+            }
 
-            return array_intersect_key($constants, array_combine($modeConstantKeys, $modeConstantPseudoValues));
+            return array_intersect_key($constants, $combined);
         }
 
         return [];
@@ -84,8 +90,13 @@ class MigrationsMigrateCommand extends ShopwareCommand implements CompletionAwar
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $connection = $this->getContainer()->get(\PDO::class);
-        $rootDir = $this->getContainer()->getParameter('kernel.root_dir');
+        $connection = $this->getContainer()->get(PDO::class);
+
+        $rootDir = $this->container->getParameter('kernel.root_dir');
+
+        if (!\is_string($rootDir)) {
+            throw new RuntimeException('Parameter kernel.root_dir has to be an string');
+        }
 
         $mode = $input->getOption('mode');
 

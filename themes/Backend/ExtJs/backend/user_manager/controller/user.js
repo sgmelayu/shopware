@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    UserManager
@@ -47,12 +46,12 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
      * Contains all snippets for the controller
      * @object
      */
-    snippets:{
-        form:{
+    snippets: {
+        form: {
             errorTitle: '{s name="message/password/form/error_title"}Error saving the form{/s}',
             errorMessage: '{s name="message/password/form/error_message"}The field -[0]- is not valid{/s}'
         },
-        growlMessage:'{s name="message/growlMessage"}User manager{/s}',
+        growlMessage: '{s name="message/growlMessage"}User manager{/s}',
         unlock: {
             successTitle: '{s name="create_user/unlock/success_title"}Success{/s}',
             successText: '{s name="create_user/unlock/success_text"}Successfully unlocked the user.{/s}',
@@ -91,7 +90,7 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
                 deleteUser: me.onDeleteUser,
                 deleteUsers: me.onDeleteUsers
             },
-            'usermanager-user-list textfield[action=searchUser]':{
+            'usermanager-user-list textfield[action=searchUser]': {
                 change: me.onSearchUser
             }
         });
@@ -104,7 +103,7 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
      * @param value
      * @return void
      */
-    onSearchUser:function (field, value) {
+    onSearchUser: function (field, value) {
         var me = this,
             searchString = Ext.String.trim(value),
             store = me.subApplication.getStore('User');
@@ -129,7 +128,7 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
             // check which field is not valid in order to tell the user, why the customer cannot be saved
             // SW-4322
             formPnl.getForm().getFields().each(function(f){
-                 if (!f.validate()){
+                if (!f.validate()){
                     if (f.fieldLabel){
                         missingField = f.fieldLabel;
                     } else if (f.name){
@@ -137,9 +136,9 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
                     }
                     Shopware.Notification.createGrowlMessage(me.snippets.form.errorTitle, Ext.String.format(me.snippets.form.errorMessage, missingField), me.snippets.growlMessage)
                     return false;
-                 }
+                }
 
-             });
+            });
             return;
 
         }
@@ -164,9 +163,9 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
                     formPnl.up('window').destroy();
 
                     Shopware.Notification.createGrowlMessage(
-                            '{s name="user/Success"}Successful{/s}',
-                            Ext.String.format('{s name="user/editSuccessful"}User \'[0]\' was updated{/s}', formPnl.getForm().getValues().name),
-                            '{s name="user/userManager"}User Manager{/s}'
+                        '{s name="user/Success"}Successful{/s}',
+                        Ext.String.format('{s name="user/editSuccessful"}User \'[0]\' was updated{/s}', formPnl.getForm().getValues().name),
+                        '{s name="user/userManager"}User Manager{/s}'
                     );
                     Ext.Ajax.request({
                         url: '{url controller=login action=getLoginStatus}',
@@ -239,11 +238,11 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
      * @param view
      * @param rowIndex
      */
-    onDeleteUser: function (view,rowIndex){
+    onDeleteUser: function (view, rowIndex){
         var me = this,
-        userStore = me.getStore('User'),
-        message,
-        record = userStore.getAt(rowIndex);
+            userStore = me.getStore('User'),
+            message,
+            record = userStore.getAt(rowIndex);
 
         message = Ext.String.format('{s name="user/messageDeleteUser"}Are you sure you want to delete the user [0]?{/s}', record.data.username);
         Ext.MessageBox.confirm('{s name="user/titleDeleteUser"}Delete user{/s}', message, function (response){
@@ -251,11 +250,11 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
 
             Shopware.app.Application.fireEvent('Shopware.ValidatePassword', function() {
                 record.destroy({
-                    success : function () {
+                    success: function () {
                         userStore.load();
                         Shopware.Notification.createGrowlMessage('{s name="user/Success"}Successful{/s}', '{s name="user/deletedSuccessfully"}User has been deleted{/s}', '{s name="user/userManager"}User Manager{/s}');
                     },
-                    failure : function () {
+                    failure: function () {
                         Shopware.Notification.createGrowlMessage('{s name="user/Error"}Error{/s}', '{s name="user/deletedError"}An error has occurred while deleting the user{/s}', '{s name="user/userManager"}User Manager{/s}');
                     }
                 });
@@ -272,7 +271,7 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
             records = view.getSelectionModel().getSelection(),
             userStore = me.getStore('User');
 
-        if(records.length > 0) {
+        if (records.length > 0) {
             Ext.MessageBox.confirm('{s name="user/titleDeleteUser"}Delete user{/s}', '{s name="user/messageDeleteMultipleUsers"}Are you sure you want delete these users?{/s}', function (response) {
                 if (response !== 'yes') return false;
 
@@ -298,7 +297,7 @@ Ext.define('Shopware.apps.UserManager.controller.User', {
 
         me.getStore('UserDetail').load({
             id: record.data.id,
-            callback:function (records) {
+            callback: function (records) {
                 me.getView('user.Create').create({
                     record: records[0],
                     edit: true

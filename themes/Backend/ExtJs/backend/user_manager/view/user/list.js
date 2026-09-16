@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    UserManager
@@ -89,7 +88,7 @@ Ext.define('Shopware.apps.UserManager.view.user.List', {
             action: 'deleteUser',
             cls: 'delete',
             tooltip: '{s name="list_users/deletetooltip"}Delete this user{/s}',
-            handler:function (view, rowIndex, colIndex, item) {
+            handler: function (view, rowIndex, colIndex, item) {
                 me.fireEvent('deleteUser', view, rowIndex, colIndex, item);
             }
         });
@@ -101,9 +100,10 @@ Ext.define('Shopware.apps.UserManager.view.user.List', {
             cls: 'editBtn',
             action: 'editUser',
             tooltip: '{s name="list_users/edittooltip"}Edit this user{/s}',
-            handler:function (view, rowIndex, colIndex, item) {
+            handler: function (view, rowIndex, colIndex, item) {
                 me.fireEvent('editUser', view, rowIndex, colIndex, item);
-        }});
+            }
+        });
         /* {/if} */
 
         me.dockedItems = me.createDockedToolBar();
@@ -158,14 +158,14 @@ Ext.define('Shopware.apps.UserManager.view.user.List', {
         /* {/if} */
 
         tbButtons.push('->', {
-            xtype:'textfield',
-            name:'searchfield',
-            action:'searchUser',
-            width:170,
+            xtype: 'textfield',
+            name: 'searchfield',
+            action: 'searchUser',
+            width: 170,
             cls: 'searchfield',
-            enableKeyEvents:true,
+            enableKeyEvents: true,
             checkChangeBuffer: 500,
-            emptyText:'{s name="list_users/field/search"}{/s}'
+            emptyText: '{s name="list_users/field/search"}{/s}'
         });
 
         // Row grouping
@@ -188,36 +188,36 @@ Ext.define('Shopware.apps.UserManager.view.user.List', {
         me.callParent();
     },
 
-    registerEvents:function () {
+    registerEvents: function () {
         var me = this;
 
-            me.addEvents(
-                    /**
-                     * Event will be fired when the user clicks the delete icon in the
-                     * action column
-                     *
-                     * @event deleteColumn
-                     * @param [object] View - Associated Ext.view.Table
-                     * @param [integer] rowIndex - Row index
-                     * @param [integer] colIndex - Column index
-                     * @param [object] item - Associated HTML DOM node
-                     */
-                    'deleteUser',
+        me.addEvents(
+            /**
+             * Event will be fired when the user clicks the delete icon in the
+             * action column
+             *
+             * @event deleteColumn
+             * @param [object] View - Associated Ext.view.Table
+             * @param [integer] rowIndex - Row index
+             * @param [integer] colIndex - Column index
+             * @param [object] item - Associated HTML DOM node
+             */
+            'deleteUser',
 
-                    /**
-                     * Event will be fired when the user clicks the delete icon in the
-                     * action column
-                     *
-                     * @event deleteColumn
-                     * @param [object] View - Associated Ext.view.Table
-                     * @param [integer] rowIndex - Row index
-                     * @param [integer] colIndex - Column index
-                     * @param [object] item - Associated HTML DOM node
-                     */
-                    'editUser'
-            );
+            /**
+             * Event will be fired when the user clicks the delete icon in the
+             * action column
+             *
+             * @event deleteColumn
+             * @param [object] View - Associated Ext.view.Table
+             * @param [integer] rowIndex - Row index
+             * @param [integer] colIndex - Column index
+             * @param [object] item - Associated HTML DOM node
+             */
+            'editUser'
+        );
 
-            return true;
+        return true;
     },
 
     /**

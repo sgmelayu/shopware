@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EmotionBundle\Struct\Collection;
@@ -36,9 +36,9 @@ class ResolvedDataCollection extends Extendable
     private $batchResult;
 
     /**
-     * @var Media[]
+     * @var array<int|string, Media>
      */
-    private $mediaList = [];
+    private array $mediaList = [];
 
     /**
      * @param int $mediaId
@@ -47,25 +47,17 @@ class ResolvedDataCollection extends Extendable
      */
     public function getMedia($mediaId)
     {
-        if (!array_key_exists($mediaId, $this->mediaList)) {
-            return null;
-        }
-
-        return $this->mediaList[$mediaId];
+        return $this->mediaList[$mediaId] ?? null;
     }
 
     /**
-     * @param int $mediaPath
+     * @param string $mediaPath
      *
      * @return Media|null
      */
     public function getMediaByPath($mediaPath)
     {
-        if (!array_key_exists($mediaPath, $this->mediaList)) {
-            return null;
-        }
-
-        return $this->mediaList[$mediaPath];
+        return $this->mediaList[$mediaPath] ?? null;
     }
 
     /**
@@ -85,7 +77,7 @@ class ResolvedDataCollection extends Extendable
     }
 
     /**
-     * @param Media[] $mediaList
+     * @param array<int|string, Media> $mediaList
      */
     public function setMediaList($mediaList)
     {

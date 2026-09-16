@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/snippet/view/main"}
@@ -47,18 +46,18 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
      * @object
      */
     snippets: {
-        tooltipTranslateSnippet:   '{s name="tooltip_translate_snippet"}Translate this snippet{/s}',
+        tooltipTranslateSnippet: '{s name="tooltip_translate_snippet"}Translate this snippet{/s}',
         tooltipDeleteSnippet: '{s name="tooltip_delete_snippet"}Delete this snippet{/s}',
 
         columnNamespace: '{s name="column_namespace"}Namespace{/s}',
-        columnName:      '{s name="column_name"}Name{/s}',
-        columnValue:     '{s name="column_value"}Value{/s}',
+        columnName: '{s name="column_name"}Name{/s}',
+        columnValue: '{s name="column_value"}Value{/s}',
 
-        buttonFilterEmpty:  '{s name="button_filter_empty"}Show only empty snippets{/s}',
+        buttonFilterEmpty: '{s name="button_filter_empty"}Show only empty snippets{/s}',
         buttonEditSelected: '{s name="button_edit_selected"}Edit selected snippets{/s}',
-        buttonAddSnippet:   '{s name="button_add_snippet"}Add snippet{/s}',
+        buttonAddSnippet: '{s name="button_add_snippet"}Add snippet{/s}',
 
-        emptyTextSearch:   '{s name="empty_text_search"}search...{/s}'
+        emptyTextSearch: '{s name="empty_text_search"}search...{/s}'
     },
 
     /**
@@ -67,7 +66,7 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
      *
      * @return void
      */
-    registerEvents:function () {
+    registerEvents: function () {
         this.addEvents(
             /**
              * Event will be fired when the user clicks the delete icon in the
@@ -98,7 +97,6 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
         );
     },
 
-
     /**
      * Sets up the ui component
      *
@@ -109,7 +107,7 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
 
         me.listeners = {
             beforeactivate: me.onBeforeActivate,
-            beforeedit:     me.onBeforeEdit
+            beforeedit: me.onBeforeEdit
         };
 
         me.editor   = me.getRowEditorPlugin();
@@ -189,15 +187,15 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
 
         /*{if {acl_is_allowed privilege=update}}*/
         actionColumnItems.push({
-                action: 'translate',
-                cls: 'translateBtn',
-                iconCls: 'sprite-globe',
-                tooltip: me.snippets.tooltipTranslateSnippet,
-                handler: function(grid, rowIndex) {
-                    var record = grid.getStore().getAt(rowIndex);
-                    me.fireEvent('translateSnippet', record);
-                }
+            action: 'translate',
+            cls: 'translateBtn',
+            iconCls: 'sprite-globe',
+            tooltip: me.snippets.tooltipTranslateSnippet,
+            handler: function(grid, rowIndex) {
+                var record = grid.getStore().getAt(rowIndex);
+                me.fireEvent('translateSnippet', record);
             }
+        }
         );
         /*{/if}*/
 
@@ -207,7 +205,7 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
             cls: 'deleteBtn',
             hideMode: 'display',
             iconCls: 'sprite-minus-circle-frame',
-            tooltip:  me.snippets.tooltipDeleteSnippet,
+            tooltip: me.snippets.tooltipDeleteSnippet,
             handler: function(grid, rowIndex, colIndex) {
                 me.fireEvent('deleteSingle', grid, rowIndex, colIndex);
             },
@@ -220,14 +218,14 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
         /*{/if}*/
 
         var columns = [{
-            header:  me.snippets.columnNamespace,
+            header: me.snippets.columnNamespace,
             dataIndex: 'namespace',
             flex: 1,
             editor: {
                 xtype: 'textfield',
                 allowBlank: false
             }
-        },{
+        }, {
             header: me.snippets.columnName,
             dataIndex: 'name',
             flex: 1,
@@ -285,7 +283,7 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
     getPagingbar: function () {
         return Ext.create('Ext.toolbar.Paging', {
             store: this.store,
-            dock:'bottom',
+            dock: 'bottom',
             displayInfo: true
         });
     },
@@ -304,7 +302,7 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
             xtype: 'button',
             text: me.snippets.buttonFilterEmpty,
             enableToggle: true,
-            action : 'filterEmpty',
+            action: 'filterEmpty',
             iconCls: 'sprite-blue-document-template'
         });
 
@@ -344,14 +342,14 @@ Ext.define('Shopware.apps.Snippet.view.main.Grid', {
         });
 
         buttons.push({
-            xtype : 'textfield',
-            name : 'searchfield',
-            action : 'search',
+            xtype: 'textfield',
+            name: 'searchfield',
+            action: 'search',
             width: 170,
             cls: 'searchfield',
             enableKeyEvents: true,
             checkChangeBuffer: 500,
-            emptyText : me.snippets.emptyTextSearch
+            emptyText: me.snippets.emptyTextSearch
         });
 
         buttons.push({

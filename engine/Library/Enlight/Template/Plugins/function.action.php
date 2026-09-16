@@ -24,27 +24,20 @@
  * - name : The name of the action to call
  * - params : optional params array for the specific action call
  *
- * @param                          $params
- * @param Enlight_Template_Default $template
- *
  * @throws Exception
  *
  * @return string
  */
 function smarty_function_action($params, Enlight_Template_Default $template)
 {
-    /** @var Enlight_Controller_Front $front */
     $front = Shopware()->Front();
     $dispatcher = clone $front->Dispatcher();
 
     $request = $front->Request();
     $response = $front->Response();
 
-    if (empty($request) || empty($response)) {
-        $e = new Exception(
-            'Action view helper requires both a registered request and response object in the front controller instance'
-        );
-        throw $e;
+    if (empty($request)) {
+        throw new Exception('Action view helper requires both a registered request and response object in the front controller instance');
     }
 
     if (isset($params['name'])) {
@@ -60,7 +53,6 @@ function smarty_function_action($params, Enlight_Template_Default $template)
 
     $params = array_merge($userParams, $params);
 
-    /** @var \Shopware_Plugins_Core_HttpCache_Bootstrap $httpCache */
     $httpCache = Shopware()->Plugins()->Core()->HttpCache();
     if ($esiTag = $httpCache->renderEsiTag($request, $params)) {
         return $esiTag;

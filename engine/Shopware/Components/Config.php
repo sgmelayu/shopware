@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
 use Shopware\Components\CacheManager;
 use Shopware\Components\ShopwareReleaseStruct;
+use Shopware\Models\Shop\Shop;
 
 /**
  * Shopware Config Model
@@ -32,7 +33,7 @@ use Shopware\Components\ShopwareReleaseStruct;
 class Shopware_Components_Config implements ArrayAccess
 {
     /**
-     * @var Shopware\Models\Shop\Shop
+     * @var Shop|null
      */
     protected $_shop;
 
@@ -101,6 +102,8 @@ class Shopware_Components_Config implements ArrayAccess
      * Magic getter
      *
      * @param string $name
+     *
+     * @return mixed config value
      */
     public function __get($name)
     {
@@ -129,7 +132,7 @@ class Shopware_Components_Config implements ArrayAccess
     }
 
     /**
-     * @param Shopware\Models\Shop\Shop $shop
+     * @param Shop $shop
      *
      * @return Shopware_Components_Config
      */
@@ -155,7 +158,7 @@ class Shopware_Components_Config implements ArrayAccess
      */
     public function formatName($name)
     {
-        if (strpos($name, 's') === 0 && preg_match('#^s[A-Z]#', $name)) {
+        if (str_starts_with($name, 's') && preg_match('#^s[A-Z]#', $name)) {
             $name = substr($name, 1);
         }
 
@@ -174,7 +177,10 @@ class Shopware_Components_Config implements ArrayAccess
     }
 
     /**
-     * @param string $name
+     * @param string     $name
+     * @param mixed|null $default
+     *
+     * @return mixed config value
      */
     public function get($name, $default = null)
     {
@@ -184,8 +190,13 @@ class Shopware_Components_Config implements ArrayAccess
     }
 
     /**
-     * @param string $name
+     * @param string|mixed $name config name
+     *
+     * @return mixed config value
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetGet($name)
     {
         if (!isset($this->_data[$name])) {
@@ -200,32 +211,45 @@ class Shopware_Components_Config implements ArrayAccess
     }
 
     /**
-     * @param string $name
+     * @param string|mixed $name config name
+     *
+     * @return void
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetUnset($name)
     {
         $this->_data[$name] = null;
     }
 
     /**
-     * @param string $name
+     * @param string|mixed $name config name
      *
      * @return bool
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetExists($name)
     {
         if (!isset($this->_data[$name])) {
             $baseName = $this->formatName($name);
 
-            return isset($this->_data[$baseName]) && $this->_data[$baseName] !== null;
+            return isset($this->_data[$baseName]);
         }
 
         return true;
     }
 
     /**
-     * @param string $name
+     * @param string|mixed $name  config name
+     * @param mixed        $value config value
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
+     * @deprecated - Will not return anything anymore with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetSet($name, $value)
     {
         $baseName = $this->formatName($name);

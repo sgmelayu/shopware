@@ -1,43 +1,45 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 class Shopware_Components_Modules extends Enlight_Class implements ArrayAccess
 {
     /**
-     * @var \sSystem
+     * @var sSystem
      */
     protected $system;
 
     /**
      * Container that hold references to all modules already loaded
      *
-     * @var array
+     * @var array<string, object|null>
      */
     protected $modules_container = [];
 
     /**
-     * @param string $name
+     * @param string     $name
+     * @param mixed|null $value
      */
     public function __call($name, $value = null)
     {
@@ -47,7 +49,9 @@ class Shopware_Components_Modules extends Enlight_Class implements ArrayAccess
     /**
      * Set class property
      *
-     * @param \sSystem $system
+     * @param sSystem $system
+     *
+     * @return void
      */
     public function setSystem($system)
     {
@@ -61,49 +65,69 @@ class Shopware_Components_Modules extends Enlight_Class implements ArrayAccess
      */
     public function getModule($name)
     {
-        if (strpos($name, 's') === 0) {
+        if (str_starts_with($name, 's')) {
             $name = substr($name, 1);
         }
         if ($name !== 'RewriteTable') {
-            $name = 's' . ucfirst(strtolower($name));
+            $className = 's' . ucfirst(strtolower($name));
         } else {
-            $name = 's' . $name;
+            $className = 's' . $name;
         }
 
-        if (!isset($this->modules_container[$name])) {
-            $this->loadModule($name);
+        /** @var class-string $className */
+        if (!isset($this->modules_container[$className])) {
+            $this->loadModule($className);
         }
 
-        return $this->modules_container[$name];
+        return $this->modules_container[$className];
     }
 
     /**
-     * @param string $offset
+     * @param string|mixed $offset module name
+     * @param mixed        $value  module
+     *
+     * @return void
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
     }
 
     /**
-     * @param string $offset
+     * @param string|mixed $offset module name
      *
      * @return bool
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return (bool) $this->getModule($offset);
     }
 
     /**
-     * @param string $offset
+     * @param string|mixed $offset module name
+     *
+     * @return void
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
     }
 
     /**
-     * @param string $offset
+     * @param string|mixed $offset module name
+     *
+     * @return mixed module
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->getModule($offset);
@@ -142,7 +166,7 @@ class Shopware_Components_Modules extends Enlight_Class implements ArrayAccess
     }
 
     /**
-     * @return \sSystem
+     * @return sSystem
      */
     public function System()
     {
@@ -201,17 +225,10 @@ class Shopware_Components_Modules extends Enlight_Class implements ArrayAccess
      * Load a module defined by $name
      * Possible values for $name - sBasket, sAdmin etc.
      *
-     * @param string $name
+     * @param class-string $name
      */
-    private function loadModule($name)
+    private function loadModule(string $name): void
     {
-        if (isset($this->modules_container[$name])) {
-            return;
-        }
-
-        $this->modules_container[$name] = null;
-        $name = basename($name);
-
         if ($name === 'sSystem') {
             $this->modules_container[$name] = $this->system;
 
@@ -221,6 +238,8 @@ class Shopware_Components_Modules extends Enlight_Class implements ArrayAccess
         Shopware()->Hooks()->setAlias($name, $name);
         $proxy = Shopware()->Hooks()->getProxy($name);
         $this->modules_container[$name] = new $proxy();
-        $this->modules_container[$name]->sSYSTEM = $this->system;
+        if (property_exists($this->modules_container[$name], 'sSYSTEM')) {
+            $this->modules_container[$name]->sSYSTEM = $this->system;
+        }
     }
 }

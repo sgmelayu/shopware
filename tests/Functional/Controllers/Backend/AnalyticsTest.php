@@ -1,95 +1,110 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Controllers\Backend;
 
+use DateTime;
+use Doctrine\DBAL\Connection;
+use Enlight_Components_Test_Controller_TestCase as ControllerTestCase;
+use Enlight_Controller_Request_RequestTestCase;
+use Enlight_Event_EventArgs;
+use Enlight_Template_Manager;
+use Enlight_View_Default;
+use Shopware\Components\ContainerAwareEventManager;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Components\ShopRegistrationServiceInterface;
 use Shopware\Models\Analytics\Repository;
+use Shopware\Models\Shop\Shop;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
+use Shopware_Controllers_Backend_Analytics;
 
-class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
+class AnalyticsTest extends ControllerTestCase
 {
-    /** @var \Shopware\Models\Analytics\Repository */
-    private $repository;
+    use DatabaseTransactionBehaviour;
+    use ContainerTrait;
 
-    private $userId;
+    private const TEST_SELECT_KEY = 'testOrderCount';
 
-    private $customerNumber;
+    private Connection $connection;
 
-    private $articleId;
+    private Repository $repository;
 
-    private $categoryId;
+    private int $userId;
 
-    private $orderNumber;
+    private string $customerNumber;
 
-    private $articleDetailId;
+    private ?int $productId = null;
 
-    private $orderIds;
+    private ?int $categoryId = null;
 
-    private $addressId;
+    private string $orderNumber;
 
-    /**
-     * Standard set up for every test - just disable auth
-     */
+    private ?int $productVariantId = null;
+
     public function setUp(): void
     {
         parent::setUp();
 
         // disable auth and acl
-        Shopware()->Plugins()->Backend()->Auth()->setNoAuth();
-        Shopware()->Plugins()->Backend()->Auth()->setNoAcl();
+        $this->getContainer()->get('plugins')->Backend()->Auth()->setNoAuth();
+        $this->getContainer()->get('plugins')->Backend()->Auth()->setNoAcl();
 
-        $this->repository = new Repository(Shopware()->Models()->getConnection(), Shopware()->Events());
+        $this->connection = $this->getContainer()->get(Connection::class);
+        $this->repository = new Repository($this->connection, $this->getContainer()->get(ContainerAwareEventManager::class));
 
         $this->orderNumber = uniqid('SW');
-        $this->articleId = 0;
+        $this->productId = 0;
         $this->userId = 0;
     }
 
     public function tearDown(): void
     {
         $this->removeDemoData();
+        parent::tearDown();
     }
 
-    public function testGetVisitorImpressions()
+    public function testGetVisitorImpressions(): void
     {
         $this->createVisitors();
 
         $result = $this->repository->getVisitorImpressions(
             0,
             25,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01'),
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01'),
             [
                 [
                     'property' => 'datum',
                     'direction' => 'ASC',
                 ],
             ],
-            ['1']
+            [1]
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'datum' => '2013-06-01',
@@ -129,18 +144,59 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'mobileVisits1' => 0,
                     'totalVisits1' => 20,
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetOrdersOfCustomers()
+    public function testGetVisitorAsCSV(): void
+    {
+        $this->createVisitors();
+
+        $this->Request()->setParams([
+            'fromDate' => '2013-01-01',
+            'toDate' => '2014-01-01',
+            'selectedShops' => '1',
+            'format' => 'csv',
+        ]);
+
+        $this->dispatch('backend/analytics/getVisitors');
+
+        static::assertSame('text/csv; charset=utf-8', $this->Response()->getHeader('Content-Type'));
+        static::assertSame('attachment;filename=visitors.csv', $this->Response()->getHeader('content-disposition'));
+    }
+
+    public function testGetOverview(): void
+    {
+        $this->getContainer()->get('events')->addListener('Shopware_Analytics_ShopStatisticTurnover', function (Enlight_Event_EventArgs $args) {
+            $queryBuilder = $args->getReturn();
+            $queryBuilder->addSelect(\sprintf('COUNT(orders.id) as %s', self::TEST_SELECT_KEY));
+        });
+
+        $request = new Enlight_Controller_Request_RequestTestCase();
+        $request->setParams([
+            'fromDate' => '2012-01-01',
+            'toDate' => '2013-01-01',
+        ]);
+
+        $analyticsController = new Shopware_Controllers_Backend_Analytics();
+        $analyticsController->setContainer($this->getContainer());
+        $analyticsController->setRequest($request);
+        $analyticsController->setView(new Enlight_View_Default(new Enlight_Template_Manager()));
+        $analyticsController->getOverviewAction();
+
+        $assignedData = $analyticsController->View()->getAssign('data');
+        static::assertArrayHasKey(self::TEST_SELECT_KEY, $assignedData[0]);
+    }
+
+    public function testGetOrdersOfCustomers(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getOrdersOfCustomers(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
@@ -156,18 +212,18 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         );
     }
 
-    public function testGetReferrerRevenue()
+    public function testGetReferrerRevenue(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
-        $shop = Shopware()->Models()->getRepository('Shopware\Models\Shop\Shop')->getActiveDefault();
-        Shopware()->Container()->get(\Shopware\Components\ShopRegistrationServiceInterface::class)->registerShop($shop);
+        $shop = $this->getContainer()->get(ModelManager::class)->getRepository(Shop::class)->getActiveDefault();
+        $this->getContainer()->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
 
         $result = $this->repository->getReferrerRevenue(
             $shop,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
@@ -176,7 +232,7 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                 [
                     'turnover' => 1000.00,
                     'userID' => $this->userId,
-                    'referrer' => 'http://www.google.de/',
+                    'referrer' => 'https://www.google.de/',
                     'firstLogin' => '2013-06-01',
                     'orderTime' => '2013-06-01',
                 ],
@@ -184,7 +240,7 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         );
     }
 
-    public function testGetPartnerRevenue()
+    public function testGetPartnerRevenue(): void
     {
         $this->createCustomer();
         $this->createOrders();
@@ -192,12 +248,11 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         $result = $this->repository->getPartnerRevenue(
             0,
             25,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'turnover' => 1000,
@@ -205,21 +260,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'trackingCode' => 'PHPUNIT_PARTNER',
                     'partnerId' => null,
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetProductSales()
+    public function testGetProductSales(): void
     {
         $this->createCustomer();
-        $this->createArticle();
+        $this->createProduct();
         $this->createOrders();
 
         $result = $this->repository->getProductSales(
             0,
             25,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
@@ -234,30 +290,30 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         );
     }
 
-    public function testGetProductImpressions()
+    public function testGetProductImpressions(): void
     {
-        $this->createArticle();
+        $this->createProduct();
         $this->createImpressions();
 
         $result = $this->repository->getProductImpressions(
             0,
             25,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01'),
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01'),
             [
                 [
                     'property' => 'articleId',
                     'direction' => 'ASC',
                 ],
             ],
-            ['1']
+            [1]
         );
 
         static::assertEquals(
             $result->getData(),
             [
                 [
-                    'articleId' => $this->articleId,
+                    'articleId' => $this->productId,
                     'articleName' => 'PHPUNIT ARTICLE',
                     'totalImpressions' => 10,
                     'totalImpressions1' => 10,
@@ -269,41 +325,40 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         );
     }
 
-    public function testGetAgeOfCustomers()
+    public function testGetAgeOfCustomers(): void
     {
         $this->createCustomer();
 
         $result = $this->repository->getAgeOfCustomers(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01'),
-            ['1']
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01'),
+            [1]
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'firstLogin' => '2013-06-01',
                     'birthday' => '1990-01-01',
                     'birthday1' => '1990-01-01',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetAmountPerHour()
+    public function testGetAmountPerHour(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getAmountPerHour(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01'),
-            ['1']
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01'),
+            [1]
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -313,22 +368,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'date' => '1970-01-01 10:00:00',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetAmountPerWeekday()
+    public function testGetAmountPerWeekday(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getAmountPerWeekday(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -336,22 +391,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'date' => '2013-06-01',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetAmountPerCalendarWeek()
+    public function testGetAmountPerCalendarWeek(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getAmountPerCalendarWeek(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -359,22 +414,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'date' => '2013-05-30',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetAmountPerMonth()
+    public function testGetAmountPerMonth(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getAmountPerMonth(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -382,22 +437,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'date' => '2013-06-04',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetCustomerGroupAmount()
+    public function testGetCustomerGroupAmount(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getCustomerGroupAmount(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -405,22 +460,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'customerGroup' => 'Shopkunden',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetAmountPerCountry()
+    public function testGetAmountPerCountry(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getAmountPerCountry(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -428,22 +483,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'name' => 'Deutschland',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetAmountPerShipping()
+    public function testGetAmountPerShipping(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getAmountPerShipping(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -451,22 +506,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'name' => 'Standard Versand',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetAmountPerPayment()
+    public function testGetAmountPerPayment(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getAmountPerPayment(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -474,19 +529,20 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'name' => 'Lastschrift',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetSearchTerms()
+    public function testGetSearchTerms(): void
     {
         $this->createSearchTerms();
 
         $result = $this->repository->getSearchTerms(
             0,
             25,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01'),
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01'),
             [
                 [
                     'property' => 'countRequests',
@@ -496,7 +552,6 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'countRequests' => 1,
@@ -504,21 +559,21 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'countResults' => 10,
                     'shop' => null,
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetDailyVisitors()
+    public function testGetDailyVisitors(): void
     {
         $this->createVisitors();
 
         $result = $this->repository->getDailyVisitors(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 '2013-06-15' => [
                     [
@@ -532,22 +587,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                         'visits' => 10,
                     ],
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetDailyShopVisitors()
+    public function testGetDailyShopVisitors(): void
     {
         $this->createVisitors();
 
         $result = $this->repository->getDailyShopVisitors(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01'),
-            ['1']
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01'),
+            [1]
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 '2013-06-15' => [
                     [
@@ -563,23 +618,23 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                         'visits1' => 10,
                     ],
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetDailyShopOrders()
+    public function testGetDailyShopOrders(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getDailyShopOrders(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01'),
-            ['1']
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01'),
+            [1]
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 '2013-06-15' => [
                     [
@@ -597,21 +652,21 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                         'cancelledOrders1' => 0,
                     ],
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetDailyRegistrations()
+    public function testGetDailyRegistrations(): void
     {
         $this->createCustomer();
 
         $result = $this->repository->getDailyRegistrations(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 '2013-06-01' => [
                     [
@@ -619,22 +674,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                         'customers' => 0,
                     ],
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetDailyTurnover()
+    public function testGetDailyTurnover(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getDailyTurnover(
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 '2013-06-01' => [
                     [
@@ -642,58 +697,59 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                         'turnover' => 1000,
                     ],
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetProductAmountPerManufacturer()
+    public function testGetProductAmountPerManufacturer(): void
     {
         $this->createCustomer();
-        $this->createArticle();
+        $this->createProduct();
         $this->createOrders();
 
         $result = $this->repository->getProductAmountPerManufacturer(
             0,
             25,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
                     'turnover' => 1000,
                     'name' => 'shopware AG',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetVisitedReferrer()
+    public function testGetVisitedReferrer(): void
     {
         $this->createReferrer();
 
         $result = $this->repository->getVisitedReferrer(
             0,
             25,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'count' => 1,
-                    'referrer' => 'http://www.google.de/?q=phpunit',
+                    'referrer' => 'https://www.google.de/?q=phpunit',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetReferrerUrls()
+    public function testGetReferrerUrls(): void
     {
         $this->createReferrer();
 
@@ -704,54 +760,52 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'count' => 1,
-                    'referrer' => 'http://www.google.de/?q=phpunit',
+                    'referrer' => 'https://www.google.de/?q=phpunit',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testGetReferrerSearchTerms()
+    public function testGetReferrerSearchTerms(): void
     {
         $this->createReferrer();
 
-        $result = $this->repository->getReferrerSearchTerms('phpunit');
-        $data = $result->getData();
+        $data = $this->repository->getReferrerSearchTerms('phpunit')->getData();
 
         static::assertEquals(
-            $data,
             [
                 [
                     'count' => 1,
-                    'referrer' => 'http://www.google.de/?q=phpunit',
+                    'referrer' => 'https://www.google.de/?q=phpunit',
                 ],
-            ]
+            ],
+            $data
         );
 
         static::assertEquals(
-            $this->getSearchTermFromReferrerUrl($data[0]['referrer']),
-            'phpunit'
+            'phpunit',
+            $this->getSearchTermFromReferrerUrl($data[0]['referrer'])
         );
     }
 
-    public function testGetProductAmountPerCategory()
+    public function testGetProductAmountPerCategory(): void
     {
-        $this->createArticle();
+        $this->createProduct();
         $this->createCategory();
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getProductAmountPerCategory(
             1,
-            new \DateTime('2013-01-01'),
-            new \DateTime('2014-01-01')
+            new DateTime('2013-01-01'),
+            new DateTime('2014-01-01')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -759,22 +813,22 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'name' => 'phpunit category',
                     'node' => '',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    public function testOrderCurrencyFactor()
+    public function testOrderCurrencyFactor(): void
     {
         $this->createCustomer();
         $this->createOrders();
 
         $result = $this->repository->getAmountPerHour(
-            new \DateTime('2014-01-01'),
-            new \DateTime('2014-02-02')
+            new DateTime('2014-01-01'),
+            new DateTime('2014-02-02')
         );
 
         static::assertEquals(
-            $result->getData(),
             [
                 [
                     'orderCount' => 1,
@@ -782,15 +836,16 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                     'displayDate' => 'Saturday',
                     'date' => '1970-01-01 10:00:00',
                 ],
-            ]
+            ],
+            $result->getData()
         );
     }
 
-    private function createCustomer()
+    private function createCustomer(): void
     {
-        $this->customerNumber = uniqid(rand());
+        $this->customerNumber = uniqid((string) rand());
 
-        Shopware()->Db()->insert(
+        $this->connection->insert(
             's_user',
             [
                 'password' => '098f6bcd4621d373cade4e832627b4f6', // md5('test')
@@ -807,9 +862,9 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                 'birthday' => '1990-01-01',
             ]
         );
-        $this->userId = Shopware()->Db()->lastInsertId();
+        $this->userId = (int) $this->connection->lastInsertId();
 
-        Shopware()->Db()->insert('s_user_addresses', [
+        $this->connection->insert('s_user_addresses', [
             'user_id' => $this->userId,
             'company' => 'PHPUNIT',
             'salutation' => 'mr',
@@ -820,19 +875,19 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
             'country_id' => 2,
             'state_id' => 3,
         ]);
-        $this->addressId = Shopware()->Db()->lastInsertId();
+        $addressId = $this->connection->lastInsertId();
 
-        Shopware()->Db()->update('s_user', [
-            'default_billing_address_id' => $this->addressId,
-            'default_shipping_address_id' => $this->addressId,
+        $this->connection->update('s_user', [
+            'default_billing_address_id' => $addressId,
+            'default_shipping_address_id' => $addressId,
         ], [
-            'id = ?' => $this->userId,
+            'id' => $this->userId,
         ]);
     }
 
-    private function createArticle()
+    private function createProduct(): void
     {
-        Shopware()->Db()->insert(
+        $this->connection->insert(
             's_articles',
             [
                 'supplierID' => 1,
@@ -840,33 +895,33 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                 'datum' => '2013-06-01',
                 'active' => 1,
                 'taxID' => 1,
-                'main_detail_id' => 0,
+                'main_detail_id' => 9999,
             ]
         );
-        $this->articleId = Shopware()->Db()->lastInsertId();
+        $this->productId = (int) $this->connection->lastInsertId();
 
-        Shopware()->Db()->insert(
+        $this->connection->insert(
             's_articles_details',
             [
-                'articleID' => $this->articleId,
+                'articleID' => $this->productId,
                 'ordernumber' => $this->orderNumber,
                 'kind' => 1,
                 'active' => 1,
                 'instock' => 1,
             ]
         );
-        $this->articleDetailId = Shopware()->Db()->lastInsertId();
+        $this->productVariantId = (int) $this->connection->lastInsertId();
 
-        Shopware()->Db()->update(
+        $this->connection->update(
             's_articles',
-            ['main_detail_id' => $this->articleDetailId],
-            'id = ' . $this->articleId
+            ['main_detail_id' => $this->productVariantId],
+            ['id' => $this->productId]
         );
     }
 
-    private function createCategory()
+    private function createCategory(): void
     {
-        Shopware()->Db()->insert(
+        $this->connection->insert(
             's_categories',
             [
                 'description' => 'phpunit category',
@@ -874,20 +929,20 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                 'active' => 1,
             ]
         );
-        $this->categoryId = Shopware()->Db()->lastInsertId();
+        $this->categoryId = (int) $this->connection->lastInsertId();
 
-        Shopware()->Db()->insert(
+        $this->connection->insert(
             's_articles_categories_ro',
             [
-                'articleID' => $this->articleId,
+                'articleID' => $this->productId,
                 'categoryID' => $this->categoryId,
             ]
         );
     }
 
-    private function createOrders()
+    private function createOrders(): void
     {
-        $this->orderIds = [];
+        $orderIds = [];
 
         $orders = [
             [
@@ -897,7 +952,7 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                 'ordertime' => '2013-06-01 10:11:12',
                 'status' => 0,
                 'partnerID' => 'PHPUNIT_PARTNER',
-                'referer' => 'http://www.google.de/',
+                'referer' => 'https://www.google.de/',
                 'subshopID' => 1,
                 'currencyFactor' => 1,
                 'dispatchID' => 9,
@@ -931,14 +986,14 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         ];
 
         foreach ($orders as $order) {
-            Shopware()->Db()->insert('s_order', $order);
-            array_push($this->orderIds, Shopware()->Db()->lastInsertId());
+            $this->connection->insert('s_order', $order);
+            $orderIds[] = $this->connection->lastInsertId();
         }
 
         $orderDetails = [
             [
-                'orderID' => $this->orderIds[0],
-                'articleID' => $this->articleId,
+                'orderID' => $orderIds[0],
+                'articleID' => $this->productId,
                 'articleordernumber' => $this->orderNumber,
                 'price' => 1000,
                 'quantity' => 1,
@@ -947,8 +1002,8 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
                 'tax_rate' => 19,
             ],
             [
-                'orderID' => $this->orderIds[1],
-                'articleID' => $this->articleId,
+                'orderID' => $orderIds[1],
+                'articleID' => $this->productId,
                 'articleordernumber' => $this->orderNumber,
                 'price' => 1000,
                 'quantity' => 1,
@@ -958,7 +1013,7 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
             ],
         ];
         foreach ($orderDetails as $detail) {
-            Shopware()->Db()->insert('s_order_details', $detail);
+            $this->connection->insert('s_order_details', $detail);
         }
 
         $userBillingAddress = [
@@ -971,7 +1026,7 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         $orderBillingAddresses = [
             [
                 'userID' => $this->userId,
-                'orderID' => $this->orderIds[0],
+                'orderID' => $orderIds[0],
                 'company' => $userBillingAddress['company'],
                 'salutation' => $userBillingAddress['salutation'],
                 'customernumber' => $this->customerNumber,
@@ -980,7 +1035,7 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
             ],
             [
                 'userID' => $this->userId,
-                'orderID' => $this->orderIds[1],
+                'orderID' => $orderIds[1],
                 'company' => $userBillingAddress['company'],
                 'salutation' => $userBillingAddress['salutation'],
                 'customernumber' => $this->customerNumber,
@@ -989,7 +1044,7 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
             ],
             [
                 'userID' => $this->userId,
-                'orderID' => $this->orderIds[2],
+                'orderID' => $orderIds[2],
                 'company' => $userBillingAddress['company'],
                 'salutation' => $userBillingAddress['salutation'],
                 'customernumber' => $this->customerNumber,
@@ -998,11 +1053,11 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
             ],
         ];
         foreach ($orderBillingAddresses as $address) {
-            Shopware()->Db()->insert('s_order_billingaddress', $address);
+            $this->connection->insert('s_order_billingaddress', $address);
         }
     }
 
-    private function createVisitors()
+    private function createVisitors(): void
     {
         $visitors = [
             [
@@ -1019,16 +1074,16 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
             ],
         ];
         foreach ($visitors as $visitor) {
-            Shopware()->Db()->insert('s_statistics_visitors', $visitor);
+            $this->connection->insert('s_statistics_visitors', $visitor);
         }
     }
 
-    private function createImpressions()
+    private function createImpressions(): void
     {
-        Shopware()->Db()->insert(
+        $this->connection->insert(
             's_statistics_article_impression',
             [
-                'articleId' => $this->articleId,
+                'articleId' => $this->productId,
                 'shopId' => 1,
                 'date' => '2013-06-15',
                 'impressions' => 10,
@@ -1036,9 +1091,9 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         );
     }
 
-    private function createSearchTerms()
+    private function createSearchTerms(): void
     {
-        Shopware()->Db()->insert(
+        $this->connection->insert(
             's_statistics_search',
             [
                 'datum' => '2013-06-15 10:11:12',
@@ -1048,64 +1103,69 @@ class AnalyticsTest extends \Enlight_Components_Test_Controller_TestCase
         );
     }
 
-    private function createReferrer()
+    private function createReferrer(): void
     {
-        Shopware()->Db()->insert(
+        $this->connection->insert(
             's_statistics_referer',
             [
                 'datum' => '2013-06-15',
-                'referer' => 'http://www.google.de/?q=phpunit',
+                'referer' => 'https://www.google.de/?q=phpunit',
             ]
         );
     }
 
-    private function removeDemoData()
+    private function removeDemoData(): void
     {
         if ($this->userId) {
-            Shopware()->Db()->delete('s_user', 'id = ' . $this->userId);
-            Shopware()->Db()->delete('s_user_addresses', 'user_id = ' . $this->userId);
-            Shopware()->Db()->delete('s_order', 'userID = ' . $this->userId);
-            Shopware()->Db()->delete('s_order_billingaddress', 'userID = ' . $this->userId);
+            $this->connection->delete('s_user', ['id' => $this->userId]);
+            $this->connection->delete('s_user_addresses', ['user_id' => $this->userId]);
+            $this->connection->delete('s_order', ['userID' => $this->userId]);
+            $this->connection->delete('s_order_billingaddress', ['userID' => $this->userId]);
         }
 
-        if ($this->articleDetailId) {
-            Shopware()->Db()->delete('s_articles_details', 'id = ' . $this->articleDetailId);
+        if ($this->productVariantId) {
+            $this->connection->delete('s_articles_details', ['id' => $this->productVariantId]);
         }
 
-        if ($this->articleId) {
-            Shopware()->Db()->delete('s_articles', 'id = ' . $this->articleId);
-            Shopware()->Db()->delete('s_statistics_article_impression', 'articleId = ' . $this->articleId);
-            Shopware()->Db()->delete('s_order_details', 'articleID = ' . $this->articleId);
+        if ($this->productId) {
+            $this->connection->delete('s_articles', ['id' => $this->productId]);
+            $this->connection->delete('s_statistics_article_impression', ['articleId' => $this->productId]);
+            $this->connection->delete('s_order_details', ['articleID' => $this->productId]);
         }
 
         if ($this->categoryId) {
-            if ($this->articleId) {
-                Shopware()->Db()->delete('s_articles_categories_ro', 'articleID = ' . $this->articleId);
+            if ($this->productId) {
+                $this->connection->delete('s_articles_categories_ro', ['articleID' => $this->productId]);
             }
-            Shopware()->Db()->delete('s_categories', 'id = ' . $this->categoryId);
+            $this->connection->delete('s_categories', ['id' => $this->categoryId]);
         }
 
-        Shopware()->Db()->delete('s_statistics_visitors', "shopID = 1 AND datum = '2013-06-01' OR datum = '2013-06-15'");
-        Shopware()->Db()->delete('s_statistics_search', "searchterm = 'phpunit search term'");
-        Shopware()->Db()->delete('s_statistics_referer', "referer = 'http://www.google.de/?q=phpunit'");
+        $this->connection->createQueryBuilder()
+            ->delete('s_statistics_visitors')
+            ->where('shopID = 1')
+            ->andWhere('datum = "2013-06-01" OR datum = "2013-06-15"')
+            ->execute();
+        $this->connection->delete('s_statistics_search', ['searchterm' => 'phpunit search term']);
+        $this->connection->delete('s_statistics_referer', ['referer' => 'https://www.google.de/?q=phpunit']);
     }
 
-    private function getSearchTermFromReferrerUrl($url)
+    private function getSearchTermFromReferrerUrl(string $url): string
     {
         preg_match_all(
             '#[?&]([qp]|query|highlight|encquery|url|field-keywords|as_q|sucheall|satitle|KW)=([^&\$]+)#',
-            utf8_encode($url) . '&',
+            mb_convert_encoding($url, 'UTF-8', 'ISO-8859-1') . '&',
             $matches
         );
         if (empty($matches[0])) {
             return '';
         }
 
-        $ref = $matches[2][0];
-        $ref = html_entity_decode(rawurldecode(strtolower($ref)));
+        $ref = html_entity_decode(rawurldecode(strtolower($matches[2][0])));
         $ref = str_replace('+', ' ', $ref);
-        $ref = trim(preg_replace('/\s\s+/', ' ', $ref));
 
-        return $ref;
+        $replace = preg_replace('/\s\s+/', ' ', $ref);
+        static::assertIsString($replace);
+
+        return trim($replace);
     }
 }

@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Enlight
  *
@@ -36,21 +38,23 @@ class Enlight_Components_Snippet_Manager extends Enlight_Class
     protected $adapter;
 
     /**
-     * @var array Array with all registered namespaces
+     * @var array<string, Enlight_Components_Snippet_Namespace> Array with all registered namespaces
      */
     protected $namespaces = [];
 
     /**
-     * @var string Default config class
+     * @var class-string<Enlight_Components_Snippet_Namespace> Default config class
      */
     protected $defaultNamespaceClass = 'Enlight_Components_Snippet_Namespace';
 
     /**
      * @var string Default config class
      */
-    protected $defaultSection = null;
+    protected $defaultSection;
 
     /**
+     * @deprecated - Unused property. Will be removed in Shopware 5.8 without replacement
+     *
      * @var string Array of all ignored namespaces. Can be set in the constructor.
      */
     protected $ignoreNamespace;
@@ -60,11 +64,11 @@ class Enlight_Components_Snippet_Manager extends Enlight_Class
      * The adapter can be set in the options array element "adapter" and have to been an instance
      * of the Enlight_Config_Adapter.
      *
-     * @param array|Enlight_Config_Adapter|null $options
+     * @param array{adapter?: Enlight_Config_Adapter}|Enlight_Config_Adapter|null $options
      */
     public function __construct($options = null)
     {
-        if (!is_array($options)) {
+        if (!\is_array($options)) {
             $options = ['adapter' => $options];
         }
 
@@ -72,9 +76,6 @@ class Enlight_Components_Snippet_Manager extends Enlight_Class
             $this->setAdapter($options['adapter']);
         }
 
-        if (isset($options['ignore_namespace'])) {
-            $this->ignoreNamespace = (bool) $options['ignore_namespace'];
-        }
         parent::__construct();
     }
 

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Shipping
@@ -47,34 +46,34 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      * Some references to get a better grip of the single elements
      * @object
      */
-    refs   : [
-        { ref : 'grid', selector : 'shipping-list' },
-        { ref : 'mainWindow', selector : 'dispatchGrid' }
+    refs: [
+        { ref: 'grid', selector: 'shipping-list' },
+        { ref: 'mainWindow', selector: 'dispatchGrid' }
     ],
 
     /**
      * Keeps the current config for the costs matrix
      * @null
      */
-    currentConfig : null,
+    currentConfig: null,
 
     /**
      * Holds the main window
      * @null
      */
-    mainWindow : null,
+    mainWindow: null,
 
-     /**
+    /**
      * Contains all text messages for this controller
      * @object
      */
     messages: {
-        deleteDialogMessageMulti : '{s name="delete_dialog_multi"}Are you sure you want to delete those dispatchs ([0]){/s}?',
-        deleteDialogMessageSingle : '{s name="delete_dialog_single"}Are you sure you want to delete this dispatchs ([0]){/s}?',
-        deleteDialogSuccess :'{s name="dialog_multi_success"}Dispatches successfully deleted.{/s}',
-        saveDialogSuccess :'{s name="dialog_save_success"}Dispatch successfully saved.{/s}',
-        deleteDialogFailure :'{s name="dialog_multi_error"}Some dispatches couldn\'t removed.{/s}',
-        deleteDialogTitle : '{s name="delete_dialog_title"}Delete selected dispatch{/s}'
+        deleteDialogMessageMulti: '{s name="delete_dialog_multi"}Are you sure you want to delete those dispatchs ([0]){/s}?',
+        deleteDialogMessageSingle: '{s name="delete_dialog_single"}Are you sure you want to delete this dispatchs ([0]){/s}?',
+        deleteDialogSuccess: '{s name="dialog_multi_success"}Dispatches successfully deleted.{/s}',
+        saveDialogSuccess: '{s name="dialog_save_success"}Dispatch successfully saved.{/s}',
+        deleteDialogFailure: '{s name="dialog_multi_error"}Some dispatches couldn\'t removed.{/s}',
+        deleteDialogTitle: '{s name="delete_dialog_title"}Delete selected dispatch{/s}'
     },
 
     /**
@@ -89,23 +88,23 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
 
         me.control({
             // Handling the action column in the main view
-            'shipping-list actioncolumn' : {
-                render : function (view) {
+            'shipping-list actioncolumn': {
+                render: function (view) {
                     view.scope = this;
                     view.handler = this.handleActionColumn;
                 }
             },
 
-            'shipping-list button[action=addShipping]' :  {
-                'click' : me.onAddShipping
+            'shipping-list button[action=addShipping]': {
+                'click': me.onAddShipping
             },
 
-            'shipping-list button[action=deleteShipping]' :  {
-                'click' : me.onDeleteShipping
+            'shipping-list button[action=deleteShipping]': {
+                'click': me.onDeleteShipping
             },
 
-            'shipping-list' : {
-                'selectionchange' : me.onSelectionChange
+            'shipping-list': {
+                'selectionchange': me.onSelectionChange
             }
         });
 
@@ -118,8 +117,8 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
             callback: function() {
                 me.mainWindow = me.getView('Main').create({
                     customerGroupStore: me.customerGroupStore,
-                    shopStore:          me.shopStore,
-                    dispatchStore:      me.getStore('Dispatch').load()
+                    shopStore: me.shopStore,
+                    dispatchStore: me.getStore('DispatchList').load()
                 });
                 me.subApplication.setAppWindow(me.mainWindow);
                 me.mainWindow.show();
@@ -136,7 +135,7 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      * @param [integer] rowIndex - Position of the event
      * @return void
      */
-    onDeleteSingleShipping:function (grid, rowIndex) {
+    onDeleteSingleShipping: function (grid, rowIndex) {
         var me = this,
             store = grid.getStore(),
             record = store.getAt(rowIndex);
@@ -144,20 +143,20 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
         Ext.MessageBox.confirm(
             me.messages.deleteDialogTitle,
             Ext.String.format(me.messages.deleteDialogMessageSingle, record.get('name')), function (response) {
-            if (response !== 'yes') {
-                return false;
-            }
-            store.remove(record);
-            store.sync({
-                callback: function() {
-                    Shopware.Msg.createGrowlMessage('', me.messages.deleteDialogSuccess, '{s name="title"}{/s}');
-                    Ext.Error.handle = function() {
-                        Shopware.Msg.createGrowlMessage('', me.messages.deleteDialogFailure + e.message, '{s name="title"}{/s}');
-                    }
-                    store.load();
+                if (response !== 'yes') {
+                    return false;
                 }
+                store.remove(record);
+                store.sync({
+                    callback: function() {
+                        Shopware.Msg.createGrowlMessage('', me.messages.deleteDialogSuccess, '{s name="title"}{/s}');
+                        Ext.Error.handle = function() {
+                            Shopware.Msg.createGrowlMessage('', me.messages.deleteDialogFailure + e.message, '{s name="title"}{/s}');
+                        }
+                        store.load();
+                    }
+                });
             });
-        });
 
     },
 
@@ -167,11 +166,11 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      * @param button
      * @param event
      */
-    onDeleteShipping : function(button, event) {
+    onDeleteShipping: function(button, event) {
         var me                  = this,
             grid                = me.getGrid(),
             selection           = grid.getSelectionModel().getSelection(),
-            store               = me.getStore('Dispatch'),
+            store               = me.getStore('DispatchList'),
             listOfDispatchNames = [],
             noOfElements        = selection.length;
 
@@ -199,7 +198,7 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
                         }
                     });
                 }
-        });
+            });
     },
 
     /**
@@ -209,7 +208,7 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      * @param selection array of Ext.data.Model
      * @return void
      */
-    onSelectionChange : function(sm, selection) {
+    onSelectionChange: function(sm, selection) {
         var me = this,
             deleteButton = me.getMainWindow().down('button[action=deleteShipping]'),
             allowDelete = true;
@@ -233,17 +232,17 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      *
      * @return void
      */
-    onAddShipping : function() {
+    onAddShipping: function() {
         var me = this,
             costsmatrix = this.getStore('Costsmatrix'),
-            // create a empty dispatch model
+            // create an empty dispatch model
             record = me.getModel('Dispatch').create(),
             // create an inital empty costs matrix entry
             emptyCostsMatrix = me.getModel('Costsmatrix').create();
 
-        // Make shure that an empty dispatch id will be send, so that a new data entry will be generated.
+        // Make sure that an empty dispatch id will be send, so that a new data entry will be generated.
         costsmatrix.getProxy().extraParams = {
-            dispatchId : ''
+            dispatchId: ''
         };
         costsmatrix.removeAll();
         costsmatrix.add(emptyCostsMatrix);
@@ -258,30 +257,33 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      * @param createMode - boolean
      * @return Shopware.apps.Shipping.view.edit.Panel
      */
-    createEditForm : function(record, costsmatrix) {
+    createEditForm: function(record, costsmatrix) {
         var me = this;
 
         // Using Ext.create() here to force new instances of Stores (sw-3780)
         return  me.getView('Shopware.apps.Shipping.view.edit.Panel').create({
-            editRecord              : record,
+            editRecord: record,
             // store for costs matrix tab
-            costMatrixStore         : costsmatrix,
+            costMatrixStore: costsmatrix,
             // store for payments tab
-            availablePayments       : Ext.create('Shopware.apps.Shipping.store.Payment').load(),
+            availablePayments: Ext.create('Shopware.apps.Shipping.store.Payment').load(),
             // store for county tab
-            availableCountries      : Ext.create('Shopware.apps.Shipping.store.Country').load(),
+            availableCountries: Ext.create('Shopware.apps.Shipping.store.Country').load(),
             // store for the category tree
-            availableCategoriesTree : Ext.create('Shopware.apps.Shipping.store.CategoryTree').load(),
+            availableCategoriesTree: Ext.create('Shopware.apps.Shipping.store.CategoryTree').load(),
             // store for holidays
-            availableHolidays       : Ext.create('Shopware.apps.Shipping.store.Holiday').load(),
+            availableHolidays: Ext.create('Shopware.apps.Shipping.store.Holiday').load(),
             // current dispatch id
-            dispatchId              : record.get('id'),
+            dispatchId: record.get('id'),
             // store for the dispatch
-            mainStore               : Ext.create('Shopware.apps.Shipping.store.Dispatch').load()
+            mainStore: Ext.create('Shopware.apps.Shipping.store.Dispatch').load(
+                {
+                    params: { id: record.get('id') },
+                })
         });
     },
 
-     /**
+    /**
      * Helper method which handles all clicks of the action column in the main view
      *
      * @param [object] view - The view
@@ -290,7 +292,7 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      * @param [object] item - The item that has been clicked
      * @return void
      */
-    handleActionColumn : function (view, rowIndex, colIndex, item) {
+    handleActionColumn: function (view, rowIndex, colIndex, item) {
         var me = this.scope;
 
         switch (item.iconCls) {
@@ -299,7 +301,7 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
                 break;
             case 'sprite-minus-circle-frame':
                 me.onDeleteSingleShipping(view, rowIndex);
-            break;
+                break;
             case 'sprite-blue-document-copy':
                 me.onCloneShippingCosts(view, item, rowIndex);
                 break;
@@ -316,11 +318,11 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      * @param [object]  item - The row which is affected
      * @param [integer] rowIndex - The row number
      */
-    onEditShippingCosts : function (view, item, rowIndex) {
+    onEditShippingCosts: function (view, item, rowIndex) {
         var store       = view.getStore(),
             me          = this,
             costsmatrix = Ext.create('Shopware.apps.Shipping.store.Costsmatrix'),
-            record      = store.load().getAt(rowIndex);
+            record      = store.getAt(rowIndex);
 
         record.data.clone = false;
 
@@ -351,7 +353,7 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
      * @param [object]  item - The row which is affected
      * @param [integer] rowIndex - The row number
      */
-    onCloneShippingCosts : function (view, item, rowIndex) {
+    onCloneShippingCosts: function (view, item, rowIndex) {
         var store       = view.getStore(),
             me          = this,
             costsmatrix = this.getStore('Costsmatrix'),
@@ -363,7 +365,7 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
 
         // also clone the actual shipping costs SW-2263
         costsmatrix.getProxy().extraParams = {
-            dispatchId : record.get('id')
+            dispatchId: record.get('id')
         };
 
         costsmatrix.load({
@@ -383,7 +385,7 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
         });
 
         // save costsmatrix for further reference
-//        me.costsmatrix = costsmatrix;
+        //        me.costsmatrix = costsmatrix;
 
         me.getGrid().setLoading(true);
 
@@ -417,26 +419,26 @@ Ext.define('Shopware.apps.Shipping.controller.Main', {
         switch (calculationType)
         {
             case 1:
-            return {
-                decimalPrecision : 2,
-                minChange : 0.01,
-                startValue : 0
-            };
-            break;
+                return {
+                    decimalPrecision: 2,
+                    minChange: 0.01,
+                    startValue: 0
+                };
+                break;
             case 2:
             case 3:
                 return {
-                    decimalPrecision : 0,
-                    minChange : 1,
-                    startValue : 1
+                    decimalPrecision: 0,
+                    minChange: 1,
+                    startValue: 1
                 };
                 break;
             case 0:
             default:
                 return {
-                    decimalPrecision : 3,
-                    minChange : 0.001,
-                    startValue : 0
+                    decimalPrecision: 3,
+                    minChange: 0.001,
+                    startValue: 0
                 };
                 break;
         }

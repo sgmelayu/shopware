@@ -1,65 +1,86 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Controllers\Backend;
 
+use Closure;
+use DateInterval;
+use DateTime;
 use Doctrine\DBAL\Connection;
+use Enlight_Components_Test_Controller_TestCase;
+use Enlight_Plugin_Namespace;
+use Enlight_View;
+use Generator;
+use PHPUnit\Framework\Constraint\Constraint;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
+use Shopware_Controllers_Backend_Widgets;
+use Shopware_Plugins_Backend_Auth_Bootstrap;
+use Zend_Db_Expr;
 
-class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
+class WidgetsTest extends Enlight_Components_Test_Controller_TestCase
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    use DatabaseTransactionBehaviour;
+    use ContainerTrait;
 
-    private $userId;
+    private Connection $connection;
+
+    private int $userId;
+
+    private Shopware_Plugins_Backend_Auth_Bootstrap $authPlugin;
 
     public function setUp(): void
     {
         parent::setUp();
-        Shopware()->Plugins()->Backend()->Auth()->setNoAuth();
-        Shopware()->Plugins()->Backend()->Auth()->setNoAcl();
 
-        $this->connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
-        $this->connection->beginTransaction();
+        $pluginManager = $this->getContainer()->get('plugin_manager');
+        $backendPlugins = $pluginManager->get('Backend');
+        static::assertInstanceOf(Enlight_Plugin_Namespace::class, $backendPlugins);
+        $authPlugin = $backendPlugins->get('Auth');
+        static::assertInstanceOf(Shopware_Plugins_Backend_Auth_Bootstrap::class, $authPlugin);
+        $this->authPlugin = $authPlugin;
 
-        Shopware()->Db()->exec('DELETE FROM s_statistics_visitors');
-        Shopware()->Db()->exec('DELETE FROM s_order');
-        Shopware()->Db()->exec('DELETE FROM s_user');
+        $this->authPlugin->setNoAuth();
+        $this->authPlugin->setNoAcl();
+
+        $this->connection = $this->getContainer()->get(Connection::class);
+
+        $this->connection->executeStatement('DELETE FROM s_statistics_visitors');
+        $this->connection->executeStatement('DELETE FROM s_order');
+        $this->connection->executeStatement('DELETE FROM s_user');
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
 
-        Shopware()->Plugins()->Backend()->Auth()->setNoAuth(false);
-        Shopware()->Plugins()->Backend()->Auth()->setNoAcl(false);
-
-        $this->connection->rollBack();
+        $this->authPlugin->setNoAuth(false);
+        $this->authPlugin->setNoAcl(false);
     }
 
-    public function testConversionIsEmpty()
+    public function testConversionIsEmpty(): void
     {
         $this->dispatch('backend/widgets/getTurnOverVisitors');
 
@@ -69,10 +90,10 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertEquals('0.00', $response['conversion']);
     }
 
-    public function testConversionIsCalucatedFromBeginningOfDay()
+    public function testConversionIsCalculatedFromBeginningOfDay(): void
     {
-        $date = new \DateTime();
-        $date->sub(new \DateInterval('P7DT1M'));
+        $date = new DateTime();
+        $date->sub(new DateInterval('P7DT1M'));
 
         $this->connection
             ->insert('s_statistics_visitors', [
@@ -102,10 +123,10 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertEquals('100.00', $response['conversion']);
     }
 
-    public function testConversionStillWorks()
+    public function testConversionStillWorks(): void
     {
-        $date = new \DateTime();
-        $date->sub(new \DateInterval('P6DT59M'));
+        $date = new DateTime();
+        $date->sub(new DateInterval('P6DT59M'));
 
         $this->connection
             ->insert('s_statistics_visitors', [
@@ -135,10 +156,10 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertEquals('100.00', $response['conversion']);
     }
 
-    public function testIfNoConversionAfterEightDays()
+    public function testIfNoConversionAfterEightDays(): void
     {
-        $date = new \DateTime();
-        $date->sub(new \DateInterval('P8D'));
+        $date = new DateTime();
+        $date->sub(new DateInterval('P8D'));
 
         $this->connection
             ->insert('s_statistics_visitors', [
@@ -171,7 +192,7 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
     /**
      * test the getVisitorsAction
      */
-    public function testGetVisitorsWithCompanyAction()
+    public function testGetVisitorsWithCompanyAction(): void
     {
         $addressData = [
             'company' => 'TestCompany',
@@ -190,7 +211,7 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
 
         // Check if success
         static::assertArrayHasKey('success', $response);
-        // Check if has data
+        // Check if response has data
         static::assertArrayHasKey('data', $response);
         // Check if data contains customers
         static::assertArrayHasKey('customers', $response['data']);
@@ -200,7 +221,7 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertEquals($addressData['company'], $response['data']['customers'][0]['customer']);
     }
 
-    public function testGetVisitorsWithoutCompanyAction()
+    public function testGetVisitorsWithoutCompanyAction(): void
     {
         $addressData = [
             'salutation' => 'mr',
@@ -218,7 +239,7 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
 
         // Check if success
         static::assertArrayHasKey('success', $response);
-        // Check if has data
+        // Check if response has data
         static::assertArrayHasKey('data', $response);
         // Check if data contains customers
         static::assertArrayHasKey('customers', $response['data']);
@@ -231,7 +252,7 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
         );
     }
 
-    public function testGetVisitorsWithEmptyCompanyAction()
+    public function testGetVisitorsWithEmptyCompanyAction(): void
     {
         $addressData = [
             'company' => '',
@@ -250,7 +271,7 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
 
         // Check if success
         static::assertArrayHasKey('success', $response);
-        // Check if has data
+        // Check if response has data
         static::assertArrayHasKey('data', $response);
         // Check if data contains customers
         static::assertArrayHasKey('customers', $response['data']);
@@ -260,7 +281,87 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertEquals($addressData['firstname'] . ' ' . $addressData['lastname'], $response['data']['customers'][0]['customer']);
     }
 
-    private function prepareTestGetVisitors($addressData)
+    /**
+     * @dataProvider backendAuthProvider
+     */
+    public function testGetNoticeChecksBackendAuth(object $auth, Enlight_View $view): void
+    {
+        $controller = $this->createController($view);
+
+        $_SESSION['ShopwareBackend']['Auth'] = $auth;
+
+        $controller->getNoticeAction();
+
+        unset($_SESSION);
+    }
+
+    /**
+     * @dataProvider backendAuthProvider
+     */
+    public function testSaveNoticeChecksBackendAuth(object $auth, Enlight_View $view): void
+    {
+        $this->Request()->setParam('notice', 'bf0b9d61-8f55-4f2c-818b-9d0891178df8');
+
+        $controller = $this->createController($view);
+        $controller->setRequest($this->Request());
+
+        $_SESSION['ShopwareBackend']['Auth'] = $auth;
+
+        $controller->saveNoticeAction();
+
+        unset($_SESSION);
+    }
+
+    /**
+     * @return Generator<string, array>
+     */
+    public function backendAuthProvider(): Generator
+    {
+        yield 'invalid auth' => [
+            (object) [],
+            $this->getViewMockCheckingForAssign([
+                static::callback($this->getResponseSuccessValidator(false)),
+                static::anything(),
+                static::anything(),
+                static::anything(),
+            ]),
+        ];
+
+        yield 'valid auth' => [
+            (object) ['id' => 1],
+            $this->getViewMockCheckingForAssign([
+                static::callback($this->getResponseSuccessValidator(true)),
+                static::anything(),
+                static::anything(),
+                static::anything(),
+            ]),
+        ];
+    }
+
+    /**
+     * @param array<Constraint> $arguments
+     */
+    private function getViewMockCheckingForAssign(array $arguments): Enlight_View
+    {
+        $view = $this->createMock(Enlight_View::class);
+        $view->expects(static::once())
+            ->method('assign')
+            ->with(...$arguments);
+
+        return $view;
+    }
+
+    /**
+     * @return Closure(array<string, mixed>): bool
+     */
+    private function getResponseSuccessValidator(bool $expectSuccess): callable
+    {
+        return static function (array $response) use ($expectSuccess): bool {
+            return $response['success'] === $expectSuccess;
+        };
+    }
+
+    private function prepareTestGetVisitors(array $addressData): void
     {
         $this->connection->insert('s_user', [
             'password' => '098f6bcd4621d373cade4e832627b4f6',
@@ -278,7 +379,7 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
             'birthday' => '1990-01-01',
         ]);
 
-        $this->userId = $this->connection->lastInsertId('s_user');
+        $this->userId = (int) $this->connection->lastInsertId('s_user');
 
         $addressData = array_merge(['user_id' => $this->userId], $addressData);
         $this->connection->insert('s_user_addresses', $addressData);
@@ -295,9 +396,18 @@ class WidgetsTest extends \Enlight_Components_Test_Controller_TestCase
         $this->connection->insert('s_statistics_currentusers', [
             'remoteaddr' => '127.0.0.1',
             'page' => '/',
-            'time' => new \Zend_Db_Expr('NOW()'),
+            'time' => new Zend_Db_Expr('NOW()'),
             'userID' => $this->userId,
             'deviceType' => 'Test',
         ]);
+    }
+
+    private function createController(Enlight_View $view): Shopware_Controllers_Backend_Widgets
+    {
+        $controller = new Shopware_Controllers_Backend_Widgets();
+        $controller->setContainer($this->getContainer());
+        $controller->setView($view);
+
+        return $controller;
     }
 }

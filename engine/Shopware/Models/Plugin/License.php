@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Plugin;
 
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 
@@ -79,6 +80,7 @@ class License extends ModelEntity
 
     /**
      * @var string
+     *
      * @ORM\Column(name="notation", type="string", nullable=false)
      */
     private $notation;
@@ -98,21 +100,21 @@ class License extends ModelEntity
     private $source;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="added", type="date", nullable=true)
      */
     private $added;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="creation", type="date", nullable=true)
      */
     private $creation;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="expiration", type="date", nullable=true)
      */
@@ -133,7 +135,7 @@ class License extends ModelEntity
     private $pluginId;
 
     /**
-     * @var \Shopware\Models\Plugin\Plugin|null
+     * @var Plugin|null
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Plugin\Plugin", inversedBy="licenses")
      * @ORM\JoinColumn(name="plugin_id", referencedColumnName="id")
@@ -165,7 +167,7 @@ class License extends ModelEntity
     }
 
     /**
-     * @param \DateTimeInterface $added
+     * @param DateTimeInterface $added
      */
     public function setAdded($added)
     {
@@ -173,7 +175,7 @@ class License extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getAdded()
     {
@@ -181,7 +183,7 @@ class License extends ModelEntity
     }
 
     /**
-     * @param \DateTimeInterface $creation
+     * @param DateTimeInterface $creation
      */
     public function setCreation($creation)
     {
@@ -189,7 +191,7 @@ class License extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getCreation()
     {
@@ -197,7 +199,7 @@ class License extends ModelEntity
     }
 
     /**
-     * @param \DateTimeInterface $expiration
+     * @param DateTimeInterface $expiration
      */
     public function setExpiration($expiration)
     {
@@ -205,7 +207,7 @@ class License extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getExpiration()
     {

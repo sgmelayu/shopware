@@ -1,46 +1,41 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service\Core;
 
 use Shopware\Bundle\StoreFrontBundle\Gateway\RelatedProductsGatewayInterface;
-use Shopware\Bundle\StoreFrontBundle\Service;
 use Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\RelatedProductsServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
-use Shopware\Bundle\StoreFrontBundle\Struct\ProductContextInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class RelatedProductsService implements Service\RelatedProductsServiceInterface
+class RelatedProductsService implements RelatedProductsServiceInterface
 {
-    /**
-     * @var RelatedProductsGatewayInterface
-     */
-    private $gateway;
+    private RelatedProductsGatewayInterface $gateway;
 
-    /**
-     * @var ListProductServiceInterface
-     */
-    private $listProductService;
+    private ListProductServiceInterface $listProductService;
 
     public function __construct(
         RelatedProductsGatewayInterface $gateway,
@@ -53,7 +48,7 @@ class RelatedProductsService implements Service\RelatedProductsServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function get(BaseProduct $product, ProductContextInterface $context)
+    public function get(BaseProduct $product, ShopContextInterface $context)
     {
         $related = $this->getList([$product], $context);
 
@@ -63,7 +58,7 @@ class RelatedProductsService implements Service\RelatedProductsServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function getList($products, ProductContextInterface $context)
+    public function getList($products, ShopContextInterface $context)
     {
         /*
          * Returns an array which is associated with the different product numbers.
@@ -96,17 +91,17 @@ class RelatedProductsService implements Service\RelatedProductsServiceInterface
     }
 
     /**
-     * @param BaseProduct[] $products
+     * @param ListProduct[] $products
      * @param string[]      $numbers
      *
-     * @return BaseProduct[]
+     * @return array<string, ListProduct>
      */
-    private function getProductsByNumbers($products, array $numbers)
+    private function getProductsByNumbers(array $products, array $numbers): array
     {
         $result = [];
 
         foreach ($products as $product) {
-            if (in_array($product->getNumber(), $numbers)) {
+            if (\in_array($product->getNumber(), $numbers)) {
                 $result[$product->getNumber()] = $product;
             }
         }
@@ -115,11 +110,11 @@ class RelatedProductsService implements Service\RelatedProductsServiceInterface
     }
 
     /**
-     * @param array<string, string[]> $numbers
+     * @param array<int, array<string>> $numbers
      *
-     * @return array
+     * @return array<string>
      */
-    private function extractNumbers($numbers)
+    private function extractNumbers(array $numbers): array
     {
         // Collect all numbers to send a single list product request.
         $related = [];

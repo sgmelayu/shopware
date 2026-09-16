@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service\Core;
@@ -35,15 +35,9 @@ use Shopware\Components\Routing\RouterInterface;
 
 class ListingLinkRewriteService implements ListingLinkRewriteServiceInterface
 {
-    /**
-     * @var ConfiguratorServiceInterface
-     */
-    private $configuratorService;
+    private ConfiguratorServiceInterface $configuratorService;
 
-    /**
-     * @var RouterInterface
-     */
-    private $router;
+    private RouterInterface $router;
 
     public function __construct(ConfiguratorServiceInterface $configuratorService, RouterInterface $router)
     {
@@ -51,6 +45,12 @@ class ListingLinkRewriteService implements ListingLinkRewriteServiceInterface
         $this->router = $router;
     }
 
+    /**
+     * @param array<string, mixed> $articles
+     * @param int|null             $categoryId
+     *
+     * @return array<string, mixed>
+     */
     public function rewriteLinks(
         Criteria $criteria,
         array $articles,
@@ -62,8 +62,8 @@ class ListingLinkRewriteService implements ListingLinkRewriteServiceInterface
             return $condition->expandVariants();
         });
 
-        $products = array_map(function (array $article) {
-            return new BaseProduct($article['articleID'], $article['articleDetailsID'], $article['ordernumber']);
+        $products = array_map(function (array $product) {
+            return new BaseProduct($product['articleID'], $product['articleDetailsID'], $product['ordernumber']);
         }, $articles);
 
         $configurations = [];
@@ -82,7 +82,7 @@ class ListingLinkRewriteService implements ListingLinkRewriteServiceInterface
         $rewrite = $this->router->generateList($urls);
 
         foreach ($articles as $key => &$product) {
-            if (!array_key_exists($key, $rewrite)) {
+            if (!\array_key_exists($key, $rewrite)) {
                 continue;
             }
             $product['linkDetails'] = $rewrite[$key];
@@ -92,15 +92,12 @@ class ListingLinkRewriteService implements ListingLinkRewriteServiceInterface
         foreach ($articles as &$product) {
             $number = $product['ordernumber'];
 
-            $config = [];
-            if (isset($configurations[$number])) {
-                $config = $configurations[$number];
-            }
+            $config = $configurations[$number] ?? [];
 
             if (!empty($config)) {
                 $variantLink = $this->buildListingVariantLink($number, $config, $conditions);
 
-                if (strpos($product['linkDetails'], '?') !== false) {
+                if (str_contains($product['linkDetails'], '?')) {
                     $product['linkDetails'] .= '&' . $variantLink;
                 } else {
                     $product['linkDetails'] .= '?' . $variantLink;
@@ -111,22 +108,25 @@ class ListingLinkRewriteService implements ListingLinkRewriteServiceInterface
         return $articles;
     }
 
-    private function buildListingVariantLink($number, array $config, array $conditions)
+    /**
+     * @param array<Group>            $config
+     * @param array<VariantCondition> $conditions
+     */
+    private function buildListingVariantLink(string $number, array $config, array $conditions): string
     {
         $groupIds = array_map(function (VariantCondition $condition) {
             return $condition->getGroupId();
         }, $conditions);
 
         $filtered = array_filter($config, function (Group $group) use ($groupIds) {
-            return in_array($group->getId(), $groupIds, true);
+            return \in_array($group->getId(), $groupIds, true);
         });
 
-        if (count($config) === count($filtered)) {
+        if (\count($config) === \count($filtered)) {
             return 'number=' . $number;
         }
 
         $keys = [];
-        /** @var Group $group */
         foreach ($filtered as $group) {
             $keys['group'][$group->getId()] = $group->getOptions()[0]->getId();
         }

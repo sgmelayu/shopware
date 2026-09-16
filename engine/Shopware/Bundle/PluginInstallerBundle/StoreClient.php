@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle;
 
+use Exception;
+use RuntimeException;
 use Shopware\Bundle\PluginInstallerBundle\Exception\AccountException;
 use Shopware\Bundle\PluginInstallerBundle\Exception\AuthenticationException;
 use Shopware\Bundle\PluginInstallerBundle\Exception\DomainVerificationException;
@@ -37,6 +39,7 @@ use Shopware\Bundle\PluginInstallerBundle\Exception\ShopSecretException;
 use Shopware\Bundle\PluginInstallerBundle\Exception\StoreException;
 use Shopware\Bundle\PluginInstallerBundle\Service\UniqueIdGeneratorInterface;
 use Shopware\Bundle\PluginInstallerBundle\Struct\AccessTokenStruct;
+use Shopware\Bundle\PluginInstallerBundle\Struct\StructHydrator;
 use Shopware\Components\HttpClient\HttpClientInterface;
 use Shopware\Components\HttpClient\RequestException;
 use Shopware\Components\HttpClient\Response;
@@ -44,38 +47,20 @@ use Shopware\Components\OpenSSLVerifier;
 
 class StoreClient
 {
-    /**
-     * @var HttpClientInterface
-     */
-    private $httpClient;
+    private HttpClientInterface $httpClient;
 
-    /**
-     * @var string
-     */
-    private $apiEndPoint;
+    private string $apiEndPoint;
 
-    /**
-     * @var Struct\StructHydrator
-     */
-    private $structHydrator;
+    private StructHydrator $structHydrator;
 
-    /**
-     * @var OpenSSLVerifier
-     */
-    private $openSSLVerifier;
+    private OpenSSLVerifier $openSSLVerifier;
 
-    /**
-     * @var UniqueIdGeneratorInterface
-     */
-    private $uniqueIdGenerator;
+    private UniqueIdGeneratorInterface $uniqueIdGenerator;
 
-    /**
-     * @param string $apiEndPoint
-     */
     public function __construct(
         HttpClientInterface $httpClient,
-        $apiEndPoint,
-        Struct\StructHydrator $structHydrator,
+        string $apiEndPoint,
+        StructHydrator $structHydrator,
         OpenSSLVerifier $openSSLVerifier,
         UniqueIdGeneratorInterface $uniqueIdGenerator
     ) {
@@ -90,7 +75,7 @@ class StoreClient
      * @param string $shopwareId
      * @param string $password
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return AccessTokenStruct
      */
@@ -108,13 +93,13 @@ class StoreClient
     }
 
     /**
-     * @param string $resource
-     * @param array  $params
-     * @param array  $headers
+     * @param string                $resource
+     * @param array<string, mixed>  $params
+     * @param array<string, string> $headers
      *
-     * @throws \Exception
+     * @throws Exception
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function doGetRequest($resource, $params = [], $headers = [])
     {
@@ -128,13 +113,13 @@ class StoreClient
     }
 
     /**
-     * @param string $resource
-     * @param array  $params
-     * @param array  $headers
+     * @param string                $resource
+     * @param array<string, mixed>  $params
+     * @param array<string, string> $headers
      *
-     * @throws \Exception
+     * @throws Exception
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function doAuthGetRequest(
         AccessTokenStruct $accessToken,
@@ -153,11 +138,13 @@ class StoreClient
     }
 
     /**
-     * @param string $resource
-     * @param array  $params
-     * @param array  $headers
+     * @param string                $resource
+     * @param array<string, mixed>  $params
+     * @param array<string, string> $headers
      *
-     * @throws \Exception
+     * @throws Exception
+     *
+     * @return string
      */
     public function doGetRequestRaw($resource, $params = [], $headers = [])
     {
@@ -171,11 +158,11 @@ class StoreClient
     }
 
     /**
-     * @param string $resource
-     * @param array  $params
-     * @param array  $headers
+     * @param string                $resource
+     * @param array<string, mixed>  $params
+     * @param array<string, string> $headers
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return string
      */
@@ -196,13 +183,13 @@ class StoreClient
     }
 
     /**
-     * @param string $resource
-     * @param array  $params
-     * @param array  $headers
+     * @param string                $resource
+     * @param array<string, mixed>  $params
+     * @param array<string, string> $headers
      *
-     * @throws \Exception
+     * @throws Exception
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function doPostRequest($resource, $params, $headers = [])
     {
@@ -216,12 +203,12 @@ class StoreClient
     }
 
     /**
-     * @param string $resource
-     * @param array  $params
+     * @param string               $resource
+     * @param array<string, mixed> $params
      *
-     * @throws \Exception
+     * @throws Exception
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function doAuthPostRequest(
         AccessTokenStruct $accessToken,
@@ -239,10 +226,10 @@ class StoreClient
     }
 
     /**
-     * @param string $resource
-     * @param array  $params
+     * @param string               $resource
+     * @param array<string, mixed> $params
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return Response
      */
@@ -251,14 +238,12 @@ class StoreClient
         $resource,
         $params
     ) {
-        $response = $this->postRequest(
+        return $this->postRequest(
             $resource,
             $params,
             [],
             $accessToken
         );
-
-        return $response;
     }
 
     /**
@@ -273,10 +258,10 @@ class StoreClient
     }
 
     /**
-     * @param string $eventName
-     * @param array  $additionalData
+     * @param string               $eventName
+     * @param array<string, mixed> $additionalData
      *
-     * @return array|false
+     * @return array<string, mixed>|false
      */
     public function doTrackEvent($eventName, $additionalData = [])
     {
@@ -287,7 +272,7 @@ class StoreClient
         ];
 
         try {
-            $response = $this->httpClient->post($this->apiEndPoint . '/tracking/events', [], json_encode($payload));
+            $response = $this->httpClient->post($this->apiEndPoint . '/tracking/events', [], json_encode($payload, JSON_THROW_ON_ERROR));
             $this->verifyResponseSignature($response);
         } catch (RequestException $ex) {
             return false;
@@ -297,80 +282,68 @@ class StoreClient
     }
 
     /**
-     * @param string $resource
-     * @param array  $params
-     * @param array  $headers
+     * @param array<string, mixed>  $params
+     * @param array<string, string> $headers
      *
-     * @throws \Exception
-     *
-     * @return Response
-     *
-     * @internal param null|string $secret
+     * @throws Exception
      */
-    private function getRequest($resource, $params, $headers = [], AccessTokenStruct $token = null)
+    private function getRequest(string $resource, array $params, array $headers = [], ?AccessTokenStruct $token = null): Response
     {
         $url = $this->apiEndPoint . $resource;
         if (!empty($params)) {
             $url .= '?' . http_build_query($params, '', '&');
         }
         $header = [];
-        if ($token) {
+        if ($token !== null) {
             $header['X-Shopware-Token'] = $token->getToken();
         }
 
-        if (count($headers) > 0) {
+        if (\count($headers) > 0) {
             $header = array_merge($header, $headers);
         }
-
-        $response = null;
 
         try {
             $response = $this->httpClient->get($url, $header);
             $this->verifyResponseSignature($response);
+
+            return $response;
         } catch (RequestException $e) {
             $this->handleRequestException($e);
         }
-
-        return $response;
     }
 
     /**
-     * @param string            $resource
-     * @param array             $params
-     * @param array             $headers
-     * @param AccessTokenStruct $token
+     * @param array<string, mixed>  $params
+     * @param array<string, string> $headers
      *
      * @throws StoreException
-     * @throws \Exception
-     *
-     * @return Response
+     * @throws Exception
      */
-    private function postRequest($resource, $params = [], $headers = [], AccessTokenStruct $token = null)
+    private function postRequest(string $resource, array $params = [], array $headers = [], ?AccessTokenStruct $token = null): Response
     {
         $url = $this->apiEndPoint . $resource;
 
         $header = [];
-        if ($token) {
+        if ($token !== null) {
             $header['X-Shopware-Token'] = $token->getToken();
         }
 
-        if (count($headers) > 0) {
+        if (\count($headers) > 0) {
             $header = array_merge($header, $headers);
         }
 
-        $response = null;
         try {
             $response = $this->httpClient->post(
                 $url,
                 $header,
-                json_encode($params)
+                json_encode($params, JSON_THROW_ON_ERROR)
             );
             $this->verifyResponseSignature($response);
+
+            return $response;
         } catch (RequestException $e) {
             $this->handleRequestException($e);
         }
-
-        return $response;
     }
 
     /**
@@ -378,7 +351,6 @@ class StoreClient
      * Parses it to detect and extract details provided
      * by SBP about what happened
      *
-     * @throws \Exception
      * @throws SbpServerException
      * @throws AuthenticationException
      * @throws AccountException
@@ -386,8 +358,11 @@ class StoreClient
      * @throws LicenceException
      * @throws StoreException
      * @throws DomainVerificationException
+     * @throws RequestException
+     *
+     * @return never-return
      */
-    private function handleRequestException(RequestException $requestException)
+    private function handleRequestException(RequestException $requestException): void
     {
         if (!$requestException->getBody()) {
             throw $requestException;
@@ -399,7 +374,7 @@ class StoreClient
             throw $requestException;
         }
 
-        $httpCode = array_key_exists('error', $data) ? $data['error'] : 0;
+        $httpCode = \array_key_exists('error', $data) ? $data['error'] : 0;
         $sbpCode = $data['code'];
 
         switch ($sbpCode) {
@@ -501,18 +476,18 @@ class StoreClient
                 throw new MissingDoubleOptInConfirmationException($sbpCode, 'missing_doi_confirmation', $httpCode, $requestException);
         }
 
-        $reason = array_key_exists('reason', $data) ? $data['reason'] : sprintf('Unknown error occurred. (%s)', $sbpCode);
+        $reason = \array_key_exists('reason', $data) ? $data['reason'] : \sprintf('Unknown error occurred. (%s)', $sbpCode);
 
         throw new StoreException($sbpCode, $reason, $httpCode, $requestException);
     }
 
-    private function verifyResponseSignature(Response $response)
+    private function verifyResponseSignature(Response $response): void
     {
         $signatureHeaderName = 'x-shopware-signature';
         $signature = $response->getHeader($signatureHeaderName);
 
-        if (empty($signature)) {
-            throw new \RuntimeException(sprintf('Signature not found in header "%s"', $signatureHeaderName));
+        if (!\is_string($signature)) {
+            throw new RuntimeException(\sprintf('Signature not found in header "%s"', $signatureHeaderName));
         }
 
         if (!$this->openSSLVerifier->isSystemSupported()) {
@@ -523,6 +498,6 @@ class StoreClient
             return;
         }
 
-        throw new \RuntimeException('Signature not valid');
+        throw new RuntimeException('Signature not valid');
     }
 }

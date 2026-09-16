@@ -1,48 +1,53 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\DBAL\Connection;
 use Shopware\Bundle\StoreFrontBundle\Service\CategoryServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Category;
+use Shopware\Components\Compatibility\LegacyStructConverter;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Category\Category as CategoryModel;
+use Shopware\Models\Category\Repository as CategoryRepository;
 
 /**
  * Shopware Class that handles categories
  */
-class sCategories implements \Enlight_Hook
+class sCategories implements Enlight_Hook
 {
     /**
-     * @deprecated in 5.6, will be removed in 5.7 without replacement
+     * @deprecated in 5.6, will be removed in 5.8 without replacement
      */
     public $sSYSTEM;
 
     /**
-     * @var Shopware\Components\Model\ModelManager
+     * @var ModelManager
      */
     public $manager;
 
     /**
-     * @var Shopware\Models\Category\Repository
+     * @var CategoryRepository
      */
     public $repository;
 
@@ -77,16 +82,7 @@ class sCategories implements \Enlight_Hook
     private $db;
 
     /**
-     * Shopware configuration object which used for
-     * each config access in this class.
-     * Injected over the class constructor
-     *
-     * @var Shopware_Components_Config
-     */
-    private $config;
-
-    /**
-     * @var \Doctrine\DBAL\Connection
+     * @var Connection
      */
     private $connection;
 
@@ -101,27 +97,22 @@ class sCategories implements \Enlight_Hook
     private $contextService;
 
     /**
-     * @var Enlight_Controller_Front
-     */
-    private $frontController;
-
-    /**
      * @throws Exception
      */
     public function __construct()
     {
+        $config = Shopware()->Container()->get(Shopware_Components_Config::class);
+
         $this->db = Shopware()->Container()->get('db');
-        $this->config = Shopware()->Container()->get(\Shopware_Components_Config::class);
-        $this->manager = Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class);
-        $this->repository = $this->manager->getRepository(\Shopware\Models\Category\Category::class);
-        $this->baseUrl = $this->config->get('baseFile') . '?sViewport=cat&sCategory=';
-        $this->blogBaseUrl = $this->config->get('baseFile') . '?sViewport=blog&sCategory=';
+        $this->manager = Shopware()->Container()->get(ModelManager::class);
+        $this->repository = $this->manager->getRepository(CategoryModel::class);
+        $this->baseUrl = $config->get('baseFile') . '?sViewport=cat&sCategory=';
+        $this->blogBaseUrl = $config->get('baseFile') . '?sViewport=blog&sCategory=';
         $this->baseId = (int) Shopware()->Shop()->get('parentID');
         $this->customerGroupId = (int) (Shopware()->Modules()->System()->sUSERGROUPDATA['id'] ?? 0);
-        $this->connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
-        $this->categoryService = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\CategoryServiceInterface::class);
-        $this->contextService = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class);
-        $this->frontController = Shopware()->Container()->get('front');
+        $this->connection = Shopware()->Container()->get(Connection::class);
+        $this->categoryService = Shopware()->Container()->get(CategoryServiceInterface::class);
+        $this->contextService = Shopware()->Container()->get(ContextServiceInterface::class);
     }
 
     /**
@@ -263,12 +254,10 @@ class sCategories implements \Enlight_Hook
             LIMIT 1
         ';
 
-        $id = (int) $this->db->fetchOne($sql, [
+        return (int) $this->db->fetchOne($sql, [
             '%|' . $parentId . '|%',
             $articleId,
         ]);
-
-        return $id;
     }
 
     /**
@@ -286,21 +275,26 @@ class sCategories implements \Enlight_Hook
      *
      * @param int $id Id of the category
      *
-     * @return array Array of categories in path
+     * @return array<array{id: int, name: string, blog: bool, link: string}> Array of categories in path
      */
     public function sGetCategoriesByParent($id)
     {
         $pathCategories = $this->repository->getPathById($id, ['id', 'name', 'blog']);
 
+        $categories = [];
+        if (!\is_array($pathCategories)) {
+            return $categories;
+        }
+
         $pathCategories = array_reverse($pathCategories);
 
-        $categories = [];
         foreach ($pathCategories as $category) {
             if ($category['id'] == $this->baseId) {
                 break;
             }
 
             $url = ($category['blog']) ? $this->blogBaseUrl : $this->baseUrl;
+
             $category['link'] = $url . $category['id'];
             $categories[] = $category;
         }
@@ -309,13 +303,13 @@ class sCategories implements \Enlight_Hook
     }
 
     /**
-     * Return a the category subtree for the given root
+     * Return a category subtree for the given root
      *
      * @param int $parentId Id of the root category, defaults to the current shop category
      * @param int $depth    Depth to use, defaults to null (unlimited depth)
      * @param int $shopId   Needed for shop limitation
      *
-     * @return array Category tree for the provided args
+     * @return list<array<string, mixed>> Category tree for the provided args
      */
     public function sGetWholeCategoryTree($parentId = null, $depth = null, $shopId = null)
     {
@@ -343,12 +337,12 @@ class sCategories implements \Enlight_Hook
         }
 
         $context = $this->contextService->getShopContext();
-        $category = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\CategoryServiceInterface::class)->get($id, $context);
+        $category = Shopware()->Container()->get(CategoryServiceInterface::class)->get($id, $context);
         if (empty($category)) {
             return null;
         }
 
-        return Shopware()->Container()->get(\Shopware\Components\Compatibility\LegacyStructConverter::class)->convertCategoryStruct($category);
+        return Shopware()->Container()->get(LegacyStructConverter::class)->convertCategoryStruct($category);
     }
 
     /**
@@ -360,7 +354,7 @@ class sCategories implements \Enlight_Hook
     {
         $category = $this->repository->find($categoryId);
 
-        if (!$category) {
+        if (!$category instanceof CategoryModel) {
             return 'basic';
         }
 
@@ -433,9 +427,9 @@ class sCategories implements \Enlight_Hook
     }
 
     /**
-     * @param array $categories
+     * @param list<array<string, mixed>> $categories
      *
-     * @return array
+     * @return list<array<string, mixed>>
      */
     protected function mapCategoryTree($categories)
     {
@@ -444,7 +438,7 @@ class sCategories implements \Enlight_Hook
             $category['description'] = $category['name'];
             $category['link'] = $category['external'] ?: $url . $category['id'];
             $category['hidetop'] = $category['hideTop'];
-            if ($category['sub']) {
+            if (isset($category['sub'])) {
                 $category['sub'] = $this->mapCategoryTree($category['sub']);
             }
         }
@@ -469,12 +463,9 @@ class sCategories implements \Enlight_Hook
             ->where('parent IN ( :ids )')
             ->andWhere('category.active = 1')
             ->groupBy('parent')
-            ->setParameter(':ids', $ids, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
+            ->setParameter(':ids', $ids, Connection::PARAM_INT_ARRAY);
 
-        /** @var PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(PDO::FETCH_KEY_PAIR);
+        return $query->execute()->fetchAllKeyValue();
     }
 
     /**
@@ -498,13 +489,10 @@ class sCategories implements \Enlight_Hook
             ->andWhere('category.shops IS NULL OR category.shops LIKE :shopId')
             ->orderBy('category.position', 'ASC')
             ->addOrderBy('category.id')
-            ->setParameter(':parentId', $ids, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY)
+            ->setParameter(':parentId', $ids, Connection::PARAM_INT_ARRAY)
             ->setParameter(':shopId', '%|' . $shopId . '|%');
 
-        /** @var PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(PDO::FETCH_KEY_PAIR);
+        return $query->execute()->fetchAllKeyValue();
     }
 
     /**
@@ -523,10 +511,7 @@ class sCategories implements \Enlight_Hook
             ->where('category.id = :id')
             ->setParameter(':id', $id);
 
-        /** @var PDOStatement $statement */
-        $statement = $query->execute();
-
-        $path = $statement->fetch(PDO::FETCH_COLUMN);
+        $path = $query->execute()->fetchOne();
 
         $ids = [$id];
 
@@ -596,7 +581,7 @@ class sCategories implements \Enlight_Hook
                 );
             }
 
-            $category['flag'] = in_array($categoryId, $activePath);
+            $category['flag'] = \in_array($categoryId, $activePath);
 
             $result[$categoryId] = $category;
         }

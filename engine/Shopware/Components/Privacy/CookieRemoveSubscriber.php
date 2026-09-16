@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Privacy;
 
 use Enlight\Event\SubscriberInterface;
+use Enlight_Controller_ActionEventArgs;
 use Shopware\Bundle\CookieBundle\CookieGroupCollection;
 use Shopware\Bundle\CookieBundle\Services\CookieHandlerInterface;
 use Shopware\Bundle\CookieBundle\Services\CookieRemoveHandler;
@@ -64,6 +65,9 @@ class CookieRemoveSubscriber implements SubscriberInterface
         $this->httpCacheEnabled = $httpCacheEnabled;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -72,7 +76,7 @@ class CookieRemoveSubscriber implements SubscriberInterface
         ];
     }
 
-    public function onPostDispatch(\Enlight_Controller_ActionEventArgs $args): void
+    public function onPostDispatch(Enlight_Controller_ActionEventArgs $args): void
     {
         $controller = $args->getSubject();
         $controller->View()->assign('httpCacheEnabled', $this->httpCacheEnabled);
@@ -87,17 +91,17 @@ class CookieRemoveSubscriber implements SubscriberInterface
                 json_encode([
                     'cookieNoteMode' => $this->config->get('cookie_note_mode'),
                     'showCookieNote' => $this->config->get('show_cookie_note'),
-                ])
+                ], JSON_THROW_ON_ERROR)
             );
         }
 
-        $allowCookie = (int) $controller->Request()->cookies->getInt('allowCookie');
+        $allowCookie = $controller->Request()->cookies->getInt('allowCookie');
         if ($this->config->get('cookie_note_mode') !== self::COOKIE_MODE_TECHNICAL) {
             if ($allowCookie === 1) {
                 return;
             }
 
-            header_remove('Set-Cookie');
+            $controller->Response()->headers->remove('Set-Cookie');
 
             return;
         }

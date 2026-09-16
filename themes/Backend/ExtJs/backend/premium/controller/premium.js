@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Premium
@@ -49,22 +48,22 @@ Ext.define('Shopware.apps.Premium.controller.Premium', {
         var me = this;
 
         me.control({
-            'premium-main-list textfield[action=searchPremiumArticle]':{
+            'premium-main-list textfield[action=searchPremiumArticle]': {
                 fieldchange: me.onSearch
             },
             //The add-button on the toolbar
-            'premium-main-list button[action=add]':{
+            'premium-main-list button[action=add]': {
                 click: me.onOpenCreateWindow
             },
             //The delete-button on the toolbar
-            'premium-main-list button[action=deleteMultipleArticles]':{
+            'premium-main-list button[action=deleteMultipleArticles]': {
                 click: me.onDeleteMultipleArticles
             },
             // The save-button from the create-window
             'window button[action=savePremium]': {
                 click: me.onCreatePremium
             },
-            'premium-main-list':{
+            'premium-main-list': {
                 deleteColumn: me.onDeleteSingleArticle,
                 editColumn: me.onOpenEditWindow
             }
@@ -72,11 +71,11 @@ Ext.define('Shopware.apps.Premium.controller.Premium', {
 
     },
 
-   /**
-    * Opens the detail-window
-    * @event click
-    * @return void
-    */
+    /**
+     * Opens the detail-window
+     * @event click
+     * @return void
+     */
     onOpenCreateWindow: function(){
         this.getView('premium.Detail').create();
     },
@@ -89,12 +88,12 @@ Ext.define('Shopware.apps.Premium.controller.Premium', {
      * @param [int] rowIndex Contains the row-index
      * @return void
      */
-    onOpenEditWindow : function (view, item, rowIndex) {
+    onOpenEditWindow: function (view, item, rowIndex) {
         var store = this.subApplication.premiumStore,
             record = store.getAt(rowIndex);
 
         //Create edit-window
-        this.getView('premium.Detail').create({ record : record, mainStore : store });
+        this.getView('premium.Detail').create({ record: record, mainStore: store });
     },
 
     /**
@@ -117,9 +116,9 @@ Ext.define('Shopware.apps.Premium.controller.Premium', {
                 var records = operation.getRecords(),
                     record = records[0],
                     rawData = record.getProxy().getReader().rawData;
-                if(operation.success){
+                if (operation.success){
                     Shopware.Notification.createGrowlMessage('{s name="growlMessage_title/createPremiumSuccess"}The article was successfully created{/s}', '{s name="growlMessage_message/createPremiumSuccess"}The article was successfully saved{/s}', '{s name="window_title"}{/s}');
-                }else{
+                } else {
                     Shopware.Notification.createGrowlMessage('{s name="growlMessage/error"}An error has occurred{/s}', rawData.errorMsg, '{s name="window_title"}{/s}');
                 }
                 store.load();
@@ -136,12 +135,12 @@ Ext.define('Shopware.apps.Premium.controller.Premium', {
      */
     onDeleteMultipleArticles: function(btn){
         var win = btn.up('window'),
-                grid = win.down('grid'),
-                selModel = grid.selModel,
-                store = grid.getStore(),
-                selection = selModel.getSelection(),
-                me = this,
-                message = Ext.String.format('{s name="messagebox_multipleDelete/message"}You have marked [0] articles. Are you sure you want to delete them?{/s}', selection.length);
+            grid = win.down('grid'),
+            selModel = grid.selModel,
+            store = grid.getStore(),
+            selection = selModel.getSelection(),
+            me = this,
+            message = Ext.String.format('{s name="messagebox_multipleDelete/message"}You have marked [0] articles. Are you sure you want to delete them?{/s}', selection.length);
 
         //Create a message-box, which has to be confirmed by the user
         Ext.MessageBox.confirm('{s name="messagebox_multipleDelete/title"}Delete articles{/s}', message, function (response){
@@ -160,7 +159,7 @@ Ext.define('Shopware.apps.Premium.controller.Premium', {
                     if (rawData.success) {
                         me.subApplication.premiumStore.load();
                         Shopware.Notification.createGrowlMessage('{s name="growlMessage_title/deleteMultipleSuccess"}Articles deleted{/s}', '{s name="growlMessage_message/deleteMultipleSuccess"}The articles were successfully deleted{/s}', '{s name="window_title"}{/s}');
-                    }else{
+                    } else {
                         Shopware.Notification.createGrowlMessage('{s name="growlMessage_title/deleteMultipleError"}An error occurred{/s}', rawData.errorMsg, '{s name="window_title"}{/s}');
                     }
                 }
@@ -184,7 +183,7 @@ Ext.define('Shopware.apps.Premium.controller.Premium', {
         //Create a message-box, which has to be confirmed by the user
         Ext.MessageBox.confirm('{s name="messagebox_singleDelete/title"}Delete article{/s}', message, function (response){
             //If the user doesn't want to delete the article
-            if(response != 'yes')
+            if (response != 'yes')
             {
                 return false;
             }
@@ -209,13 +208,13 @@ Ext.define('Shopware.apps.Premium.controller.Premium', {
             store = me.subApplication.premiumStore;
 
         //If the search-value is empty, reset the filter
-        if(field.getValue().length == 0){
+        if (field.getValue().length == 0){
             store.clearFilter();
-        }else{
+        } else {
             //This won't reload the store
             store.filters.clear();
             //Loads the store with a special filter
-            store.filter('searchValue',field.getValue());
+            store.filter('searchValue', field.getValue());
         }
     }
 });

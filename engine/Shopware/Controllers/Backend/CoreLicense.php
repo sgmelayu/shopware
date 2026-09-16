@@ -1,37 +1,42 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\DBAL\Connection;
 use Shopware\Components\License\Service\Exceptions\LicenseHostException;
+use Shopware\Components\License\Service\LocalLicenseUnpackService;
 use Shopware\Components\License\Struct\LicenseInformation;
 use Shopware\Components\License\Struct\LicenseUnpackRequest;
 use Shopware\Components\LicenseInstaller;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Shop\Shop;
 
 class Shopware_Controllers_Backend_CoreLicense extends Shopware_Controllers_Backend_ExtJs
 {
-    /** @var array Contains the possible Exception names thrown by LocalLicenseUnpackService */
-    private $licenseException = [
+    /**
+     * @var array Contains the possible Exception names thrown by LocalLicenseUnpackService
+     */
+    private array $licenseException = [
         'LicenseHostException',
         'LicenseInvalidException',
         'LicenseProductKeyException',
@@ -68,7 +73,7 @@ class Shopware_Controllers_Backend_CoreLicense extends Shopware_Controllers_Back
         }
 
         try {
-            $licenseInstaller = new LicenseInstaller($this->container->get(\Doctrine\DBAL\Connection::class));
+            $licenseInstaller = new LicenseInstaller($this->container->get(Connection::class));
             $licenseInstaller->installLicense($licenseData);
         } catch (Exception $e) {
             $this->View()->assign([
@@ -176,7 +181,7 @@ class Shopware_Controllers_Backend_CoreLicense extends Shopware_Controllers_Back
     {
         $sql = 'SELECT license FROM s_core_licenses WHERE active=1 AND module = "SwagCommercial"';
 
-        return $this->container->get(\Doctrine\DBAL\Connection::class)->query($sql)->fetchColumn();
+        return $this->container->get(Connection::class)->query($sql)->fetchColumn();
     }
 
     /**
@@ -186,18 +191,18 @@ class Shopware_Controllers_Backend_CoreLicense extends Shopware_Controllers_Back
      *
      * @param string $licenseString
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      *
      * @return LicenseInformation
      */
     private function unpackLicense($licenseString)
     {
-        $repository = $this->container->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Shop::class);
-        $host = $repository->getActiveDefault()->getHost();
+        $repository = $this->container->get(ModelManager::class)->getRepository(Shop::class);
+        $host = (string) $repository->getActiveDefault()->getHost();
         $request = new LicenseUnpackRequest($licenseString, $host);
 
         /** @var LicenseInformation $licenseData */
-        $licenseData = $this->container->get(\Shopware\Components\License\Service\LocalLicenseUnpackService::class)->evaluateLicense($request);
+        $licenseData = $this->container->get(LocalLicenseUnpackService::class)->evaluateLicense($request);
 
         return $licenseData;
     }
@@ -211,9 +216,9 @@ class Shopware_Controllers_Backend_CoreLicense extends Shopware_Controllers_Back
     {
         try {
             $sql = "DELETE FROM s_core_licenses WHERE module = 'SwagCommercial'";
-            $this->container->get(\Doctrine\DBAL\Connection::class)->query($sql);
-        } catch (\PDOException $e) {
-            throw new \RuntimeException('Could not remove license from database', 0, $e);
+            $this->container->get(Connection::class)->query($sql);
+        } catch (PDOException $e) {
+            throw new RuntimeException('Could not remove license from database', 0, $e);
         }
     }
 
@@ -225,9 +230,9 @@ class Shopware_Controllers_Backend_CoreLicense extends Shopware_Controllers_Back
     private function resolveLicenseException($e)
     {
         // Get class name without namespace
-        $exceptionType = (new \ReflectionClass($e))->getShortName();
+        $exceptionType = (new ReflectionClass($e))->getShortName();
 
-        if (in_array($exceptionType, $this->licenseException)) {
+        if (\in_array($exceptionType, $this->licenseException)) {
             $errorType = $exceptionType;
 
             return $errorType;
@@ -247,7 +252,7 @@ class Shopware_Controllers_Backend_CoreLicense extends Shopware_Controllers_Back
         $license = $licenseInformation->license;
 
         $license = preg_replace('#--.+?--#', '', (string) $license);
-        $license = preg_replace('#[^A-Za-z0-9+/=]#', '', $license);
+        $license = (string) preg_replace('#[^A-Za-z0-9+/=]#', '', $license);
         $license = chunk_split($license, 32);
         $license = "-------- LICENSE BEGIN ---------\r\n" . $license . "--------- LICENSE END ----------\r\n";
 

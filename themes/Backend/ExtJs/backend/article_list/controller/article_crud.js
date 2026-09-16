@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -35,8 +34,8 @@ Ext.define('Shopware.apps.ArticleList.controller.ArticleCrud', {
     extend: 'Ext.app.Controller',
 
     refs: [
-        { ref:'grid', selector:'multi-edit-main-grid' },
-        { ref:'showVariantsCheckbox', selector:'multi-edit-category-tree checkbox[name=displayVariants]' }
+        { ref: 'grid', selector: 'multi-edit-main-grid' },
+        { ref: 'showVariantsCheckbox', selector: 'multi-edit-category-tree checkbox[name=displayVariants]' }
     ],
 
     /**
@@ -137,7 +136,6 @@ Ext.define('Shopware.apps.ArticleList.controller.ArticleCrud', {
         })
     },
 
-
     /**
      * Called after the user edited a grow in the main grid
      *
@@ -150,8 +148,8 @@ Ext.define('Shopware.apps.ArticleList.controller.ArticleCrud', {
             isActiveChange = false,
             changes = record.getChanges();
 
-        isActiveChange = typeof changes.Article_active !== 'undefined'
-                         && record.raw.Article_active != changes.Article_active;
+        isActiveChange = typeof changes.Article_active !== 'undefined' &&
+                         record.raw.Article_active != changes.Article_active;
 
         record.save({
             params: {
@@ -160,11 +158,11 @@ Ext.define('Shopware.apps.ArticleList.controller.ArticleCrud', {
             success: function(record, operation) {
                 if (operation.success) {
                     Shopware.Notification.createGrowlMessage(
-                            '{s name="successTitle"}Success{/s}',
-                            Ext.String.format('{s name="successMessage"}Saved [0]{/s}', record.get('Article_name')),
-                            'ArticleList',
-                            'growl',
-                            true
+                        '{s name="successTitle"}Success{/s}',
+                        Ext.String.format('{s name="successMessage"}Saved [0]{/s}', record.get('Article_name')),
+                        'ArticleList',
+                        'growl',
+                        true
                     );
 
                     if (isActiveChange && me.getShowVariantsCheckbox().getValue()) {

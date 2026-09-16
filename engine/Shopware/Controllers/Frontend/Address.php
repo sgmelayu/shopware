@@ -1,30 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\AccountBundle\Form\Account\AddressFormType;
 use Shopware\Bundle\AccountBundle\Service\AddressServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\CountryGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\Compatibility\LegacyStructConverter;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Customer\Address;
 use Shopware\Models\Customer\AddressRepository;
 use Shopware\Models\Customer\Customer;
@@ -59,13 +62,15 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
             $this->admin->logout();
         }
 
-        $this->addressRepository = $this->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Address::class);
-        $this->addressService = $this->get(\Shopware\Bundle\AccountBundle\Service\AddressServiceInterface::class);
+        $this->addressRepository = $this->get(ModelManager::class)->getRepository(Address::class);
+        $this->addressService = $this->get(AddressServiceInterface::class);
 
         $this->View()->assign('sUserLoggedIn', $this->admin->sCheckUser());
 
         if (!$this->View()->getAssign('sUserLoggedIn')) {
-            return $this->forward('index', 'register', 'frontend', $this->getForwardParameters());
+            $this->forward('index', 'register', 'frontend', $this->getForwardParameters());
+
+            return;
         }
 
         $this->View()->assign('userInfo', $this->get('shopware_account.store_front_greeting_service')->fetch());
@@ -86,18 +91,18 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
         $countryIds = array_unique(array_filter(array_column($addresses, 'countryId')));
         $stateIds = array_unique(array_filter(array_column($addresses, 'stateId')));
 
-        $countryRepository = $this->container->get(\Shopware\Bundle\StoreFrontBundle\Gateway\CountryGatewayInterface::class);
-        $context = $this->container->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getShopContext();
+        $countryRepository = $this->container->get(CountryGatewayInterface::class);
+        $context = $this->container->get(ContextServiceInterface::class)->getShopContext();
 
         $countries = $countryRepository->getCountries($countryIds, $context);
         $states = $countryRepository->getStates($stateIds, $context);
 
         // Apply translations for countries and states to address array, converting them from structs to arrays in the process
         foreach ($addresses as &$address) {
-            if (array_key_exists($address['countryId'], $countries)) {
+            if (\array_key_exists($address['countryId'], $countries)) {
                 $address['country'] = json_decode(json_encode($countries[$address['countryId']]), true);
             }
-            if (array_key_exists($address['stateId'], $states)) {
+            if (\array_key_exists($address['stateId'], $states)) {
                 $address['state'] = json_decode(json_encode($states[$address['stateId']]), true);
             }
         }
@@ -119,7 +124,7 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
 
         if ($form->isSubmitted() && $form->isValid()) {
             $userId = $this->get('session')->get('sUserId');
-            $customer = $this->get(\Shopware\Components\Model\ModelManager::class)->find(Customer::class, $userId);
+            $customer = $this->get(ModelManager::class)->find(Customer::class, $userId);
 
             $this->addressService->create($address, $customer);
 
@@ -212,10 +217,10 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
             return;
         }
 
-        $addressView = $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address);
-        $addressView['country'] = $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address->getCountry());
-        $addressView['state'] = $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address->getState());
-        $addressView['attribute'] = $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address->getAttribute());
+        $addressView = $this->get(ModelManager::class)->toArray($address);
+        $addressView['country'] = $this->get(ModelManager::class)->toArray($address->getCountry());
+        $addressView['state'] = $this->get(ModelManager::class)->toArray($address->getState());
+        $addressView['attribute'] = $this->get(ModelManager::class)->toArray($address->getAttribute());
 
         $this->View()->assign('address', $addressView);
     }
@@ -347,16 +352,16 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
             if ($address->getId()) {
                 $this->addressService->update($address);
             } else {
-                $customer = $this->get(\Shopware\Components\Model\ModelManager::class)->find(Customer::class, $userId);
+                $customer = $this->get(ModelManager::class)->find(Customer::class, $userId);
                 $this->addressService->create($address, $customer);
             }
 
             $this->handleExtraData($extraData, $address);
 
-            $addressView = $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address);
-            $addressView['country'] = $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address->getCountry());
-            $addressView['state'] = $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address->getState());
-            $addressView['attribute'] = $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address->getAttribute());
+            $addressView = $this->get(ModelManager::class)->toArray($address);
+            $addressView['country'] = $this->get(ModelManager::class)->toArray($address->getCountry());
+            $addressView['state'] = $this->get(ModelManager::class)->toArray($address->getState());
+            $addressView['attribute'] = $this->get(ModelManager::class)->toArray($address->getAttribute());
             $response['data'] = $addressView;
         } else {
             foreach ($form->getErrors(true) as $error) {
@@ -387,9 +392,11 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
     }
 
     /**
-     * @return array
+     * @param FormInterface<Address> $form
+     *
+     * @return array<string, mixed>
      */
-    private function getFormViewData(FormInterface $form)
+    private function getFormViewData(FormInterface $form): array
     {
         $errorFlags = [];
         $errorMessages = [];
@@ -411,12 +418,11 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
             array_unshift($errorMessages, $errorMessage);
         }
 
-        /** @var Address $address */
         $address = $form->getViewData();
 
         $formData = array_merge(
-            $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address),
-            ['attribute' => $this->get(\Shopware\Components\Model\ModelManager::class)->toArray($address->getAttribute())],
+            $this->get(ModelManager::class)->toArray($address),
+            ['attribute' => $this->get(ModelManager::class)->toArray($address->getAttribute())],
             ['additional' => $address->getAdditional()],
             $form->getExtraData()
         );
@@ -481,7 +487,7 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
         $this->get('session')->offsetSet('sState', $stateId);
         $this->get('session')->offsetSet('sArea', $areaId);
 
-        $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->initializeShopContext();
+        $this->get(ContextServiceInterface::class)->initializeShopContext();
     }
 
     /**
@@ -511,7 +517,7 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
         $keys = array_filter(explode(',', $extraData['sessionKey']));
 
         return $extraData['setDefaultShippingAddress'] === '1'
-            || in_array('checkoutShippingAddressId', $keys, true);
+            || \in_array('checkoutShippingAddressId', $keys, true);
     }
 
     /**
@@ -523,8 +529,8 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
             return true;
         }
 
-        $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getContext();
-        $country = $this->get(\Shopware\Bundle\StoreFrontBundle\Gateway\CountryGatewayInterface::class)->getCountry($address->getCountry()->getId(), $context);
+        $context = $this->get(ContextServiceInterface::class)->getContext();
+        $country = $this->get(CountryGatewayInterface::class)->getCountry($address->getCountry()->getId(), $context);
 
         return $country->allowShipping();
     }
@@ -538,8 +544,8 @@ class Shopware_Controllers_Frontend_Address extends Enlight_Controller_Action
             return $address['country']['id'];
         }, $addresses);
 
-        $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getContext();
-        $countries = $this->get(\Shopware\Bundle\StoreFrontBundle\Gateway\CountryGatewayInterface::class)->getCountries($countryIds, $context);
+        $context = $this->get(ContextServiceInterface::class)->getContext();
+        $countries = $this->get(CountryGatewayInterface::class)->getCountries($countryIds, $context);
         $countries = $this->get(LegacyStructConverter::class)->convertCountryStructList($countries);
 
         foreach ($addresses as &$address) {

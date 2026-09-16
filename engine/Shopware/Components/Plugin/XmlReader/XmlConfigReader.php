@@ -1,32 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Plugin\XmlReader;
 
 use DOMDocument;
-use DOMElement;
 use DOMNodeList;
+use DOMXPath;
 use InvalidArgumentException;
 use Symfony\Component\Config\Util\XmlUtils;
 
@@ -44,25 +44,33 @@ class XmlConfigReader extends XmlReaderBase
             return self::SCOPE_SHOP;
         }
 
-        throw new InvalidArgumentException(sprintf('Invalid scope "%s"', $scope));
+        throw new InvalidArgumentException(\sprintf('Invalid config scope "%s" in file "%s"', $scope, static::$xmlFile));
     }
 
     protected function parseFile(DOMDocument $xml): array
     {
-        $xpath = new \DOMXPath($xml);
+        $xpath = new DOMXPath($xml);
 
-        $form = [];
-        $form['label'] = self::parseTranslatableNodeList(
-            $xpath->query('//config/label')
-        );
+        $form = [
+            'label' => [],
+            'description' => [],
+            'elements' => [],
+        ];
 
-        $form['description'] = self::parseTranslatableNodeList(
-            $xpath->query('//config/description')
-        );
+        $label = $xpath->query('//config/label');
+        if ($label instanceof DOMNodeList) {
+            $form['label'] = self::parseTranslatableNodeList($label);
+        }
 
-        $form['elements'] = $this->parseElementNodeList(
-            $xpath->query('//config/elements/element')
-        );
+        $description = $xpath->query('//config/description');
+        if ($description instanceof DOMNodeList) {
+            $form['description'] = self::parseTranslatableNodeList($description);
+        }
+
+        $elements = $xpath->query('//config/elements/element');
+        if ($elements instanceof DOMNodeList) {
+            $form['elements'] = $this->parseElementNodeList($elements);
+        }
 
         return $form;
     }
@@ -75,11 +83,10 @@ class XmlConfigReader extends XmlReaderBase
 
         $elements = [];
 
-        /** @var DOMElement $item */
         foreach ($list as $item) {
             $element = [];
 
-            //attributes
+            // attributes
             $element['scope'] = self::validateAttributeScope(
                 $item->getAttribute('scope')
             );
@@ -94,7 +101,7 @@ class XmlConfigReader extends XmlReaderBase
                 'text'
             );
 
-            //elements
+            // elements
             if ($name = $item->getElementsByTagName('name')->item(0)) {
                 $element['name'] = $name->nodeValue;
             }

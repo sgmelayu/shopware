@@ -117,6 +117,24 @@
                                 </div>
                             {/if}
                         {/block}
+
+                        {* Regulation price *}
+                        {block name='frontend_compare_price_regulation'}
+                            {if $sArticle.regulationPrice}
+                                <div class="price--regulation">
+
+                                    {block name='frontend_compare_price_regulation_before'}
+                                        {s name="priceRegulationLabel" namespace="frontend/detail/data"}{/s}
+                                    {/block}
+
+                                    {$sArticle.regulationPrice|currency}{s name="Star" namespace="frontend/listing/box_article"}{/s}
+
+                                    {block name='frontend_compare_price_regulation_after'}
+                                        {s name="priceRegulationInfo" namespace="frontend/detail/data"}{/s}
+                                    {/block}
+                                </div>
+                            {/if}
+                        {/block}
                     </li>
                 {/block}
 

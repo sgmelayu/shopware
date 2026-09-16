@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Update\Controller;
 
 use DirectoryIterator;
+use PDO;
 use Shopware\Recovery\Update\Cleanup;
 use Shopware\Recovery\Update\CleanupFilesFinder;
 use Shopware\Recovery\Update\DummyPluginFinder;
@@ -32,6 +33,7 @@ use Shopware\Recovery\Update\Utils;
 use Slim\Http\Request;
 use Slim\Http\Response;
 use Slim\Slim;
+use SplFileInfo;
 use Symfony\Component\Finder\Finder;
 
 class CleanupController
@@ -67,7 +69,7 @@ class CleanupController
     private $shopwarePath;
 
     /**
-     * @var \PDO
+     * @var PDO
      */
     private $conn;
 
@@ -93,7 +95,7 @@ class CleanupController
         Cleanup $cleanupService,
         Slim $app,
         $shopwarePath,
-        \PDO $conn,
+        PDO $conn,
         $backupDir
     ) {
         $this->request = $request;
@@ -117,7 +119,7 @@ class CleanupController
             $this->cleanupMedia();
         }
 
-        if (count($cleanupList) == 0) {
+        if (\count($cleanupList) == 0) {
             $_SESSION['CLEANUP_DONE'] = true;
             $this->response->redirect($this->app->urlFor('done'));
         }
@@ -130,13 +132,13 @@ class CleanupController
                 $result = array_merge($result, Utils::cleanPath($path));
             }
 
-            if (count($result) == 0) {
+            if (\count($result) == 0) {
                 $_SESSION['CLEANUP_DONE'] = true;
                 $this->response->redirect($this->app->urlFor('done'));
             } else {
                 $result = array_map(
                     function ($path) {
-                        return substr($path, strlen(SW_PATH) + 1);
+                        return substr($path, \strlen(SW_PATH) + 1);
                     },
                     $result
                 );
@@ -146,7 +148,7 @@ class CleanupController
         } else {
             $cleanupList = array_map(
                 function ($path) {
-                    return substr($path, strlen(SW_PATH) + 1);
+                    return substr($path, \strlen(SW_PATH) + 1);
                 },
                 $cleanupList
             );
@@ -161,7 +163,7 @@ class CleanupController
     public function deleteOutdatedFolders()
     {
         echo $this->cleanupService->cleanup();
-        exit();
+        exit;
     }
 
     private function cleanupMedia()
@@ -176,7 +178,7 @@ class CleanupController
             ->path('#/(' . implode('|', array_keys($blacklistMapping)) . ')/#')
             ->getIterator();
 
-        /** @var \SplFileInfo $file */
+        /** @var SplFileInfo $file */
         foreach ($files as $file) {
             $sanitizedPath = str_replace($mediaPath, '', $file->getPathname());
 

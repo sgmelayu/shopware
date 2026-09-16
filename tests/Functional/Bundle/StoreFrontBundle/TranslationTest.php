@@ -1,43 +1,52 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
 
+use Shopware\Bundle\StoreFrontBundle\Service\ConfiguratorServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\PropertyServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\Product\Manufacturer;
+use Shopware\Bundle\StoreFrontBundle\Struct\Product\Price;
+use Shopware\Bundle\StoreFrontBundle\Struct\Product\Unit;
+use Shopware\Bundle\StoreFrontBundle\Struct\Property\Set;
 use Shopware\Models\Article\Detail;
+use Shopware\Models\Article\Supplier;
+use Shopware\Models\Article\Unit as UnitModel;
 
 class TranslationTest extends TestCase
 {
-    public function testListProductTranslation()
+    public function testListProductTranslation(): void
     {
         $number = 'Translation-Test';
         $context = $this->getContext();
 
         $product = $this->getProduct($number, $context);
-        $article = $this->helper->createArticle($product);
+        $createdProduct = $this->helper->createProduct($product);
 
         $this->helper->createArticleTranslation(
-            $article->getId(),
+            $createdProduct->getId(),
             $context->getShop()->getId()
         );
 
@@ -53,25 +62,28 @@ class TranslationTest extends TestCase
         static::assertEquals('Dummy Translation', $listProduct->getAdditional());
         static::assertEquals('Dummy Translation', $listProduct->getKeywords());
         static::assertEquals('Dummy Translation', $listProduct->getMetaTitle());
+        static::assertInstanceOf(Unit::class, $listProduct->getUnit());
         static::assertEquals('Dummy Translation', $listProduct->getUnit()->getPackUnit());
     }
 
-    public function testManufacturerTranslation()
+    public function testManufacturerTranslation(): void
     {
         $number = 'Translation-Test';
         $context = $this->getContext();
 
         $product = $this->getProduct($number, $context);
-        $article = $this->helper->createArticle($product);
+        $createdProduct = $this->helper->createProduct($product);
 
+        static::assertInstanceOf(Supplier::class, $createdProduct->getSupplier());
         $this->helper->createManufacturerTranslation(
-            $article->getSupplier()->getId(),
+            $createdProduct->getSupplier()->getId(),
             $context->getShop()->getId()
         );
 
         $product = $this->helper->getListProduct($number, $context);
 
         $manufacturer = $product->getManufacturer();
+        static::assertInstanceOf(Manufacturer::class, $manufacturer);
 
         static::assertEquals('Dummy Translation', $manufacturer->getDescription());
         static::assertEquals('Dummy Translation', $manufacturer->getMetaTitle());
@@ -79,7 +91,7 @@ class TranslationTest extends TestCase
         static::assertEquals('Dummy Translation', $manufacturer->getMetaDescription());
     }
 
-    public function testUnitTranslation()
+    public function testUnitTranslation(): void
     {
         $number = 'Unit-Translation';
         $context = $this->getContext();
@@ -103,11 +115,10 @@ class TranslationTest extends TestCase
         $variant['unit'] = ['name' => 'Test-Unit-Variant', 'unit' => 'ABC'];
         $product['variants'][1] = $variant;
 
-        $article = $this->helper->createArticle($product);
+        $createdProduct = $this->helper->createProduct($product);
 
         $unit = null;
-        /** @var Detail $detail */
-        foreach ($article->getDetails() as $detail) {
+        foreach ($createdProduct->getDetails() as $detail) {
             if ($variant['number'] === $detail->getNumber()) {
                 $unit = $detail->getUnit();
                 break;
@@ -121,9 +132,11 @@ class TranslationTest extends TestCase
             ],
         ];
 
+        static::assertInstanceOf(Detail::class, $createdProduct->getMainDetail());
+        static::assertInstanceOf(UnitModel::class, $createdProduct->getMainDetail()->getUnit());
         $this->helper->createUnitTranslations(
             [
-                $article->getMainDetail()->getUnit()->getId(),
+                $createdProduct->getMainDetail()->getUnit()->getId(),
                 $unit->getId(),
             ],
             $context->getShop()->getId(),
@@ -135,19 +148,23 @@ class TranslationTest extends TestCase
             $context
         );
 
+        static::assertInstanceOf(Unit::class, $listProduct->getUnit());
         static::assertEquals('Dummy Translation', $listProduct->getUnit()->getUnit());
         static::assertEquals('Dummy Translation', $listProduct->getUnit()->getName());
 
         foreach ($listProduct->getPrices() as $price) {
+            static::assertInstanceOf(Unit::class, $price->getUnit());
             static::assertEquals('Dummy Translation', $price->getUnit()->getUnit());
             static::assertEquals('Dummy Translation', $price->getUnit()->getName());
         }
 
+        static::assertInstanceOf(Price::class, $listProduct->getCheapestPrice());
+        static::assertInstanceOf(Unit::class, $listProduct->getCheapestPrice()->getUnit());
         static::assertEquals('Dummy Translation 2', $listProduct->getCheapestPrice()->getUnit()->getUnit());
         static::assertEquals('Dummy Translation 2', $listProduct->getCheapestPrice()->getUnit()->getName());
     }
 
-    public function testPropertyTranslation()
+    public function testPropertyTranslation(): void
     {
         $number = 'Property-Translation';
         $context = $this->getContext();
@@ -157,11 +174,12 @@ class TranslationTest extends TestCase
         $product = array_merge($product, $properties);
 
         $this->helper->createPropertyTranslation($properties['all'], $context->getShop()->getId());
-        $this->helper->createArticle($product);
+        $this->helper->createProduct($product);
 
         $listProduct = $this->helper->getListProduct($number, $context);
-        $property = $this->helper->getProductProperties($listProduct, $context);
 
+        $property = $this->getContainer()->get(PropertyServiceInterface::class)->get($listProduct, $context);
+        static::assertInstanceOf(Set::class, $property);
         static::assertEquals('Dummy Translation', $property->getName());
 
         foreach ($property->getGroups() as $group) {
@@ -175,7 +193,7 @@ class TranslationTest extends TestCase
         }
     }
 
-    public function testConfiguratorTranslation()
+    public function testConfiguratorTranslation(): void
     {
         $number = 'Configurator-Translation';
         $context = $this->getContext();
@@ -198,14 +216,11 @@ class TranslationTest extends TestCase
             $context->getShop()->getId()
         );
 
-        $this->helper->createArticle($product);
+        $this->helper->createProduct($product);
 
         $listProduct = $this->helper->getListProduct($number, $context);
 
-        $configurator = $this->helper->getProductConfigurator(
-            $listProduct,
-            $context
-        );
+        $configurator = $this->getContainer()->get(ConfiguratorServiceInterface::class)->getProductConfigurator($listProduct, $context, []);
 
         foreach ($configurator->getGroups() as $group) {
             $expected = 'Dummy Translation group - ' . $group->getId();
@@ -221,7 +236,7 @@ class TranslationTest extends TestCase
         }
     }
 
-    protected function getContext($shopId = 1)
+    protected function getContext(int $shopId = 1): TestContext
     {
         $tax = $this->helper->createTax();
         $customerGroup = $this->helper->createCustomerGroup();

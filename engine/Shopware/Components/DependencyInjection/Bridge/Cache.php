@@ -1,31 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\DependencyInjection\Bridge;
 
 use Shopware\Components\ShopwareReleaseStruct;
+use Zend_Cache;
+use Zend_Cache_Backend;
+use Zend_Cache_Backend_Apcu;
+use Zend_Cache_Backend_File;
 use Zend_Cache_Core;
+use Zend_Cache_Exception;
+use Zend_Db_Table_Abstract;
 use Zend_Locale_Data;
 
 /**
@@ -39,7 +45,7 @@ class Cache
      * @param array  $frontendOptions
      * @param array  $backendOptions
      *
-     * @throws \Zend_Cache_Exception
+     * @throws Zend_Cache_Exception
      *
      * @return Zend_Cache_Core
      */
@@ -52,8 +58,8 @@ class Cache
 
         $cacheCore->setBackend($backend);
 
-        \Zend_Locale_Data::setCache($cacheCore);
-        \Zend_Db_Table_Abstract::setDefaultMetadataCache($cacheCore);
+        Zend_Locale_Data::setCache($cacheCore);
+        Zend_Db_Table_Abstract::setDefaultMetadataCache($cacheCore);
 
         return $cacheCore;
     }
@@ -62,7 +68,7 @@ class Cache
      * @param string $backend
      * @param array  $backendOptions
      *
-     * @return \Zend_Cache_Backend
+     * @return Zend_Cache_Backend
      */
     private function createBackend($backend, $backendOptions)
     {
@@ -73,7 +79,7 @@ class Cache
                 $backend = 'apcu';
             }
 
-            $backend = \Zend_Cache::_makeBackend($backend, $backendOptions);
+            $backend = Zend_Cache::_makeBackend($backend, $backendOptions);
         }
 
         return $backend;
@@ -82,14 +88,14 @@ class Cache
     /**
      * @param array $backendOptions
      *
-     * @return \Zend_Cache_Backend
+     * @return Zend_Cache_Backend
      */
     private function createAutomaticBackend($backendOptions = [])
     {
         if ($this->isApcuAvailable()) {
-            $backend = new \Zend_Cache_Backend_Apcu($backendOptions);
+            $backend = new Zend_Cache_Backend_Apcu($backendOptions);
         } else {
-            $backend = new \Zend_Cache_Backend_File($backendOptions);
+            $backend = new Zend_Cache_Backend_File($backendOptions);
         }
 
         return $backend;
@@ -104,11 +110,11 @@ class Cache
             return false;
         }
 
-        if (!extension_loaded('apcu')) {
+        if (!\extension_loaded('apcu')) {
             return false;
         }
 
-        if (!ini_get('apc.enabled')) {
+        if (!\ini_get('apc.enabled')) {
             return false;
         }
 

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -63,8 +62,8 @@ Ext.define('Shopware.apps.Config.view.base.Table', {
     getPagingToolbar: function() {
         return Ext.create('Ext.toolbar.Paging', {
             store: this.store,
-            dock:'bottom',
-            displayInfo:true
+            dock: 'bottom',
+            displayInfo: true
         });
     },
 
@@ -87,30 +86,30 @@ Ext.define('Shopware.apps.Config.view.base.Table', {
         };
     },
 
-    getTopBar:function () {
+    getTopBar: function () {
         var me = this;
         var items = [];
-        if(me.addable) {
+        if (me.addable) {
             items.push({
-                iconCls:'sprite-plus-circle-frame',
-                text:'{s name="table/add_text"}Add entry{/s}',
-                tooltip:'{s name="table/add_tooltip"}Add (ALT + INSERT){/s}',
-                action:'add'
+                iconCls: 'sprite-plus-circle-frame',
+                text: '{s name="table/add_text"}Add entry{/s}',
+                tooltip: '{s name="table/add_tooltip"}Add (ALT + INSERT){/s}',
+                action: 'add'
             });
         }
-        if(me.deletable) {
+        if (me.deletable) {
             items.push({
-                iconCls:'sprite-minus-circle-frame',
-                text:'{s name="table/delete_text"}Delete entry{/s}',
-                tooltip:'{s name="table/delete_tooltip"}Delete (ALT + DELETE){/s}',
-                disabled:true,
-                action:'delete'
+                iconCls: 'sprite-minus-circle-frame',
+                text: '{s name="table/delete_text"}Delete entry{/s}',
+                tooltip: '{s name="table/delete_tooltip"}Delete (ALT + DELETE){/s}',
+                disabled: true,
+                action: 'delete'
             });
         }
         items.push('->', {
-            xtype:'config-base-search'
+            xtype: 'config-base-search'
         }, {
-            xtype:'tbspacer', width:6
+            xtype: 'tbspacer', width: 6
         });
         return items;
     }

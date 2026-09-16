@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Install;
 
+use Exception;
 use Shopware\Recovery\Install\Service\TranslationService;
 
 class MenuHelper
@@ -56,7 +57,7 @@ class MenuHelper
         $complete = true;
         $entries = $this->entries;
         foreach ($entries as $entry) {
-            $active = ($entry == current($this->entries));
+            $active = $entry == current($this->entries);
             if ($active) {
                 $complete = false;
             }
@@ -77,12 +78,12 @@ class MenuHelper
     /**
      * @param string $name
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function setCurrent($name)
     {
         if (array_search($name, $this->entries) === false) {
-            throw new \Exception('could not find entrie');
+            throw new Exception('could not find entrie');
         }
 
         reset($this->entries);
@@ -99,7 +100,7 @@ class MenuHelper
     public function getNextUrl($params = [])
     {
         $entries = $this->entries;
-        $currentEntry = \next($entries);
+        $currentEntry = next($entries);
 
         return $this->slim->urlFor($currentEntry, $params);
     }
@@ -112,7 +113,7 @@ class MenuHelper
     public function getPreviousUrl($params = [])
     {
         $entries = $this->entries;
-        $currentEntry = \prev($entries);
+        $currentEntry = prev($entries);
 
         return $this->slim->urlFor($currentEntry, $params);
     }
@@ -125,7 +126,7 @@ class MenuHelper
     public function getCurrentUrl($params = [])
     {
         $entries = $this->entries;
-        $currentEntry = \current($entries);
+        $currentEntry = current($entries);
 
         return $this->slim->urlFor($currentEntry, $params);
     }

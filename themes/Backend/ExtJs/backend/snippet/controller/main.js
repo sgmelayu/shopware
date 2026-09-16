@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/snippet/controller/main"}
@@ -101,13 +100,13 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
 
         me.control({
             'snippet-main-navigation': {
-                select:          me.onSelect,
+                select: me.onSelect,
                 deleteNamespace: me.onDeleteNamespace
             },
 
             'snippet-main-grid': {
-                edit:         me.onEdit,
-                beforeedit:   me.onBeforeEdit,
+                edit: me.onEdit,
+                beforeedit: me.onBeforeEdit,
                 deleteSingle: me.onDeleteSingle,
                 editSelectedSnippets: me.onOpenEditSnippetWindow,
                 translateSnippet: me.onTranslate
@@ -180,8 +179,8 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
                             me.subApplication.userConfig = config;
 
                             me.mainWindow = me.getView('main.Window').create({
-                                nSpaceStore:     me.getStore('NSpace'),
-                                snippetStore:    me.getStore('Snippet'),
+                                nSpaceStore: me.getStore('NSpace'),
+                                snippetStore: me.getStore('Snippet'),
                                 shoplocaleStore: localeStore
                             });
                             me.subApplication.setAppWindow(me.mainWindow);
@@ -293,7 +292,7 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
         me.getStore('Snippet').add(record)
 
         me.getStore('Snippet').sync({
-            success : function() {
+            success: function() {
                 Shopware.Notification.createGrowlMessage(me.snippets.createSuccessTitle, me.snippets.createSuccessMessage, me.snippets.growlMessage);
             },
             failure: function() {
@@ -307,7 +306,6 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
 
         win.destroy();
     },
-
 
     /**
      * Function to save a form
@@ -351,7 +349,7 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
         store.getProxy().batchActions = !newRecords;
 
         store.sync({
-            success : function() {
+            success: function() {
                 Shopware.Notification.createGrowlMessage(me.snippets.saveSuccessTitle, me.snippets.saveSuccessMessage, me.snippets.growlMessage);
                 me.getStore('Snippet').reload();
             },
@@ -363,7 +361,6 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
         // some more cleanup to do?
         win.destroy();
     },
-
 
     /**
      * Function to save a form
@@ -408,7 +405,7 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
         store.getProxy().batchActions = !newRecords;
 
         store.sync({
-            success : function() {
+            success: function() {
                 Shopware.Notification.createGrowlMessage(me.snippets.saveSuccessTitle, me.snippets.saveSuccessMessage, me.snippets.growlMessage);
                 me.getStore('Snippet').reload();
             },
@@ -468,7 +465,7 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
         });
 
         me.getSnippetPanel().enableExpertMode(isPressed);
-   },
+    },
 
     /**
      * Fires when the 'Add Snippet' button is clicked
@@ -488,8 +485,8 @@ Ext.define('Shopware.apps.Snippet.controller.Main', {
         }
 
         me.getView('main.CreateForm').create({
-            defaultLocaleId:  shoplocale.get('localeId'),
-            defaultShopId:    shoplocale.get('shopId'),
+            defaultLocaleId: shoplocale.get('localeId'),
+            defaultShopId: shoplocale.get('shopId'),
             defaultNamespace: defaultNamespace
         }).show();
     },

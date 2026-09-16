@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Voucher
@@ -43,13 +42,13 @@ Ext.define('Shopware.apps.Voucher.view.voucher.Window', {
     autoShow: true,
     layout: 'border',
     height: '90%',
-    autoScroll:true,
+    autoScroll: true,
     width: '80%',
     /**
      * Display no footer button for the detail window
      * @boolean
      */
-    footerButton:false,
+    footerButton: false,
 
     /**
      * Initializes the component and builds up the main interface
@@ -60,9 +59,9 @@ Ext.define('Shopware.apps.Voucher.view.voucher.Window', {
         var me = this;
         me.items = [
             {
-                xtype:'tabpanel',
-                region:'center',
-                items:me.getTabs()
+                xtype: 'tabpanel',
+                region: 'center',
+                items: me.getTabs()
             }
         ];
         me.callParent(arguments);
@@ -76,17 +75,17 @@ Ext.define('Shopware.apps.Voucher.view.voucher.Window', {
      * Can contains additionally an second tab which displays the customer orders and a chart which
      * displays the orders grouped by the order year and month
      */
-    getTabs:function () {
+    getTabs: function () {
         return [
             {
-                xtype:'voucher-voucher-base_configuration',
-                record:this.record,
+                xtype: 'voucher-voucher-base_configuration',
+                record: this.record,
                 taxStore: this.taxStore
             },
             {
-                xtype:'voucher-code-list',
+                xtype: 'voucher-code-list',
                 codeStore: this.codeStore,
-                disabled:true
+                disabled: true
             }
         ];
     },

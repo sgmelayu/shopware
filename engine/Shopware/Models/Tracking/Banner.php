@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Tracking;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 
@@ -53,6 +55,7 @@ class Banner extends ModelEntity
      * Autoincrement Identifier
      *
      * @var int
+     *
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\Id()
      * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -63,7 +66,7 @@ class Banner extends ModelEntity
      * Date when the banner has been shown or has been clicked.
      * Part one of the composite primary key
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="display_date", type="date", nullable=false)
      */
@@ -72,16 +75,16 @@ class Banner extends ModelEntity
     /**
      * ID of the banner which should be tracked
      *
-     * @var int|null
+     * @var int
      *
-     * @ORM\Column(name="bannerID", type="integer", nullable=true)
+     * @ORM\Column(name="bannerID", type="integer", nullable=false)
      */
     private $bannerId;
 
     /**
      * Accumulated number of clicks
      *
-     * @var int|null
+     * @var int
      *
      * @ORM\Column(name="clicks", type="integer", nullable=false)
      */
@@ -90,20 +93,20 @@ class Banner extends ModelEntity
     /**
      * Accumulated number of views
      *
-     * @var int|null
+     * @var int
      *
      * @ORM\Column(name="views", type="integer", nullable=false)
      */
     private $views;
 
     /**
-     * @param int                     $bannerId
-     * @param \DateTimeInterface|null $date
+     * @param int                    $bannerId
+     * @param DateTimeInterface|null $date
      */
     public function __construct($bannerId, $date = null)
     {
         if ($date === null) {
-            $date = new \DateTime();
+            $date = new DateTime();
         }
         $this->setDisplayDate($date);
         $this->setBannerId($bannerId);
@@ -112,7 +115,7 @@ class Banner extends ModelEntity
     /**
      * Returns the date
      *
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getDisplayDate()
     {
@@ -122,7 +125,7 @@ class Banner extends ModelEntity
     /**
      * Set the Date on when the event happened
      *
-     * @param \DateTimeInterface $displayDate
+     * @param DateTimeInterface $displayDate
      *
      * @return Banner
      */
@@ -136,7 +139,7 @@ class Banner extends ModelEntity
     /**
      * Returns the ID of the banner which should be tracked.
      *
-     * @return int|null
+     * @return int
      */
     public function getBannerId()
     {

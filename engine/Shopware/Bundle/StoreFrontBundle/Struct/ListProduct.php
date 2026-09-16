@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Struct;
 
+use DateTimeInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Product\Esd;
 use Shopware\Bundle\StoreFrontBundle\Struct\Product\Manufacturer;
 use Shopware\Bundle\StoreFrontBundle\Struct\Product\Price;
@@ -37,7 +38,7 @@ class ListProduct extends BaseProduct
     /**
      * State for a calculated product price.
      */
-    const STATE_PRICE_CALCULATED = 'price_calculated';
+    public const STATE_PRICE_CALCULATED = 'price_calculated';
 
     /**
      * Contains the product name.
@@ -73,7 +74,7 @@ class ListProduct extends BaseProduct
      * Defines the date when the product was released / will be
      * released and can be ordered.
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      */
     protected $releaseDate;
 
@@ -110,7 +111,7 @@ class ListProduct extends BaseProduct
      * Defines the date which the product was created in the
      * database.
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      */
     protected $createdAt;
 
@@ -118,7 +119,7 @@ class ListProduct extends BaseProduct
      * Defines the date which the product was last updated in
      * the database.
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      */
     protected $updatedAt;
 
@@ -194,7 +195,7 @@ class ListProduct extends BaseProduct
     /**
      * Ean code of the product.
      *
-     * @var string
+     * @var string|null
      */
     protected $ean;
 
@@ -287,7 +288,7 @@ class ListProduct extends BaseProduct
     protected $tax;
 
     /**
-     * @var Manufacturer
+     * @var Manufacturer|null
      */
     protected $manufacturer;
 
@@ -295,7 +296,7 @@ class ListProduct extends BaseProduct
      * Contains the product cover which displayed
      * as product image in listings or sliders.
      *
-     * @var Media
+     * @var Media|null
      */
     protected $cover;
 
@@ -405,7 +406,7 @@ class ListProduct extends BaseProduct
      */
     public function hasState($state)
     {
-        return in_array($state, $this->states);
+        return \in_array($state, $this->states);
     }
 
     /**
@@ -478,7 +479,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Tax $tax
+     * @param Tax $tax
      */
     public function setTax($tax)
     {
@@ -486,7 +487,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Tax
+     * @return Tax
      */
     public function getTax()
     {
@@ -494,7 +495,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Product\Price[]|null $prices
+     * @param Price[]|null $prices
      */
     public function setPrices($prices)
     {
@@ -502,7 +503,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\Price[]
+     * @return Price[]
      */
     public function getPrices()
     {
@@ -510,7 +511,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Product\Manufacturer $manufacturer
+     * @param Manufacturer $manufacturer
      */
     public function setManufacturer($manufacturer)
     {
@@ -518,7 +519,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\Manufacturer|null
+     * @return Manufacturer|null
      */
     public function getManufacturer()
     {
@@ -526,7 +527,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Media $cover
+     * @param Media $cover
      */
     public function setCover($cover)
     {
@@ -534,7 +535,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Media|null
+     * @return Media|null
      */
     public function getCover()
     {
@@ -542,7 +543,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Product\Price|null $cheapestPrice
+     * @param Price|null $cheapestPrice
      */
     public function setCheapestPrice($cheapestPrice)
     {
@@ -550,7 +551,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\Price|null
+     * @return Price|null
      */
     public function getCheapestPrice()
     {
@@ -558,7 +559,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\Price
+     * @return Price
      */
     public function getVariantPrice()
     {
@@ -616,7 +617,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param string $ean
+     * @param string|null $ean
      */
     public function setEan($ean)
     {
@@ -624,7 +625,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getEan()
     {
@@ -712,7 +713,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \DateTimeInterface|null $releaseDate
+     * @param DateTimeInterface|null $releaseDate
      */
     public function setReleaseDate($releaseDate)
     {
@@ -720,7 +721,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getReleaseDate()
     {
@@ -828,7 +829,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getCreatedAt()
     {
@@ -836,7 +837,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \DateTimeInterface|null $createdAt
+     * @param DateTimeInterface|null $createdAt
      */
     public function setCreatedAt($createdAt)
     {
@@ -844,7 +845,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getUpdatedAt()
     {
@@ -852,7 +853,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \DateTimeInterface|null $updatedAt
+     * @param DateTimeInterface|null $updatedAt
      */
     public function setUpdatedAt($updatedAt)
     {
@@ -867,16 +868,13 @@ class ListProduct extends BaseProduct
         return $this->priceGroup;
     }
 
-    /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceGroup $priceGroup
-     */
-    public function setPriceGroup(PriceGroup $priceGroup = null)
+    public function setPriceGroup(?PriceGroup $priceGroup = null)
     {
         $this->priceGroup = $priceGroup;
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceRule[]
+     * @return PriceRule[]
      */
     public function getPriceRules()
     {
@@ -884,7 +882,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceRule[]|null $priceRules
+     * @param PriceRule[]|null $priceRules
      */
     public function setPriceRules($priceRules)
     {
@@ -892,7 +890,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceRule|null
+     * @return PriceRule|null
      */
     public function getCheapestPriceRule()
     {
@@ -900,7 +898,7 @@ class ListProduct extends BaseProduct
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceRule|null $cheapestPriceRule
+     * @param PriceRule|null $cheapestPriceRule
      */
     public function setCheapestPriceRule($cheapestPriceRule)
     {
@@ -1011,10 +1009,7 @@ class ListProduct extends BaseProduct
         return $this->esd;
     }
 
-    /**
-     * @param Esd $esd
-     */
-    public function setEsd(Esd $esd = null)
+    public function setEsd(?Esd $esd = null)
     {
         $this->esd = $esd;
     }
@@ -1049,14 +1044,6 @@ class ListProduct extends BaseProduct
     public function setBlockedCustomerGroupIds($blockedCustomerGroupIds)
     {
         $this->blockedCustomerGroupIds = $blockedCustomerGroupIds;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function jsonSerialize()
-    {
-        return get_object_vars($this);
     }
 
     /**
@@ -1163,7 +1150,7 @@ class ListProduct extends BaseProduct
     public function setMainVariantId($mainVariantId)
     {
         $this->mainVariantId = $mainVariantId;
-        $this->isMainVariant = ($this->variantId == $this->mainVariantId);
+        $this->isMainVariant = $this->variantId == $this->mainVariantId;
     }
 
     /**

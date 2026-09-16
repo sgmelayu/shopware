@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -67,21 +66,21 @@ Ext.define('Shopware.apps.Article.view.esd.Detail', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
-        esdInfo:{
+    snippets: {
+        esdInfo: {
             title: '{s name="esd/detail/esdinfo/title"}ESD-Version{/s}',
             article: '{s name="esd/detail/esdinfo/artcile"}Article:{/s}',
             serialAdministration: '{s name="esd/detail/esdinfo/serial_administration"}Serial administration:{/s}',
             enableSerialAdministration: '{s name="esd/detail/esdinfo/enable_serial_administration"}Enables the administration of serials{/s}'
         },
 
-        fileInfo:{
+        fileInfo: {
             title: '{s name="esd/detail/fileinfo/title"}File-Info{/s}',
             downloadFile: '{s name="esd/detail/fileinfo/download_file"}Download file{/s}',
             noFile: '{s name="esd/detail/fileinfo/no_file"}No file choosen{/s}'
         },
 
-        fileUpload:{
+        fileUpload: {
             title: '{s name="esd/detail/fileupload/title"}File-Upload{/s}',
             selection: '{s name="esd/detail/fileupload/selection"}Selection{/s}',
             selectFile: '{s name="esd/detail/fileupload/download_file"}Select file{/s}',
@@ -90,9 +89,9 @@ Ext.define('Shopware.apps.Article.view.esd.Detail', {
             buttonRename: '{s name="esd/detail/fileupload/buttonRename"}Rename{/s}',
             buttonCancel: '{s name="esd/detail/fileupload/buttonCancel"}Cancel{/s}',
             renameMessage: '{s name="esd/detail/fileupload/reanameMessage"}You file has been renamed to [0]{/s}'
-    },
+        },
 
-        fileChoose:{
+        fileChoose: {
             title: '{s name="esd/detail/filechoose/title"}Choose File{/s}',
             pleaseChoose: '{s name="esd/detail/fileupload/please_choose"}Please choose...{/s}'
         }
@@ -224,7 +223,6 @@ Ext.define('Shopware.apps.Article.view.esd.Detail', {
         };
     },
 
-
     /**
      * Creates the XTemplate for the file information panel
      *
@@ -278,7 +276,6 @@ Ext.define('Shopware.apps.Article.view.esd.Detail', {
         };
     },
 
-
     /**
      * Creates the drop zone for article images
      * @return Shopware.app.FileUpload
@@ -308,7 +305,7 @@ Ext.define('Shopware.apps.Article.view.esd.Detail', {
             name: 'drop-zone',
             requestURL: '{url controller="article" action="uploadEsdFile"}',
             showInput: false,
-            padding:0,
+            padding: 0,
             checkSize: false,
             checkType: false,
             checkAmount: false,
@@ -326,7 +323,6 @@ Ext.define('Shopware.apps.Article.view.esd.Detail', {
                     if (!response.hasOwnProperty('newName')) {
                         return;
                     }
-
 
                     Ext.Msg.alert('{s name="esd/detail/rename/title"}Upload{/s}', Ext.String.format(me.snippets.fileUpload.renameMessage, response.newName));
                 }
@@ -360,7 +356,7 @@ Ext.define('Shopware.apps.Article.view.esd.Detail', {
             fieldLabel: me.snippets.fileUpload.selection,
             labelWidth: 60,
             anchor: '100%',
-            buttonText : me.snippets.fileUpload.selectFile,
+            buttonText: me.snippets.fileUpload.selectFile,
             listeners: {
                 scope: this,
                 afterrender: function(btn) {
@@ -370,7 +366,7 @@ Ext.define('Shopware.apps.Article.view.esd.Detail', {
                     me.fireEvent('mediaUpload', field);
                 }
             },
-            buttonConfig : {
+            buttonConfig: {
                 iconCls: 'sprite-inbox-upload',
                 cls: 'small secondary'
             }

@@ -1,57 +1,44 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator;
 
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use DateTime;
+use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceGroup;
 
 class ProductHydrator extends Hydrator
 {
-    /**
-     * @var ManufacturerHydrator
-     */
-    private $manufacturerHydrator;
+    private ManufacturerHydrator $manufacturerHydrator;
 
-    /**
-     * @var AttributeHydrator
-     */
-    private $attributeHydrator;
+    private AttributeHydrator $attributeHydrator;
 
-    /**
-     * @var TaxHydrator
-     */
-    private $taxHydrator;
+    private TaxHydrator $taxHydrator;
 
-    /**
-     * @var UnitHydrator
-     */
-    private $unitHydrator;
+    private UnitHydrator $unitHydrator;
 
-    /**
-     * @var EsdHydrator
-     */
-    private $esdHydrator;
+    private EsdHydrator $esdHydrator;
 
     public function __construct(
         AttributeHydrator $attributeHydrator,
@@ -71,11 +58,11 @@ class ProductHydrator extends Hydrator
      * Hydrates the passed data and converts the ORM
      * array values into a Struct\ListProduct class.
      *
-     * @return Struct\ListProduct
+     * @return ListProduct
      */
     public function hydrateListProduct(array $data)
     {
-        $product = new Struct\ListProduct(
+        $product = new ListProduct(
             (int) $data['__product_id'],
             (int) $data['__variant_id'],
             $data['__variant_ordernumber']
@@ -97,7 +84,7 @@ class ProductHydrator extends Hydrator
             return $translation;
         }
 
-        $result = $this->convertArrayKeys($translation, [
+        return $this->convertArrayKeys($translation, [
             'metaTitle' => '__product_metaTitle',
             'txtArtikel' => '__product_name',
             'txtshortdescription' => '__product_description',
@@ -107,14 +94,9 @@ class ProductHydrator extends Hydrator
             'txtkeywords' => '__product_keywords',
             'txtpackunit' => '__unit_packunit',
         ]);
-
-        return $result;
     }
 
-    /**
-     * @return Struct\ListProduct
-     */
-    private function assignData(Struct\ListProduct $product, array $data)
+    private function assignData(ListProduct $product, array $data): ListProduct
     {
         $translation = $this->getProductTranslation($data);
         $data = array_merge($data, $translation);
@@ -150,10 +132,10 @@ class ProductHydrator extends Hydrator
         return $product;
     }
 
-    private function assignPriceGroupData(Struct\ListProduct $product, array $data)
+    private function assignPriceGroupData(ListProduct $product, array $data): void
     {
         if (!empty($data['__priceGroup_id'])) {
-            $product->setPriceGroup(new Struct\Product\PriceGroup());
+            $product->setPriceGroup(new PriceGroup());
             $product->getPriceGroup()->setId((int) $data['__priceGroup_id']);
             $product->getPriceGroup()->setName($data['__priceGroup_description']);
         }
@@ -163,23 +145,23 @@ class ProductHydrator extends Hydrator
      * Helper function which assigns the shopware article
      * data to the product. (data of s_articles)
      */
-    private function assignProductData(Struct\ListProduct $product, array $data)
+    private function assignProductData(ListProduct $product, array $data): void
     {
         $product->setName($data['__product_name']);
         $product->setShortDescription($data['__product_description']);
         $product->setLongDescription($data['__product_description_long']);
-        $product->setCloseouts((bool) ($data['__product_laststock']));
+        $product->setCloseouts((bool) $data['__product_laststock']);
         $product->setMetaTitle($data['__product_metaTitle']);
         $product->setHasProperties($data['__product_filtergroupID'] > 0);
-        $product->setHighlight((bool) ($data['__product_topseller']));
-        $product->setAllowsNotification((bool) ($data['__product_notification']));
+        $product->setHighlight((bool) $data['__product_topseller']);
+        $product->setAllowsNotification((bool) $data['__product_notification']);
         $product->setKeywords($data['__product_keywords']);
         $product->setTemplate($data['__product_template']);
-        $product->setHasConfigurator(($data['__product_configurator_set_id'] > 0));
+        $product->setHasConfigurator($data['__product_configurator_set_id'] > 0);
         $product->setHasEsd((bool) $data['__product_has_esd']);
         $product->setIsPriceGroupActive((bool) $data['__product_pricegroupActive']);
         $product->setSales((int) $data['__topSeller_sales']);
-        $product->setShippingFree((bool) ($data['__variant_shippingfree']));
+        $product->setShippingFree((bool) $data['__variant_shippingfree']);
         $product->setStock((int) $data['__variant_instock']);
         $product->setManufacturerNumber($data['__variant_suppliernumber']);
         $product->setMainVariantId((int) $data['__product_main_detail_id']);
@@ -192,17 +174,17 @@ class ProductHydrator extends Hydrator
 
         if ($data['__variant_releasedate']) {
             $product->setReleaseDate(
-                new \DateTime($data['__variant_releasedate'])
+                new DateTime($data['__variant_releasedate'])
             );
         }
         if ($data['__product_datum']) {
             $product->setCreatedAt(
-                new \DateTime($data['__product_datum'])
+                new DateTime($data['__product_datum'])
             );
         }
         if ($data['__product_changetime']) {
             $product->setUpdatedAt(
-                new \DateTime($data['__product_changetime'])
+                new DateTime($data['__product_changetime'])
             );
         }
 
@@ -214,13 +196,13 @@ class ProductHydrator extends Hydrator
         $product->setWeight((float) $data['__variant_weight']);
         $product->setWidth((float) $data['__variant_width']);
 
-        $customerGroups = explode('|', $data['__product_blocked_customer_groups']);
+        $customerGroups = explode('|', $data['__product_blocked_customer_groups'] ?? '');
         $customerGroups = array_filter($customerGroups);
         $product->setBlockedCustomerGroupIds($customerGroups);
         $product->setHasAvailableVariant($data['__product_has_available_variants'] > 0);
 
         $product->setFallbackPriceCount($data['__product_fallback_price_count']);
-        if (array_key_exists('__product_custom_price_count', $data)) {
+        if (\array_key_exists('__product_custom_price_count', $data)) {
             $product->setCustomerPriceCount($data['__product_custom_price_count']);
         } else {
             $product->setCustomerPriceCount($data['__product_fallback_price_count']);
@@ -230,7 +212,7 @@ class ProductHydrator extends Hydrator
     /**
      * Iterates the attribute data and assigns the attribute struct to the product.
      */
-    private function assignAttributeData(Struct\ListProduct $product, array $data)
+    private function assignAttributeData(ListProduct $product, array $data): void
     {
         $translation = $this->getProductTranslation($data);
         $translation = $this->extractFields('__attribute_', $translation);

@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Newsletter;
 
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 
@@ -58,7 +59,7 @@ class ContactData extends ModelEntity
      *
      * @ORM\Column(name="salutation", type="string", nullable=true)
      */
-    protected $salutation;
+    protected $salutation = 'not_defined';
 
     /**
      * @var string|null
@@ -103,21 +104,21 @@ class ContactData extends ModelEntity
     protected $city;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="added", type="datetime", nullable=false)
      */
     protected $added;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="double_optin_confirmed", type="datetime", nullable=false)
      */
     protected $doubleOptinConfirmed;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="deleted", type="datetime", nullable=true)
      */
@@ -135,7 +136,7 @@ class ContactData extends ModelEntity
     private $id;
 
     /**
-     * @param \DateTimeInterface $added
+     * @param DateTimeInterface $added
      */
     public function setAdded($added)
     {
@@ -143,7 +144,7 @@ class ContactData extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getAdded()
     {
@@ -167,7 +168,7 @@ class ContactData extends ModelEntity
     }
 
     /**
-     * @param \DateTimeInterface|null $deleted
+     * @param DateTimeInterface|null $deleted
      */
     public function setDeleted($deleted)
     {
@@ -175,7 +176,7 @@ class ContactData extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getDeleted()
     {
@@ -319,7 +320,7 @@ class ContactData extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getDoubleOptinConfirmed()
     {
@@ -327,7 +328,7 @@ class ContactData extends ModelEntity
     }
 
     /**
-     * @param \DateTimeInterface $doubleOptinConfirmed
+     * @param DateTimeInterface $doubleOptinConfirmed
      */
     public function setDoubleOptinConfirmed($doubleOptinConfirmed)
     {

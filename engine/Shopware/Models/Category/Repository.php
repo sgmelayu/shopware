@@ -1,38 +1,41 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Category;
 
-use Doctrine\ORM\Query\Expr;
+use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query;
+use Doctrine\ORM\Query\Expr\Join;
 use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Model\QueryBuilder;
+use Shopware_Components_Translation;
 
 /**
- * This class gathers all categories with there id, description, position, parent category id and the number
+ * This class gathers all categories with their id, description, position, parent category id and the number
  * of articles assigned to that category.
  *
- * Uses the articles association to get the numbers of articles.
+ * Uses the product associations to get the numbers of products.
  *
  * Affected Models
  *  - Category
@@ -42,13 +45,15 @@ use Shopware\Components\Model\QueryBuilder;
  *  - s_categories
  *  - s_articles
  *  - s_articles_categories
+ *
+ * @extends ModelRepository<Category>
  */
 class Repository extends ModelRepository
 {
     /**
-     * @param int          $id        identifier of category
-     * @param string|array $field     string or array of selectable fields
-     * @param string|null  $separator if separator is given string will be returned
+     * @param int                  $id        identifier of category
+     * @param string|array<string> $field     string or array of selectable fields
+     * @param string|null          $separator if separator is given string will be returned
      *
      * @return array|string
      */
@@ -58,14 +63,16 @@ class Repository extends ModelRepository
             return '';
         }
 
-        /** @var Category $category */
         $category = $this->find($id);
+        if (!$category instanceof Category) {
+            return '';
+        }
 
         $before = $this->getCategoryPathBefore($category, $field, $separator);
 
         $self = $this->getCategoryPathQuery($id, $field);
 
-        if (!$before) {
+        if (!\is_array($before)) {
             if ($separator) {
                 return $self;
             }
@@ -88,7 +95,7 @@ class Repository extends ModelRepository
      * @param int|null $offset
      * @param bool     $selectOnlyActive
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Category>
      */
     public function getListQuery(array $filterBy, array $orderBy = [], $limit = null, $offset = null, $selectOnlyActive = true)
     {
@@ -98,16 +105,17 @@ class Repository extends ModelRepository
     }
 
     /**
-     * Returns a query builder object to get all defined categories with an count of sub categories.
+     * Returns a query builder object to get all defined categories with a count of sub categories.
      *
-     * @param int|null $limit
-     * @param int|null $offset
+     * @param array<string, string>|array<array{property: string, value: mixed, expression?: string}> $filterBy
+     * @param array<array{property: string, direction: string}>                                       $orderBy
+     * @param int|null                                                                                $limit
+     * @param int|null                                                                                $offset
      *
      * @return QueryBuilder
      */
     public function getBackendListQuery(array $filterBy = [], array $orderBy = [], $limit = null, $offset = null)
     {
-        /** @var QueryBuilder $builder */
         $builder = $this->createQueryBuilder('c');
         $builder->select([
             'c.id as id',
@@ -142,18 +150,18 @@ class Repository extends ModelRepository
      *
      * @param int $categoryId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getBackendDetailQuery($categoryId)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select([
-                'category',
-                'attribute',
-                'emotions',
-                'customerGroups',
-                'media',
-            ])
+            'category',
+            'attribute',
+            'emotions',
+            'customerGroups',
+            'media',
+        ])
             ->from($this->getEntityName(), 'category')
             ->leftJoin('category.attribute', 'attribute')
             ->leftJoin('category.emotions', 'emotions')
@@ -171,15 +179,16 @@ class Repository extends ModelRepository
      * Helper method to create the query builder for the "getListQuery" function.
      * This function can be hooked to modify the query builder of the query object.
      *
-     * @param int|null $limit
-     * @param int|null $offset
-     * @param bool     $selectOnlyActive
+     * @param array<string, string>|array<array{property: string, value: mixed, expression?: string}> $filterBy
+     * @param array<array{property: string, direction: string}>                                       $orderBy
+     * @param int|null                                                                                $limit
+     * @param int|null                                                                                $offset
+     * @param bool                                                                                    $selectOnlyActive
      *
      * @return QueryBuilder
      */
     public function getListQueryBuilder(array $filterBy, array $orderBy = [], $limit = null, $offset = null, $selectOnlyActive = true)
     {
-        /** @var QueryBuilder $builder */
         $builder = $this->createQueryBuilder('c');
         $builder->select([
             'c.id as id',
@@ -214,7 +223,7 @@ class Repository extends ModelRepository
      *
      * @param int $categoryId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Category>
      */
     public function getDetailQuery($categoryId)
     {
@@ -229,7 +238,7 @@ class Repository extends ModelRepository
      *
      * @param int $categoryId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Category>
      */
     public function getDetailQueryWithoutArticles($categoryId)
     {
@@ -246,7 +255,7 @@ class Repository extends ModelRepository
      *
      * @param int $categoryId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getDetailQueryBuilder($categoryId)
     {
@@ -279,7 +288,7 @@ class Repository extends ModelRepository
      *
      * @param int $categoryId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getDetailQueryBuilderWithoutArticles($categoryId)
     {
@@ -310,7 +319,7 @@ class Repository extends ModelRepository
      * @param int      $parentId
      * @param int|null $customerGroupId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Category>
      */
     public function getActiveByParentIdQuery($parentId, $customerGroupId = null)
     {
@@ -327,7 +336,7 @@ class Repository extends ModelRepository
      * @param int      $articleId
      * @param int|null $parentId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Category>
      */
     public function getActiveByArticleIdQuery($articleId, $parentId = null)
     {
@@ -335,7 +344,7 @@ class Repository extends ModelRepository
         $builder = $builder->from($this->getEntityName(), 'c')
             ->select(['c'])
             ->where('c.active=1')
-            ->join('c.articles', 'a', Expr\Join::WITH, 'a.id= ?0')
+            ->join('c.articles', 'a', Join::WITH, 'a.id= ?0')
             ->setParameter(0, $articleId)
             ->addOrderBy('c.position');
 
@@ -353,7 +362,7 @@ class Repository extends ModelRepository
      * @param int      $id              The id of the category
      * @param int|null $customerGroupId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Category>
      */
     public function getActiveByIdQuery($id, $customerGroupId = null)
     {
@@ -378,7 +387,7 @@ class Repository extends ModelRepository
      * @param int|null $depth
      * @param int|null $shopId
      *
-     * @return array
+     * @return list<array<string, mixed>>
      */
     public function getActiveChildrenTree($id, $customerGroupId = null, $depth = null, $shopId = null)
     {
@@ -455,14 +464,14 @@ class Repository extends ModelRepository
     /**
      * @param int $id
      *
-     * @return array
+     * @return int
      */
     public function getChildrenCountList($id)
     {
         $builder = $this->getCategoriesByParentBuilder($id);
         $builder->select('COUNT(categories) as categoriesCount');
 
-        return $builder->getQuery()->getSingleScalarResult();
+        return (int) $builder->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -484,25 +493,23 @@ class Repository extends ModelRepository
      */
     public function getActiveArticleIdByCategoryId($category)
     {
-        if ($category !== null && !$category instanceof Category) {
+        if (\is_int($category)) {
             $category = $this->find($category);
         }
-        if ($category === null) {
+        if (!$category instanceof Category) {
             return null;
         }
 
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->from($this->getEntityName(), 'c');
         $builder->select('MIN(a.id)')
-            ->innerJoin('c.allArticles', 'a', Expr\Join::WITH, 'a.active=1')
+            ->innerJoin('c.allArticles', 'a', Join::WITH, 'a.active=1')
             ->where('c.active=1')
             ->andWhere('c.id = :id');
 
         $builder->setParameter('id', $category->getId());
 
-        return $builder->getQuery()->getResult(
-            \Doctrine\ORM\Query::HYDRATE_SINGLE_SCALAR
-        );
+        return $builder->getQuery()->getResult(Query::HYDRATE_SINGLE_SCALAR);
     }
 
     /**
@@ -514,7 +521,7 @@ class Repository extends ModelRepository
      *
      * @internal param $filterBy
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Category>
      */
     public function getBlogCategoriesByParentQuery($parentId, $offset = null, $limit = null)
     {
@@ -547,7 +554,7 @@ class Repository extends ModelRepository
      * @param int|null $offset
      * @param int|null $limit
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getCategoriesByParentBuilder($parentId, $offset = null, $limit = null)
     {
@@ -571,7 +578,7 @@ class Repository extends ModelRepository
      *
      * @param array $filterBy
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Category>
      */
     public function getBlogCategoryTreeListQuery($filterBy)
     {
@@ -591,7 +598,7 @@ class Repository extends ModelRepository
     public function getBlogCategoryTreeListBuilder()
     {
         $subQuery = $this->getEntityManager()->createQueryBuilder();
-        $subQuery->from(\Shopware\Models\Category\Category::class, 'c2')
+        $subQuery->from(Category::class, 'c2')
             ->select('COUNT(c2.id)')
             ->where('c2.parentId = c.id')
             ->andWhere('c2.blog = 1');
@@ -612,16 +619,16 @@ class Repository extends ModelRepository
     /**
      * Helper function to select all path elements for the passed category.
      *
-     * @param Category $category
-     * @param string   $field
-     * @param string   $separator
+     * @param Category|null        $category
+     * @param string|array<string> $field
+     * @param string|null          $separator
      *
-     * @return array|string|null
+     * @return array|null
      */
     protected function getCategoryPathBefore($category, $field, $separator)
     {
         if (!$category instanceof Category) {
-            return '';
+            return null;
         }
         $parent = $category->getParent();
 
@@ -641,15 +648,17 @@ class Repository extends ModelRepository
     }
 
     /**
-     * @param int          $id
-     * @param string|array $fields
+     * @param int                  $id
+     * @param string|array<string> $fields
+     *
+     * @return array<string, mixed>
      */
     protected function getCategoryPathQuery($id, $fields)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
 
         $selection = [];
-        if (is_array($fields)) {
+        if (\is_array($fields)) {
             foreach ($fields as $field) {
                 $selection[] = 'category.' . $field;
             }
@@ -663,24 +672,24 @@ class Repository extends ModelRepository
             ->setParameter('id', (int) $id);
 
         $result = $builder->getQuery()->getOneOrNullResult(
-            \Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY
+            AbstractQuery::HYDRATE_ARRAY
         );
 
         if (Shopware()->Container()->initialized('shop')) {
-            $translationComponent = Shopware()->Container()->get(\Shopware_Components_Translation::class);
+            $translationComponent = Shopware()->Container()->get(Shopware_Components_Translation::class);
             $shopId = Shopware()->Shop()->getId();
-            $fallbackId = null;
+            $fallbackId = 0;
             if (Shopware()->Shop()->getFallback()) {
                 $fallbackId = Shopware()->Shop()->getFallback()->getId();
             }
 
             $translations = $translationComponent->readWithFallback($shopId, $fallbackId, 'category', $id);
-            if (isset($translations) && isset($translations['description']) && (isset($result['name']) || $fields === 'name')) {
+            if (isset($translations['description']) && (isset($result['name']) || $fields === 'name')) {
                 $result['name'] = $translations['description'];
             }
         }
 
-        if (is_array($fields)) {
+        if (\is_array($fields)) {
             return $result;
         }
 
@@ -695,11 +704,10 @@ class Repository extends ModelRepository
      * @param int|null $customerGroupId
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     protected function getActiveQueryBuilder($customerGroupId = null, $shopId = null)
     {
-        /** @var QueryBuilder $builder */
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->from($this->getEntityName(), 'c')
                 ->select([
@@ -721,12 +729,12 @@ class Repository extends ModelRepository
         $builder = $this->addChildrenCountSelect($builder);
 
         if (isset($customerGroupId)) {
-            $builder->leftJoin('c.customerGroups', 'cg', 'with', 'cg.id = :cgId')
+            $builder->leftJoin('c.customerGroups', 'cg', Join::WITH, 'cg.id = :cgId')
                     ->setParameter('cgId', $customerGroupId)
                     ->andHaving('COUNT(cg.id) = 0');
         }
 
-        //to prevent a temporary table and file sort we have to set the same sort and group by condition
+        // to prevent a temporary table and file sort we have to set the same sort and group by condition
         $builder->groupBy('c.parentId')
             ->addGroupBy('c.position')
             ->addGroupBy('c.id')
@@ -737,15 +745,10 @@ class Repository extends ModelRepository
         return $builder;
     }
 
-    /**
-     * @param \Doctrine\ORM\QueryBuilder $builder
-     *
-     * @return \Doctrine\ORM\QueryBuilder
-     */
-    private function addChildrenCountSelect($builder)
+    private function addChildrenCountSelect(QueryBuilder $builder): QueryBuilder
     {
         $subQuery = $this->getEntityManager()->createQueryBuilder();
-        $subQuery->from(\Shopware\Models\Category\Category::class, 'c2')
+        $subQuery->from(Category::class, 'c2')
                 ->select('COUNT(c2.id)')
                 ->where('c2.parentId = c.id');
 
@@ -755,21 +758,15 @@ class Repository extends ModelRepository
         return $builder;
     }
 
-    /**
-     * @param \Doctrine\ORM\QueryBuilder $builder
-     * @param bool                       $onlyActive
-     *
-     * @return \Doctrine\ORM\QueryBuilder
-     */
-    private function addArticleCountSelect($builder, $onlyActive = false)
+    private function addArticleCountSelect(QueryBuilder $builder, bool $onlyActive = false): QueryBuilder
     {
         $subQuery = $this->getEntityManager()->createQueryBuilder();
-        $subQuery->from(\Shopware\Models\Category\Category::class, 'c3')
+        $subQuery->from(Category::class, 'c3')
             ->select('COUNT(articles)')
             ->where('c3.id = c.id');
 
         if ($onlyActive) {
-            $subQuery->leftJoin('c3.allArticles', 'articles', 'WITH', 'articles.active = true');
+            $subQuery->leftJoin('c3.allArticles', 'articles', Join::WITH, 'articles.active = true');
         } else {
             $subQuery->leftJoin('c3.allArticles', 'articles');
         }

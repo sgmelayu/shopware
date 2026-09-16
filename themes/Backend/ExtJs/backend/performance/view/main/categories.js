@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/performance/main"}
@@ -106,10 +105,10 @@ Ext.define('Shopware.apps.Performance.view.main.Categories', {
      * @object
      */
     snippets: {
-        title:'{s name="progress/title"}Fix category tree{/s}',
-        cancel:'{s name="progress/cancel"}Cancel process{/s}',
-        start:'{s name="progress/start"}Start process{/s}',
-        close:'{s name="progress/close"}Close window{/s}'
+        title: '{s name="progress/title"}Fix category tree{/s}',
+        cancel: '{s name="progress/cancel"}Cancel process{/s}',
+        start: '{s name="progress/start"}Start process{/s}',
+        close: '{s name="progress/close"}Close window{/s}'
     },
 
     /**
@@ -134,7 +133,6 @@ Ext.define('Shopware.apps.Performance.view.main.Categories', {
         me.callParent(arguments);
     },
 
-
     /**
      * Registers additional component events.
      */
@@ -153,7 +151,7 @@ Ext.define('Shopware.apps.Performance.view.main.Categories', {
             animate: true,
             margin: '0 0 15',
             style: 'border-width: 1px !important;',
-            cls:'left-align'
+            cls: 'left-align'
         });
     },
 

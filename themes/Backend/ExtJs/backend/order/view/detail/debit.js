@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -40,12 +39,12 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      * Define that the debit field set is an extension of the Ext.form.FieldSet
      * @string
      */
-    extend:'Ext.form.FieldSet',
+    extend: 'Ext.form.FieldSet',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.order-debit-field-set',
+    alias: 'widget.order-debit-field-set',
     /**
      * Set css class for this component
      * @string
@@ -55,13 +54,13 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
-        title:'{s name="debit/title"}Payment data{/s}',
-        payment:'{s name="debit/current_payment"}Payment method{/s}',
-        account:'{s name="debit/account"}Account{/s}',
-        accountHolder:'{s name="debit/account_holder"}Account holder{/s}',
-        bankName:'{s name="debit/bank_name"}Bank name{/s}',
-        bankCode:'{s name="debit/bank_code"}Bank code{/s}'
+    snippets: {
+        title: '{s name="debit/title"}Payment data{/s}',
+        payment: '{s name="debit/current_payment"}Payment method{/s}',
+        account: '{s name="debit/account"}Account{/s}',
+        accountHolder: '{s name="debit/account_holder"}Account holder{/s}',
+        bankName: '{s name="debit/bank_name"}Bank name{/s}',
+        bankCode: '{s name="debit/bank_code"}Bank code{/s}'
     },
 
     /**
@@ -74,7 +73,7 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         me.registerEvents();
@@ -95,13 +94,13 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
 
         me.topContainer = Ext.create('Ext.container.Container', {
             layout: 'anchor',
-            items:me.createTopElements()
+            items: me.createTopElements()
         });
 
         me.fieldContainer = Ext.create('Ext.container.Container', {
-            layout:'column',
+            layout: 'column',
             defaults: { columnWidth: .5 },
-            items:me.createDebitForm()
+            items: me.createDebitForm()
         });
         me.debitContainer = me.fieldContainer;
 
@@ -113,7 +112,7 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      * and will be fired when the user change the payment combo box.
      * @return void
      */
-    registerEvents:function () {
+    registerEvents: function () {
         this.addEvents(
             /**
              * Event will be fired when the user change the payment combo box which
@@ -134,7 +133,7 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      *
      * @return [Array] Container which contains the payment combo box
      */
-    createTopElements:function () {
+    createTopElements: function () {
         return [ this.createPaymentCombo() ];
     },
 
@@ -142,19 +141,19 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
         var me = this;
 
         me.paymentCombo = Ext.create('Ext.form.field.ComboBox', {
-            name:'paymentId',
-            triggerAction:'all',
-            fieldLabel:me.snippets.payment,
+            name: 'paymentId',
+            triggerAction: 'all',
+            fieldLabel: me.snippets.payment,
             store: me.paymentsStore,
-            valueField:'id',
-            displayField:'description',
-            allowBlank:false,
-            required:true,
-            anchor:'97.5%',
+            valueField: 'id',
+            displayField: 'description',
+            allowBlank: false,
+            required: true,
+            anchor: '97.5%',
             labelWidth: 155,
-            minWidth:250,
+            minWidth: 250,
             labelStyle: 'font-weight: 700;',
-            editable:false,
+            editable: false,
             queryMode: 'local',
             tpl: Ext.create('Ext.XTemplate',
                 '<tpl for=".">',
@@ -180,7 +179,7 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
                         me.highlightPaymentComboBox(field);
                     });
                 },
-                change:function (field, newValue) {
+                change: function (field, newValue) {
                     me.fireEvent('changePayment', newValue, me.fieldContainer);
                 }
             }
@@ -196,7 +195,7 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      */
     highlightPaymentComboBox: function (field) {
         var store = field.getStore();
-            var selectedRecord = store.findRecord('id', field.getValue()),
+        var selectedRecord = store.findRecord('id', field.getValue()),
             input = Ext.get(field.getEl().down('.x-form-field'));
 
         if (!selectedRecord || !selectedRecord.get('active')) {
@@ -213,38 +212,38 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      *
      * @return [Array] Contains the left and right container
      */
-    createDebitForm:function () {
+    createDebitForm: function () {
         var leftContainer, rightContainer, me = this;
 
         leftContainer = Ext.create('Ext.container.Container', {
-            layout:'anchor',
+            layout: 'anchor',
             cls: Ext.baseCSSPrefix + 'field-set-container',
-            defaults:{
-                anchor:'95%',
+            defaults: {
+                anchor: '95%',
                 labelStyle: 'font-weight: 700;',
                 style: {
                     margin: '0 0 10px'
                 },
                 labelWidth: 155,
-                minWidth:250,
-                xtype:'textfield'
+                minWidth: 250,
+                xtype: 'textfield'
             },
-            items:me.createLeftElements()
+            items: me.createLeftElements()
         });
 
         rightContainer = Ext.create('Ext.container.Container', {
-            layout:'anchor',
+            layout: 'anchor',
             cls: Ext.baseCSSPrefix + 'field-set-container',
-            defaults:{
-                anchor:'100%',
-                labelWidth:155,
+            defaults: {
+                anchor: '100%',
+                labelWidth: 155,
                 labelStyle: 'font-weight: 700;',
                 style: {
                     margin: '0 0 10px'
                 },
-                xtype:'textfield'
+                xtype: 'textfield'
             },
-            items:me.createRightElements()
+            items: me.createRightElements()
         });
 
         return [ leftContainer, rightContainer ];
@@ -255,16 +254,16 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      *
      * @return [Array] Contains the account name and account holder
      */
-    createLeftElements:function () {
+    createLeftElements: function () {
         var me = this;
         return [{
-            name:'debit[account]',
-            alias:'account',
-            fieldLabel:me.snippets.account
+            name: 'debit[account]',
+            alias: 'account',
+            fieldLabel: me.snippets.account
         }, {
-            name:'debit[accountHolder]',
-            alias:'holder',
-            fieldLabel:me.snippets.accountHolder
+            name: 'debit[accountHolder]',
+            alias: 'holder',
+            fieldLabel: me.snippets.accountHolder
         }];
     },
 
@@ -273,16 +272,16 @@ Ext.define('Shopware.apps.Order.view.detail.Debit', {
      *
      * @return [Array] Contains the bank name and code
      */
-    createRightElements:function () {
+    createRightElements: function () {
         var me = this;
         return [{
-            name:'debit[bankName]',
-            alias:'bankName',
-            fieldLabel:me.snippets.bankName
+            name: 'debit[bankName]',
+            alias: 'bankName',
+            fieldLabel: me.snippets.bankName
         }, {
-            name:'debit[bankCode]',
-            alias:'bankCode',
-            fieldLabel:me.snippets.bankCode
+            name: 'debit[bankCode]',
+            alias: 'bankCode',
+            fieldLabel: me.snippets.bankCode
         }];
     }
 });

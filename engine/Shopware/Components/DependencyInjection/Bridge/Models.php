@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\DependencyInjection\Bridge;
@@ -27,6 +27,7 @@ namespace Shopware\Components\DependencyInjection\Bridge;
 use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
+use Enlight_Loader;
 use Shopware\Components\Model\Configuration;
 use Shopware\Components\Model\LazyFetchModelEntity;
 use Shopware\Components\Model\ModelManager;
@@ -48,11 +49,11 @@ class Models
     public function factory(
         EventManager $eventManager,
         Configuration $config,
-        \Enlight_Loader $loader,
+        Enlight_Loader $loader,
         Connection $connection,
         // Annotation driver is not really used here but has to be loaded first
         AnnotationDriver $modelAnnotation,
-        QueryOperatorValidator $operatorValidator = null
+        ?QueryOperatorValidator $operatorValidator = null
     ) {
         $loader->registerNamespace(
             'Shopware\Models\Attribute',

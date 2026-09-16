@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Article;
 
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\Order\Esd as OrderEsd;
 
 /**
  * @ORM\Entity()
@@ -39,14 +40,14 @@ class EsdSerial extends ModelEntity
      * @var Esd
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Article\Esd", inversedBy="serials")
-     * @ORM\JoinColumn(name="esdID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="esdID", referencedColumnName="id", nullable=false)
      */
     protected $esd;
 
     /**
      * INVERSE SIDE
      *
-     * @var \Shopware\Models\Order\Esd
+     * @var OrderEsd|null
      *
      * @ORM\OneToOne(targetEntity="Shopware\Models\Order\Esd", mappedBy="serial")
      */
@@ -62,9 +63,9 @@ class EsdSerial extends ModelEntity
     private $id;
 
     /**
-     * @var string|null
+     * @var string
      *
-     * @ORM\Column(name="serialnumber", type="string", length=255, nullable=true)
+     * @ORM\Column(name="serialnumber", type="string", length=255, nullable=false)
      */
     private $serialnumber = '';
 
@@ -103,7 +104,7 @@ class EsdSerial extends ModelEntity
     }
 
     /**
-     * @return string|null
+     * @return string
      */
     public function getSerialnumber()
     {

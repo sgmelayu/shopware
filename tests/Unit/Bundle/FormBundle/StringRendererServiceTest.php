@@ -1,32 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Bundle\FormBundle;
 
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Shopware\Bundle\FormBundle\StringRendererService;
 use Shopware\Tests\Unit\Bundle\FormBundle\fixtures\View;
+use stdClass;
 
 class StringRendererServiceTest extends TestCase
 {
@@ -155,7 +157,7 @@ Wir freuen uns auf Ihre Kontaktaufnahme.
         $view = $this->view->getAssign();
         $view['sTestException'] = [0 => 1, 2 => 3, 4 => 5];
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->stringRendererService->render('testString {$sTestException} test 123', $view, []);
     }
 
@@ -169,11 +171,11 @@ Wir freuen uns auf Ihre Kontaktaufnahme.
             'required' => '1',
             'label' => 'Anrede',
             'class' => 'normal',
-            'value' => new \stdClass(),
+            'value' => new stdClass(),
             'error_msg' => '',
         ];
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->stringRendererService->render(
             'testString {$sElement.value} test 123',
             $this->view->getAssign(),

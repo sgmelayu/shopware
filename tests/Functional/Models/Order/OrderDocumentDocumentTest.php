@@ -1,38 +1,59 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-namespace Shopware\Tests\Models\Order;
+namespace Shopware\Tests\Functional\Models\Order;
 
+use Enlight_Components_Test_TestCase;
+use Exception;
+use Generator;
+use RuntimeException;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Attribute\Document as DocumentAttribute;
 use Shopware\Models\Order\Document\Document;
+use Shopware\Models\Shop\Shop;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
 use Shopware_Components_Document;
 
-class OrderDocumentDocumentTest extends \Enlight_Components_Test_TestCase
+class OrderDocumentDocumentTest extends Enlight_Components_Test_TestCase
 {
-    public function testSetAttribute()
+    use ContainerTrait;
+    use DatabaseTransactionBehaviour;
+
+    private ModelManager $modelManager;
+
+    protected function setUp(): void
+    {
+        $this->modelManager = $this->getContainer()->get(ModelManager::class);
+        parent::setUp();
+    }
+
+    public function testSetAttribute(): void
     {
         $document = new Document();
-        $attribute = new \Shopware\Models\Attribute\Document();
+        $attribute = new DocumentAttribute();
         $document->setAttribute($attribute);
 
         static::assertSame($document, $attribute->getDocument());
@@ -42,15 +63,17 @@ class OrderDocumentDocumentTest extends \Enlight_Components_Test_TestCase
     /*
      * Test order document creation for inactive subshops
      */
-    public function testDocumentForInactiveSubshop()
+
+    public function testDocumentForInactiveSubshop(): void
     {
         // Temporarily set main shop to inactive
-        $shop = Shopware()->Models()->getRepository(\Shopware\Models\Shop\Shop::class)->find(1);
+        $shop = $this->modelManager->getRepository(Shop::class)->find(1);
         $shop->setActive(false);
 
         // Flush changed shop to the database, needed for the Document code
-        Shopware()->Models()->flush($shop);
+        $this->modelManager->flush($shop);
 
+        $document = null;
         try {
             /*
              * Used to fail with the following error before allowing inactive subshops
@@ -65,13 +88,13 @@ class OrderDocumentDocumentTest extends \Enlight_Components_Test_TestCase
                     '_preview' => true,
                 ]
             );
-        } catch (\Exception $e) {
-            // Append exception to possible failure ouputs (caused by the assert in the finally block)
+        } catch (Exception $e) {
+            // Append exception to possible failure outputs (caused by the assert in the finally block)
             throw $e;
         } finally {
             // Make sure we always clean up, since an inactive default shop would otherwise crash the next test execution
             $shop->setActive(true);
-            Shopware()->Models()->flush($shop);
+            $this->modelManager->flush($shop);
 
             // Check that document was actually created
             static::assertNotNull($document);
@@ -82,7 +105,7 @@ class OrderDocumentDocumentTest extends \Enlight_Components_Test_TestCase
      * Test the creation of multiple documents of the same order and the same type.
      * Asserts the number of created documents is 2 if the _allowMultipleDocuments flag is set.
      */
-    public function testMultipleDocumentsOfTheSameType()
+    public function testMultipleDocumentsOfTheSameType(): void
     {
         $document1 = Shopware_Components_Document::initDocument(
             15,
@@ -106,7 +129,7 @@ class OrderDocumentDocumentTest extends \Enlight_Components_Test_TestCase
         );
         $document2->render();
 
-        $documents = Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class)->getRepository(\Shopware\Models\Order\Document\Document::class)
+        $documents = $this->modelManager->getRepository(Document::class)
             ->findBy([
                 'typeId' => 1,
                 'orderId' => 15,
@@ -115,16 +138,16 @@ class OrderDocumentDocumentTest extends \Enlight_Components_Test_TestCase
 
         // Revert changes of this test
         foreach ($documents as $document) {
-            Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class)->remove($document);
+            $this->modelManager->remove($document);
         }
-        Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class)->flush();
+        $this->modelManager->flush();
     }
 
     /**
      * Test the creation of multiple documents of the same order and the same type.
      * Asserts the number of created documents stays 1 if the _allowMultipleDocuments flag is not set.
      */
-    public function testMultipleDocumentsOfTheSameTypeNegative()
+    public function testMultipleDocumentsOfTheSameTypeNegative(): void
     {
         $document1 = Shopware_Components_Document::initDocument(
             15,
@@ -148,7 +171,7 @@ class OrderDocumentDocumentTest extends \Enlight_Components_Test_TestCase
         );
         $document2->render();
 
-        $documents = Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class)->getRepository(\Shopware\Models\Order\Document\Document::class)
+        $documents = $this->modelManager->getRepository(Document::class)
             ->findBy([
                 'typeId' => 1,
                 'orderId' => 15,
@@ -157,8 +180,36 @@ class OrderDocumentDocumentTest extends \Enlight_Components_Test_TestCase
 
         // Revert changes of this test
         foreach ($documents as $document) {
-            Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class)->remove($document);
+            $this->modelManager->remove($document);
         }
-        Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class)->flush();
+        $this->modelManager->flush();
+    }
+
+    /**
+     * @dataProvider orderIdProvider
+     */
+    public function testOrderWithoutBillingAddress(int $orderId, bool $expectException): void
+    {
+        if ($expectException) {
+            $this->expectException(RuntimeException::class);
+            $this->expectExceptionMessage('Country ID not set in shipping address');
+        }
+        $document = Shopware_Components_Document::initDocument($orderId, 1, [
+            '_renderer' => 'pdf',
+            '_preview' => false,
+        ]);
+        $document->render();
+
+        $documents = $this->modelManager->getRepository(Document::class)->findBy(['typeId' => 1]);
+        static::assertCount(1, $documents);
+    }
+
+    /**
+     * @return Generator<string, array<int|bool>>
+     */
+    public function orderIdProvider(): Generator
+    {
+        yield 'Invalid order from the demo data without billing and shipping address' => [52, true];
+        yield 'Valid order' => [15, false];
     }
 }

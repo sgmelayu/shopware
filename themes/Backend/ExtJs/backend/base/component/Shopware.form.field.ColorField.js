@@ -2,25 +2,23 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
-
 
 //{namespace name="backend/base/color_components"}
 
@@ -177,7 +175,7 @@ Ext.define('Shopware.form.field.ColorField', {
      * @public
      * @return [object] helpIcon - DOM element
      */
-    createHelp:function () {
+    createHelp: function () {
         var me = this,
             helpIcon = new Ext.Element(document.createElement('span')),
             row = new Ext.Element(document.createElement('td'));
@@ -187,11 +185,11 @@ Ext.define('Shopware.form.field.ColorField', {
         helpIcon.appendTo(row);
 
         Ext.tip.QuickTipManager.register({
-            target:helpIcon,
+            target: helpIcon,
             cls: Ext.baseCSSPrefix + 'form-tooltip',
-            title:(me.helpTitle) ? me.helpTitle : '',
-            text:me.helpText,
-            width:(me.helpWidth) ? me.helpWidth : 225,
+            title: (me.helpTitle) ? me.helpTitle : '',
+            text: me.helpText,
+            width: (me.helpWidth) ? me.helpWidth : 225,
             anchorToTarget: true,
             anchor: 'right',
             anchorSize: {
@@ -215,7 +213,7 @@ Ext.define('Shopware.form.field.ColorField', {
      * @public
      * @return [object] supportText - DOM element
      */
-    createSupport:function () {
+    createSupport: function () {
         var me = this,
             row = new Ext.Element(document.createElement('tr')),
             fillCell = new Ext.Element(document.createElement('td')),
@@ -223,10 +221,10 @@ Ext.define('Shopware.form.field.ColorField', {
             supportText = new Ext.Element(document.createElement('div'));
 
         supportText.set({
-            cls: Ext.baseCSSPrefix +'form-support-text'
+            cls: Ext.baseCSSPrefix + 'form-support-text'
         });
 
-        if(me.supportText) {
+        if (me.supportText) {
             supportText.update(me.supportText);
         }
 
@@ -234,17 +232,17 @@ Ext.define('Shopware.form.field.ColorField', {
 
         // If we're finding more than one item, just use the first one :)
         var element = me.getEl().select('tbody');
-        if(element.elements.length > 1) {
+        if (element.elements.length > 1) {
             element = element.elements[0];
         }
 
-        if(me.fieldLabel || !me.hideEmptyLabel) {
+        if (me.fieldLabel || !me.hideEmptyLabel) {
             fillCell.appendTo(row);
         }
 
         cell.appendTo(row);
 
-        if(me.helpText) {
+        if (me.helpText) {
             var tmpCell = new Ext.Element(document.createElement('td'));
             tmpCell.appendTo(row);
         }

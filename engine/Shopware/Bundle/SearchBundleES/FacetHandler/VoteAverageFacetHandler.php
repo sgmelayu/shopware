@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleES\FacetHandler;
@@ -41,15 +41,9 @@ use Shopware_Components_Snippet_Manager;
 
 class VoteAverageFacetHandler implements HandlerInterface, ResultHydratorInterface
 {
-    /**
-     * @var Shopware_Components_Snippet_Manager
-     */
-    private $snippetManager;
+    private Shopware_Components_Snippet_Manager $snippetManager;
 
-    /**
-     * @var QueryAliasMapper
-     */
-    private $queryAliasMapper;
+    private QueryAliasMapper $queryAliasMapper;
 
     public function __construct(
         Shopware_Components_Snippet_Manager $snippetManager,
@@ -107,22 +101,20 @@ class VoteAverageFacetHandler implements HandlerInterface, ResultHydratorInterfa
     }
 
     /**
-     * @return RadioFacetResult
+     * @param array<string, mixed> $buckets
      */
-    private function createFacet(Criteria $criteria, array $buckets)
+    private function createFacet(Criteria $criteria, array $buckets): RadioFacetResult
     {
         $activeAverage = null;
-        if ($criteria->hasCondition('vote_average')) {
-            /** @var VoteAverageCondition $condition */
-            $condition = $criteria->getCondition('vote_average');
+        $condition = $criteria->getCondition('vote_average');
+        if ($condition instanceof VoteAverageCondition) {
             $activeAverage = $condition->getAverage();
         }
 
         $values = $this->buildItems($buckets, $activeAverage);
 
-        /** @var VoteAverageFacet|null $facet */
         $facet = $criteria->getFacet('vote_average');
-        if ($facet && !empty($facet->getLabel())) {
+        if ($facet instanceof VoteAverageFacet && !empty($facet->getLabel())) {
             $label = $facet->getLabel();
         } else {
             $label = $this->snippetManager
@@ -130,9 +122,7 @@ class VoteAverageFacetHandler implements HandlerInterface, ResultHydratorInterfa
                 ->get('vote_average', 'Ranking');
         }
 
-        if (!$fieldName = $this->queryAliasMapper->getShortAlias('rating')) {
-            $fieldName = 'rating';
-        }
+        $fieldName = $this->queryAliasMapper->getShortAlias('rating') ?? 'rating';
 
         return new RadioFacetResult(
             'vote_average',
@@ -146,20 +136,19 @@ class VoteAverageFacetHandler implements HandlerInterface, ResultHydratorInterfa
     }
 
     /**
-     * @param array $data
-     * @param float $activeAverage
+     * @param array<string, mixed> $data
      *
-     * @return array
+     * @return array<ValueListItem>
      */
-    private function buildItems($data, $activeAverage)
+    private function buildItems(array $data, ?float $activeAverage): array
     {
-        usort($data, function ($a, $b) {
-            return $a['key'] > $b['key'];
+        usort($data, static function ($a, $b) {
+            return $a['key'] <=> $b['key'];
         });
 
         $values = [];
         for ($i = 1; $i <= 4; ++$i) {
-            $affected = array_filter($data, function ($value) use ($i) {
+            $affected = array_filter($data, static function ($value) use ($i) {
                 return $i <= ($value['key'] / 2);
             });
 
@@ -168,11 +157,11 @@ class VoteAverageFacetHandler implements HandlerInterface, ResultHydratorInterfa
                 continue;
             }
 
-            $values[] = new ValueListItem($i, (string) $count, $activeAverage == $i);
+            $values[] = new ValueListItem($i, (string) $count, (int) $activeAverage === $i);
         }
 
-        usort($values, function (ValueListItem $a, ValueListItem $b) {
-            return $a->getId() < $b->getId();
+        usort($values, static function (ValueListItem $a, ValueListItem $b) {
+            return $b->getId() <=> $a->getId();
         });
 
         return $values;

@@ -1,32 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Article;
 
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\LazyFetchModelEntity;
 use Shopware\Models\Attribute\ArticleNotification as ProductNotificationAttribute;
+use Shopware\Models\Customer\Customer;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -44,20 +46,20 @@ class Notification extends LazyFetchModelEntity
     /**
      * OWNING SIDE
      *
-     * @var \Shopware\Models\Article\Detail
+     * @var Detail
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Article\Detail", inversedBy="notifications")
-     * @ORM\JoinColumn(name="ordernumber", referencedColumnName="ordernumber")
+     * @ORM\JoinColumn(name="ordernumber", referencedColumnName="ordernumber", nullable=false)
      */
     protected $articleDetail;
 
     /**
      * OWNING SIDE
      *
-     * @var \Shopware\Models\Customer\Customer
+     * @var Customer
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Customer\Customer", inversedBy="notifications")
-     * @ORM\JoinColumn(name="mail", referencedColumnName="email")
+     * @ORM\JoinColumn(name="mail", referencedColumnName="email", nullable=false)
      */
     protected $customer;
 
@@ -67,7 +69,6 @@ class Notification extends LazyFetchModelEntity
      * @var ProductNotificationAttribute|null
      *
      * @Assert\Valid()
-     *
      * @ORM\OneToOne(targetEntity="Shopware\Models\Attribute\ArticleNotification", mappedBy="articleNotification", cascade={"persist"})
      */
     protected $attribute;
@@ -89,7 +90,7 @@ class Notification extends LazyFetchModelEntity
     private $articleNumber;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="date", type="datetime", nullable=false)
      */
@@ -134,7 +135,7 @@ class Notification extends LazyFetchModelEntity
     /**
      * @return Notification
      */
-    public function setDate(\DateTimeInterface $date)
+    public function setDate(DateTimeInterface $date)
     {
         $this->date = $date;
 
@@ -142,7 +143,7 @@ class Notification extends LazyFetchModelEntity
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getDate()
     {
@@ -244,22 +245,22 @@ class Notification extends LazyFetchModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Article\Detail
+     * @return Detail
      */
     public function getArticleDetail()
     {
-        /** @var \Shopware\Models\Article\Detail $return */
+        /** @var Detail $return */
         $return = $this->fetchLazy($this->articleDetail, ['number' => $this->articleNumber]);
 
         return $return;
     }
 
     /**
-     * @return \Shopware\Models\Customer\Customer
+     * @return Customer
      */
     public function getCustomer()
     {
-        /** @var \Shopware\Models\Customer\Customer $return */
+        /** @var Customer $return */
         $return = $this->fetchLazy($this->customer, ['email' => $this->mail]);
 
         return $return;

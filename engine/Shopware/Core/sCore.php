@@ -1,31 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
  * Shopware Class providing helper functions for post dispatch url rewriting
  */
-class sCore implements \Enlight_Hook
+class sCore implements Enlight_Hook
 {
     /**
      * The Front controller object
@@ -52,7 +52,7 @@ class sCore implements \Enlight_Hook
         $url = [];
         $allowedCategoryVariables = ['sCategory', 'sPage'];
 
-        $tempGET = $this->front->Request() ? $this->front->Request()->getParams() : null;
+        $tempGET = $this->front->Request() ? $this->front->Request()->getParams() : [];
 
         // If viewport is available, this will be the first variable
         if (!empty($tempGET['sViewport'])) {
@@ -96,23 +96,27 @@ class sCore implements \Enlight_Hook
     /**
      * Tries to rewrite the provided link using SEO friendly urls
      *
-     * @param string $link  the link to rewrite
-     * @param string $title title of the link or related element
+     * @param string|null $link  the link to rewrite
+     * @param string|null $title title of the link or related element
      *
      * @return mixed|string Complete url, rewritten if possible
      */
     public function sRewriteLink($link = null, $title = null)
     {
-        $url = str_replace(',', '=', $link);
-        $url = html_entity_decode($url);
-        $query = parse_url($url, PHP_URL_QUERY);
-        parse_str($query, $query);
+        $url = html_entity_decode(str_replace(',', '=', $link ?? ''));
+        $query = (string) parse_url($url, PHP_URL_QUERY);
+        parse_str($query, $queryArray);
 
         if (!empty($title)) {
-            $query['title'] = $title;
+            $queryArray['title'] = $title;
         }
-        $query['module'] = 'frontend';
+        $queryArray['module'] = 'frontend';
 
-        return $this->front->Router()->assemble($query);
+        $newQueryArray = [];
+        foreach ($queryArray as $key => $queryItem) {
+            $newQueryArray[(string) $key] = $queryItem;
+        }
+
+        return $this->front->ensureRouter()->assemble($newQueryArray);
     }
 }

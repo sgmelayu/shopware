@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Category
@@ -43,7 +42,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
      */
     extend: 'Ext.app.Controller',
 
-     /**
+    /**
      * Define references for the different parts of our application. The
      * references are parsed by ExtJS and Getter methods are automatically created.
      *
@@ -57,28 +56,28 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
         { ref: 'saveCategoryButton', selector: 'button[action=saveDetail]' },
         { ref: 'settingsForm', selector: 'category-category-tabs-settings' },
         { ref: 'articleMappingForm', selector: 'category-category-tabs-article_mapping' }
-     ],
+    ],
 
     /**
      * Translations
      * @Object
      */
-    snippets : {
-        confirmMoveCategory : '{s name="tree/move_confirmation"}Are you sure you want to move this category?{/s}',
-        moveCategorySuccess : '{s name="tree/move_success"}Category has been moved.{/s}',
-        moveCategoryFailure : '{s name="tree/move_failure"}Category could not be moved.{/s}',
-        confirmDeleteCategoryTitle   : '{s name="tree/delete_confirmation_title"}Are you sure you want to delete the category?{/s}',
-        confirmDeleteCategory : '{s name="tree/delete_confirmation"}Are you sure you want to delete category: [0] and all its subcategories?{/s}',
+    snippets: {
+        confirmMoveCategory: '{s name="tree/move_confirmation"}Are you sure you want to move this category?{/s}',
+        moveCategorySuccess: '{s name="tree/move_success"}Category has been moved.{/s}',
+        moveCategoryFailure: '{s name="tree/move_failure"}Category could not be moved.{/s}',
+        confirmDeleteCategoryTitle: '{s name="tree/delete_confirmation_title"}Are you sure you want to delete the category?{/s}',
+        confirmDeleteCategory: '{s name="tree/delete_confirmation"}Are you sure you want to delete category: [0] and all its subcategories?{/s}',
         confirmDeleteCategoryHeadline: '{s name="tree/delete_confirmation_headline"}Delete this Category?{/s}',
-        deleteSingleItemSuccess : '{s name="tree/delete_success"}Category has been deleted.{/s}',
-        deleteSingleItemFailure : '{s name="tree/delete_failure"}Category could not be deleted.{/s}',
-        duplicateItemSuccess : '{s name="tree/duplicate_success"}Category has been duplicated.{/s}',
-        duplicateItemFailure : '{s name="tree/duplicate_failure"}Category could not be duplicated.{/s}',
-        onSaveChangesSuccess    : '{s name="settings/save_success"}Changes have been saved successfully.{/s}',
-        onSaveChangesError      : '{s name="settings/save_error"}An error has occurred while saving the changes.{/s}',
-        emptySubcategoryField   : '{s name="tree/empty_subcategory"}Required field.{/s}',
-        subCategoryNameRequired : '{s name="tree/sub_category_name_required"}A name is required in order to create a sub category.{/s}',
-        growlMessage            : '{s name="window/main_title"}{/s}'
+        deleteSingleItemSuccess: '{s name="tree/delete_success"}Category has been deleted.{/s}',
+        deleteSingleItemFailure: '{s name="tree/delete_failure"}Category could not be deleted.{/s}',
+        duplicateItemSuccess: '{s name="tree/duplicate_success"}Category has been duplicated.{/s}',
+        duplicateItemFailure: '{s name="tree/duplicate_failure"}Category could not be duplicated.{/s}',
+        onSaveChangesSuccess: '{s name="settings/save_success"}Changes have been saved successfully.{/s}',
+        onSaveChangesError: '{s name="settings/save_error"}An error has occurred while saving the changes.{/s}',
+        emptySubcategoryField: '{s name="tree/empty_subcategory"}Required field.{/s}',
+        subCategoryNameRequired: '{s name="tree/sub_category_name_required"}A name is required in order to create a sub category.{/s}',
+        growlMessage: '{s name="window/main_title"}{/s}'
     },
 
     productMappingRendered: false,
@@ -94,37 +93,37 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
         var me = this;
         me.control({
             // Context Menu
-            'category-category-tree':{
-                'selectionchange'   : me.onSelectionChange,
+            'category-category-tree': {
+                'selectionchange': me.onSelectionChange,
                 // event when ever a category is moved in the tree
-                'itemmove'      : me.onCategoryMove,
+                'itemmove': me.onCategoryMove,
                 // event when ever the category tree store should be reloaded
-                'reload'        : me.onReload,
+                'reload': me.onReload,
                 // delete event
-                'deleteSubCategory' : function() { me._destroyOtherModuleInstances(me.onDeleteCategory, arguments) },
+                'deleteSubCategory': function() { me._destroyOtherModuleInstances(me.onDeleteCategory, arguments) },
                 // event when ever someone tries to add a new category into the category tree
-                'addSubCategory'    : function() { me._destroyOtherModuleInstances(me.onOpenNameDialog, arguments) },
+                'addSubCategory': function() { me._destroyOtherModuleInstances(me.onOpenNameDialog, arguments) },
                 // event when ever someone tries to duplicate a category from the category tree
-                'duplicateSubCategory'    : function() { me._destroyOtherModuleInstances(me.onDuplicateCategory, arguments) },
+                'duplicateSubCategory': function() { me._destroyOtherModuleInstances(me.onDuplicateCategory, arguments) },
                 // event when ever someone tries to edit a category
-                'itemclick'      : me.onItemClick,
+                'itemclick': me.onItemClick,
                 //
                 'beforeDropCategory': function() { me._destroyOtherModuleInstances(me.onBeforeDrop, arguments) }
             },
-             // Add Category from a dialog window, route event to the tree controller
-            'category-category-tree button[action=addCategory]' : {
-                'click' : function() { me._destroyOtherModuleInstances(me.onOpenNameDialog, arguments) }
+            // Add Category from a dialog window, route event to the tree controller
+            'category-category-tree button[action=addCategory]': {
+                'click': function() { me._destroyOtherModuleInstances(me.onOpenNameDialog, arguments) }
             },
-             // Add Category in settings tab
-            'category-category-tabs-settings [action=addCategory]':{
-                'click' : function() { me._destroyOtherModuleInstances(me.onAddCategory, arguments) }
+            // Add Category in settings tab
+            'category-category-tabs-settings [action=addCategory]': {
+                'click': function() { me._destroyOtherModuleInstances(me.onAddCategory, arguments) }
             },
-            'category-category-tree button[action=duplicateCategory]' : {
-                'click' : function() { me._destroyOtherModuleInstances(me.onDuplicateCategory, arguments) }
+            'category-category-tree button[action=duplicateCategory]': {
+                'click': function() { me._destroyOtherModuleInstances(me.onDuplicateCategory, arguments) }
             },
             // Add dialog box
-            'category-category-tree button[action=deleteCategory]' : {
-                'click' : function() { me._destroyOtherModuleInstances(me.onDeleteCategory, arguments) }
+            'category-category-tree button[action=deleteCategory]': {
+                'click': function() { me._destroyOtherModuleInstances(me.onDeleteCategory, arguments) }
             },
             'duplication-settings-window': {
                 'start-duplication': me.onStartDuplication
@@ -133,8 +132,6 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
         // need to call parent
         me.callParent(arguments);
     },
-
-
 
     /**
      * Deletes one category tree node and its children
@@ -159,7 +156,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
                     return false;
                 }
                 var record = selection[0],
-                parentNode = record.parentNode;
+                    parentNode = record.parentNode;
 
                 record.removeAll();
                 record.childNodes = [];
@@ -168,14 +165,14 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
                         mainWindow.setLoading(false);
                         var rawData = operation.records[0].proxy.reader.rawData
                         if (operation.success) {
-                            Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleItemSuccess, me.snippets.growlMessage);
+                            Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleItemSuccess, me.snippets.growlMessage);
                             store.load({ node: parentNode });
                             me.disableForm();
                         } else {
                             if (rawData.message) {
-                                Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleItemFailure + '<br>' + rawData.message, me.snippets.growlMessage);
+                                Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleItemFailure + '<br>' + rawData.message, me.snippets.growlMessage);
                             } else {
-                                Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleItemFailure, me.snippets.growlMessage);
+                                Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleItemFailure, me.snippets.growlMessage);
                             }
                         }
                     }
@@ -207,11 +204,11 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
      * @event addSubCategory
      * @return void
      */
-    onOpenNameDialog:function () {
+    onOpenNameDialog: function () {
         var me = this;
         Ext.Msg.prompt('{s name="view/add_dialog_headline"}Enter category name{/s}', '{s name="view/add_dialog_label"}Category name{/s}', function (btn, text) {
             if (btn == 'ok') {
-                if(text == "") {
+                if (text == "") {
                     //you can not save categories with empty names try it again
                     me.onOpenNameDialog();
                 }
@@ -230,7 +227,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
      * @event editSettings
      * @return void
      */
-    onItemClick : function (view, record) {
+    onItemClick: function (view, record) {
         var me = this,
             window          = me.getMainWindow(),
             mainForm        = window.formPanel,
@@ -240,16 +237,16 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
             title           = settingForm.snippets.defaultSettingsTitle;
 
         //to always get the latest parentId on reloading or saving
-        me.subApplication.treeStore.getProxy().extraParams = { node:record.get("id") };
+        me.subApplication.treeStore.getProxy().extraParams = { node: record.get("id") };
         var detailStore = me.subApplication.getStore('Detail');
-        detailStore.getProxy().extraParams = { node:record.get("id") };
+        detailStore.getProxy().extraParams = { node: record.get("id") };
 
         me.subApplication.availableProductsStore.getProxy().extraParams = { categoryId: record.get("id") };
         me.subApplication.assignedProductsStore.getProxy().extraParams = { categoryId: record.get("id") };
 
         detailStore.load({
-            scope:this,
-            callback:function (records) {
+            scope: this,
+            callback: function (records) {
                 var mainWindow = me.subApplication.mainWindow,
                     articleMappingContainer = mainWindow.articleMappingContainer,
                     categoryRestrictionContainer = mainWindow.categoryRestrictionContainer,
@@ -272,7 +269,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
                 }
 
                 // Just create the selection view once, if created just refresh the stores and the detail record.
-                if(!me.productMappingRendered) {
+                if (!me.productMappingRendered) {
                     me.selectorView = Ext.create('Shopware.apps.Category.view.category.tabs.ArticleMapping', {
                         availableProductsStore: me.subApplication.availableProductsStore,
                         assignedProductsStore: me.subApplication.assignedProductsStore,
@@ -333,7 +330,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
                 } else {
                     dropHandlers.cancelDrop();
                 }
-             }
+            }
         );
     },
 
@@ -371,7 +368,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
 
                 me.saveNewChildPositions(newParent);
 
-                if(!Ext.isEmpty(operation.response)) {
+                if (!Ext.isEmpty(operation.response)) {
                     var responseObject = Ext.decode(operation.response.responseText);
 
                     if (responseObject.needsRebuild) {
@@ -443,9 +440,9 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
         return inBlackList;
     },
 
-   /**
-    * @param parent
-    */
+    /**
+     * @param parent
+     */
     saveNewChildPositions: function(parent) {
         var me = this,
             url = '{url controller=Category action=saveNewChildPositions}',
@@ -471,7 +468,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
      * @param tree [Shopware.apps.Category.view.main.CategoryTree]
      * @param selection [array]
      */
-    onSelectionChange : function(tree, selection)
+    onSelectionChange: function(tree, selection)
     {
         /* {if {acl_is_allowed privilege=delete}} */
         var me = this,
@@ -479,7 +476,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
             duplicateButton = me.getDuplicateButton(),
             selectedNode = selection[0];
         // do not delete the root node
-        if(selection.length > 0 && ! selectedNode.isRoot() ) {
+        if (selection.length > 0 && !selectedNode.isRoot() ) {
             deleteButton.enable();
             duplicateButton.enable();
         } else {
@@ -495,7 +492,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
      *  @event reload
      *  @return void
      */
-    onReload : function() {
+    onReload: function() {
         var tree     = this.getCategoryTree(),
             store    = tree.getStore(),
             rootNode = tree.getRootNode();
@@ -515,7 +512,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
      * @param button
      * @param event
      */
-    onAddCategory : function(button, event) {
+    onAddCategory: function(button, event) {
         var me = this,
             form = me.getSettingsForm().getForm(),
             values = form.getValues(),
@@ -524,7 +521,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
         if (form.isValid() && newCategoryNameField.value != "") {
             me.saveCategory(newCategoryNameField.value, values);
             newCategoryNameField.reset();
-        }else{
+        } else {
             // SW-3377. Set allowBlank to false only temporarily as it is not required for the whole form.
             newCategoryNameField.allowBlank = false;
             newCategoryNameField.validate();
@@ -541,28 +538,28 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
      */
     saveCategory: function(categoryName, attributeValues){
         var me = this,
-        selectedNode = me.getSelectedNode(),
-        parentNode = selectedNode.parentNode || selectedNode;
+            selectedNode = me.getSelectedNode(),
+            parentNode = selectedNode.parentNode || selectedNode;
 
         var newCategory = me.getModel('Tree').create({
-            'parentId'  : selectedNode.getId(),
-            'name'      : categoryName,
-            'text'      : categoryName
+            'parentId': selectedNode.getId(),
+            'name': categoryName,
+            'text': categoryName
         });
 
-        if(parentNode.isLeaf) {
+        if (parentNode.isLeaf) {
             //setting the node to an folder
             parentNode.data.leaf = false;
         }
         newCategory.save({
-            callback:function (self, operation) {
+            callback: function (self, operation) {
                 if (operation.success) {
                     Shopware.Notification.createGrowlMessage('', me.snippets.onSaveChangesSuccess, me.snippets.growlMessage);
                     me.reloadTree();
                 } else {
                     var rawData = self.proxy.reader.rawData;
                     if (rawData.message) {
-                        Shopware.Notification.createGrowlMessage('',me.snippets.onSaveChangesError + '<br>' +  rawData.message, me.snippets.growlMessage);
+                        Shopware.Notification.createGrowlMessage('', me.snippets.onSaveChangesError + '<br>' +  rawData.message, me.snippets.growlMessage);
                     } else {
                         Shopware.Notification.createGrowlMessage('', me.snippets.onSaveChangesError, me.snippets.growlMessage);
                     }
@@ -581,7 +578,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
             selectedNode = me.getSelectedNode(),
             parentNode = selectedNode.parentNode || selectedNode,
             options = {
-                node : parentNode
+                node: parentNode
             },
             sm = tree.getSelectionModel(),
             selectedId;
@@ -589,7 +586,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
         if (sm.hasSelection()) {
             selectedId = sm.getSelection()[0].getId();
             Ext.apply(options, {
-                callback : function () {
+                callback: function () {
                     var node = this.store.getNodeById(this.idToSelect);
 
                     if (node) {
@@ -597,16 +594,15 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
                         node.expand();
                     }
                 },
-                scope : {
-                    store : store,
-                    sm : sm,
-                    idToSelect : selectedId
+                scope: {
+                    store: store,
+                    sm: sm,
+                    idToSelect: selectedId
                 }
             });
         }
         store.load(options);
     },
-
 
     /**
      * updates the given tab and add or remove it to the tabpanel
@@ -627,7 +623,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
      *
      * @return void
      */
-    disableForm : function() {
+    disableForm: function() {
         var me   = this,
             formPanel = me.getSettingsForm(),
             form = formPanel.getForm();
@@ -651,7 +647,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
             treeStore = me.subApplication.treeStore,
             selection = tree.getSelectionModel().getSelection();
         // check if we have a selection otherwise we have to add the new category to the root node.
-        if(selection.length > 0 && !isNaN(selection[0].get('id')) ) {
+        if (selection.length > 0 && !isNaN(selection[0].get('id')) ) {
             return treeStore.getNodeById(selection[0].get('id'));
         } else {
             return treeStore.getRootNode();
@@ -665,7 +661,7 @@ Ext.define('Shopware.apps.Category.controller.Tree', {
             store = me.getStore('Tree'),
             batch;
 
-        if(!values.categoryId) {
+        if (!values.categoryId) {
             values.categoryId = NaN;
         }
 

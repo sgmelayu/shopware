@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -41,13 +40,13 @@ Ext.define('Shopware.apps.Order.view.list.Filter', {
      * Define that the additional information is an Ext.panel.Panel extension
      * @string
      */
-    extend:'Ext.panel.Panel',
+    extend: 'Ext.panel.Panel',
 
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.order-list-filter',
+    alias: 'widget.order-list-filter',
 
     /**
      * An optional extra CSS class that will be added to this component's Element.
@@ -63,8 +62,8 @@ Ext.define('Shopware.apps.Order.view.list.Filter', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
-        title:'{s name="filter/title"}Filter options{/s}',
+    snippets: {
+        title: '{s name="filter/title"}Filter options{/s}',
         from: '{s name="filter/from"}From{/s}',
         to: '{s name="filter/to"}To{/s}',
         orderState: '{s name="filter/orderState"}Order status{/s}',
@@ -84,7 +83,7 @@ Ext.define('Shopware.apps.Order.view.list.Filter', {
         document: {
             title: '{s name="document/title"}Documents{/s}',
             date: '{s name="document/date"}Date{/s}',
-            name:  '{s name="document/name"}Name{/s}'
+            name: '{s name="document/name"}Name{/s}'
         }
     },
 
@@ -92,7 +91,7 @@ Ext.define('Shopware.apps.Order.view.list.Filter', {
      * Component event which is fired when the component is initials.
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.registerEvents();
         me.items = [ me.createFieldContainer() ];
@@ -152,15 +151,14 @@ Ext.define('Shopware.apps.Order.view.list.Filter', {
     createFilterForm: function() {
         var me = this;
 
-
         me.filterForm = Ext.create('Ext.form.Panel', {
             border: false,
             cls: Ext.baseCSSPrefix + 'filter-form',
-            defaults:{
-                anchor:'98%',
-                labelWidth:155,
-                minWidth:250,
-                xtype:'pagingcombo',
+            defaults: {
+                anchor: '98%',
+                labelWidth: 155,
+                minWidth: 250,
+                xtype: 'pagingcombo',
                 style: 'box-shadow: none;',
                 labelStyle: 'font-weight:700;'
             },
@@ -286,7 +284,6 @@ Ext.define('Shopware.apps.Order.view.list.Filter', {
             fieldLabel: me.snippets.dispatchName
         });
     },
-
 
     createCustomerGroupField: function() {
         var me = this;

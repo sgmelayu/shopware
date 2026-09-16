@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Customer
@@ -565,45 +564,45 @@ Ext.define('Shopware.apps.Customer.view.detail.Window', {
 
         return new Ext.XTemplate(
             '{literal}<tpl for=".">',
-                '<div class="customer-info-pnl">',
-                    '<div class="base-info">',
-                        '<tpl if="company">',
-                            '<p>',
-                                '<span>{company}</span>',
-                            '</p>',
-                        '</tpl>',
-                        '<tpl if="department">',
-                            '<p>',
-                                '<span>{department}</span>',
-                            '</p>',
-                        '</tpl>',
-                        '<p>',
-                            '<span>{salutationSnippet}</span>&nbsp;',
-                            '<tpl if="title"><span>{title}</span><br /></tpl>',
-                            '<span>{firstname}</span>&nbsp;',
-                            '<span>{lastname}</span>',
-                        '</p>',
-                        '<p>',
-                            '<span>{street}</span>',
-                        '</p>',
-                        '<tpl if="additionalAddressLine1">',
-                            '<p>',
-                                '<span>{additionalAddressLine1}</span>',
-                            '</p>',
-                        '</tpl>',
-                        '<tpl if="additionalAddressLine2">',
-                            '<p>',
-                                '<span>{additionalAddressLine2}</span>',
-                            '</p>',
-                        '</tpl>',
-                        '<p>',
-                            '<span>{zipcode}</span>&nbsp;',
-                            '<span>{city}</span>',
-                        '</p>',
-                        '<p><span>{[this.getCountry(values.countryId)]}</span></p>',
-                        '<p><span>{[this.getCountryState(values.stateId)]}</span></p>',
-                    '</div>',
-                '</div>',
+            '<div class="customer-info-pnl">',
+            '<div class="base-info">',
+            '<tpl if="company">',
+            '<p>',
+            '<span>{company}</span>',
+            '</p>',
+            '</tpl>',
+            '<tpl if="department">',
+            '<p>',
+            '<span>{department}</span>',
+            '</p>',
+            '</tpl>',
+            '<p>',
+            '<span>{salutationSnippet}</span>&nbsp;',
+            '<tpl if="title"><span>{title}</span><br /></tpl>',
+            '<span>{firstname}</span>&nbsp;',
+            '<span>{lastname}</span>',
+            '</p>',
+            '<p>',
+            '<span>{street}</span>',
+            '</p>',
+            '<tpl if="additionalAddressLine1">',
+            '<p>',
+            '<span>{additionalAddressLine1}</span>',
+            '</p>',
+            '</tpl>',
+            '<tpl if="additionalAddressLine2">',
+            '<p>',
+            '<span>{additionalAddressLine2}</span>',
+            '</p>',
+            '</tpl>',
+            '<p>',
+            '<span>{zipcode}</span>&nbsp;',
+            '<span>{city}</span>',
+            '</p>',
+            '<p><span>{[this.getCountry(values.countryId)]}</span></p>',
+            '<p><span>{[this.getCountryState(values.stateId)]}</span></p>',
+            '</div>',
+            '</div>',
             '</tpl>{/literal}',
             {
                 getCountry: function(countryId) {

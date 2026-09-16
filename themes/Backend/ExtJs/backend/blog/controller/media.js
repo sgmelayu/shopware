@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Blog
@@ -39,13 +38,13 @@ Ext.define('Shopware.apps.Blog.controller.Media', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
 
     /**
      * All references to get the elements by the applicable selector
      */
-    refs:[
-        { ref:'mediaList', selector:'blog-blog-detail-sidebar-options dataview[name=image-listing]' }
+    refs: [
+        { ref: 'mediaList', selector: 'blog-blog-detail-sidebar-options dataview[name=image-listing]' }
     ],
 
     /**
@@ -55,7 +54,7 @@ Ext.define('Shopware.apps.Blog.controller.Media', {
      *
      * @return void
      */
-    init:function () {
+    init: function () {
         var me = this;
         me.control({
             'blog-blog-detail-sidebar-options mediaselectionfield': {
@@ -81,8 +80,8 @@ Ext.define('Shopware.apps.Blog.controller.Media', {
      */
     onMediaAdded: function(dropZone, images, selModel) {
         var me = this,
-                mediaList = me.getMediaList(),
-                store = mediaList.getStore();
+            mediaList = me.getMediaList(),
+            store = mediaList.getStore();
 
         if (images.length === 0) {
             return true;
@@ -157,7 +156,7 @@ Ext.define('Shopware.apps.Blog.controller.Media', {
         if (!(selected instanceof Ext.data.Model)) {
             return false;
         }
-        changeMain = (selected.get('preview')===true);
+        changeMain = (selected.get('preview') === true);
 
         store.remove(selected);
         if (!changeMain) {
@@ -184,7 +183,7 @@ Ext.define('Shopware.apps.Blog.controller.Media', {
         previewButton.setDisabled(disabled);
         if (!disabled) {
             var selected = dataViewModel.selected.first();
-            previewButton.setDisabled(selected.get('preview')===1);
+            previewButton.setDisabled(selected.get('preview') === 1);
         }
     }
 

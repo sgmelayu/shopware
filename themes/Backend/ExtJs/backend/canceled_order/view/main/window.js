@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    CanceledOrder
@@ -36,7 +35,7 @@
 //{block name="backend/canceled_order/view/main/window"}
 Ext.define('Shopware.apps.CanceledOrder.view.main.Window', {
     extend: 'Enlight.app.Window',
-    alias : 'widget.canceled-order-main-window',
+    alias: 'widget.canceled-order-main-window',
     layout: 'fit',
     width: 1250,
     height: '90%',
@@ -101,20 +100,20 @@ Ext.define('Shopware.apps.CanceledOrder.view.main.Window', {
         var me = this;
 
         return [{
-            xtype:'canceled-order-tabs-order-main',
+            xtype: 'canceled-order-tabs-order-main',
             canceledOrderStore: me.canceledOrderStore,
             canceledOrderVoucher: me.canceledOrderVoucher,
             internalTitle: 'orders'
         },
         {
-            xtype:'canceled-order-tabs-baskets-main',
+            xtype: 'canceled-order-tabs-baskets-main',
             overviewStore: me.canceledOrderBasket,
             articlesStore: me.canceledOrderArticles,
             viewportStore: me.canceledOrderViewports,
             internalTitle: 'baskets'
         },
         {
-            xtype:'canceled-order-tabs-statistics',
+            xtype: 'canceled-order-tabs-statistics',
             store: me.canceledOrderStatistic,
             internalTitle: 'statistics'
         }

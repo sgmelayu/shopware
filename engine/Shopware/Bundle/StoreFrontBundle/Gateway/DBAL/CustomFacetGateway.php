@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
@@ -34,20 +34,11 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class CustomFacetGateway implements CustomFacetGatewayInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var FieldHelper
-     */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var CustomListingHydrator
-     */
-    private $hydrator;
+    private CustomListingHydrator $hydrator;
 
     public function __construct(
         Connection $connection,
@@ -83,7 +74,6 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
     {
         $mapping = $this->getCategoryMapping($categoryIds);
 
-        /** @var int[] $ids */
         $ids = array_merge(...array_values($mapping));
 
         if (empty($ids)) {
@@ -94,8 +84,6 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
 
         $categoryFacets = [];
 
-        /** @var int $categoryId */
-        /** @var int[] $facetIds */
         foreach ($mapping as $categoryId => $facetIds) {
             $categoryFacets[$categoryId] = $this->getAndSortElementsByIds($facetIds, $facets);
         }
@@ -103,9 +91,6 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
         return $categoryFacets;
     }
 
-    /**
-     * @return CustomFacet[] indexed by id
-     */
     public function getAllCategoryFacets(ShopContextInterface $context)
     {
         $query = $this->createQuery($context);
@@ -122,7 +107,7 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
      *
      * @return int[]
      */
-    private function getAllCategoryFacetIds()
+    private function getAllCategoryFacetIds(): array
     {
         $query = $this->connection->createQueryBuilder();
         $query->select('id');
@@ -130,7 +115,9 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
         $query->andWhere('customFacet.display_in_categories = 1');
         $query->addOrderBy('customFacet.position', 'ASC');
 
-        return $query->execute()->fetchAll(PDO::FETCH_COLUMN);
+        $ids = $query->execute()->fetchAll(PDO::FETCH_COLUMN);
+
+        return array_map('\intval', $ids);
     }
 
     /**
@@ -150,9 +137,11 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
     }
 
     /**
-     * @return CustomFacet[]
+     * @param array<string, mixed> $data
+     *
+     * @return array<int, CustomFacet>
      */
-    private function hydrate(array $data)
+    private function hydrate(array $data): array
     {
         $streams = $this->fetchAssignedStreams($data);
 
@@ -172,12 +161,12 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
     }
 
     /**
-     * @param int[]         $facetIds
-     * @param CustomFacet[] $facets
+     * @param int[]                   $facetIds
+     * @param array<int, CustomFacet> $facets
      *
-     * @return CustomFacet[] indexed by id
+     * @return array<int, CustomFacet> indexed by id
      */
-    private function getAndSortElementsByIds(array $facetIds, array $facets)
+    private function getAndSortElementsByIds(array $facetIds, array $facets): array
     {
         $filtered = [];
         foreach ($facetIds as $facetId) {
@@ -192,9 +181,9 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
     /**
      * @param int[] $categoryIds
      *
-     * @return array<string, string[]> indexed by id
+     * @return array<int, int[]> indexed by id
      */
-    private function getCategoryMapping(array $categoryIds)
+    private function getCategoryMapping(array $categoryIds): array
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['id', 'facet_ids'])
@@ -205,17 +194,16 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
         $mapping = $query->execute()->fetchAll(PDO::FETCH_KEY_PAIR);
         $allFacetIds = [];
 
-        $hasEmpty = count(array_filter($mapping)) !== count($mapping);
-        if ($hasEmpty) {
+        if (\count(array_filter($mapping)) !== \count($mapping)) {
             $allFacetIds = $this->getAllCategoryFacetIds();
         }
 
         return array_map(
             function ($ids) use ($allFacetIds) {
-                $ids = array_filter(explode('|', $ids));
+                $ids = array_filter(explode('|', $ids ?? ''));
 
                 if (!empty($ids)) {
-                    return $ids;
+                    return array_map('\intval', $ids);
                 }
 
                 return $allFacetIds;
@@ -225,15 +213,17 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
     }
 
     /**
-     * @return array
+     * @param array<string, mixed> $data
+     *
+     * @return array<int, array<string, mixed>>
      */
-    private function fetchAssignedStreams(array $data)
+    private function fetchAssignedStreams(array $data): array
     {
         $streamIds = [];
         foreach ($data as $facet) {
             $config = json_decode($facet['__customFacet_facet'], true);
             $config = array_shift($config);
-            if (array_key_exists('streamId', $config)) {
+            if (\array_key_exists('streamId', $config)) {
                 $streamIds[] = $config['streamId'];
             }
         }
@@ -253,7 +243,7 @@ class CustomFacetGateway implements CustomFacetGatewayInterface
         $query->leftJoin('articles', 's_articles_details', 'variant', 'variant.articleID = articles.article_id AND variant.kind = 1');
         $query->where('streams.id IN (:ids)');
         $query->groupBy('streams.id');
-        $query->setParameter(':ids', $streamIds, \Doctrine\DBAL\Connection::PARAM_INT_ARRAY);
+        $query->setParameter(':ids', $streamIds, Connection::PARAM_INT_ARRAY);
 
         return $query->execute()->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE);
     }

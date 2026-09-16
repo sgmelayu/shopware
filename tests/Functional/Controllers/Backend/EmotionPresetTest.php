@@ -1,53 +1,53 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-namespace Shopware\Tests\Unit\Controller\Backend;
+namespace Shopware\Tests\Functional\Controllers\Backend;
 
-use Shopware\Components\Api\Resource\EmotionPreset;
+use Doctrine\DBAL\Connection;
+use Enlight_Components_Test_Controller_TestCase;
+use Shopware\Components\Api\Resource\EmotionPreset as EmotionPresetResource;
 use Shopware\Models\Emotion\Preset;
 
 /**
  * @group EmotionPreset
  */
-class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
+class EmotionPresetTest extends Enlight_Components_Test_Controller_TestCase
 {
-    /**
-     * @var EmotionPreset
-     */
-    private $resource;
+    private EmotionPresetResource $resource;
 
     /**
-     * @var array
+     * @var array<string, string|bool>
      */
-    private $presetData;
+    private array $presetData;
 
     public function setUp(): void
     {
         parent::setUp();
-        $this->resource = Shopware()->Container()->get(\Shopware\Components\Api\Resource\EmotionPreset::class);
+        $this->resource = Shopware()->Container()->get(EmotionPresetResource::class);
         $this->resource->setManager(Shopware()->Models());
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->beginTransaction();
+        Shopware()->Container()->get(Connection::class)->beginTransaction();
         Shopware()->Plugins()->Backend()->Auth()->setNoAuth();
         Shopware()->Plugins()->Backend()->Auth()->setNoAcl();
 
@@ -57,10 +57,10 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
     protected function tearDown(): void
     {
         parent::tearDown();
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->rollback();
+        Shopware()->Container()->get(Connection::class)->rollBack();
     }
 
-    public function testListAction()
+    public function testListAction(): void
     {
         $this->resource->create(['name' => 'first', 'presetData' => '{}']);
         $this->resource->create(['name' => 'second', 'presetData' => '{}']);
@@ -76,7 +76,7 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertCount(3, $data['data']);
     }
 
-    public function testDeleteAction()
+    public function testDeleteAction(): void
     {
         $first = $this->resource->create(['name' => 'first', 'presetData' => '{}']);
         $this->resource->create(['name' => 'second', 'presetData' => '{}']);
@@ -90,7 +90,7 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertCount(2, $this->resource->getList());
     }
 
-    public function testLoadPresetActionShouldFail()
+    public function testLoadPresetActionShouldFail(): void
     {
         $this->Request()->setMethod('POST')->setPost([
             'id' => null,
@@ -103,7 +103,7 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertFalse($data['success']);
     }
 
-    public function testLoadPresetAction()
+    public function testLoadPresetAction(): void
     {
         $preset = $this->resource->create($this->presetData);
 
@@ -118,7 +118,7 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertJson($data['data']);
     }
 
-    public function testCreateShouldFail()
+    public function testCreateShouldFail(): void
     {
         $this->Request()->setMethod('POST')->setPost(['name' => 'first', 'presetData' => '{}']);
 
@@ -129,7 +129,7 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertFalse($data['success']);
     }
 
-    public function testCreate()
+    public function testCreate(): void
     {
         $this->Request()->setMethod('POST')->setPost(['name' => 'first', 'presetData' => '{}', 'emotionId' => 1]);
 
@@ -140,7 +140,7 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertCount(1, $this->resource->getList());
     }
 
-    public function testUpdate()
+    public function testUpdate(): void
     {
         $preset = $this->resource->create(['name' => 'first', 'presetData' => '{}', 'emotionId' => 1]);
         $this->Request()->setMethod('POST')->setPost([
@@ -156,10 +156,10 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
 
         $list = $this->resource->getList();
         static::assertCount(1, $list);
-        static::assertSame($list[0]['name'], 'updated');
+        static::assertSame('updated', $list[0]['name']);
     }
 
-    public function testImportAssetsShouldFail()
+    public function testImportAssetsShouldFail(): void
     {
         $this->Request()->setMethod('POST')->setPost([
             'syncKey' => 'key',
@@ -172,7 +172,7 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertFalse($data['success']);
     }
 
-    public function testImportAssets()
+    public function testImportAssets(): void
     {
         $presetData = '{"showListing":false,"templateId":1,"active":false,"name":"testemotion","position":1,"device":"0,1,2,3,4","fullscreen":0,"isLandingPage":0,"seoTitle":"","seoKeywords":"","seoDescription":"","rows":20,"cols":4,"cellSpacing":10,"cellHeight":185,"articleHeight":2,"mode":"fluid","customerStreamId":null,"replacement":null,"elements":[{"componentId":"emotion-components-banner","startRow":1,"startCol":1,"endRow":1,"endCol":1,"cssClass":"","viewports":[{"alias":"xs","startRow":1,"startCol":1,"endRow":1,"endCol":1,"visible":true},{"alias":"s","startRow":1,"startCol":1,"endRow":1,"endCol":1,"visible":true},{"alias":"m","startRow":1,"startCol":1,"endRow":1,"endCol":1,"visible":true},{"alias":"l","startRow":1,"startCol":1,"endRow":1,"endCol":1,"visible":true},{"alias":"xl","startRow":1,"startCol":1,"endRow":1,"endCol":1,"visible":true}],"data":[{"componentId":"emotion-components-banner","fieldId":"bannerPosition","value":"center","key":"bannerPosition","valueType":""},{"componentId":"emotion-components-banner","fieldId":"file","value":"7143d7fbadfa4693b9eec507d9d37443","key":"file","valueType":""},{"componentId":"emotion-components-banner","fieldId":"bannerMapping","value":"null","key":"bannerMapping","valueType":"json"},{"componentId":"emotion-components-banner","fieldId":"link","value":"","key":"link","valueType":""},{"componentId":"emotion-components-banner","fieldId":"banner_link_target","value":"","key":"banner_link_target","valueType":""},{"componentId":"emotion-components-banner","fieldId":"title","value":"","key":"title","valueType":""}],"syncKey":"preset-element-590ed04d726936.19755837"}],"syncData":{"assets":{"7143d7fbadfa4693b9eec507d9d37443":"data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs="}}}';
         $this->presetData['presetData'] = $presetData;
@@ -192,9 +192,10 @@ class EmotionPresetTest extends \Enlight_Components_Test_Controller_TestCase
         static::assertArrayHasKey('success', $data);
 
         $preset = $this->resource->getManager()->find(Preset::class, $preset->getId());
+        static::assertInstanceOf(Preset::class, $preset);
         $presetData = json_decode($preset->getPresetData(), true);
         $element = $presetData['elements'][0];
 
-        $this->assertMatchesRegularExpression('/media/', $element['data'][1]['value']);
+        static::assertMatchesRegularExpression('/media/', $element['data'][1]['value']);
     }
 }

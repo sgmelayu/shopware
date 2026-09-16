@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Console;
@@ -28,7 +28,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Tools\Console\Helper\ConnectionHelper;
 use Doctrine\ORM\Tools\Console\ConsoleRunner as DoctrineConsoleRunner;
 use Doctrine\ORM\Tools\Console\Helper\EntityManagerHelper;
+use Exception;
 use Shopware\Components\DependencyInjection\ContainerAwareInterface;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Kernel;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Command\Command;
@@ -41,20 +43,11 @@ class Application extends BaseApplication
 {
     private const IMPORTANT_COMMANDS = ['sw:migration:migrate', 'sw:cache:clear'];
 
-    /**
-     * @var \Shopware\Kernel
-     */
-    private $kernel;
+    private Kernel $kernel;
 
-    /**
-     * @var bool
-     */
-    private $commandsRegistered = false;
+    private bool $commandsRegistered = false;
 
-    /**
-     * @var bool
-     */
-    private $skipDatabase = false;
+    private bool $skipDatabase = false;
 
     public function __construct(Kernel $kernel)
     {
@@ -69,7 +62,7 @@ class Application extends BaseApplication
     /**
      * Gets the Kernel associated with this Console.
      *
-     * @return \Shopware\Kernel
+     * @return Kernel
      */
     public function getKernel()
     {
@@ -88,7 +81,7 @@ class Application extends BaseApplication
     {
         try {
             $this->kernel->boot();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->kernel->boot(true);
             $formatter = $this->getHelperSet()->get('formatter');
             $output->writeln($formatter->formatBlock('WARNING! ' . $e->getMessage() . ' in ' . $e->getFile(), 'error'));
@@ -98,7 +91,7 @@ class Application extends BaseApplication
         if (!$this->commandsRegistered) {
             $this->setCommandLoader($this->kernel->getContainer()->get('console.command_loader'));
 
-            if (!in_array($input->getFirstArgument(), self::IMPORTANT_COMMANDS, true)) {
+            if (!\in_array($input->getFirstArgument(), self::IMPORTANT_COMMANDS, true)) {
                 $this->registerCommands($output);
             }
 
@@ -113,7 +106,6 @@ class Application extends BaseApplication
      */
     protected function doRunCommand(Command $command, InputInterface $input, OutputInterface $output)
     {
-        /** @var \Enlight_Event_EventManager $eventManager */
         $eventManager = $this->kernel->getContainer()->get('events');
 
         $event = $eventManager->notifyUntil('Shopware_Command_Before_Run', [
@@ -129,11 +121,11 @@ class Application extends BaseApplication
         $exitCode = parent::doRunCommand($command, $input, $output);
 
         $eventManager->notify('Shopware_Command_After_Run', [
-           'exitCode' => $exitCode,
-           'command' => $command,
-           'input' => $input,
-           'output' => $output,
-       ]);
+            'exitCode' => $exitCode,
+            'command' => $command,
+            'input' => $input,
+            'output' => $output,
+        ]);
 
         return $exitCode;
     }
@@ -146,7 +138,7 @@ class Application extends BaseApplication
             // Wrap database related logic in a try-catch
             // so that non-db commands can still execute
             try {
-                $em = $this->kernel->getContainer()->get(\Shopware\Components\Model\ModelManager::class);
+                $em = $this->kernel->getContainer()->get(ModelManager::class);
 
                 // Setup doctrine commands
                 $helperSet = $this->getHelperSet();
@@ -162,7 +154,7 @@ class Application extends BaseApplication
                         $plugin->registerCommands($this);
                     }
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $formatter = $this->getHelperSet()->get('formatter');
                 $output->writeln($formatter->formatBlock('WARNING! ' . $e->getMessage() . ' in ' . $e->getFile(), 'error'));
             }
@@ -173,13 +165,11 @@ class Application extends BaseApplication
     {
         $this->kernel->getContainer()->load('plugins');
 
-        /** @var \Enlight_Event_EventManager $eventManager */
         $eventManager = $this->kernel->getContainer()->get('events');
 
         $collection = new ArrayCollection();
         $collection = $eventManager->collect('Shopware_Console_Add_Command', $collection, ['subject' => $this]);
 
-        /** @var Command $command */
         foreach ($collection as $command) {
             if ($command instanceof Command) {
                 $this->add($command);
@@ -198,13 +188,9 @@ class Application extends BaseApplication
      */
     protected function registerTaggedServiceIds()
     {
-        $lazyServices = array_keys($this->kernel->getContainer()->getParameter('console.command.ids'));
-
         if ($this->kernel->getContainer()->hasParameter('console.command.ids')) {
             foreach ($this->kernel->getContainer()->getParameter('console.command.ids') as $id) {
-                if (!in_array($id, $lazyServices)) {
-                    $this->add($this->kernel->getContainer()->get($id));
-                }
+                $this->add($this->kernel->getContainer()->get($id));
             }
         }
     }

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -40,37 +39,37 @@ Ext.define('Shopware.apps.Order.view.batch.Progress', {
      * Define that the order main window is an extension of the enlight application window
      * @string
      */
-    extend:'Enlight.app.Window',
+    extend: 'Enlight.app.Window',
     /**
      * Set base css class prefix and module individual css class for css styling
      * @string
      */
-    cls:Ext.baseCSSPrefix + 'order-progress-window',
+    cls: Ext.baseCSSPrefix + 'order-progress-window',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.order-progress-window',
+    alias: 'widget.order-progress-window',
     /**
      * Define window width
      * @integer
      */
-    width:560,
+    width: 560,
 
     /**
      * Define window height
      * @integer
      */
-    height:130,
+    height: 130,
     /**
      * Display no footer button for the detail window
      * @boolean
      */
-    footerButton:false,
+    footerButton: false,
     /**
      * A flag which causes the object to attempt to restore the state of internal properties from a saved state on startup.
      */
-    stateful:true,
+    stateful: true,
 
     /**
      * If set to true the window will be dispalyed directly on creation.
@@ -79,7 +78,7 @@ Ext.define('Shopware.apps.Order.view.batch.Progress', {
     /**
      * The unique id for this object to use for state management purposes.
      */
-    stateId:'shopware-order-progress-window',
+    stateId: 'shopware-order-progress-window',
 
     /**
      * Set vbox layout and stretch align to display the toolbar on top and the button container
@@ -131,9 +130,9 @@ Ext.define('Shopware.apps.Order.view.batch.Progress', {
      * @object
      */
     snippets: {
-        title:'{s name="window_title"}Document creation{/s}',
-        cancel:'{s name="cancel"}Cancel process{/s}',
-        close:'{s name="close"}Close window{/s}'
+        title: '{s name="window_title"}Document creation{/s}',
+        cancel: '{s name="cancel"}Cancel process{/s}',
+        close: '{s name="close"}Close window{/s}'
     },
 
     /**
@@ -166,7 +165,7 @@ Ext.define('Shopware.apps.Order.view.batch.Progress', {
             animate: true,
             margin: '0 0 15',
             style: 'border-width: 1px !important;',
-            cls:'left-align'
+            cls: 'left-align'
         });
     },
 
@@ -205,7 +204,7 @@ Ext.define('Shopware.apps.Order.view.batch.Progress', {
             flex: 1,
             action: 'closeWindow',
             disabled: true,
-            cls:'secondary',
+            cls: 'secondary',
             handler: function() {
                 me.destroy();
             }

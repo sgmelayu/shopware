@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    RiskManagement
@@ -40,12 +39,12 @@ Ext.define('Shopware.apps.RiskManagement', {
      * sub-application behavior and the event bus
      * @string
      */
-    extend:'Enlight.app.SubApplication',
+    extend: 'Enlight.app.SubApplication',
     /**
      * The name of the module. Used for internal purpose
      * @string
      */
-    name:'Shopware.apps.RiskManagement',
+    name: 'Shopware.apps.RiskManagement',
     /**
      * Sets the loading path for the sub-application.
      *
@@ -53,31 +52,31 @@ Ext.define('Shopware.apps.RiskManagement', {
      * controller (server-side)
      * @string
      */
-    loadPath:'{url action=load}',
-    bulkLoad:true,
+    loadPath: '{url action=load}',
+    bulkLoad: true,
     /**
      * Requires controllers for sub-application
      * @array
      */
-    controllers:[ 'RiskManagement', 'Main' ],
+    controllers: [ 'RiskManagement', 'Main' ],
 
     /**
      * Required views for controller
      * @array
      */
-    views:[ 'main.Window', 'risk_management.Panel' ],
+    views: [ 'main.Window', 'risk_management.Panel' ],
 
     /**
      * Required stores for controller
      * @array
      */
-    stores:[ 'Risks', 'Payments', 'Rules', 'Areas', 'Subshops'  ],
+    stores: [ 'Risks', 'Payments', 'Rules', 'Areas', 'Subshops'  ],
 
     /**
      * Required models for controller
      * @array
      */
-    models:[ 'Risk', 'Payment', 'Rule', 'Areas', 'Subshop' ],
+    models: [ 'Risk', 'Payment', 'Rule', 'Areas', 'Subshop' ],
     /**
      * Returns the main application window for this is expected
      * by the Enlight.app.SubApplication class.
@@ -91,7 +90,7 @@ Ext.define('Shopware.apps.RiskManagement', {
      * @private
      * @return [object] mainWindow - the main application window based on Enlight.app.Window
      */
-    launch:function () {
+    launch: function () {
 
         var me = this,
             mainController = me.getController('Main');

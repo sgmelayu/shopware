@@ -1,50 +1,49 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\PluginInstallerBundle\Service\ZipUtils;
 use Shopware\Components\CSRFWhitelistAware;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
 use Shopware\Components\OptinServiceInterface;
-use Shopware\Components\Theme;
+use Shopware\Components\ShopRegistrationServiceInterface;
+use Shopware\Components\Theme\Generator as ThemeGenerator;
+use Shopware\Components\Theme\Installer;
+use Shopware\Components\Theme\PathResolver;
+use Shopware\Components\Theme\Service;
+use Shopware\Components\Theme\Util;
 use Shopware\Models\Shop\Shop;
 use Shopware\Models\Shop\Template;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
+/**
+ * @extends Shopware_Controllers_Backend_Application<Template>
+ */
 class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Application implements CSRFWhitelistAware
 {
-    /**
-     * Model which handled through this controller
-     *
-     * @var string
-     */
     protected $model = Template::class;
 
-    /**
-     * SQL alias for the internal query builder
-     *
-     * @var string
-     */
     protected $alias = 'template';
 
     /**
@@ -59,13 +58,15 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
 
     /**
      * Controller action which called to assign a shop template.
+     *
+     * @return void
      */
     public function assignAction()
     {
         // Reset preview template
         $this->resetPreviewSessionAction();
 
-        $this->get(\Shopware\Components\Theme\Service::class)->assignShopTemplate(
+        $this->get(Service::class)->assignShopTemplate(
             $this->Request()->getParam('shopId'),
             $this->Request()->getParam('themeId')
         );
@@ -74,23 +75,25 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
     }
 
     /**
-     * Starts a template preview for the passed theme
-     * and shop id.
+     * Starts a template preview for the passed theme and shop id.
+     *
+     * @return void
      */
     public function previewAction()
     {
         $themeId = $this->Request()->getParam('themeId');
         $shopId = $this->Request()->getParam('shopId');
 
-        /** @var Template $theme */
         $theme = $this->getRepository()->find($themeId);
+        if (!$theme instanceof Template) {
+            throw new ModelNotFoundException(Template::class, $themeId);
+        }
 
-        /** @var Shop $shop */
         $shop = $this->getManager()->getRepository(Shop::class)->getActiveById($shopId);
 
         session_write_close();
 
-        $this->get(\Shopware\Components\ShopRegistrationServiceInterface::class)->registerShop($shop);
+        $this->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
 
         $session = $this->get('session');
 
@@ -104,12 +107,12 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
                 'theme' => $theme,
             ]);
 
-            $hash = $this->container->get(\Shopware\Components\OptinServiceInterface::class)->add(OptinServiceInterface::TYPE_THEME_PREVIEW, 300, [
+            $hash = $this->container->get(OptinServiceInterface::class)->add(OptinServiceInterface::TYPE_THEME_PREVIEW, 300, [
                 'sessionName' => session_name(),
                 'sessionValue' => $session->get('sessionId'),
             ]);
 
-            $url = $this->Front()->Router()->assemble([
+            $url = $this->Front()->ensureRouter()->assemble([
                 'module' => 'frontend',
                 'controller' => 'index',
                 'themeHash' => $hash,
@@ -120,8 +123,9 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
     }
 
     /**
-     * Resets the template variable within the shop session
-     * for the passed shop id.
+     * Resets the template variable within the shop session for the passed shop id.
+     *
+     * @return void
      */
     public function resetPreviewSessionAction()
     {
@@ -131,10 +135,7 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
             return;
         }
 
-        /** @var Shop $shop */
-        $shop = $this->getManager()->getRepository(Shop::class)->getActiveById(
-            $shopId
-        );
+        $shop = $this->getManager()->getRepository(Shop::class)->getActiveById($shopId);
 
         if (!$shop instanceof Shop) {
             return;
@@ -142,7 +143,7 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
 
         session_write_close();
 
-        $this->get(\Shopware\Components\ShopRegistrationServiceInterface::class)->registerShop($shop);
+        $this->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
 
         $this->get('session')->offsetSet('template', null);
     }
@@ -174,11 +175,11 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
             $parent = $this->getRepository()->find($parentId);
 
             if (!$parent instanceof Template) {
-                throw new Exception(sprintf('Shop template by id %s not found', $parentId));
+                throw new Exception(\sprintf('Shop template by id %s not found', $parentId));
             }
         }
 
-        $this->container->get(\Shopware\Components\Theme\Generator::class)->generateTheme(
+        $this->container->get(ThemeGenerator::class)->generateTheme(
             $this->Request()->getParams(),
             $parent
         );
@@ -193,7 +194,7 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
      */
     public function listAction()
     {
-        $this->container->get(\Shopware\Components\Theme\Installer::class)->synchronize();
+        $this->container->get(Installer::class)->synchronize();
 
         parent::listAction();
     }
@@ -202,6 +203,8 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
      * Used for the configuration window.
      * Returns all configuration sets for the passed
      * template id.
+     *
+     * @return void
      */
     public function getConfigSetsAction()
     {
@@ -210,22 +213,18 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
 
         $this->View()->assign([
             'success' => true,
-            'data' => $this->get(\Shopware\Components\Theme\Service::class)->getConfigSets($template),
+            'data' => $this->get(Service::class)->getConfigSets($template),
         ]);
     }
 
     /**
      * Saves the passed theme configuration.
-     *
-     * @param array $data
-     *
-     * @return array
      */
     public function save($data)
     {
         $theme = $this->getRepository()->find($data['id']);
 
-        $this->get(\Shopware\Components\Theme\Service::class)->saveConfig(
+        $this->get(Service::class)->saveConfig(
             $theme,
             $data['values']
         );
@@ -238,10 +237,11 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
      * and extract it into the engine\Shopware\Themes folder.
      *
      * @throws Exception
+     *
+     * @return void
      */
     public function uploadAction()
     {
-        /** @var UploadedFile $file */
         $file = Symfony\Component\HttpFoundation\Request::createFromGlobals()->files->get('fileId');
         $system = new Filesystem();
 
@@ -250,15 +250,17 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
 
             $system->remove($file->getPathname());
 
-            throw new Exception(sprintf('Uploaded file %s is no zip file', $name));
+            throw new Exception(\sprintf('Uploaded file %s is no zip file', $name));
         }
-        $targetDirectory = $this->container->get(\Shopware\Components\Theme\PathResolver::class)->getFrontendThemeDirectory();
+        $targetDirectory = $this->container->get(PathResolver::class)->getFrontendThemeDirectory();
 
         if (!is_writable($targetDirectory)) {
-            return $this->View()->assign([
+            $this->View()->assign([
                 'success' => false,
-                'error' => sprintf("Target Directory %s isn't writable", $targetDirectory),
+                'error' => \sprintf("Target Directory %s isn't writable", $targetDirectory),
             ]);
+
+            return;
         }
 
         $this->unzip($file, $targetDirectory);
@@ -268,19 +270,25 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
         $this->View()->assign('success', true);
     }
 
+    /**
+     * @return void
+     */
     public function loadSettingsAction()
     {
         $this->View()->assign([
             'success' => true,
-            'data' => $this->container->get(\Shopware\Components\Theme\Service::class)->getSystemConfiguration(),
+            'data' => $this->container->get(Service::class)->getSystemConfiguration(),
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function saveSettingsAction()
     {
         $this->View()->assign([
             'success' => true,
-            'data' => $this->container->get(\Shopware\Components\Theme\Service::class)->saveSystemConfiguration(
+            'data' => $this->container->get(Service::class)->saveSystemConfiguration(
                 $this->Request()->getParams()
             ),
         ]);
@@ -314,15 +322,14 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
 
     /**
      * Override to get all snippet definitions for the loaded theme configuration.
-     *
-     * @return array
      */
     protected function getAdditionalDetailData(array $data)
     {
-        /** @var Template $template */
         $template = $this->getRepository()->find($data['id']);
+        if (!$template instanceof Template) {
+            throw new ModelNotFoundException(Template::class, $data['id']);
+        }
 
-        /** @var Shop $shop */
         $shop = $this->getManager()->find(
             Shop::class,
             $this->Request()->getParam('shopId')
@@ -330,7 +337,7 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
 
         $data['hasConfigSet'] = $this->hasTemplateConfigSet($template);
 
-        $data['configLayout'] = $this->container->get(\Shopware\Components\Theme\Service::class)->getLayout(
+        $data['configLayout'] = $this->container->get(Service::class)->getLayout(
             $template,
             $shop
         );
@@ -343,19 +350,6 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
         ]);
     }
 
-    /**
-     * The getList function returns an array of the configured class model.
-     * The listing query created in the getListQuery function.
-     * The pagination of the listing is handled inside this function.
-     *
-     * @param int   $offset
-     * @param int   $limit
-     * @param array $sort        Contains an array of Ext JS sort conditions
-     * @param array $filter      Contains an array of Ext JS filters
-     * @param array $wholeParams Contains all passed request parameters
-     *
-     * @return array
-     */
     protected function getList($offset, $limit, $sort = [], $filter = [], array $wholeParams = [])
     {
         if (!isset($wholeParams['shopId'])) {
@@ -364,42 +358,32 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
 
         $data = parent::getList(null, null, $sort, $filter, $wholeParams);
 
-        /** @var Shop $shop */
         $shop = $this->getManager()->find(Shop::class, $wholeParams['shopId']);
 
         foreach ($data['data'] as &$theme) {
-            /** @var Template $instance */
             $instance = $this->getRepository()->find($theme['id']);
+            if (!$instance instanceof Template) {
+                continue;
+            }
 
-            $theme['screen'] = $this->container->get(\Shopware\Components\Theme\Util::class)->getPreviewImage(
-                $instance
-            );
+            $theme['screen'] = $this->container->get(Util::class)->getPreviewImage($instance);
 
-            $theme['path'] = $this->container->get(\Shopware\Components\Theme\PathResolver::class)->getDirectory(
-                $instance
-            );
+            $theme['path'] = $this->container->get(PathResolver::class)->getDirectory($instance);
 
-            $theme = $this->get(\Shopware\Components\Theme\Service::class)->translateTheme(
-                $instance,
-                $theme
-            );
+            $theme = $this->get(Service::class)->translateTheme($instance, $theme);
 
             if ($shop instanceof Shop && $shop->getTemplate() instanceof Template) {
-                $theme['enabled'] = ($theme['id'] === $shop->getTemplate()->getId());
+                $theme['enabled'] = $theme['id'] === $shop->getTemplate()->getId();
             }
         }
 
-        $data = $this->get('events')->filter('Shopware_Theme_Listing_Loaded', $data, [
+        return $this->get('events')->filter('Shopware_Theme_Listing_Loaded', $data, [
             'shop' => $shop,
         ]);
-
-        return $data;
     }
 
     /**
      * Override of the Application controller to select the template configuration.
-     *
-     * @return \Shopware\Components\Model\QueryBuilder
      */
     protected function getListQuery()
     {
@@ -421,11 +405,9 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
     /**
      * Helper function to decompress zip files.
      *
-     * @param string $targetDirectory
-     *
      * @throws Exception
      */
-    private function unzip(UploadedFile $file, $targetDirectory)
+    private function unzip(UploadedFile $file, string $targetDirectory): void
     {
         $filePath = $file->getPath() . DIRECTORY_SEPARATOR . $file->getFilename();
         $zipUtils = ZipUtils::openZip($filePath);
@@ -435,17 +417,16 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
     /**
      * Helper function which checks if the passed template
      * or the inheritance templates has configuration sets.
-     *
-     * @return bool
      */
-    private function hasTemplateConfigSet(Template $template)
+    private function hasTemplateConfigSet(Template $template): bool
     {
-        /** @var Theme $theme */
-        $theme = $this->get(\Shopware\Components\Theme\Util::class)->getThemeByTemplate($template);
+        $theme = $this->get(Util::class)->getThemeByTemplate($template);
 
         if ($template->getConfigSets()->count() > 0) {
             return true;
-        } elseif ($theme->useInheritanceConfig() && $template->getParent() instanceof Template) {
+        }
+
+        if ($theme->useInheritanceConfig() && $template->getParent() instanceof Template) {
             return $this->hasTemplateConfigSet($template->getParent());
         }
 
@@ -454,35 +435,37 @@ class Shopware_Controllers_Backend_Theme extends Shopware_Controllers_Backend_Ap
 
     /**
      * Returns the id of the default shop.
-     *
-     * @return string
      */
-    private function getDefaultShopId()
+    private function getDefaultShopId(): int
     {
-        return Shopware()->Db()->fetchOne(
+        return (int) Shopware()->Db()->fetchOne(
             'SELECT id FROM s_core_shops WHERE `default` = 1'
         );
     }
 
-    /**
-     * @return string|null
-     */
-    private function getThemeInfo(Template $template)
+    private function getThemeInfo(Template $template): ?string
     {
-        $user = $this->get('auth')->getIdentity();
-        /** @var Locale $locale */
-        $locale = $user->locale;
-        $localeCode = $locale->getLocale();
+        $localeCode = $this->get('auth')->getIdentity()->locale->getLocale();
 
-        $path = $this->container->get(\Shopware\Components\Theme\PathResolver::class)->getDirectory($template);
+        $path = $this->container->get(PathResolver::class)->getDirectory($template);
 
         $languagePath = $path . '/info/' . $localeCode . '.html';
         if (file_exists($languagePath)) {
-            return file_get_contents($languagePath);
+            $contents = file_get_contents($languagePath);
+            if (!\is_string($contents)) {
+                return null;
+            }
+
+            return $contents;
         }
 
         if (file_exists($path . '/info/en_GB.html')) {
-            return file_get_contents($path . '/info/en_GB.html');
+            $contents = file_get_contents($path . '/info/en_GB.html');
+            if (!\is_string($contents)) {
+                return null;
+            }
+
+            return $contents;
         }
 
         return null;

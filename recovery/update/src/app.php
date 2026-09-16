@@ -1,43 +1,48 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Pimple\Container as PimpleContainer;
+use Shopware\Components\Theme\Installer;
+use Shopware\Recovery\Common\SystemLocker;
+use Shopware\Recovery\Common\Utils as CommonUtils;
 use Shopware\Recovery\Update\DependencyInjection\Container;
 use Shopware\Recovery\Update\PluginCheck;
 use Shopware\Recovery\Update\Utils;
+use Slim\Slim;
 
 date_default_timezone_set('Europe/Berlin');
 ini_set('display_errors', 1);
 error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 
 $config = require __DIR__ . '/../config/config.php';
-$container = new Container(new \Pimple\Container(), $config);
+$container = new Container(new PimpleContainer(), $config);
 
-/** @var \Slim\Slim $app */
+/** @var Slim $app */
 $app = $container->get('app');
 
 $app->hook('slim.before.dispatch', function () use ($app, $container) {
-    $baseUrl = \Shopware\Recovery\Common\Utils::getBaseUrl($app);
+    $baseUrl = CommonUtils::getBaseUrl($app);
 
     $lang = null;
     if (!UPDATE_IS_MANUAL) {
@@ -126,7 +131,7 @@ $app->map('/', function () use ($app) {
 })->via('GET', 'POST')->name('welcome');
 
 // Check file & directory permissions
-$app->map('/checks', function () use ($app, $container) {
+$app->map('/checks', function () use ($container) {
     $container->get('controller.requirements')->checkRequirements();
 })->via('GET', 'POST')->name('checks');
 
@@ -142,7 +147,7 @@ $app->map('/dbmigration', function () use ($app) {
     $app->render('dbmigration.php');
 })->via('GET', 'POST')->name('dbmigration');
 
-$app->map('/applyMigrations', function () use ($app, $container) {
+$app->map('/applyMigrations', function () use ($container) {
     $container->get('controller.batch')->applyMigrations();
 })->via('GET', 'POST')->name('applyMigrations');
 
@@ -152,6 +157,7 @@ $app->map('/importSnippets', function () use ($container) {
 
 $app->map('/unpack', function () use ($container) {
     $container->get('controller.batch')->unpack();
+    $container->get('controller.batch')->updateHtaccess();
 })->via('GET', 'POST')->name('unpack');
 
 $app->map('/cleanup', function () use ($container) {
@@ -165,12 +171,12 @@ $app->map('/clearCache', function () use ($container) {
 $app->map('/done', function () use ($app, $container) {
     $container->get('shopware.update.chmod')->changePermissions();
 
-    /** @var \Shopware\Components\Theme\Installer $themeService */
+    /** @var Installer $themeService */
     $themeService = $container->get('shopware.theme_installer');
     $themeService->synchronize();
 
     if (is_dir(SW_PATH . '/recovery/install')) {
-        /** @var \Shopware\Recovery\Common\SystemLocker $systemLocker */
+        /** @var SystemLocker $systemLocker */
         $systemLocker = $container->get('system.locker');
         $systemLocker();
     }
@@ -190,7 +196,7 @@ $app->get('/redirect/:target', function ($target) use ($app) {
 
     $url = str_replace('/index.php', '', $app->request()->getRootUri());
     $url = str_replace('/recovery/update', '/', $url);
-    if ($target == 'backend') {
+    if ($target === 'backend') {
         $url .= 'backend';
     }
 

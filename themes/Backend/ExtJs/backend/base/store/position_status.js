@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -37,18 +36,18 @@ Ext.define('Shopware.apps.Base.store.PositionStatus', {
      * Define that this component is an extension of the Ext.data.Store
      */
     extend: 'Ext.data.Store',
-   /**
-    * Auto load the store after the component
-    * is initialized
-    * @boolean
-    */
+    /**
+     * Auto load the store after the component
+     * is initialized
+     * @boolean
+     */
     autoLoad: false,
 
     /**
      * Define the used model for this store
      * @string
      */
-    model : 'Shopware.apps.Base.model.PositionStatus',
+    model: 'Shopware.apps.Base.model.PositionStatus',
     alternateClassName: 'Shopware.store.PositionStatus',
     storeId: 'base.PositionStatus',
     pageSize: 1000,
@@ -56,24 +55,24 @@ Ext.define('Shopware.apps.Base.store.PositionStatus', {
      * Configure the data communication
      * @object
      */
-    proxy:{
+    proxy: {
         /**
          * Set proxy type to ajax
          */
-        type:'ajax',
+        type: 'ajax',
 
         /**
          * Configure the url mapping for the different
          * store operations based on
          * @object
          */
-        url:'{url action="getDetailStatus"}',
+        url: '{url action="getDetailStatus"}',
 
         /**
          * Configure the data reader
          * @object
          */
-        reader:{
+        reader: {
             type: 'json',
             root: 'data',
             totalProperty: 'total'

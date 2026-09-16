@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Update\Steps;
 
+use PDO;
+use PDOException;
 use Shopware\Recovery\Common\DumpIterator;
 
 class SnippetStep
@@ -32,7 +34,7 @@ class SnippetStep
 
     private $dumper;
 
-    public function __construct(\PDO $connection, DumpIterator $dumper)
+    public function __construct(PDO $connection, DumpIterator $dumper)
     {
         $this->conn = $connection;
         $this->dumper = $dumper;
@@ -70,7 +72,7 @@ class SnippetStep
                 try {
                     $conn->exec(implode(";\n", $sql));
                     $sql = [];
-                } catch (\PDOException $e) {
+                } catch (PDOException $e) {
                     return new ErrorResult($e->getMessage(), $e, ['query' => $sql]);
                 }
             }
@@ -84,7 +86,7 @@ class SnippetStep
         if (!empty($sql)) {
             try {
                 $conn->exec(implode(";\n", $sql));
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 return new ErrorResult('second' . $e->getMessage(), $e, ['query' => $sql]);
             }
         }

@@ -1,28 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-use Shopware\Bundle\SearchBundleDBAL\SearchTerm\SearchIndexerInterface;
+use Shopware\Bundle\SearchBundleDBAL\SearchTerm\SearchIndexer;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Components\ShopRegistrationServiceInterface;
 use Shopware\Models\Shop\Shop;
 
 class Shopware_Plugins_Core_RebuildIndex_Bootstrap extends Shopware_Components_Plugin_Bootstrap
@@ -30,17 +32,17 @@ class Shopware_Plugins_Core_RebuildIndex_Bootstrap extends Shopware_Components_P
     /**
      * Refresh the data only manuel.
      */
-    const STRATEGY_MANUAL = 1;
+    public const STRATEGY_MANUAL = 1;
 
     /**
      * Refresh the data over a cron job.
      */
-    const STRATEGY_CRON_JOB = 2;
+    public const STRATEGY_CRON_JOB = 2;
 
     /**
      * Refresh the data after access the specified core function
      */
-    const STRATEGY_LIVE = 3;
+    public const STRATEGY_LIVE = 3;
 
     /**
      * Returns capabilities so the plugin is default not installable and hidden in the plugin manager
@@ -141,17 +143,16 @@ class Shopware_Plugins_Core_RebuildIndex_Bootstrap extends Shopware_Components_P
         $this->RewriteTable()->sCreateRewriteTableCleanup();
 
         foreach ($shops as $shopId) {
-            /** @var \Shopware\Models\Shop\Repository $repository */
             $repository = Shopware()->Models()->getRepository(Shop::class);
             $shop = $repository->getActiveById($shopId);
             if ($shop === null) {
                 throw new Exception('No valid shop id passed');
             }
 
-            $this->get(\Shopware\Components\ShopRegistrationServiceInterface::class)->registerShop($shop);
+            $this->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
             Shopware()->Modules()->Categories()->baseId = $shop->getCategory()->getId();
 
-            list($cachedTime, $elementId, $shopId) = $this->SeoIndex()->getCachedTime();
+            [, $elementId, $shopId] = $this->SeoIndex()->getCachedTime();
             $this->SeoIndex()->setCachedTime($currentTime->format('Y-m-d H:i:s'), $elementId, $shopId);
 
             $this->RewriteTable()->baseSetup();
@@ -167,7 +168,7 @@ class Shopware_Plugins_Core_RebuildIndex_Bootstrap extends Shopware_Components_P
 
             $this->SeoIndex()->setCachedTime($currentTime->format('Y-m-d H:i:s'), $elementId, $shopId);
 
-            $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->createShopContext($shopId);
+            $context = $this->get(ContextServiceInterface::class)->createShopContext($shopId);
 
             $this->RewriteTable()->sCreateRewriteTableCategories();
             $this->RewriteTable()->sCreateRewriteTableCampaigns();
@@ -202,8 +203,7 @@ class Shopware_Plugins_Core_RebuildIndex_Bootstrap extends Shopware_Components_P
             return true;
         }
 
-        /* @var SearchIndexerInterface $indexer */
-        $indexer = $this->get(\Shopware\Bundle\SearchBundleDBAL\SearchTerm\SearchIndexer::class);
+        $indexer = $this->get(SearchIndexer::class);
         $indexer->build();
 
         return true;

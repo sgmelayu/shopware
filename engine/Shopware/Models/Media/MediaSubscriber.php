@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Media;
@@ -27,27 +27,22 @@ namespace Shopware\Models\Media;
 use Doctrine\Common\EventSubscriber;
 use Doctrine\ORM\Event\LifecycleEventArgs;
 use Doctrine\ORM\Events;
+use Exception;
+use Shopware\Bundle\MediaBundle\MediaServiceInterface;
 use Shopware\Components\DependencyInjection\Container;
+use SimpleXMLElement;
 
 class MediaSubscriber implements EventSubscriber
 {
-    /**
-     * @var Container
-     */
-    private $container;
+    private Container $container;
 
-    /**
-     * @param Container $container
-     */
-    public function __construct($container)
+    public function __construct(Container $container)
     {
         $this->container = $container;
     }
 
     /**
-     * Returns an array of events this subscriber wants to listen to.
-     *
-     * @return array
+     * {@inheritdoc}
      */
     public function getSubscribedEvents()
     {
@@ -59,6 +54,8 @@ class MediaSubscriber implements EventSubscriber
 
     /**
      * Set meta data on load
+     *
+     * @return void
      */
     public function postLoad(LifecycleEventArgs $eventArgs)
     {
@@ -67,6 +64,8 @@ class MediaSubscriber implements EventSubscriber
 
     /**
      * Set meta data on save
+     *
+     * @return void
      */
     public function prePersist(LifecycleEventArgs $eventArgs)
     {
@@ -76,36 +75,42 @@ class MediaSubscriber implements EventSubscriber
     /**
      * Live migration to fill width/height
      *
-     * @throws \Exception
+     * @throws Exception
      */
-    private function migrateMeta(LifecycleEventArgs $eventArgs)
+    private function migrateMeta(LifecycleEventArgs $eventArgs): void
     {
         $media = $eventArgs->getEntity();
+        if (!$media instanceof Media) {
+            return;
+        }
 
         if (!$this->isFormatSupported($media)) {
             return;
         }
 
-        $mediaService = $this->container->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = $this->container->get(MediaServiceInterface::class);
 
         if ((!$media->getHeight() || !$media->getWidth()) && $mediaService->has($media->getPath())) {
             switch ($media->getType()) {
                 case Media::TYPE_IMAGE:
-                    list($width, $height) = getimagesizefromstring($mediaService->read($media->getPath()));
-                    break;
+                    $imageSize = getimagesizefromstring((string) $mediaService->read($media->getPath()));
+                    if (\is_array($imageSize)) {
+                        [$width, $height] = $imageSize;
+                        break;
+                    }
 
+                    // no break
                 case Media::TYPE_VECTOR:
-                    if (
-                        $media->getExtension() === 'svg'
+                    if ($media->getExtension() === 'svg'
                         && $xml = simplexml_load_string($mediaService->read($media->getPath()))
                     ) {
-                        /** @var \SimpleXMLElement|null $attr */
+                        /** @var SimpleXMLElement|null $attr */
                         $attr = $xml->attributes();
 
                         if ((int) $attr->width > 0 && (int) $attr->height > 0) {
                             $width = (int) $attr->width;
                             $height = (int) $attr->height;
-                        } elseif ($attr->viewBox && count($size = explode(' ', $attr->viewBox)) === 4) {
+                        } elseif ($attr->viewBox && \count($size = explode(' ', $attr->viewBox)) === 4) {
                             $width = (int) $size[2];
                             $height = (int) $size[3];
                         }
@@ -131,16 +136,11 @@ class MediaSubscriber implements EventSubscriber
     }
 
     /**
-     * Test file for instance Media and has supported types
-     *
-     * @param object $media
-     *
-     * @return bool
+     * Test file for supported types
      */
-    private function isFormatSupported($media)
+    private function isFormatSupported(Media $media): bool
     {
-        return $media instanceof Media
-            && ($media->getType() === Media::TYPE_IMAGE
-                || ($media->getType() === Media::TYPE_VECTOR && $media->getExtension() === 'svg'));
+        return $media->getType() === Media::TYPE_IMAGE
+            || ($media->getType() === Media::TYPE_VECTOR && $media->getExtension() === 'svg');
     }
 }

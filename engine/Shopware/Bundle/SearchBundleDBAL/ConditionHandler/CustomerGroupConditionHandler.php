@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\ConditionHandler;
@@ -49,7 +49,12 @@ class CustomerGroupConditionHandler implements ConditionHandlerInterface
         QueryBuilder $query,
         ShopContextInterface $context
     ) {
-        $key = ':customerGroupIds' . md5(json_encode($condition));
+        $this->addCondition($condition, $query);
+    }
+
+    private function addCondition(CustomerGroupCondition $condition, QueryBuilder $query): void
+    {
+        $key = ':customerGroupIds' . md5(json_encode($condition, JSON_THROW_ON_ERROR));
 
         $query->leftJoin(
             'product',
@@ -59,7 +64,6 @@ class CustomerGroupConditionHandler implements ConditionHandlerInterface
              AND avoidCustomerGroup.customerGroupId IN (' . $key . ')'
         );
 
-        /* @var CustomerGroupCondition $condition */
         $query->setParameter(
             $key,
             $condition->getCustomerGroupIds(),

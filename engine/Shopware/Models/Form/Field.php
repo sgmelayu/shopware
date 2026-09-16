@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Form;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 
@@ -50,10 +52,10 @@ class Field extends ModelEntity
     /**
      * The associated form
      *
-     * @var \Shopware\Models\Form\Form
+     * @var Form
      *
      * @ORM\ManyToOne(targetEntity="Form", inversedBy="fields")
-     * @ORM\JoinColumn(name="supportID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="supportID", referencedColumnName="id", nullable=false)
      */
     protected $form;
 
@@ -143,7 +145,7 @@ class Field extends ModelEntity
     /**
      * Defines the date and time when the field was created
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="added", type="datetime", nullable=false)
      */
@@ -177,9 +179,7 @@ class Field extends ModelEntity
     /**
      * Set the associated form
      *
-     * @param \Shopware\Models\Form\Form $form
-     *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setForm(Form $form)
     {
@@ -213,7 +213,7 @@ class Field extends ModelEntity
      *
      * @param string $errorMsg
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setErrorMsg($errorMsg)
     {
@@ -237,7 +237,7 @@ class Field extends ModelEntity
      *
      * @param string $name
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setName($name)
     {
@@ -261,7 +261,7 @@ class Field extends ModelEntity
      *
      * @param string $note
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setNote($note)
     {
@@ -285,7 +285,7 @@ class Field extends ModelEntity
      *
      * @param string $typ
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setTyp($typ)
     {
@@ -295,7 +295,7 @@ class Field extends ModelEntity
     }
 
     /**
-     * Get typ of field
+     * Get type of field
      *
      * @return string
      */
@@ -305,11 +305,11 @@ class Field extends ModelEntity
     }
 
     /**
-     * Set whether or not this field is required
+     * Set whether this field is required or not
      *
      * @param int $required
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setRequired($required)
     {
@@ -319,7 +319,7 @@ class Field extends ModelEntity
     }
 
     /**
-     * Get whether or not this field is required
+     * Get whether this field is required or not
      *
      * @return int
      */
@@ -333,7 +333,7 @@ class Field extends ModelEntity
      *
      * @param string $label
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setLabel($label)
     {
@@ -357,7 +357,7 @@ class Field extends ModelEntity
      *
      * @param string $class
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setClass($class)
     {
@@ -381,7 +381,7 @@ class Field extends ModelEntity
      *
      * @param string $value
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setValue($value)
     {
@@ -405,7 +405,7 @@ class Field extends ModelEntity
      *
      * @param int $position
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setPosition($position)
     {
@@ -431,13 +431,13 @@ class Field extends ModelEntity
      */
     public function onPrePersist()
     {
-        $this->added = new \DateTime('now');
+        $this->added = new DateTime('now');
     }
 
     /**
      * @param string $ticketTask
      *
-     * @return \Shopware\Models\Form\Field
+     * @return Field
      */
     public function setTicketTask($ticketTask)
     {

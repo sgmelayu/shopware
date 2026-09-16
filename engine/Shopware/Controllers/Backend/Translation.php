@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Models\Shop\Shop;
@@ -27,7 +27,7 @@ use Shopware\Models\Shop\Shop;
 class Shopware_Controllers_Backend_Translation extends Shopware_Controllers_Backend_ExtJs
 {
     /**
-     * @var \Shopware_Components_Translation
+     * @var Shopware_Components_Translation|null
      */
     protected $translation;
 
@@ -45,14 +45,13 @@ class Shopware_Controllers_Backend_Translation extends Shopware_Controllers_Back
             'value' => $node,
         ];
 
-        /** @var Shopware\Models\Shop\Repository $repository */
-        $repository = Shopware()->Models()->getRepository(Shop::class);
+        $repository = $this->get('models')->getRepository(Shop::class);
 
         $query = $repository->getListQuery($filter, $sort);
 
         $data = $query->getArrayResult();
         $this->View()->assign([
-            'success' => true, 'data' => $data, 'total' => count($data),
+            'success' => true, 'data' => $data, 'total' => \count($data),
         ]);
     }
 
@@ -101,7 +100,7 @@ class Shopware_Controllers_Backend_Translation extends Shopware_Controllers_Back
     protected function getTranslation()
     {
         if (!isset($this->translation)) {
-            $this->translation = $this->container->get(\Shopware_Components_Translation::class);
+            $this->translation = $this->container->get(Shopware_Components_Translation::class);
         }
 
         return $this->translation;

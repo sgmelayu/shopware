@@ -1,37 +1,50 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Bundle\AttributeBundle\Service\DataLoader;
+use Shopware\Bundle\AttributeBundle\Service\DataLoaderInterface;
+use Shopware\Bundle\AttributeBundle\Service\DataPersister;
+use Shopware\Bundle\AttributeBundle\Service\DataPersisterInterface;
+use Shopware\Bundle\CartBundle\CartKey;
+use Shopware\Bundle\CartBundle\CartPositionsMode;
+use Shopware\Bundle\CartBundle\CheckoutKey;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\NumberRangeIncrementerInterface;
+use Shopware\Components\Privacy\IpAnonymizerInterface;
+use Shopware\Components\ShopRegistrationServiceInterface;
+use Shopware\Models\Customer\Address;
 use Shopware\Models\Customer\Customer;
 use Shopware\Models\Mail\Mail;
 use Shopware\Models\Shop\Shop;
+use ShopwarePlugin\PaymentMethods\Components\BasePaymentMethod;
 
 /**
- * Deprecated Shopware Class that handles frontend orders
+ * Shopware Class that handles frontend orders
  */
-class sOrder implements \Enlight_Hook
+class sOrder implements Enlight_Hook
 {
     /**
      * Array with user data
@@ -52,12 +65,12 @@ class sOrder implements \Enlight_Hook
      *
      * @var array
      */
-    public $sShippingData;
+    public $sShippingData = [];
 
     /**
      * User comment to save within this order
      *
-     * @var string
+     * @var string|null
      */
     public $sComment;
 
@@ -114,14 +127,14 @@ class sOrder implements \Enlight_Hook
     /**
      * Pointer to sSystem object
      *
-     * @var \sSystem
+     * @var sSystem
      */
     public $sSYSTEM;
 
     /**
      * TransactionID (epayment)
      *
-     * @var string
+     * @var string|null
      */
     public $bookingId;
 
@@ -212,41 +225,39 @@ class sOrder implements \Enlight_Hook
     private $numberRangeIncrementer;
 
     /**
-     * @var Shopware\Bundle\AttributeBundle\Service\DataLoaderInterface
+     * @var DataLoaderInterface
      */
     private $attributeLoader;
 
     /**
-     * @var Shopware\Bundle\AttributeBundle\Service\DataPersisterInterface
+     * @var DataPersisterInterface
      */
     private $attributePersister;
 
     /**
-     * @var Shopware\Components\Model\ModelManager
+     * @var ModelManager
      */
     private $modelManager;
 
     /**
      * Injects all dependencies which are required for this class.
      *
-     * @param ContextServiceInterface $contextService
-     *
      * @throws Exception
      */
     public function __construct(
-        ContextServiceInterface $contextService = null
+        ?ContextServiceInterface $contextService = null
     ) {
         $container = Shopware()->Container();
 
         $this->db = Shopware()->Db();
         $this->eventManager = Shopware()->Events();
         $this->config = Shopware()->Config();
-        $this->numberRangeIncrementer = $container->get(\Shopware\Components\NumberRangeIncrementerInterface::class);
+        $this->numberRangeIncrementer = $container->get(NumberRangeIncrementerInterface::class);
 
-        $this->contextService = $contextService ?: Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class);
-        $this->attributeLoader = Shopware()->Container()->get(\Shopware\Bundle\AttributeBundle\Service\DataLoader::class);
-        $this->attributePersister = Shopware()->Container()->get(\Shopware\Bundle\AttributeBundle\Service\DataPersister::class);
-        $this->modelManager = $container->get(\Shopware\Components\Model\ModelManager::class);
+        $this->contextService = $contextService ?: Shopware()->Container()->get(ContextServiceInterface::class);
+        $this->attributeLoader = Shopware()->Container()->get(DataLoader::class);
+        $this->attributePersister = Shopware()->Container()->get(DataPersister::class);
+        $this->modelManager = $container->get(ModelManager::class);
     }
 
     /**
@@ -283,7 +294,7 @@ class sOrder implements \Enlight_Hook
         // Check if current order number is an esd variant.
         $esdProduct = $this->getVariantEsd($basketRow['ordernumber']);
 
-        if (!$esdProduct['id']) {
+        if (!$esdProduct || !$esdProduct['id']) {
             return $basketRow;
         }
 
@@ -303,11 +314,11 @@ class sOrder implements \Enlight_Hook
 
         $availableSerials = $this->getAvailableSerialsOfEsd($esdProduct['id']);
 
-        if ((count($availableSerials) <= $this->config->get('esdMinSerials')) || count($availableSerials) <= $quantity) {
+        if ((\count($availableSerials) <= $this->config->get('esdMinSerials')) || \count($availableSerials) <= $quantity) {
             // Not enough serial numbers anymore, inform merchant
             $context = [
                 'sArticleName' => $basketRow['articlename'],
-                'sMail' => $this->sUserData['additional']['user']['email'],
+                'sMail' => $this->sUserData['additional']['user']['email'] ?? null,
             ];
 
             $mail = Shopware()->TemplateMail()->createMail('sNOSERIALS', $context);
@@ -322,7 +333,7 @@ class sOrder implements \Enlight_Hook
         }
 
         // Check if enough serials are available, if not, an email has been sent, and we can return
-        if (count($availableSerials) < $quantity) {
+        if (\count($availableSerials) < $quantity) {
             return $basketRow;
         }
 
@@ -348,6 +359,8 @@ class sOrder implements \Enlight_Hook
 
     /**
      * Delete temporary created order
+     *
+     * @return void
      */
     public function sDeleteTemporaryOrder()
     {
@@ -377,15 +390,17 @@ class sOrder implements \Enlight_Hook
      * Create temporary order (for order cancellation reports)
      *
      * @throws Enlight_Exception
+     *
+     * @return void
      */
     public function sCreateTemporaryOrder()
     {
-        $this->sShippingData['AmountNumeric'] = $this->sShippingData['AmountNumeric'] ? $this->sShippingData['AmountNumeric'] : '0';
+        $this->sShippingData[CartKey::AMOUNT_NUMERIC] = $this->sShippingData[CartKey::AMOUNT_NUMERIC] ?? '0';
         if (!$this->sShippingcostsNumeric) {
             $this->sShippingcostsNumeric = 0.;
         }
-        if (!$this->sBasketData['AmountWithTaxNumeric']) {
-            $this->sBasketData['AmountWithTaxNumeric'] = $this->sBasketData['AmountNumeric'];
+        if (!$this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC]) {
+            $this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC] = $this->sBasketData[CartKey::AMOUNT_NUMERIC];
         }
 
         $net = '0';
@@ -397,18 +412,18 @@ class sOrder implements \Enlight_Hook
         }
 
         $dispatchId = '0';
-        $this->sBasketData['AmountNetNumeric'] = round($this->sBasketData['AmountNetNumeric'], 2);
+        $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC] = round($this->sBasketData[CartKey::AMOUNT_NET_NUMERIC], 2);
         if ($this->dispatchId) {
             $dispatchId = $this->dispatchId;
         }
 
-        $this->sBasketData['AmountNetNumeric'] = round($this->sBasketData['AmountNetNumeric'], 2);
+        $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC] = round($this->sBasketData[CartKey::AMOUNT_NET_NUMERIC], 2);
 
-        if (empty($this->sBasketData['sCurrencyName'])) {
-            $this->sBasketData['sCurrencyName'] = 'EUR';
+        if (empty($this->sBasketData[CheckoutKey::CURRENCY_NAME])) {
+            $this->sBasketData[CheckoutKey::CURRENCY_NAME] = 'EUR';
         }
-        if (empty($this->sBasketData['sCurrencyFactor'])) {
-            $this->sBasketData['sCurrencyFactor'] = '1';
+        if (empty($this->sBasketData[CheckoutKey::CURRENCY_FACTOR])) {
+            $this->sBasketData[CheckoutKey::CURRENCY_FACTOR] = '1';
         }
 
         $shop = Shopware()->Shop();
@@ -418,22 +433,22 @@ class sOrder implements \Enlight_Hook
         if (!empty($this->sNet)) {
             // Complete net delivery
             $net = '1';
-            $this->sBasketData['AmountWithTaxNumeric'] = $this->sBasketData['AmountNetNumeric'];
+            $this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC] = $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC];
             $this->sShippingcostsNumeric = $this->sShippingcostsNumericNet;
             $taxfree = '1';
         }
-        if (empty($this->sBasketData['AmountWithTaxNumeric'])) {
-            $this->sBasketData['AmountWithTaxNumeric'] = '0';
+        if (empty($this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC])) {
+            $this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC] = '0';
         }
-        if (empty($this->sBasketData['AmountNetNumeric'])) {
-            $this->sBasketData['AmountNetNumeric'] = '0';
+        if (empty($this->sBasketData[CartKey::AMOUNT_NET_NUMERIC])) {
+            $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC] = '0';
         }
 
         $data = [
             'ordernumber' => '0',
             'userID' => $this->sUserData['additional']['user']['id'],
-            'invoice_amount' => $this->sBasketData['AmountWithTaxNumeric'],
-            'invoice_amount_net' => $this->sBasketData['AmountNetNumeric'],
+            'invoice_amount' => $this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC],
+            'invoice_amount_net' => $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC],
             'invoice_shipping' => $this->sShippingcostsNumeric,
             'invoice_shipping_net' => $this->sShippingcostsNumericNet,
             'ordertime' => new Zend_Db_Expr('NOW()'),
@@ -447,8 +462,8 @@ class sOrder implements \Enlight_Hook
             'referer' => (string) $this->getSession()->offsetGet('sReferer'),
             'language' => $shop->getId(),
             'dispatchID' => $dispatchId,
-            'currency' => $this->sBasketData['sCurrencyName'],
-            'currencyFactor' => $this->sBasketData['sCurrencyFactor'],
+            'currency' => $this->sBasketData[CheckoutKey::CURRENCY_NAME],
+            'currencyFactor' => $this->sBasketData[CheckoutKey::CURRENCY_FACTOR],
             'subshopID' => $mainShop->getId(),
             'deviceType' => $this->deviceType,
         ];
@@ -457,7 +472,7 @@ class sOrder implements \Enlight_Hook
             $affectedRows = $this->db->insert('s_order', $data);
             $orderID = $this->db->lastInsertId();
         } catch (Exception $e) {
-            throw new Enlight_Exception(sprintf('##sOrder-sTemporaryOrder-#01:%s', $e->getMessage()), 0, $e);
+            throw new Enlight_Exception(\sprintf('##sOrder-sTemporaryOrder-#01:%s', $e->getMessage()), 0, $e);
         }
         if (!$affectedRows || !$orderID) {
             throw new Enlight_Exception('##sOrder-sTemporaryOrder-#01: No rows affected or no order id saved', 0);
@@ -466,7 +481,7 @@ class sOrder implements \Enlight_Hook
         // Create order attributes
         $this->attributePersister->persist($this->orderAttributes, 's_order_attributes', $orderID);
 
-        foreach ($this->sBasketData['content'] as $basketRow) {
+        foreach ($this->sBasketData[CartKey::POSITIONS] as $basketRow) {
             if (!$basketRow['price']) {
                 $basketRow['price'] = '0,00';
             }
@@ -485,7 +500,7 @@ class sOrder implements \Enlight_Hook
             if (!$basketRow['taxID']) {
                 $basketRow['taxID'] = '0';
             }
-            if (!$basketRow['releasedate']) {
+            if (empty($basketRow['releasedate'])) {
                 $basketRow['releasedate'] = null;
             }
 
@@ -493,7 +508,7 @@ class sOrder implements \Enlight_Hook
                 'orderID' => $orderID,
                 'ordernumber' => 0,
                 'articleID' => $basketRow['articleID'],
-                'articleDetailID' => $basketRow['additional_details']['articleDetailsID'],
+                'articleDetailID' => $basketRow['additional_details']['articleDetailsID'] ?? null,
                 'articleordernumber' => $basketRow['ordernumber'],
                 'price' => $basketRow['priceNumeric'],
                 'quantity' => $basketRow['quantity'],
@@ -510,7 +525,7 @@ class sOrder implements \Enlight_Hook
                 $this->db->insert('s_order_details', $data);
                 $orderDetailId = $this->db->lastInsertId();
             } catch (Exception $e) {
-                throw new Enlight_Exception(sprintf('##sOrder-sTemporaryOrder-Position-#02:%s', $e->getMessage()), 0, $e);
+                throw new Enlight_Exception(\sprintf('##sOrder-sTemporaryOrder-Position-#02:%s', $e->getMessage()), 0, $e);
             }
 
             // Create order detail attributes
@@ -521,13 +536,15 @@ class sOrder implements \Enlight_Hook
 
     /**
      * Finally save order and send order confirmation to customer
+     *
+     * @return string|false
      */
     public function sSaveOrder()
     {
-        $this->sComment = stripslashes($this->sComment);
+        $this->sComment = stripslashes($this->sComment ?? '');
         $this->sComment = stripcslashes($this->sComment);
 
-        $this->sShippingData['AmountNumeric'] = $this->sShippingData['AmountNumeric'] ?: '0';
+        $this->sShippingData[CartKey::AMOUNT_NUMERIC] = $this->sShippingData[CartKey::AMOUNT_NUMERIC] ?? '0';
 
         if ($this->isTransactionExist($this->bookingId)) {
             return false;
@@ -541,8 +558,8 @@ class sOrder implements \Enlight_Hook
             $this->sShippingcostsNumeric = 0.;
         }
 
-        if (!$this->sBasketData['AmountWithTaxNumeric']) {
-            $this->sBasketData['AmountWithTaxNumeric'] = $this->sBasketData['AmountNumeric'];
+        if (!$this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC]) {
+            $this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC] = $this->sBasketData[CartKey::AMOUNT_NUMERIC];
         }
 
         if ($this->isTaxFree($this->sSYSTEM->sUSERGROUPDATA['tax'], $this->sSYSTEM->sUSERGROUPDATA['id'])) {
@@ -557,13 +574,13 @@ class sOrder implements \Enlight_Hook
             $dispatchId = '0';
         }
 
-        $this->sBasketData['AmountNetNumeric'] = round($this->sBasketData['AmountNetNumeric'], 2);
+        $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC] = round($this->sBasketData[CartKey::AMOUNT_NET_NUMERIC], 2);
 
-        if (empty($this->sBasketData['sCurrencyName'])) {
-            $this->sBasketData['sCurrencyName'] = 'EUR';
+        if (empty($this->sBasketData[CheckoutKey::CURRENCY_NAME])) {
+            $this->sBasketData[CheckoutKey::CURRENCY_NAME] = 'EUR';
         }
-        if (empty($this->sBasketData['sCurrencyFactor'])) {
-            $this->sBasketData['sCurrencyFactor'] = '1';
+        if (empty($this->sBasketData[CheckoutKey::CURRENCY_FACTOR])) {
+            $this->sBasketData[CheckoutKey::CURRENCY_FACTOR] = '1';
         }
 
         $shop = Shopware()->Shop();
@@ -573,7 +590,7 @@ class sOrder implements \Enlight_Hook
         if (!empty($this->sNet)) {
             // Complete net delivery
             $net = '1';
-            $this->sBasketData['AmountWithTaxNumeric'] = $this->sBasketData['AmountNetNumeric'];
+            $this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC] = $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC];
             $this->sShippingcostsNumeric = $this->sShippingcostsNumericNet;
             $taxfree = '1';
         }
@@ -582,18 +599,18 @@ class sOrder implements \Enlight_Hook
             $this->sUserData['additional']['user']['affiliate']
         );
 
-        $ip = Shopware()->Container()->get(\Shopware\Components\Privacy\IpAnonymizerInterface::class)
+        $ip = Shopware()->Container()->get(IpAnonymizerInterface::class)
             ->anonymize(
                 (string) Shopware()->Container()->get('request_stack')->getCurrentRequest()->getClientIp()
             );
         $orderParams = [
             'ordernumber' => $orderNumber,
             'userID' => $this->sUserData['additional']['user']['id'],
-            'invoice_amount' => $this->sBasketData['AmountWithTaxNumeric'],
-            'invoice_amount_net' => $this->sBasketData['AmountNetNumeric'],
+            'invoice_amount' => $this->sBasketData[CartKey::AMOUNT_WITH_TAX_NUMERIC],
+            'invoice_amount_net' => $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC],
             'invoice_shipping' => (float) $this->sShippingcostsNumeric,
             'invoice_shipping_net' => (float) $this->sShippingcostsNumericNet,
-            'invoice_shipping_tax_rate' => isset($this->sBasketData['sShippingcostsTaxProportional']) ? 0 : $this->sBasketData['sShippingcostsTax'],
+            'invoice_shipping_tax_rate' => isset($this->sBasketData[CheckoutKey::SHIPPING_COSTS_TAX_PROPORTIONAL]) ? 0 : ($this->sBasketData[CheckoutKey::SHIPPING_COSTS_TAX] ?? 0),
             'ordertime' => new Zend_Db_Expr('NOW()'),
             'changed' => new Zend_Db_Expr('NOW()'),
             'status' => 0,
@@ -608,12 +625,12 @@ class sOrder implements \Enlight_Hook
             'referer' => (string) $this->getSession()->offsetGet('sReferer'),
             'language' => $shop->getId(),
             'dispatchID' => $dispatchId,
-            'currency' => $this->sBasketData['sCurrencyName'],
-            'currencyFactor' => $this->sBasketData['sCurrencyFactor'],
+            'currency' => $this->sBasketData[CheckoutKey::CURRENCY_NAME],
+            'currencyFactor' => $this->sBasketData[CheckoutKey::CURRENCY_FACTOR],
             'subshopID' => $mainShop->getId(),
             'remote_addr' => $ip,
             'deviceType' => $this->deviceType,
-            'is_proportional_calculation' => isset($this->sBasketData['sShippingcostsTaxProportional']) ? 1 : 0,
+            'is_proportional_calculation' => isset($this->sBasketData[CheckoutKey::SHIPPING_COSTS_TAX_PROPORTIONAL]) ? 1 : 0,
         ];
 
         $orderParams = $this->eventManager->filter(
@@ -625,30 +642,30 @@ class sOrder implements \Enlight_Hook
         try {
             $this->db->beginTransaction();
             $affectedRows = $this->db->insert('s_order', $orderParams);
-            $orderID = $this->db->lastInsertId();
+            $orderID = (int) $this->db->lastInsertId();
             $this->db->commit();
         } catch (Exception $e) {
             $this->db->rollBack();
-            throw new Enlight_Exception(sprintf('Shopware Order Fatal-Error %s :%s', $_SERVER['HTTP_HOST'], $e->getMessage()), 0, $e);
+            throw new Enlight_Exception(\sprintf('Shopware Order Fatal-Error %s :%s', $_SERVER['HTTP_HOST'], $e->getMessage()), 0, $e);
         }
 
         if (!$affectedRows || !$orderID) {
-            throw new Enlight_Exception(sprintf('Shopware Order Fatal-Error %s : No rows affected or no order id created.', $_SERVER['HTTP_HOST']), 0);
+            throw new Enlight_Exception(\sprintf('Shopware Order Fatal-Error %s : No rows affected or no order id created.', $_SERVER['HTTP_HOST']), 0);
         }
 
         try {
             $paymentData = Shopware()->Modules()->Admin()
                 ->sGetPaymentMeanById($this->getPaymentId(), Shopware()->Modules()->Admin()->sGetUserData());
             $paymentClass = Shopware()->Modules()->Admin()->sInitiatePaymentClass($paymentData);
-            if ($paymentClass instanceof \ShopwarePlugin\PaymentMethods\Components\BasePaymentMethod) {
+            if ($paymentClass instanceof BasePaymentMethod) {
                 $paymentClass->createPaymentInstance(
                     $orderID,
                     $this->sUserData['additional']['user']['id'],
                     $this->getPaymentId()
                 );
             }
-        } catch (\Exception $e) {
-            //Payment method code failure
+        } catch (Exception $e) {
+            // Payment method code failure
         }
 
         $attributeData = $this->eventManager->filter(
@@ -666,7 +683,7 @@ class sOrder implements \Enlight_Hook
         unset($attributes['id'], $attributes['orderID']);
 
         $esdOrder = null;
-        foreach ($this->sBasketData['content'] as $key => $basketRow) {
+        foreach ($this->sBasketData[CartKey::POSITIONS] as $key => $basketRow) {
             $basketRow = $this->formatBasketRow($basketRow);
 
             $preparedQuery = '
@@ -689,10 +706,10 @@ class sOrder implements \Enlight_Hook
                 pack_unit,
                 articleDetailID
                 )
-                VALUES (%d, %s, %d, %s, %f, %d, %s, %d, %s, %d, %d, %d, %f, %s, %s, %s, %d)
+                VALUES (%d, %s, %d, %s, %f, %d, %s, %d, %s, %d, %d, %d, %f, %s, %s, %s, %s)
             ';
 
-            $sql = sprintf(
+            $sql = \sprintf(
                 $preparedQuery,
                 $orderID,
                 $this->db->quote((string) $orderNumber),
@@ -708,9 +725,9 @@ class sOrder implements \Enlight_Hook
                 $basketRow['taxID'],
                 $basketRow['tax_rate'],
                 $this->db->quote((string) $basketRow['ean']),
-                $this->db->quote((string) $basketRow['itemUnit']),
-                $this->db->quote((string) $basketRow['packunit']),
-                $basketRow['additional_details']['articleDetailsID']
+                $this->db->quote((string) ($basketRow['itemUnit'] ?? '')),
+                $this->db->quote((string) ($basketRow['packunit'] ?? '')),
+                $basketRow['additional_details']['articleDetailsID'] ?? 'null'
             );
 
             $sql = $this->eventManager->filter('Shopware_Modules_Order_SaveOrder_FilterDetailsSQL', $sql, [
@@ -721,8 +738,8 @@ class sOrder implements \Enlight_Hook
             ]);
 
             // Check for individual voucher - code
-            if ($basketRow['modus'] == 2) {
-                //reserve the basket voucher for the current user.
+            if ($basketRow['modus'] == CartPositionsMode::VOUCHER) {
+                // reserve the basket voucher for the current user.
                 $this->reserveVoucher(
                     $basketRow['ordernumber'],
                     $this->sUserData['additional']['user']['id'],
@@ -736,12 +753,12 @@ class sOrder implements \Enlight_Hook
 
             try {
                 $this->db->executeUpdate($sql);
-                $orderdetailsID = $this->db->lastInsertId();
+                $orderdetailsID = (int) $this->db->lastInsertId();
             } catch (Exception $e) {
-                throw new Enlight_Exception(sprintf('Shopware Order Fatal-Error %s :%s', $_SERVER['HTTP_HOST'], $e->getMessage()), 0, $e);
+                throw new Enlight_Exception(\sprintf('Shopware Order Fatal-Error %s :%s', $_SERVER['HTTP_HOST'], $e->getMessage()), 0, $e);
             }
 
-            $this->sBasketData['content'][$key]['orderDetailId'] = $orderdetailsID;
+            $this->sBasketData[CartKey::POSITIONS][$key]['orderDetailId'] = $orderdetailsID;
 
             // Save attributes
             $attributeData = $this->attributeLoader->load('s_order_basket_attributes', $basketRow['id']);
@@ -759,7 +776,7 @@ class sOrder implements \Enlight_Hook
             $this->attributePersister->persist($attributeData, 's_order_details_attributes', $orderdetailsID);
             $detailAttributes = $this->attributeLoader->load('s_order_details_attributes', $orderdetailsID);
             unset($detailAttributes['id'], $detailAttributes['detailID']);
-            $this->sBasketData['content'][$key]['attributes'] = $detailAttributes;
+            $this->sBasketData[CartKey::POSITIONS][$key]['attributes'] = $detailAttributes;
 
             // Update sales and stock
             if ($basketRow['priceNumeric'] >= 0) {
@@ -776,14 +793,14 @@ class sOrder implements \Enlight_Hook
 
                 // Add assignedSerials to basketcontent
                 if (!empty($basketRow['assignedSerials'])) {
-                    $this->sBasketData['content'][$key]['serials'] = $basketRow['assignedSerials'];
+                    $this->sBasketData[CartKey::POSITIONS][$key]['serials'] = $basketRow['assignedSerials'];
                 }
             }
         } // For every product in basket
 
         $this->eventManager->notify('Shopware_Modules_Order_SaveOrder_ProcessDetails', [
             'subject' => $this,
-            'details' => $this->sBasketData['content'],
+            'details' => $this->sBasketData[CartKey::POSITIONS],
             'orderId' => $orderID,
         ]);
 
@@ -794,7 +811,7 @@ class sOrder implements \Enlight_Hook
         $this->sUserData = $this->getUserDataForMail($this->sUserData);
 
         $details = $this->getOrderDetailsForMail(
-            $this->sBasketData['content']
+            $this->sBasketData[CartKey::POSITIONS]
         );
 
         $variables = [
@@ -802,12 +819,12 @@ class sOrder implements \Enlight_Hook
             'billingaddress' => $this->sUserData['billingaddress'],
             'shippingaddress' => $this->sUserData['shippingaddress'],
             'additional' => $this->sUserData['additional'],
-            'sShippingCosts' => $this->sSYSTEM->sMODULES['sArticles']->sFormatPrice($this->sShippingcosts) . ' ' . $this->sBasketData['sCurrencyName'],
-            'sAmount' => $this->sAmountWithTax ? $this->sSYSTEM->sMODULES['sArticles']->sFormatPrice($this->sAmountWithTax) . ' ' . $this->sBasketData['sCurrencyName'] : $this->sSYSTEM->sMODULES['sArticles']->sFormatPrice($this->sAmount) . ' ' . $this->sBasketData['sCurrencyName'],
+            'sShippingCosts' => $this->sSYSTEM->sMODULES['sArticles']->sFormatPrice($this->sShippingcosts) . ' ' . $this->sBasketData[CheckoutKey::CURRENCY_NAME],
+            'sAmount' => $this->sAmountWithTax ? $this->sSYSTEM->sMODULES['sArticles']->sFormatPrice($this->sAmountWithTax) . ' ' . $this->sBasketData[CheckoutKey::CURRENCY_NAME] : $this->sSYSTEM->sMODULES['sArticles']->sFormatPrice($this->sAmount) . ' ' . $this->sBasketData[CheckoutKey::CURRENCY_NAME],
             'sAmountNumeric' => $this->sAmountWithTax ? $this->sAmountWithTax : $this->sAmount,
-            'sAmountNet' => $this->sSYSTEM->sMODULES['sArticles']->sFormatPrice($this->sBasketData['AmountNetNumeric']) . ' ' . $this->sBasketData['sCurrencyName'],
-            'sAmountNetNumeric' => $this->sBasketData['AmountNetNumeric'],
-            'sTaxRates' => $this->sBasketData['sTaxRates'],
+            'sAmountNet' => $this->sSYSTEM->sMODULES['sArticles']->sFormatPrice($this->sBasketData[CartKey::AMOUNT_NET_NUMERIC]) . ' ' . $this->sBasketData[CheckoutKey::CURRENCY_NAME],
+            'sAmountNetNumeric' => $this->sBasketData[CartKey::AMOUNT_NET_NUMERIC],
+            'sTaxRates' => $this->sBasketData[CheckoutKey::TAX_RATES] ?? null,
             'ordernumber' => $orderNumber,
             'sOrderDay' => date('d.m.Y'),
             'sOrderTime' => date('H:i'),
@@ -834,7 +851,7 @@ class sOrder implements \Enlight_Hook
         $confirmMailDeliveryFailed = false;
         try {
             $this->sendMail($variables);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $confirmMailDeliveryFailed = true;
             $email = $this->sUserData['additional']['user']['email'];
             $this->logOrderMailException($e, $orderNumber, $email);
@@ -852,7 +869,7 @@ class sOrder implements \Enlight_Hook
 
         $this->eventManager->notify('Shopware_Modules_Order_SaveOrder_OrderCreated', [
             'subject' => $this,
-            'details' => $this->sBasketData['content'],
+            'details' => $this->sBasketData[CartKey::POSITIONS],
             'orderId' => $orderID,
             'orderNumber' => $orderNumber,
         ]);
@@ -876,37 +893,37 @@ class sOrder implements \Enlight_Hook
         $shopContext = $this->contextService->getShopContext();
 
         $context = [
-            'sOrderDetails' => $variables['sOrderDetails'],
+            'sOrderDetails' => $variables['sOrderDetails'] ?? null,
 
-            'billingaddress' => $variables['billingaddress'],
-            'shippingaddress' => $variables['shippingaddress'],
+            'billingaddress' => $variables['billingaddress'] ?? null,
+            'shippingaddress' => $variables['shippingaddress'] ?? null,
             'additional' => $variables['additional'],
 
-            'sTaxRates' => $variables['sTaxRates'],
-            'sShippingCosts' => $variables['sShippingCosts'],
-            'sAmount' => $variables['sAmount'],
-            'sAmountNumeric' => $variables['sAmountNumeric'],
-            'sAmountNet' => $variables['sAmountNet'],
-            'sAmountNetNumeric' => $variables['sAmountNetNumeric'],
+            'sTaxRates' => $variables[CheckoutKey::TAX_RATES] ?? null,
+            'sShippingCosts' => $variables['sShippingCosts'] ?? null,
+            'sAmount' => $variables[CheckoutKey::AMOUNT] ?? null,
+            'sAmountNumeric' => $variables['sAmountNumeric'] ?? null,
+            'sAmountNet' => $variables['sAmountNet'] ?? null,
+            'sAmountNetNumeric' => $variables['sAmountNetNumeric'] ?? null,
 
-            'sOrderNumber' => $variables['ordernumber'],
-            'sOrderDay' => $variables['sOrderDay'],
-            'sOrderTime' => $variables['sOrderTime'],
-            'sComment' => $variables['sComment'],
+            'sOrderNumber' => $variables['ordernumber'] ?? null,
+            'sOrderDay' => $variables['sOrderDay'] ?? null,
+            'sOrderTime' => $variables['sOrderTime'] ?? null,
+            'sComment' => $variables['sComment'] ?? null,
 
-            'attributes' => $variables['attributes'],
-            'sCurrency' => $this->sBasketData['sCurrencyName'],
+            'attributes' => $variables['attributes'] ?? null,
+            'sCurrency' => $this->sBasketData[CheckoutKey::CURRENCY_NAME] ?? null,
 
             'sLanguage' => $shopContext->getShop()->getId(),
 
             'sSubShop' => $shopContext->getShop()->getId(),
 
-            'sEsd' => $variables['sEsd'],
+            'sEsd' => $variables['sEsd'] ?? null,
             'sNet' => $this->sNet,
         ];
 
         // Support for individual payment means with custom-tables
-        if ($variables['additional']['payment']['table']) {
+        if (!empty($variables['additional']['payment']['table'])) {
             $paymentTable = $this->db->fetchRow(
                 "SELECT * FROM {$variables['additional']['payment']['table']}
                  WHERE userID=?",
@@ -917,11 +934,11 @@ class sOrder implements \Enlight_Hook
             $context['sPaymentTable'] = [];
         }
 
-        if ($variables['sDispatch']) {
+        if (isset($variables['sDispatch'])) {
             $context['sDispatch'] = $variables['sDispatch'];
         }
 
-        if ($variables['sBookingID']) {
+        if (isset($variables['sBookingID'])) {
             $context['sBookingID'] = $variables['sBookingID'];
         }
 
@@ -943,11 +960,20 @@ class sOrder implements \Enlight_Hook
             $mail = $event->getReturn();
         }
 
-        if (!($mail instanceof \Zend_Mail)) {
-            $mail = Shopware()->TemplateMail()->createMail('sORDER', $context);
+        if (!($mail instanceof Zend_Mail)) {
+            $overrideConfig = $this->eventManager->filter(
+                'Shopware_Modules_Order_SendMail_CreateMail_FilterOverrideConfig',
+                [],
+                [
+                    'subject' => $this,
+                    'context' => $context,
+                    'variables' => $variables,
+                ]
+            );
+            $mail = Shopware()->TemplateMail()->createMail('sORDER', $context, null, $overrideConfig);
         }
 
-        $mail->addTo($this->sUserData['additional']['user']['email']);
+        $mail->addTo($this->sUserData['additional']['user']['email'] ?? '');
 
         if (!$this->config->get('sNO_ORDER_MAIL')) {
             $mail->addBcc($this->config->get('sMAIL'));
@@ -959,7 +985,7 @@ class sOrder implements \Enlight_Hook
             'variables' => $variables,
         ]);
 
-        if (!($mail instanceof \Zend_Mail)) {
+        if (!($mail instanceof Zend_Mail)) {
             return;
         }
 
@@ -1067,9 +1093,9 @@ class sOrder implements \Enlight_Hook
             ':countryID' => $address['countryID'],
             ':stateID' => $address['stateID'],
             ':ustid' => $address['ustid'],
-            ':additional_address_line1' => $address['additional_address_line1'],
-            ':additional_address_line2' => $address['additional_address_line2'],
-            ':title' => $address['title'],
+            ':additional_address_line1' => $address['additional_address_line1'] ?? null,
+            ':additional_address_line2' => $address['additional_address_line2'] ?? null,
+            ':title' => $address['title'] ?? null,
         ];
         $array = $this->eventManager->filter(
             'Shopware_Modules_Order_SaveBilling_FilterArray',
@@ -1087,12 +1113,16 @@ class sOrder implements \Enlight_Hook
         }
 
         if ($billingAddressId === null) {
-            $billingAddressId = $customer->getDefaultBillingAddress()->getId();
+            $defaultBillingAddress = $customer->getDefaultBillingAddress();
+            if (!$defaultBillingAddress instanceof Address) {
+                throw new RuntimeException('Customer does not have a default billing address');
+            }
+            $billingAddressId = $defaultBillingAddress->getId();
         }
 
         $attributes = $this->attributeLoader->load('s_user_addresses_attributes', $billingAddressId);
 
-        if (!is_array($attributes)) {
+        if (!\is_array($attributes)) {
             $attributes = [];
         }
 
@@ -1168,12 +1198,12 @@ class sOrder implements \Enlight_Hook
             ':street' => (string) $address['street'],
             ':zipcode' => (string) $address['zipcode'],
             ':city' => (string) $address['city'],
-            ':phone' => (string) $address['phone'],
+            ':phone' => (string) ($address['phone'] ?? ''),
             ':countryID' => $address['countryID'],
             ':stateID' => $address['stateID'],
-            ':additional_address_line1' => (string) $address['additional_address_line1'],
-            ':additional_address_line2' => (string) $address['additional_address_line2'],
-            ':title' => (string) $address['title'],
+            ':additional_address_line1' => (string) ($address['additional_address_line1'] ?? ''),
+            ':additional_address_line2' => (string) ($address['additional_address_line2'] ?? ''),
+            ':title' => (string) ($address['title'] ?? ''),
         ];
         $array = $this->eventManager->filter(
             'Shopware_Modules_Order_SaveShipping_FilterArray',
@@ -1192,9 +1222,12 @@ class sOrder implements \Enlight_Hook
 
         if ($shippingAddressId === null) {
             /** @var Customer $customer */
-            $customer = $this->modelManager->getRepository(\Shopware\Models\Customer\Customer::class)
-                ->find($address['userID']);
-            $shippingAddressId = $customer->getDefaultShippingAddress()->getId();
+            $customer = $this->modelManager->getRepository(Customer::class)->find($address['userID']);
+            $defaultShippingAddress = $customer->getDefaultShippingAddress();
+            if (!$defaultShippingAddress instanceof Address) {
+                throw new RuntimeException('Customer does not have a default billing address');
+            }
+            $shippingAddressId = $defaultShippingAddress->getId();
         }
 
         $attributes = $this->attributeLoader->load('s_user_addresses_attributes', $shippingAddressId);
@@ -1269,29 +1302,37 @@ class sOrder implements \Enlight_Hook
     /**
      * Create status mail
      *
-     * @param int    $orderId
-     * @param int    $statusId
-     * @param string $templateName
+     * @param int         $orderId
+     * @param int         $statusId
+     * @param string|null $templateName
      *
-     * @return Enlight_Components_Mail|void
+     * @return Enlight_Components_Mail|null
      */
     public function createStatusMail($orderId, $statusId, $templateName = null)
     {
         $statusId = (int) $statusId;
         $orderId = (int) $orderId;
-        $dispatch = null;
 
         if (empty($templateName)) {
             $templateName = 'sORDERSTATEMAIL' . $statusId;
         }
 
-        if (empty($orderId) || !is_numeric($statusId)) {
-            return;
+        if ($orderId === 0) {
+            return null;
+        }
+
+        $mailModel = $this->modelManager->getRepository(Mail::class)->findOneBy(
+            ['name' => $templateName]
+        );
+
+        if (!$mailModel instanceof Mail) {
+            return null;
         }
 
         $order = $this->getOrderForStatusMail($orderId);
         $orderDetails = $this->getOrderDetailsForStatusMail($orderId);
 
+        $dispatch = null;
         if (!empty($order['dispatchID'])) {
             $dispatch = $this->db->fetchRow('
                 SELECT id, name, description FROM s_premium_dispatch
@@ -1302,14 +1343,17 @@ class sOrder implements \Enlight_Hook
         $user = $this->getCustomerInformationByOrderId($orderId);
 
         if (empty($order) || empty($orderDetails) || empty($user)) {
-            return;
+            return null;
         }
 
         $repository = $this->modelManager->getRepository(Shop::class);
         $shopId = is_numeric($order['language']) ? $order['language'] : $order['subshopID'];
         // The (sub-)shop might be inactive by now, so that's why we use `getById` instead of `getActiveById`
         $shop = $repository->getById($shopId);
-        Shopware()->Container()->get(\Shopware\Components\ShopRegistrationServiceInterface::class)->registerShop($shop);
+        if ($shop === null) {
+            throw new ModelNotFoundException(Shop::class, $shopId);
+        }
+        Shopware()->Container()->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
 
         $dispatch = Shopware()->Modules()->Admin()->sGetDispatchTranslation($dispatch);
         $payment = Shopware()->Modules()->Admin()->sGetPaymentTranslation(['id' => $order['paymentID']]);
@@ -1325,15 +1369,6 @@ class sOrder implements \Enlight_Hook
 
         if (!empty($payment['description'])) {
             $order['payment_description'] = $payment['description'];
-        }
-
-        /* @var \Shopware\Models\Mail\Mail $mailModel */
-        $mailModel = $this->modelManager->getRepository(Mail::class)->findOneBy(
-            ['name' => $templateName]
-        );
-
-        if (!$mailModel) {
-            return;
         }
 
         $context = [
@@ -1360,8 +1395,8 @@ class sOrder implements \Enlight_Hook
         $mail = Shopware()->TemplateMail()->createMail($templateName, $context, $shop);
 
         $return = [
-            'content' => $mail->getPlainBodyText(),
-            'subject' => $mail->getPlainSubject(),
+            'content' => $mail->getPlainBodyText() ?? '',
+            'subject' => $mail->getPlainSubject() ?? '',
             'email' => trim($user['email']),
             'frommail' => $mail->getFrom(),
             'fromname' => $mail->getFromName(),
@@ -1379,7 +1414,7 @@ class sOrder implements \Enlight_Hook
         $mail->clearSubject();
         $mail->setSubject($return['subject']);
 
-        $mail->setBodyText($return['content']);
+        $mail->setBodyText($return[CartKey::POSITIONS]);
 
         $mail->clearFrom();
         $mail->setFrom($return['frommail'], $return['fromname']);
@@ -1435,7 +1470,7 @@ class sOrder implements \Enlight_Hook
     }
 
     /**
-     * Set payment status by order id
+     * Set order status by order id
      *
      * @param int         $orderId
      * @param int         $orderStatusId
@@ -1480,7 +1515,7 @@ class sOrder implements \Enlight_Hook
     /**
      * Setter for config
      *
-     * @param \Shopware_Components_Config $config
+     * @param Shopware_Components_Config $config
      */
     public function setConfig($config)
     {
@@ -1490,7 +1525,7 @@ class sOrder implements \Enlight_Hook
     /**
      * Getter for config
      *
-     * @return \Shopware_Components_Config
+     * @return Shopware_Components_Config
      */
     public function getConfig()
     {
@@ -1776,13 +1811,13 @@ EOT;
      * Checks if the passed transaction id is already set as transaction id of an
      * existing order.
      *
-     * @param string $transactionId
+     * @param string|null $transactionId
      *
      * @return bool
      */
     private function isTransactionExist($transactionId)
     {
-        if (strlen($transactionId) <= 3) {
+        if (!\is_string($transactionId) || \strlen($transactionId) <= 3) {
             return false;
         }
 
@@ -1849,7 +1884,7 @@ EOT;
             [$orderCode]
         );
 
-        if ($getVoucher['modus'] == 1) {
+        if ($getVoucher['modus'] == CartPositionsMode::PREMIUM_PRODUCT) {
             $this->db->executeUpdate(
                 'UPDATE s_emarketing_voucher_codes SET cashed = 1, userID= ? WHERE id = ?',
                 [$customerId, $voucherCodeId]
@@ -1901,7 +1936,7 @@ EOT;
                 $content['articlename'] = str_replace("\n\n", "\n", $content['articlename']);
             }
 
-            $content['ordernumber'] = trim(html_entity_decode($content['ordernumber']));
+            $content['ordernumber'] = trim(html_entity_decode($content['ordernumber'] ?? ''));
 
             $details[] = $content;
         }
@@ -1962,7 +1997,7 @@ EOT;
     {
         $userData['billingaddress'] = $this->htmlEntityDecodeRecursive($userData['billingaddress']);
         $userData['shippingaddress'] = $this->htmlEntityDecodeRecursive($userData['shippingaddress']);
-        $userData['country'] = $this->htmlEntityDecodeRecursive($userData['country']);
+        $userData['country'] = $this->htmlEntityDecodeRecursive($userData['country'] ?? null);
 
         $userData['additional']['payment']['description'] = html_entity_decode(
             $userData['additional']['payment']['description']
@@ -1973,19 +2008,15 @@ EOT;
 
     /**
      * Helper function to recursively apply html_entity_decode() to the given data.
-     *
-     * @param array|string|null $data
-     *
-     * @return array|string|null
      */
-    private function htmlEntityDecodeRecursive($data)
+    private function htmlEntityDecodeRecursive(?array $data): ?array
     {
         if ($data === null) {
             return null;
         }
 
-        $func = function ($item) use (&$func) {
-            return is_array($item) ? array_map($func, $item) : call_user_func('html_entity_decode', $item);
+        $func = static function ($item) use (&$func) {
+            return \is_array($item) ? array_map($func, $item) : html_entity_decode((string) $item);
         };
 
         return array_map($func, $data);
@@ -2010,25 +2041,25 @@ EOT;
             $basketRow['articlename']
         );
 
-        if (!$basketRow['price']) {
+        if (empty($basketRow['price'])) {
             $basketRow['price'] = '0,00';
         }
-        if (!$basketRow['esdarticle']) {
+        if (empty($basketRow['esdarticle'])) {
             $basketRow['esdarticle'] = '0';
         }
-        if (!$basketRow['modus']) {
+        if (empty($basketRow['modus'])) {
             $basketRow['modus'] = '0';
         }
-        if (!$basketRow['taxID']) {
+        if (empty($basketRow['taxID'])) {
             $basketRow['taxID'] = '0';
         }
-        if ($this->sNet == true) {
+        if ($this->sNet) {
             $basketRow['taxID'] = '0';
         }
-        if (!$basketRow['ean']) {
+        if (empty($basketRow['ean'])) {
             $basketRow['ean'] = '';
         }
-        if (!$basketRow['releasedate']) {
+        if (empty($basketRow['releasedate'])) {
             $basketRow['releasedate'] = '0000-00-00';
         }
 
@@ -2071,9 +2102,9 @@ EOT;
      * @param string $orderNumber
      * @param string $email
      */
-    private function logOrderMailException(\Exception $e, $orderNumber, $email)
+    private function logOrderMailException(Exception $e, $orderNumber, $email)
     {
-        $message = sprintf(
+        $message = \sprintf(
             'Could not send order mail for ordernumber %s to address %s',
             $orderNumber,
             $email

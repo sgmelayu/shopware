@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    MediaManager
@@ -202,24 +201,24 @@ Ext.define('Shopware.apps.MediaManager.view.album.Setting', {
     createIconSelection: function () {
         var me = this;
         var icons = [
-            { boxLabel: '<span class="sprite-inbox-document-folder"></span>', name: 'iconCls', inputValue: 'sprite-inbox-document-folder'},
-            { boxLabel: '<span class="sprite-inbox-document-text"></span>', name: 'iconCls', inputValue: 'sprite-inbox-document-text'},
-            { boxLabel: '<span class="sprite-inbox-document-music"></span>', name: 'iconCls', inputValue: 'sprite-inbox-document-music'},
-            { boxLabel: '<span class="sprite-inbox-film"></span>', name: 'iconCls', inputValue: 'sprite-inbox-film'},
-            { boxLabel: '<span class="sprite-inbox-document-image"></span>', name: 'iconCls',inputValue: 'sprite-inbox-document-image'},
-            { boxLabel: '<span class="sprite-images-stack"></span>', name: 'iconCls', inputValue: 'sprite-images-stack'},
-            { boxLabel: '<span class="sprite-pictures"></span>', name: 'iconCls', inputValue: 'sprite-pictures'},
-            { boxLabel: '<span class="sprite-films"></span>', name: 'iconCls', inputValue: 'sprite-films'},
-            { boxLabel: '<span class="sprite-music-beam"></span>', name: 'iconCls', inputValue: 'sprite-music-beam'},
-            { boxLabel: '<span class="sprite-blue-document-pdf-text"></span>', name: 'iconCls', inputValue: 'sprite-blue-document-pdf-text'},
-            { boxLabel: '<span class="sprite-box"></span>', name: 'iconCls', inputValue: 'sprite-box'},
-            { boxLabel: '<span class="sprite-target"></span>', name: 'iconCls', inputValue: 'sprite-target'},
-            { boxLabel: '<span class="sprite-globe-green"></span>', name: 'iconCls', inputValue: 'sprite-globe-green'},
-            { boxLabel: '<span class="sprite-inbox"></span>', name: 'iconCls', inputValue: 'sprite-inbox'},
-            { boxLabel: '<span class="sprite-leaf"></span>', name: 'iconCls', inputValue: 'sprite-leaf'},
-            { boxLabel: '<span class="sprite-store"></span>', name: 'iconCls', inputValue: 'sprite-store'},
-            { boxLabel: '<span class="sprite-hard-hat"></span>', name: 'iconCls', inputValue: 'sprite-hard-hat'},
-            { boxLabel: '<span class="sprite-sd-memory-card"></span>', name: 'iconCls', inputValue: 'sprite-sd-memory-card'}
+            { boxLabel: '<span class="sprite-inbox-document-folder"></span>', name: 'iconCls', inputValue: 'sprite-inbox-document-folder' },
+            { boxLabel: '<span class="sprite-inbox-document-text"></span>', name: 'iconCls', inputValue: 'sprite-inbox-document-text' },
+            { boxLabel: '<span class="sprite-inbox-document-music"></span>', name: 'iconCls', inputValue: 'sprite-inbox-document-music' },
+            { boxLabel: '<span class="sprite-inbox-film"></span>', name: 'iconCls', inputValue: 'sprite-inbox-film' },
+            { boxLabel: '<span class="sprite-inbox-document-image"></span>', name: 'iconCls', inputValue: 'sprite-inbox-document-image' },
+            { boxLabel: '<span class="sprite-images-stack"></span>', name: 'iconCls', inputValue: 'sprite-images-stack' },
+            { boxLabel: '<span class="sprite-pictures"></span>', name: 'iconCls', inputValue: 'sprite-pictures' },
+            { boxLabel: '<span class="sprite-films"></span>', name: 'iconCls', inputValue: 'sprite-films' },
+            { boxLabel: '<span class="sprite-music-beam"></span>', name: 'iconCls', inputValue: 'sprite-music-beam' },
+            { boxLabel: '<span class="sprite-blue-document-pdf-text"></span>', name: 'iconCls', inputValue: 'sprite-blue-document-pdf-text' },
+            { boxLabel: '<span class="sprite-box"></span>', name: 'iconCls', inputValue: 'sprite-box' },
+            { boxLabel: '<span class="sprite-target"></span>', name: 'iconCls', inputValue: 'sprite-target' },
+            { boxLabel: '<span class="sprite-globe-green"></span>', name: 'iconCls', inputValue: 'sprite-globe-green' },
+            { boxLabel: '<span class="sprite-inbox"></span>', name: 'iconCls', inputValue: 'sprite-inbox' },
+            { boxLabel: '<span class="sprite-leaf"></span>', name: 'iconCls', inputValue: 'sprite-leaf' },
+            { boxLabel: '<span class="sprite-store"></span>', name: 'iconCls', inputValue: 'sprite-store' },
+            { boxLabel: '<span class="sprite-hard-hat"></span>', name: 'iconCls', inputValue: 'sprite-hard-hat' },
+            { boxLabel: '<span class="sprite-sd-memory-card"></span>', name: 'iconCls', inputValue: 'sprite-sd-memory-card' }
         ];
 
         // Iterate each icon to set it active
@@ -403,16 +402,17 @@ Ext.define('Shopware.apps.MediaManager.view.album.Setting', {
             defaults: {
                 labelStyle: 'font-weight: 700; text-align: right;'
             },
-            items: [{
-                xtype: 'container',
-                layout: 'hbox',
-                padding: '0 0 8',
-                items: [
-                    me.thumbnailField,
-                    me.thumbnailSubmit,
-                    me.thumbnailGenerate
-                ]
-            },
+            items: [
+                {
+                    xtype: 'container',
+                    layout: 'hbox',
+                    padding: '0 0 8',
+                    items: [
+                        me.thumbnailField,
+                        me.thumbnailSubmit,
+                        me.thumbnailGenerate
+                    ]
+                },
                 {
                     xtype: 'container',
                     layout: 'anchor',
@@ -438,7 +438,7 @@ Ext.define('Shopware.apps.MediaManager.view.album.Setting', {
 
         return new Ext.XTemplate(
             '{literal}<tpl for=".">',
-            '<div class="thumb-wrap-tiny" title="'+title+'">',
+            '<div class="thumb-wrap-tiny" title="' + title + '">',
             '<div class="thumb"><span class="number">{index}</span></div>',
             '<input class="x-form-field x-form-text x-editable" value="{value}" />',
             '</div></tpl>',

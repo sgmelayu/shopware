@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 //{block name="backend/base/component/preloader"}
 Ext.define('Shopware.component.Preloader', {
@@ -119,18 +118,18 @@ Ext.define('Shopware.component.Preloader', {
         var me = this,
             clsName = subApp.$className;
 
-        if(me.finished) {
+        if (me.finished) {
             return;
         }
 
-        if(!me.requiredComponents[me.activePrio].hasOwnProperty(clsName)) {
+        if (!me.requiredComponents[me.activePrio].hasOwnProperty(clsName)) {
             return;
         }
         me.requiredComponents[me.activePrio][clsName] = true;
 
-        if(me.isPrioLoaded(me.activePrio)) {
+        if (me.isPrioLoaded(me.activePrio)) {
             me.activePrio += 1;
-            if(!me.requiredComponents[me.activePrio]) {
+            if (!me.requiredComponents[me.activePrio]) {
                 me.finished = true;
                 me.eventProvider.removeListener('subAppLoaded', me.onSubAppLoaded, me);
                 return;
@@ -151,7 +150,7 @@ Ext.define('Shopware.component.Preloader', {
             allLoaded = true;
 
         Ext.iterate(prioGroup, function(index, item) {
-            if(!item) {
+            if (!item) {
                 allLoaded = false;
                 return false;
             }
@@ -170,7 +169,7 @@ Ext.define('Shopware.component.Preloader', {
             prioGroup = me.requiredComponents[me.activePrio];
 
         Ext.iterate(prioGroup, function(name, item) {
-            if(!Ext.ClassManager.isCreated(name)) {
+            if (!Ext.ClassManager.isCreated(name)) {
                 Ext.require(name);
             }
         });

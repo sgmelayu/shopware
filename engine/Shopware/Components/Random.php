@@ -1,28 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
+
+use DomainException;
+use RuntimeException;
+use UnexpectedValueException;
 
 /**
  * Pseudorandom number generator (PRNG).
@@ -41,12 +45,12 @@ abstract class Random
      *
      * @param int $length
      *
-     * @return string|false
+     * @return string
      */
     public static function getBytes($length)
     {
         if ($length <= 0) {
-            return false;
+            throw new UnexpectedValueException('Parameter "length" must be a positive integer');
         }
 
         return random_bytes($length);
@@ -61,7 +65,7 @@ abstract class Random
     {
         $byte = static::getBytes(1);
 
-        return (bool) (ord($byte) % 2);
+        return (bool) (\ord($byte) % 2);
     }
 
     /**
@@ -70,14 +74,14 @@ abstract class Random
      * @param int $min
      * @param int $max
      *
-     * @throws \DomainException
+     * @throws DomainException
      *
      * @return int
      */
     public static function getInteger($min, $max)
     {
         if ($min > $max) {
-            throw new \DomainException('The min parameter must be lower than max parameter');
+            throw new DomainException('The min parameter must be lower than max parameter');
         }
 
         return random_int($min, $max);
@@ -92,9 +96,14 @@ abstract class Random
     public static function getFloat()
     {
         $bytes = static::getBytes(7);
-        $bytes[6] = $bytes[6] | chr(0xF0);
-        $bytes .= chr(63); // exponent bias (1023)
-        list(, $float) = unpack('d', $bytes);
+        $newBytes = $bytes[6] | \chr(0xF0);
+        $bytes[6] = $newBytes;
+        $bytes .= \chr(63); // exponent bias (1023)
+        $unpacked = unpack('d', $bytes);
+        if (!\is_array($unpacked)) {
+            throw new RuntimeException('Cannot generate random float');
+        }
+        [, $float] = $unpacked;
 
         return $float - 1;
     }
@@ -108,20 +117,20 @@ abstract class Random
      * @param int         $length
      * @param string|null $charlist
      *
-     * @throws \DomainException
+     * @throws DomainException
      *
      * @return string
      */
     public static function getString($length, $charlist = null)
     {
         if ($length < 1) {
-            throw new \DomainException('Length should be >= 1');
+            throw new DomainException('Length should be >= 1');
         }
 
         // Charlist is empty or not provided
         if (empty($charlist)) {
             $numBytes = ceil($length * 0.75);
-            $bytes = static::getBytes($numBytes);
+            $bytes = static::getBytes((int) $numBytes);
 
             return mb_substr(rtrim(base64_encode($bytes), '='), 0, $length, '8bit');
         }
@@ -148,17 +157,17 @@ abstract class Random
      *
      * @param int $length
      *
-     * @throws \DomainException
+     * @throws DomainException
      *
      * @return string
      */
     public static function getAlphanumericString($length)
     {
         if ($length < 1) {
-            throw new \DomainException('Length should be >= 1');
+            throw new DomainException('Length should be >= 1');
         }
 
-        $charlist = implode(range('a', 'z')) . implode(range('A', 'Z')) . implode(range(0, 9));
+        $charlist = implode('', range('a', 'z')) . implode('', range('A', 'Z')) . implode('', range(0, 9));
 
         return static::getString($length, $charlist);
     }
@@ -181,16 +190,16 @@ abstract class Random
     public static function generatePassword($length = 15, $availableSets = ['l', 'u', 'd', 's'])
     {
         $sets = [];
-        if (in_array('l', $availableSets, true)) {
+        if (\in_array('l', $availableSets, true)) {
             $sets[] = 'abcdefghjkmnpqrstuvwxyz';
         }
-        if (in_array('u', $availableSets, true)) {
+        if (\in_array('u', $availableSets, true)) {
             $sets[] = 'ABCDEFGHJKMNPQRSTUVWXYZ';
         }
-        if (in_array('d', $availableSets, true)) {
+        if (\in_array('d', $availableSets, true)) {
             $sets[] = '23456789';
         }
-        if (in_array('s', $availableSets, true)) {
+        if (\in_array('s', $availableSets, true)) {
             $sets[] = '!@#$%&*?';
         }
 
@@ -203,7 +212,7 @@ abstract class Random
         }
 
         $pool = str_split($pool);
-        for ($i = 0; $i < $length - count($sets); ++$i) {
+        for ($i = 0; $i < $length - \count($sets); ++$i) {
             $password .= self::getRandomArrayElement($pool);
         }
         $password = str_shuffle($password);
@@ -218,6 +227,6 @@ abstract class Random
      */
     public static function getRandomArrayElement($array)
     {
-        return $array[self::getInteger(0, count($array) - 1)];
+        return $array[self::getInteger(0, \count($array) - 1)];
     }
 }

@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Plugin;
 
+use PDO;
 use Shopware\Bundle\PluginInstallerBundle\Service\PluginInitializer;
 use Shopware\Components\Migrations\AbstractPluginMigration;
 use Shopware\Components\Migrations\PluginMigrationManager;
@@ -37,7 +38,7 @@ class PluginMigrationTest extends TestCase
 
     protected function setUp(): void
     {
-        $pdo = Shopware()->Container()->get(\PDO::class);
+        $pdo = Shopware()->Container()->get(PDO::class);
         $initializer = new PluginInitializer($pdo, [
             'ShopwarePlugins' => __DIR__ . '/fixtures/',
         ]);
@@ -47,7 +48,7 @@ class PluginMigrationTest extends TestCase
     public function testMigrationWithDown(): void
     {
         $manager = new PluginMigrationManager(
-            Shopware()->Container()->get(\PDO::class),
+            Shopware()->Container()->get(PDO::class),
             $this->plugins['SwagTest'],
             Shopware()->Container()->get('pluginlogger')
         );
@@ -66,7 +67,7 @@ class PluginMigrationTest extends TestCase
     public function testMigrationWithDownWithKeepUserData(): void
     {
         $manager = new PluginMigrationManager(
-            Shopware()->Container()->get(\PDO::class),
+            Shopware()->Container()->get(PDO::class),
             $this->plugins['SwagTest'],
             Shopware()->Container()->get('pluginlogger')
         );
@@ -87,7 +88,7 @@ class PluginMigrationTest extends TestCase
     public function testMigrationWithDownWithUpdate(): void
     {
         $manager = new PluginMigrationManager(
-            Shopware()->Container()->get(\PDO::class),
+            Shopware()->Container()->get(PDO::class),
             $this->plugins['SwagTest'],
             Shopware()->Container()->get('pluginlogger')
         );
@@ -137,6 +138,6 @@ class PluginMigrationTest extends TestCase
 
     private function assertTableColumnExists(string $table, string $column)
     {
-        static::assertTrue((bool) Shopware()->Db()->fetchOne(sprintf('show columns FROM %s WHERE `Field` = ?', $table), [$column]));
+        static::assertTrue((bool) Shopware()->Db()->fetchOne(\sprintf('show columns FROM %s WHERE `Field` = ?', $table), [$column]));
     }
 }

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -27,9 +26,9 @@
  * @author shopware AG
  */
 //{namespace name="backend/config/controller/main"}
-Ext.define('Shopware.form.PluginPanel',
-/** @lends Ext.form.Panel# */
-{
+Ext.define('Shopware.form.PluginPanel', {
+    /** @lends Ext.form.Panel# */
+
     /**
      * The parent class that this class extends.
      * @string
@@ -99,7 +98,7 @@ Ext.define('Shopware.form.PluginPanel',
         var me = this;
 
         // Check if we're having a plugin form id
-        if(!me.formId) {
+        if (!me.formId) {
             Ext.Error.raise(me.noFormIdConfiguredErrorText);
             return false;
         }
@@ -107,14 +106,14 @@ Ext.define('Shopware.form.PluginPanel',
         // Cast the id to an integer
         me.formId = ~~(1 * me.formId);
 
-        if(!me.shopStore.getCount()) {
+        if (!me.shopStore.getCount()) {
             me.shopStore.load();
         }
 
         // Prepare form store and load the form record
         me.formStore.on('load', me.onLoadForm, me, { single: true });
         me.formStore.load({
-            filters : [{
+            filters: [{
                 property: 'id',
                 value: me.formId
             }]
@@ -161,12 +160,12 @@ Ext.define('Shopware.form.PluginPanel',
         var me = this;
 
         // If the shop store isn't fully loaded yet, defer the "initForm"-call
-        if(me.shopStore.isLoading() || !me.rendered) {
+        if (me.shopStore.isLoading() || !me.rendered) {
             Ext.defer(me.initForm, 100, me, [ form ]);
             return false;
         }
 
-        if(me.injectActionButtons) {
+        if (me.injectActionButtons) {
             me.addDocked(me.getButtons());
         }
         me.add(me.getItems(form));
@@ -215,9 +214,9 @@ Ext.define('Shopware.form.PluginPanel',
             items = [],
             tabs = [], options;
 
-        if(form.get('description') && me.descriptionField) {
+        if (form.get('description') && me.descriptionField) {
 
-            if(!me._descriptionAdded) {
+            if (!me._descriptionAdded) {
                 items.push({
                     xtype: 'fieldset',
                     margin: 10,
@@ -238,7 +237,7 @@ Ext.define('Shopware.form.PluginPanel',
                 var initialValue = value;
                 type = element.get('type').toLowerCase();
                 type = 'base-element-' + type;
-                name = 'values[' + shop.get('id') + ']['+ element.get('id') + ']';
+                name = 'values[' + shop.get('id') + '][' + element.get('id') + ']';
 
                 options = element.get('options');
                 options = options || {};
@@ -247,12 +246,12 @@ Ext.define('Shopware.form.PluginPanel',
                 elementName = element.get('name');
                 elementLabel = element.get('label');
                 elementDescription = element.get('description');
-                if(element.associations.containsKey('getTranslation')) {
-                    if(element.getTranslation().getAt(0) && element.getTranslation().getAt(0).get('label')) {
+                if (element.associations.containsKey('getTranslation')) {
+                    if (element.getTranslation().getAt(0) && element.getTranslation().getAt(0).get('label')) {
                         elementLabel = element.getTranslation().getAt(0).get('label');
                     }
 
-                    if(element.getTranslation().getAt(0) && element.getTranslation().getAt(0).get('description')) {
+                    if (element.getTranslation().getAt(0) && element.getTranslation().getAt(0).get('description')) {
                         elementDescription = element.getTranslation().getAt(0).get('description');
                     }
                 }
@@ -284,7 +283,7 @@ Ext.define('Shopware.form.PluginPanel',
                 fields.push(field);
 
             });
-            if(fields.length > 0) {
+            if (fields.length > 0) {
                 tabs.push({
                     xtype: 'base-element-fieldset',
                     title: shop.get('name'),
@@ -293,7 +292,7 @@ Ext.define('Shopware.form.PluginPanel',
             }
         });
 
-        if(tabs.length > 1) {
+        if (tabs.length > 1) {
             items.push({
                 xtype: 'tabpanel',
                 bodyStyle: 'background-color: transparent !important',
@@ -304,8 +303,8 @@ Ext.define('Shopware.form.PluginPanel',
                 items: tabs,
                 plain: true
             });
-        } else if(tabs.length == 1) {
-            if(tabs[0].title) {
+        } else if (tabs.length == 1) {
+            if (tabs[0].title) {
                 delete tabs[0].title;
             }
             items.push({
@@ -377,9 +376,9 @@ Ext.define('Shopware.form.PluginPanel',
             valueStore = element.getValues();
             valueStore.removeAll();
             me.shopStore.each(function(shop) {
-                fieldName = 'values[' + shop.get('id') + ']['+ element.get('id') + ']';
+                fieldName = 'values[' + shop.get('id') + '][' + element.get('id') + ']';
                 fieldValue = values[fieldName];
-                if(fieldValue !== '' && fieldValue !== null) {
+                if (fieldValue !== '' && fieldValue !== null) {
                     valueStore.add({
                         shopId: shop.get('id'),
                         value: fieldValue
@@ -394,20 +393,20 @@ Ext.define('Shopware.form.PluginPanel',
 
         form.store.add(form);
         form.store.sync({
-            success :function (records, operation) {
+            success: function (records, operation) {
                 var template = new Ext.Template(me.snippets.saveFormSuccess),
                     message = template.applyTemplate({
                         name: form.data.label || form.data.name
                     });
                 Shopware.Notification.createGrowlMessage(title, message, win.title);
-                if(closeWindow) {
+                if (closeWindow) {
                     win.destroy();
                 }
-                if(callback) {
+                if (callback) {
                     callback.apply(me, records, operation);
                 }
             },
-            failure:function (records, operation) {
+            failure: function (records, operation) {
                 var template = new Ext.Template(me.snippets.saveFormError),
                     message = template.applyTemplate({
                         name: form.data.label || form.data.name

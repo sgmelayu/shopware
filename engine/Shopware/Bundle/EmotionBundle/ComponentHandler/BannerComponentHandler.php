@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EmotionBundle\ComponentHandler;
@@ -28,11 +28,12 @@ use Shopware\Bundle\EmotionBundle\Struct\Collection\PrepareDataCollection;
 use Shopware\Bundle\EmotionBundle\Struct\Collection\ResolvedDataCollection;
 use Shopware\Bundle\EmotionBundle\Struct\Element;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
+use Shopware_Components_Config;
 
 class BannerComponentHandler implements ComponentHandlerInterface
 {
-    const LEGACY_CONVERT_FUNCTION = 'getBannerMappingLinks';
-    const COMPONENT_NAME = 'emotion-components-banner';
+    public const LEGACY_CONVERT_FUNCTION = 'getBannerMappingLinks';
+    public const COMPONENT_NAME = 'emotion-components-banner';
 
     /**
      * {@inheritdoc}
@@ -72,7 +73,7 @@ class BannerComponentHandler implements ComponentHandlerInterface
         $this->resolveMappings($collection, $element);
     }
 
-    private function generateLink(Element $element, ShopContextInterface $context)
+    private function generateLink(Element $element, ShopContextInterface $context): void
     {
         $link = $element->getConfig()->get('link');
         if (empty($link)) {
@@ -88,9 +89,8 @@ class BannerComponentHandler implements ComponentHandlerInterface
         $element->getConfig()->set('link', $link);
     }
 
-    private function addMappings(PrepareDataCollection $collection, Element $element, ShopContextInterface $context)
+    private function addMappings(PrepareDataCollection $collection, Element $element, ShopContextInterface $context): void
     {
-        /** @var array $mappings */
         $mappings = $element->getConfig()->get('bannerMapping', []);
         if (empty($mappings)) {
             return;
@@ -122,9 +122,8 @@ class BannerComponentHandler implements ComponentHandlerInterface
         $element->getConfig()->set('bannerMapping', $mappings);
     }
 
-    private function resolveMappings(ResolvedDataCollection $collection, Element $element)
+    private function resolveMappings(ResolvedDataCollection $collection, Element $element): void
     {
-        /** @var array $mappings */
         $mappings = $element->getConfig()->get('bannerMapping', []);
 
         if (empty($mappings)) {
@@ -150,7 +149,7 @@ class BannerComponentHandler implements ComponentHandlerInterface
                     continue;
                 }
 
-                $mapping['link'] = Shopware()->Container()->get(\Shopware_Components_Config::class)->get('baseFile') . '?sViewport=detail&sArticle=' . $product->getId() . '&number=' . $product->getNumber();
+                $mapping['link'] = Shopware()->Container()->get(Shopware_Components_Config::class)->get('baseFile') . '?sViewport=detail&sArticle=' . $product->getId() . '&number=' . $product->getNumber();
             }
 
             $mappings[$key] = $mapping;
@@ -160,9 +159,9 @@ class BannerComponentHandler implements ComponentHandlerInterface
     }
 
     /**
-     * @return string
+     * @param array<string, mixed> $mapping
      */
-    private function getMappingKey(array $mapping)
+    private function getMappingKey(array $mapping): string
     {
         return md5($mapping['x'] . $mapping['y'] . $mapping['width'] . $mapping['height'] . $mapping['link']);
     }

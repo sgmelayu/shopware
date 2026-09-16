@@ -40,9 +40,9 @@
 class Enlight_Hook_HookManager extends Enlight_Class
 {
     /**
-     * @var null|Enlight_Hook_ProxyFactory instance of the Enlight_Hook_ProxyFactory
+     * @var Enlight_Hook_ProxyFactory|null instance of the Enlight_Hook_ProxyFactory
      */
-    protected $proxyFactory = null;
+    protected $proxyFactory;
 
     /**
      * @var array internal list of all registered hook aliases
@@ -55,22 +55,20 @@ class Enlight_Hook_HookManager extends Enlight_Class
     protected $eventManager;
 
     /**
-     * @param Enlight_Event_EventManager $eventManager
-     * @param Enlight_Loader             $loader
-     * @param array                      $options
+     * @param array $options
      *
      * @throws Exception
      */
-    public function __construct(\Enlight_Event_EventManager $eventManager, \Enlight_Loader $loader, $options)
+    public function __construct(Enlight_Event_EventManager $eventManager, Enlight_Loader $loader, $options)
     {
         $this->eventManager = $eventManager;
 
         if (!isset($options['proxyNamespace'])) {
-            throw new \Exception('proxyNamespace has to be set.');
+            throw new Exception('proxyNamespace has to be set.');
         }
 
         if (!isset($options['proxyDir'])) {
-            throw new \Exception('proxyDir has to be set.');
+            throw new Exception('proxyDir has to be set.');
         }
 
         $this->proxyFactory = new Enlight_Hook_ProxyFactory(
@@ -137,9 +135,7 @@ class Enlight_Hook_HookManager extends Enlight_Class
      * Returns the proxy for the given class. If the Enlight_Hook_ProxyFactory hasn't
      * already instantiated it, the function instantiates it automatically.
      *
-     * @param string $class
-     *
-     * @return mixed
+     * @param class-string $class
      */
     public function getProxy($class)
     {
@@ -149,7 +145,7 @@ class Enlight_Hook_HookManager extends Enlight_Class
     /**
      * Checks if a proxy exists for the given class.
      *
-     * @param string $class
+     * @param class-string $class
      *
      * @return bool
      */
@@ -162,11 +158,7 @@ class Enlight_Hook_HookManager extends Enlight_Class
      * Creates a new hook execution context using the given $subject, $method and $args and executes it. Finally the
      * execution result is returned.
      *
-     * @param Enlight_Hook_Proxy $subject
-     * @param string             $method
-     * @param array              $args
-     *
-     * @return mixed
+     * @param string $method
      */
     public function executeHooks(Enlight_Hook_Proxy $subject, $method, array $args)
     {
@@ -200,7 +192,7 @@ class Enlight_Hook_HookManager extends Enlight_Class
      *
      * @param string $name
      *
-     * @return null|mixed
+     * @return mixed|null
      */
     public function getAlias($name)
     {

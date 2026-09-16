@@ -24,12 +24,7 @@
  * The Enlight_View_Default represents the interface between the template manager of smarty and
  * the internal smarty template. This class is responsible for passing the variables to the loaded template,
  * switch the caching or extends the template blocks.
- * Instead to access the template class directly, this manager will be used so the template can be modified afterwards.
- *
- * @category   Enlight
- *
- * @copyright  Copyright (c) 2011, shopware AG (http://www.shopware.de)
- * @license    http://enlight.de/license     New BSD License
+ * Instead of accessing the template class directly, this manager will be used so the template can be modified afterwards.
  */
 class Enlight_View_Default extends Enlight_View implements Enlight_View_Cache
 {
@@ -43,7 +38,7 @@ class Enlight_View_Default extends Enlight_View implements Enlight_View_Cache
     /**
      * The loaded template instance.
      *
-     * @var Enlight_Template_Default
+     * @var Enlight_Template_Default|null
      */
     protected $template;
 
@@ -64,8 +59,6 @@ class Enlight_View_Default extends Enlight_View implements Enlight_View_Cache
     /**
      * The Enlight_View_Default constructor expects an instance of the Enlight_Template_Manager and set it
      * into the internal property.
-     *
-     * @param Enlight_Template_Manager $engine
      */
     public function __construct(Enlight_Template_Manager $engine)
     {
@@ -117,7 +110,7 @@ class Enlight_View_Default extends Enlight_View implements Enlight_View_Cache
      * This function adds a template directory into the internal instance of the Enlight_Template_Manager
      *
      * @param string|string $templateDir
-     * @param null|string   $key
+     * @param string|null   $key
      *
      * @return Enlight_View_Default
      */
@@ -131,11 +124,9 @@ class Enlight_View_Default extends Enlight_View implements Enlight_View_Cache
     /**
      * Sets the current template instance into the internal property.
      *
-     * @param Enlight_Template_Default $template
-     *
      * @return Enlight_View_Default
      */
-    public function setTemplate(Enlight_Template_Default $template = null)
+    public function setTemplate(?Enlight_Template_Default $template = null)
     {
         $this->template = $template;
 
@@ -197,8 +188,6 @@ class Enlight_View_Default extends Enlight_View implements Enlight_View_Cache
     /**
      * Extends a template block by name.
      *
-     * @param        $spec
-     * @param        $content
      * @param string $mode
      *
      * @return Enlight_View_Default
@@ -229,11 +218,11 @@ class Enlight_View_Default extends Enlight_View implements Enlight_View_Cache
      * If no cache or scope given, the default settings for this property will be used.
      *
      * @param array|string $spec
-     * @param mixed        $value
-     * @param bool         $nocache
-     * @param int          $scope
+     * @param mixed|null   $value
+     * @param bool|null    $nocache
+     * @param int|null     $scope
      *
-     * @return \Enlight_View|\Enlight_View_Default
+     * @return Enlight_View|Enlight_View_Default
      */
     public function assign($spec, $value = null, $nocache = null, $scope = null)
     {

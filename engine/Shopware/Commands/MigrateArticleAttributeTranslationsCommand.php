@@ -1,29 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Statement;
+use Exception;
+use PDO;
 use Shopware\Bundle\AttributeBundle\Service\CrudServiceInterface;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
@@ -36,7 +40,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class MigrateArticleAttributeTranslationsCommand extends ShopwareCommand
 {
     /**
-     * @var \PDO
+     * @var PDO
      */
     private $connection;
 
@@ -46,7 +50,7 @@ class MigrateArticleAttributeTranslationsCommand extends ShopwareCommand
     private $columns;
 
     /**
-     * @var \Doctrine\DBAL\Driver\Statement
+     * @var Statement
      */
     private $updateStatement;
 
@@ -67,13 +71,13 @@ class MigrateArticleAttributeTranslationsCommand extends ShopwareCommand
     {
         $io = new SymfonyStyle($input, $output);
 
-        $this->connection = $this->container->get(\Doctrine\DBAL\Connection::class);
+        $this->connection = $this->container->get(Connection::class);
         $this->updateStatement = $this->connection->prepare('UPDATE s_core_translations SET objectdata=:data WHERE id=:id');
         $this->columns = $this->getColumns();
 
         $result = $this->connection
             ->query('SELECT MAX(id) AS maxId, count(1) AS count FROM s_core_translations;')
-            ->fetch(\PDO::FETCH_ASSOC);
+            ->fetch(PDO::FETCH_ASSOC);
 
         $this->migrate($io->createProgressBar($result['count']), $result['maxId']);
 
@@ -102,14 +106,14 @@ EOL
 
         do {
             $selectStatement->execute([':lastId' => $lastId, ':maxId' => $maxId]);
-            $rows = $selectStatement->fetchAll(\PDO::FETCH_ASSOC);
+            $rows = $selectStatement->fetchAll(PDO::FETCH_ASSOC);
 
             if (empty($rows)) {
                 continue;
             }
 
             $this->migrateTranslations($rows);
-            $progressBar->advance(count($rows));
+            $progressBar->advance(\count($rows));
 
             $lastId = array_pop($rows)['id'];
         } while (!empty($rows));
@@ -122,7 +126,7 @@ EOL
      */
     private function getColumns()
     {
-        $columns = $this->connection->query('SHOW COLUMNS FROM s_articles_attributes')->fetchAll(\PDO::FETCH_ASSOC);
+        $columns = $this->connection->query('SHOW COLUMNS FROM s_articles_attributes')->fetchAll(PDO::FETCH_ASSOC);
 
         $columns = array_column($columns, 'Field');
 
@@ -155,16 +159,16 @@ EOL
      */
     private function filter($data, array $columns)
     {
-        if (!is_array($data)) {
+        if (!\is_array($data)) {
             return null;
         }
 
         $updated = false;
         foreach ($columns as $key => $column) {
-            if (array_key_exists($key, $data)) {
+            if (\array_key_exists($key, $data)) {
                 $newKey = CrudServiceInterface::EXT_JS_PREFIX . $column;
 
-                if (!array_key_exists($newKey, $data)) {
+                if (!\array_key_exists($newKey, $data)) {
                     $data[$newKey] = $data[$key];
                     $updated = true;
                 }
@@ -191,8 +195,8 @@ EOL
         foreach ($rows as $row) {
             try {
                 $updated = $this->filter(unserialize($row['objectdata'], ['allowed_classes' => false]), $columns);
-            } catch (\Exception $e) {
-                //serialize error - continue with next translation
+            } catch (Exception $e) {
+                // serialize error - continue with next translation
                 continue;
             }
 

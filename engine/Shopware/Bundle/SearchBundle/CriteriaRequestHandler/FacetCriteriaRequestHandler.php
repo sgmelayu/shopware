@@ -1,30 +1,29 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundle\CriteriaRequestHandler;
 
-use Doctrine\DBAL\Connection;
 use Enlight_Controller_Request_RequestHttp as Request;
 use Shopware\Bundle\SearchBundle\Condition\CombinedCondition;
 use Shopware\Bundle\SearchBundle\Condition\ProductAttributeCondition;
@@ -35,32 +34,20 @@ use Shopware\Bundle\SearchBundle\Facet\ProductAttributeFacet;
 use Shopware\Bundle\StoreFrontBundle\Service\CustomFacetServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Search\CustomFacet;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
+use Shopware_Components_Config;
 
 class FacetCriteriaRequestHandler implements CriteriaRequestHandlerInterface
 {
-    /**
-     * @var \Shopware_Components_Config
-     */
-    private $config;
+    private Shopware_Components_Config $config;
 
-    /**
-     * @var CustomFacetServiceInterface
-     */
-    private $facetService;
-
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private CustomFacetServiceInterface $facetService;
 
     public function __construct(
-        \Shopware_Components_Config $config,
-        CustomFacetServiceInterface $facetService,
-        Connection $connection
+        Shopware_Components_Config $config,
+        CustomFacetServiceInterface $facetService
     ) {
         $this->config = $config;
         $this->facetService = $facetService;
-        $this->connection = $connection;
     }
 
     /**
@@ -115,7 +102,7 @@ class FacetCriteriaRequestHandler implements CriteriaRequestHandlerInterface
     {
         $params = $request->getParams();
 
-        return array_key_exists('sSearch', $params);
+        return \array_key_exists('sSearch', $params);
     }
 
     private function handleProductAttributeFacet(
@@ -130,7 +117,6 @@ class FacetCriteriaRequestHandler implements CriteriaRequestHandlerInterface
 
         switch ($facet->getMode()) {
             case ProductAttributeFacet::MODE_BOOLEAN_RESULT:
-
                 $criteria->addCondition(
                     new ProductAttributeCondition(
                         $facet->getField(),
@@ -142,7 +128,6 @@ class FacetCriteriaRequestHandler implements CriteriaRequestHandlerInterface
                 return;
 
             case ProductAttributeFacet::MODE_RADIO_LIST_RESULT:
-
                 $criteria->addCondition(
                     new ProductAttributeCondition(
                         $facet->getField(),
@@ -154,7 +139,6 @@ class FacetCriteriaRequestHandler implements CriteriaRequestHandlerInterface
                 return;
 
             case ProductAttributeFacet::MODE_RANGE_RESULT:
-
                 $range = [];
                 if ($request->has('min' . $facet->getFormFieldName())) {
                     $range['min'] = $request->getParam('min' . $facet->getFormFieldName());
@@ -172,7 +156,6 @@ class FacetCriteriaRequestHandler implements CriteriaRequestHandlerInterface
                 return;
 
             case ProductAttributeFacet::MODE_VALUE_LIST_RESULT:
-
                 $criteria->addCondition(
                     new ProductAttributeCondition(
                         $facet->getField(),
@@ -209,15 +192,15 @@ class FacetCriteriaRequestHandler implements CriteriaRequestHandlerInterface
     {
         $params = $request->getParams();
 
-        if (array_key_exists($facet->getFormFieldName(), $params)) {
+        if (\array_key_exists($facet->getFormFieldName(), $params)) {
             return true;
         }
         if ($facet->getMode() !== ProductAttributeFacet::MODE_RANGE_RESULT) {
             return false;
         }
 
-        return array_key_exists('min' . $facet->getFormFieldName(), $params)
-            || array_key_exists('max' . $facet->getFormFieldName(), $params)
+        return \array_key_exists('min' . $facet->getFormFieldName(), $params)
+            || \array_key_exists('max' . $facet->getFormFieldName(), $params)
         ;
     }
 }

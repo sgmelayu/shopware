@@ -42,7 +42,7 @@ class Enlight_Components_Auth_Adapter_DbTable extends Zend_Auth_Adapter_DbTable
      *
      * @var string
      */
-    protected $lockedUntilColumn = null;
+    protected $lockedUntilColumn;
 
     /**
      * Date until a account has been disabled caused by a brute force attack
@@ -223,8 +223,6 @@ class Enlight_Components_Auth_Adapter_DbTable extends Zend_Auth_Adapter_DbTable
      * Disables an account until a given date.
      * $date has to be an Zend_Date object
      *
-     * @param Zend_Date $date
-     *
      * @return Enlight_Components_Auth_Adapter_DbTable
      */
     public function setLockedUntil(Zend_Date $date)
@@ -325,8 +323,6 @@ class Enlight_Components_Auth_Adapter_DbTable extends Zend_Auth_Adapter_DbTable
     /**
      * Updates the date until an account has been disabled.
      * $date has to be an MySQL Datetime format yyyy-mm-dd hh:mm:ss
-     *
-     * @param Zend_Date $date
      *
      * @throws Exception
      *

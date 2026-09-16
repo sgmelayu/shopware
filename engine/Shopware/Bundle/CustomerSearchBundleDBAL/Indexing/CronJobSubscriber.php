@@ -1,31 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\CustomerSearchBundleDBAL\Indexing;
 
+use DateTime;
 use Doctrine\DBAL\Connection;
 use Enlight\Event\SubscriberInterface;
+use PDO;
 use Shopware\Bundle\ESIndexingBundle\LastIdQuery;
 use Shopware\Components\Api\Resource\CustomerStream;
 use Shopware\Components\CustomerStream\StreamIndexerInterface;
@@ -60,6 +62,9 @@ class CronJobSubscriber implements SubscriberInterface
         $this->customerStream = $customerStream;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public static function getSubscribedEvents()
     {
         return [
@@ -67,6 +72,9 @@ class CronJobSubscriber implements SubscriberInterface
         ];
     }
 
+    /**
+     * @return bool
+     */
     public function refresh()
     {
         $helper = new CronJobProgressHelper();
@@ -89,7 +97,9 @@ class CronJobSubscriber implements SubscriberInterface
 
         foreach ($streams as $stream) {
             if ($stream['freeze_up']) {
-                $stream['freeze_up'] = new \DateTime($stream['freeze_up']);
+                $stream['freeze_up'] = new DateTime($stream['freeze_up']);
+            } else {
+                $stream['freeze_up'] = null;
             }
             $result = $this->customerStream->updateFrozenState($stream['id'], $stream['freeze_up'], $stream['conditions']);
             if ($result) {
@@ -106,19 +116,16 @@ class CronJobSubscriber implements SubscriberInterface
         return true;
     }
 
-    /**
-     * @return array
-     */
-    private function fetchStreams()
+    private function fetchStreams(): array
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['id', 'name', 'conditions', 'freeze_up', 'static']);
         $query->from('s_customer_streams', 'streams');
 
-        return $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
+        return $query->execute()->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    private function createQuery()
+    private function createQuery(): LastIdQuery
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['id', 'id']);

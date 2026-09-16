@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleES\FacetHandler;
@@ -41,22 +41,13 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class CategoryFacetHandler implements HandlerInterface, ResultHydratorInterface
 {
-    const AGGREGATION_SIZE = 1000;
+    public const AGGREGATION_SIZE = 1000;
 
-    /**
-     * @var CategoryServiceInterface
-     */
-    private $categoryService;
+    private CategoryServiceInterface $categoryService;
 
-    /**
-     * @var CategoryDepthService
-     */
-    private $categoryDepthService;
+    private CategoryDepthService $categoryDepthService;
 
-    /**
-     * @var CategoryTreeFacetResultBuilder
-     */
-    private $categoryTreeFacetResultBuilder;
+    private CategoryTreeFacetResultBuilder $categoryTreeFacetResultBuilder;
 
     public function __construct(
         CategoryServiceInterface $categoryService,
@@ -111,8 +102,10 @@ class CategoryFacetHandler implements HandlerInterface, ResultHydratorInterface
             return;
         }
 
-        /** @var CategoryFacet $categoryFacet */
         $categoryFacet = $criteria->getFacet('category');
+        if (!$categoryFacet instanceof CategoryFacet) {
+            return;
+        }
 
         $ids = $this->filterSystemCategories($ids, $context);
         $ids = $this->categoryDepthService->get(
@@ -137,9 +130,11 @@ class CategoryFacetHandler implements HandlerInterface, ResultHydratorInterface
     }
 
     /**
-     * @return array
+     * @param array<int> $ids
+     *
+     * @return array<int>
      */
-    private function filterSystemCategories(array $ids, ShopContextInterface $context)
+    private function filterSystemCategories(array $ids, ShopContextInterface $context): array
     {
         $system = array_merge(
             [$context->getShop()->getCategory()->getId()],
@@ -147,14 +142,14 @@ class CategoryFacetHandler implements HandlerInterface, ResultHydratorInterface
         );
 
         return array_filter($ids, function ($id) use ($system) {
-            return !in_array($id, $system);
+            return !\in_array($id, $system);
         });
     }
 
     /**
      * @return int[]
      */
-    private function getFilteredIds(Criteria $criteria)
+    private function getFilteredIds(Criteria $criteria): array
     {
         $active = [];
         foreach ($criteria->getUserConditions() as $condition) {

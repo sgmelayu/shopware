@@ -1,32 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Filesystem;
 
+use InvalidArgumentException;
 use League\Flysystem\FilesystemInterface;
 use League\Flysystem\Handler;
 use League\Flysystem\PluginInterface;
+use RuntimeException;
 
 class PrefixFilesystem implements FilesystemInterface
 {
@@ -46,7 +48,7 @@ class PrefixFilesystem implements FilesystemInterface
     public function __construct(FilesystemInterface $filesystem, $prefix)
     {
         if (empty($prefix)) {
-            throw new \InvalidArgumentException('The prefix must not be empty.');
+            throw new InvalidArgumentException('The prefix must not be empty.');
         }
 
         $this->filesystem = $filesystem;
@@ -290,7 +292,7 @@ class PrefixFilesystem implements FilesystemInterface
     /**
      * {@inheritdoc}
      */
-    public function get($path, Handler $handler = null)
+    public function get($path, ?Handler $handler = null)
     {
         $this->checkPath($path);
 
@@ -302,7 +304,7 @@ class PrefixFilesystem implements FilesystemInterface
      */
     public function addPlugin(PluginInterface $plugin)
     {
-        throw new \RuntimeException('Filesystem plugins are not allowed in prefixed filesystems.');
+        throw new RuntimeException('Filesystem plugins are not allowed in prefixed filesystems.');
     }
 
     /**
@@ -313,33 +315,25 @@ class PrefixFilesystem implements FilesystemInterface
     public function stripPrefix($path)
     {
         $prefix = rtrim($this->prefix, '/');
-        $path = preg_replace('#^' . $prefix . '#', '', $path);
-        $path = ltrim($path, '/');
+        $path = (string) preg_replace('#^' . $prefix . '#', '', $path);
 
-        return $path;
+        return ltrim($path, '/');
     }
 
-    /**
-     * @param string $prefix
-     *
-     * @return string
-     */
-    private function normalizePrefix($prefix)
+    private function normalizePrefix(string $prefix): string
     {
         return trim($prefix, '/') . '/';
     }
 
     /**
-     * @param string $path
-     *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
-    private function checkPath($path)
+    private function checkPath(string $path): void
     {
         if (!preg_match('#\.\./|\\0#msi', $path)) {
             return;
         }
 
-        throw new \RuntimeException('Path traversal is not allowed.');
+        throw new RuntimeException('Path traversal is not allowed.');
     }
 }

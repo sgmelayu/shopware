@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Site
@@ -53,16 +52,16 @@ Ext.define('Shopware.apps.Site.controller.Form', {
      *
      * @object
      */
-    refs:[
-        { ref:'mainWindow', selector:'site-mainWindow' },
-        { ref:'confirmationBox', selector:'site-confirmationBox' },
-        { ref:'detailForm', selector:'site-form' },
-        { ref:'navigationTree', selector:'site-tree' },
-        { ref:'itemSelector', selector:'site-form itemselector' },
-        { ref:'navigationTree', selector:'site-tree' },
-        { ref:'attributeForm', selector: 'site-mainWindow shopware-attribute-form' },
-        { ref:'parentIdField', selector:'site-form hidden[name=parentId]' },
-        { ref:'helperIdField', selector:'site-form hidden[name=helperId]' }
+    refs: [
+        { ref: 'mainWindow', selector: 'site-mainWindow' },
+        { ref: 'confirmationBox', selector: 'site-confirmationBox' },
+        { ref: 'detailForm', selector: 'site-form' },
+        { ref: 'navigationTree', selector: 'site-tree' },
+        { ref: 'itemSelector', selector: 'site-form itemselector' },
+        { ref: 'navigationTree', selector: 'site-tree' },
+        { ref: 'attributeForm', selector: 'site-mainWindow shopware-attribute-form' },
+        { ref: 'parentIdField', selector: 'site-form hidden[name=parentId]' },
+        { ref: 'helperIdField', selector: 'site-form hidden[name=helperId]' }
     ],
 
     /**
@@ -103,14 +102,14 @@ Ext.define('Shopware.apps.Site.controller.Form', {
 
         //return if no description or grouping is set
         if (values.description == "" || toStore.first() == null) {
-            Shopware.Notification.createGrowlMessage('','{s name="onSaveGroupAndDescriptionNeeded"}You need to select a title and a group{/s}','{s name="mainWindowTitle"}{/s}');
+            Shopware.Notification.createGrowlMessage('', '{s name="onSaveGroupAndDescriptionNeeded"}You need to select a title and a group{/s}', '{s name="mainWindowTitle"}{/s}');
             return;
         }
         var grouping;
         Ext.each(toStore.data.items, function(item){
-            if(grouping){
+            if (grouping){
                 grouping = grouping + ',' + item.get('templateVariable');
-            }else{
+            } else {
                 grouping = item.get('templateVariable');
             }
         });
@@ -133,7 +132,7 @@ Ext.define('Shopware.apps.Site.controller.Form', {
 
         //save the current form state
         model.save({
-            success: function(record,response) {
+            success: function(record, response) {
                 var responseObject = Ext.decode(response.response.responseText);
                 record.set('helperId', responseObject.data.id);
                 me.getAttributeForm().saveAttribute(record.get('helperId'));
@@ -141,14 +140,14 @@ Ext.define('Shopware.apps.Site.controller.Form', {
                 Shopware.app.Application.fireEvent('site-save-successfully', me, record, form);
 
                 form.loadRecord(record);
-                Shopware.Notification.createGrowlMessage('','{s name="onSaveSiteSuccess"}The site has been saved successfully.{/s}', '{s name="mainWindowTitle"}{/s}');
+                Shopware.Notification.createGrowlMessage('', '{s name="onSaveSiteSuccess"}The site has been saved successfully.{/s}', '{s name="mainWindowTitle"}{/s}');
                 me.getStore('Nodes').load();
             },
             failure: function(response) {
                 //get the responseObject
                 var responseObject = Ext.decode(response.data),
                     errorMsg = responseObject.message;
-                Shopware.Notification.createGrowlMessage('','{s name="onSaveSiteError"}An error has occurred while trying to save the site: {/s}' + errorMsg,'{s name="mainWindowTitle"}{/s}');
+                Shopware.Notification.createGrowlMessage('', '{s name="onSaveSiteError"}An error has occurred while trying to save the site: {/s}' + errorMsg, '{s name="mainWindowTitle"}{/s}');
             }
         });
     }

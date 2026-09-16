@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ESIndexingBundle\Commands;
@@ -27,9 +27,13 @@ namespace Shopware\Bundle\ESIndexingBundle\Commands;
 use Elasticsearch\Client;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
+use Shopware\Bundle\ESIndexingBundle\IndexFactory;
+use Shopware\Bundle\StoreFrontBundle\Exception\StructNotFoundException;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ShopGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\Shop as ShopStruct;
 use Shopware\Commands\ShopwareCommand;
-use Shopware\Models\Shop\Repository;
-use Shopware\Models\Shop\Shop;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Shop\Shop as ShopModel;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
 use Symfony\Component\Console\Helper\Table;
@@ -39,7 +43,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class AnalyzeCommand extends ShopwareCommand implements CompletionAwareInterface
 {
-    const DEFAULT_ANALYZERS = [
+    public const DEFAULT_ANALYZERS = [
         'standard',
         'simple',
         'whitespace',
@@ -98,8 +102,7 @@ class AnalyzeCommand extends ShopwareCommand implements CompletionAwareInterface
     public function completeArgumentValues($argumentName, CompletionContext $context)
     {
         if ($argumentName === 'shopId') {
-            /** @var Repository $shopRepository */
-            $shopRepository = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Shop::class);
+            $shopRepository = $this->getContainer()->get(ModelManager::class)->getRepository(ShopModel::class);
             $queryBuilder = $shopRepository->createQueryBuilder('shop');
 
             if (is_numeric($context->getCurrentWord())) {
@@ -116,8 +119,7 @@ class AnalyzeCommand extends ShopwareCommand implements CompletionAwareInterface
         }
 
         if ($argumentName === 'analyzer') {
-            /** @var Client $client */
-            $client = $this->container->get(\Elasticsearch\Client::class);
+            $client = $this->container->get(Client::class);
 
             $recursive = new RecursiveIteratorIterator(
                 new RecursiveArrayIterator($client->indices()->getMapping()),
@@ -157,14 +159,17 @@ class AnalyzeCommand extends ShopwareCommand implements CompletionAwareInterface
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $shopId = $input->getArgument('shopId');
+        $shopId = (int) $input->getArgument('shopId');
         $type = $input->getArgument('type');
         $query = $input->getArgument('query');
         $analyzer = $input->getArgument('analyzer');
 
-        $shop = $this->container->get(\Shopware\Bundle\StoreFrontBundle\Gateway\ShopGatewayInterface::class)->get($shopId);
-        $client = $this->container->get(\Elasticsearch\Client::class);
-        $index = $this->container->get(\Shopware\Bundle\ESIndexingBundle\IndexFactory::class)->createShopIndex($shop, $type);
+        $shop = $this->container->get(ShopGatewayInterface::class)->get($shopId);
+        if (!$shop instanceof ShopStruct) {
+            throw new StructNotFoundException(ShopStruct::class, $shopId);
+        }
+        $client = $this->container->get(Client::class);
+        $index = $this->container->get(IndexFactory::class)->createShopIndex($shop, $type);
 
         $analyzed = $client->indices()->analyze([
             'index' => $index->getName(),

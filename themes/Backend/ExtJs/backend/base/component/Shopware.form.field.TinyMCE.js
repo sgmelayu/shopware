@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -64,9 +63,9 @@
  *     height: 100
  * });
  */
-Ext.define('Shopware.form.field.TinyMCE',
-/** @lends Ext.form.field.TextArea# */
-{
+Ext.define('Shopware.form.field.TinyMCE', {
+    /** @lends Ext.form.field.TextArea# */
+
     /**
      * Extends the default textarea to provide the
      * TinyMCE form field
@@ -129,7 +128,7 @@ Ext.define('Shopware.form.field.TinyMCE',
             invalid_elements:'script,applet',
 
             /** {if $user->extended_editor eq 1} */
-            plugins: "media_selection,safari,pagebreak,style,layer,table,iespell,inlinepopups,insertdatetime,preview,searchreplace,print,contextmenu,paste,directionality,fullscreen,visualchars,nonbreaking,xhtmlxtras,template",
+            plugins: "media_selection,safari,pagebreak,style,layer,table,iespell,insertdatetime,preview,searchreplace,print,contextmenu,paste,directionality,fullscreen,visualchars,nonbreaking,xhtmlxtras,template",
             /** {else} */
             plugins: "media_selection,fullscreen",
             /** {/if} */
@@ -142,7 +141,7 @@ Ext.define('Shopware.form.field.TinyMCE',
             document_base_url: '{"{url controller="index" fullPath}"}/'.replace('/backend', ''),
 
             // Content CSS - Styles the tiny mce editor. Please note the append timestamp. It's used to prevent caching the stylesheet
-            contentCSS: '{link file="backend/_resources/styles/tiny_mce.css" fullPath}?_dc=' + new Date().getTime(),
+            content_css: '{link file="backend/_resources/styles/tiny_mce.css" fullPath}?_dc=' + new Date().getTime(),
 
             /** {if $user->extended_editor eq 1} */
             skin_variant: 'silver',

@@ -1,75 +1,78 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
 
+use Enlight_Components_Test_TestCase;
 use Shopware\Bundle\SearchBundle\Condition\CategoryCondition;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Bundle\SearchBundle\FacetInterface;
+use Shopware\Bundle\SearchBundle\ProductNumberSearchInterface;
 use Shopware\Bundle\SearchBundle\ProductNumberSearchResult;
 use Shopware\Bundle\SearchBundle\SortingInterface;
+use Shopware\Bundle\SearchBundle\VariantSearch;
 use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Currency;
+use Shopware\Bundle\StoreFrontBundle\Struct\Customer\Group as CustomerGroupStruct;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
-use Shopware\Models\Article\Article;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Article\Article as Product;
+use Shopware\Models\Article\Supplier;
 use Shopware\Models\Category\Category;
+use Shopware\Models\Customer\Group as CustomerGroupModel;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
+use Shopware_Components_Config;
 
-abstract class TestCase extends \Enlight_Components_Test_TestCase
+abstract class TestCase extends Enlight_Components_Test_TestCase
 {
-    /**
-     * @var Helper
-     */
-    protected $helper;
+    use ContainerTrait;
+    use DatabaseTransactionBehaviour;
 
-    /**
-     * @var Converter
-     */
-    protected $converter;
+    protected Helper $helper;
+
+    protected Converter $converter;
 
     protected function setUp(): void
     {
-        $this->helper = new Helper();
+        $this->helper = new Helper($this->getContainer());
         $this->converter = new Converter();
         parent::setUp();
     }
 
-    protected function tearDown(): void
-    {
-        $this->helper->cleanUp();
-        parent::tearDown();
-    }
-
     /**
-     * @param array $products
+     * @param array<string, array<string, mixed>> $products
      *
-     * @return Article[]
+     * @return Product[]
      */
-    public function createProducts($products, ShopContext $context, Category $category)
+    public function createProducts(array $products, ShopContext $context, Category $category): array
     {
-        $articles = [];
+        $createdProducts = [];
         foreach ($products as $number => $additionally) {
-            $articles[$number] = $this->createProduct(
+            $createdProducts[$number] = $this->createProduct(
                 $number,
                 $context,
                 $category,
@@ -77,41 +80,33 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
             );
         }
 
-        return $articles;
+        return $createdProducts;
     }
 
-    /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Customer\Group
-     */
-    public function getEkCustomerGroup()
+    public function getEkCustomerGroup(): CustomerGroupStruct
     {
-        return $this->converter->convertCustomerGroup(
-            Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class)->find(\Shopware\Models\Customer\Group::class, 1)
-        );
+        $customerGroup = $this->getContainer()->get(ModelManager::class)->find(CustomerGroupModel::class, 1);
+        static::assertInstanceOf(CustomerGroupModel::class, $customerGroup);
+
+        return $this->converter->convertCustomerGroup($customerGroup);
     }
 
     /**
-     * @param array                $products
-     * @param array                $expectedNumbers
-     * @param Category             $category
      * @param ConditionInterface[] $conditions
      * @param FacetInterface[]     $facets
      * @param SortingInterface[]   $sortings
-     * @param bool                 $variantSearch
-     *
-     * @return ProductNumberSearchResult
      */
     protected function search(
-        $products,
-        $expectedNumbers,
-        $category = null,
-        $conditions = [],
-        $facets = [],
-        $sortings = [],
-        $context = null,
+        array $products,
+        array $expectedNumbers,
+        ?Category $category = null,
+        array $conditions = [],
+        array $facets = [],
+        array $sortings = [],
+        ?TestContext $context = null,
         array $configs = [],
-        $variantSearch = false
-    ) {
+        bool $variantSearch = false
+    ): ProductNumberSearchResult {
         if ($context === null) {
             $context = $this->getContext();
         }
@@ -120,7 +115,7 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
             $category = $this->helper->createCategory();
         }
 
-        $config = Shopware()->Container()->get(\Shopware_Components_Config::class);
+        $config = $this->getContainer()->get(Shopware_Components_Config::class);
         $originals = [];
         foreach ($configs as $key => $value) {
             $originals[$key] = $config->get($key);
@@ -133,7 +128,7 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
 
         $criteria = new Criteria();
 
-        $this->addCategoryBaseCondition($criteria, $category, $conditions, $context);
+        $this->addCategoryBaseCondition($criteria, $category);
 
         $this->addConditions($criteria, $conditions);
 
@@ -144,9 +139,9 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
         $criteria->offset(0)->limit(4000);
 
         if ($variantSearch) {
-            $search = Shopware()->Container()->get(\Shopware\Bundle\SearchBundle\VariantSearch::class);
+            $search = $this->getContainer()->get(VariantSearch::class);
         } else {
-            $search = Shopware()->Container()->get(\Shopware\Bundle\SearchBundle\ProductNumberSearchInterface::class);
+            $search = $this->getContainer()->get(ProductNumberSearchInterface::class);
         }
 
         $result = $search->search($criteria, $context);
@@ -160,26 +155,17 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
         return $result;
     }
 
-    /**
-     * @param array $conditions
-     */
-    protected function addCategoryBaseCondition(
-        Criteria $criteria,
-        Category $category,
-        $conditions,
-        ShopContext $context
-    ) {
-        if ($category) {
-            $criteria->addBaseCondition(
-                new CategoryCondition([$category->getId()])
-            );
-        }
+    protected function addCategoryBaseCondition(Criteria $criteria, Category $category): void
+    {
+        $criteria->addBaseCondition(
+            new CategoryCondition([$category->getId()])
+        );
     }
 
     /**
      * @param ConditionInterface[] $conditions
      */
-    protected function addConditions(Criteria $criteria, $conditions)
+    protected function addConditions(Criteria $criteria, array $conditions): void
     {
         foreach ($conditions as $condition) {
             $criteria->addCondition($condition);
@@ -189,7 +175,7 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
     /**
      * @param FacetInterface[] $facets
      */
-    protected function addFacets(Criteria $criteria, $facets)
+    protected function addFacets(Criteria $criteria, array $facets): void
     {
         foreach ($facets as $facet) {
             $criteria->addFacet($facet);
@@ -199,7 +185,7 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
     /**
      * @param SortingInterface[] $sortings
      */
-    protected function addSortings(Criteria $criteria, $sortings)
+    protected function addSortings(Criteria $criteria, array $sortings): void
     {
         foreach ($sortings as $sorting) {
             $criteria->addSorting($sorting);
@@ -207,17 +193,14 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
     }
 
     /**
-     * @param string $number
-     * @param array  $additionally
-     *
-     * @return Article
+     * @param array<string, mixed>|int $additionally
      */
     protected function createProduct(
-        $number,
+        string $number,
         ShopContext $context,
         Category $category,
         $additionally
-    ) {
+    ): Product {
         $data = $this->getProduct(
             $number,
             $context,
@@ -225,42 +208,40 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
             $additionally
         );
 
-        return $this->helper->createArticle($data);
+        return $this->helper->createProduct($data);
     }
 
-    protected function assertSearchResult(
-        ProductNumberSearchResult $result,
-        array $expectedNumbers
-    ) {
+    protected function assertSearchResult(ProductNumberSearchResult $result, array $expectedNumbers): void
+    {
         $numbers = array_map(function (BaseProduct $product) {
             return $product->getNumber();
         }, $result->getProducts());
 
         foreach ($numbers as $number) {
-            static::assertContains($number, $expectedNumbers, sprintf('Product with number: `%s` found but not expected', $number));
+            static::assertContains($number, $expectedNumbers, \sprintf('Product with number: `%s` found but not expected', $number));
         }
         foreach ($expectedNumbers as $number) {
-            static::assertContains($number, $numbers, sprintf('Expected product number: `%s` not found', $number));
+            static::assertContains($number, $numbers, \sprintf('Expected product number: `%s` not found', $number));
         }
 
-        static::assertCount(count($expectedNumbers), $result->getProducts());
-        static::assertEquals(count($expectedNumbers), $result->getTotalCount());
+        static::assertCount(\count($expectedNumbers), $result->getProducts());
+        static::assertEquals(\count($expectedNumbers), $result->getTotalCount());
     }
 
+    /**
+     * @param array<string> $expectedNumbers
+     */
     protected function assertSearchResultSorting(
         ProductNumberSearchResult $result,
-        $expectedNumbers
-    ) {
-        $productResult = array_values($result->getProducts());
-
-        /** @var BaseProduct $product */
-        foreach ($productResult as $index => $product) {
+        array $expectedNumbers
+    ): void {
+        foreach (array_values($result->getProducts()) as $index => $product) {
             $expectedProduct = $expectedNumbers[$index];
 
             static::assertEquals(
                 $expectedProduct,
                 $product->getNumber(),
-                sprintf(
+                \sprintf(
                     'Expected %s at search result position %s, but got product %s',
                     $expectedProduct,
                     $index,
@@ -270,12 +251,7 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
         }
     }
 
-    /**
-     * @param int $shopId
-     *
-     * @return TestContext
-     */
-    protected function getContext($shopId = 1)
+    protected function getContext(int $shopId = 1): TestContext
     {
         $tax = $this->helper->createTax();
         $customerGroup = $this->helper->createCustomerGroup();
@@ -287,7 +263,7 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
             [$tax]
         );
 
-        if (!$context->getShop()->getCurrency()) {
+        if (!$context->getShop()->getCurrency() instanceof Currency) {
             $context->getShop()->setCurrency($context->getCurrency());
         }
 
@@ -295,21 +271,20 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
     }
 
     /**
-     * @param string   $number
-     * @param Category $category
-     * @param array    $additionally
+     * @param array<string, mixed>|bool|int|string|Category|Supplier|null $additionally
      *
-     * @return array
+     * @return array<string, mixed>
      */
     protected function getProduct(
-        $number,
+        string $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $additionally = []
-    ) {
+    ): array {
+        $taxRules = $context->getTaxRules();
         $product = $this->helper->getSimpleProduct(
             $number,
-            array_shift($context->getTaxRules()),
+            array_shift($taxRules),
             $context->getCurrentCustomerGroup()
         );
         $product['categories'] = [['id' => $context->getShop()->getCategory()->getId()]];
@@ -320,24 +295,10 @@ abstract class TestCase extends \Enlight_Components_Test_TestCase
             ];
         }
 
-        if (!is_array($additionally)) {
+        if (!\is_array($additionally)) {
             $additionally = [];
         }
 
-        $product = array_merge($product, $additionally);
-
-        return $product;
-    }
-
-    /**
-     * Allows to set a Shopware config
-     *
-     * @param string $name
-     */
-    protected function setConfig($name, $value)
-    {
-        Shopware()->Container()->get(\Shopware\Components\ConfigWriter::class)->save($name, $value);
-        Shopware()->Container()->get(\Zend_Cache_Core::class)->clean();
-        Shopware()->Container()->get(\Shopware_Components_Config::class)->setShop(Shopware()->Shop());
+        return array_merge($product, $additionally);
     }
 }

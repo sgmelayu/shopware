@@ -1,36 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Theme;
 
+use DirectoryIterator;
 use Doctrine\ORM\AbstractQuery;
+use Exception;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Snippet\DatabaseHandler;
 use Shopware\Components\Theme;
 use Shopware\Models\Plugin\Plugin;
-use Shopware\Models\Shop;
+use Shopware\Models\Shop\Template;
 
 /**
  * The Theme\Installer class handles the theme installation.
@@ -73,7 +75,7 @@ class Installer
     private $snippetWriter;
 
     /**
-     * @var ModelRepository
+     * @var ModelRepository<Template>
      */
     private $repository;
 
@@ -96,7 +98,7 @@ class Installer
         $this->pathResolver = $pathResolver;
         $this->snippetWriter = $snippetWriter;
         $this->util = $util;
-        $this->repository = $entityManager->getRepository(\Shopware\Models\Shop\Template::class);
+        $this->repository = $entityManager->getRepository(Template::class);
         $this->service = $service;
         $this->snippetConfig = $snippetConfig;
     }
@@ -108,7 +110,7 @@ class Installer
      * The synchronization are processed in the synchronizeThemes and
      * synchronizeTemplates function.
      *
-     * @throws \Exception
+     * @throws Exception
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\ORMInvalidArgumentException
      */
@@ -128,14 +130,14 @@ class Installer
      * After the inheritance is build, the installer uses
      * the Theme\Configurator to synchronize the theme configurations.
      *
-     * @throws \Exception
+     * @throws Exception
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\ORMInvalidArgumentException
      */
     private function synchronizeThemes()
     {
         // Creates a directory iterator for the default theme directory (engine/Shopware/Themes)
-        $directories = new \DirectoryIterator($this->pathResolver->getFrontendThemeDirectory());
+        $directories = new DirectoryIterator($this->pathResolver->getFrontendThemeDirectory());
 
         // Synchronize the default themes which are stored in the engine/Shopware/Themes directory.
         $themes = $this->synchronizeThemeDirectories($directories);
@@ -161,14 +163,12 @@ class Installer
      * Helper function which iterates the engine\Shopware\Themes directory
      * and registers all stored themes within the directory as \Shopware\Models\Shop\Template.
      *
-     * @param \Shopware\Models\Plugin\Plugin $plugin
-     *
      * @throws \Doctrine\ORM\OptimisticLockException
      * @throws \Doctrine\ORM\ORMInvalidArgumentException
      *
      * @return Theme[]
      */
-    private function synchronizeThemeDirectories(\DirectoryIterator $directories, Plugin $plugin = null)
+    private function synchronizeThemeDirectories(DirectoryIterator $directories, ?Plugin $plugin = null)
     {
         $themes = [];
 
@@ -176,7 +176,7 @@ class Installer
             AbstractQuery::HYDRATE_OBJECT
         );
 
-        /** @var \DirectoryIterator $directory */
+        /** @var DirectoryIterator $directory */
         foreach ($directories as $directory) {
             // Check valid directory
 
@@ -186,7 +186,7 @@ class Installer
 
             try {
                 $theme = $this->util->getThemeByDirectory($directory);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 continue;
             }
 
@@ -196,8 +196,8 @@ class Installer
                 'template' => $theme->getTemplate(),
             ]);
 
-            if (!$template instanceof Shop\Template) {
-                $template = new Shop\Template();
+            if (!$template instanceof Template) {
+                $template = new Template();
 
                 if ($plugin) {
                     $template->setPlugin($plugin);
@@ -253,7 +253,7 @@ class Installer
                 continue;
             }
 
-            $directories = new \DirectoryIterator(
+            $directories = new DirectoryIterator(
                 $path . DIRECTORY_SEPARATOR . 'Themes' . DIRECTORY_SEPARATOR . 'Frontend'
             );
 
@@ -264,7 +264,7 @@ class Installer
                 continue;
             }
 
-            //merge the plugin themes into the already detected plugin themes.
+            // merge the plugin themes into the already detected plugin themes.
             $themes = array_merge($themes, $pluginThemes);
 
             $this->entityManager->flush();
@@ -279,7 +279,7 @@ class Installer
      *
      * The theme snippet namespace are prefixed with themes/theme-name
      */
-    private function synchronizeSnippets(Shop\Template $template)
+    private function synchronizeSnippets(Template $template)
     {
         $directory = $this->pathResolver->getSnippetDirectory($template);
 
@@ -333,7 +333,7 @@ class Installer
 
         $themes = $themes->getQuery()->getResult(AbstractQuery::HYDRATE_OBJECT);
 
-        /** @var Shop\Template $theme */
+        /** @var Template $theme */
         foreach ($themes as $theme) {
             $directory = $this->pathResolver->getDirectory($theme);
             if (!file_exists($directory)) {
@@ -348,7 +348,7 @@ class Installer
      * Helper function which resolves the theme parent for each
      * passed theme
      *
-     * @throws \Exception
+     * @throws Exception
      */
     private function setParents(array $themes)
     {
@@ -361,13 +361,15 @@ class Installer
             $template = $this->repository->findOneBy([
                 'template' => $theme->getTemplate(),
             ]);
+            if (!$template instanceof Template) {
+                throw new Exception(\sprintf('Template of theme %s not found', $theme->getTemplate()));
+            }
 
             $parent = $this->repository->findOneBy([
                 'template' => $theme->getExtend(),
             ]);
-
-            if (!$parent instanceof Shop\Template) {
-                throw new \Exception(sprintf('Parent %s of theme %s not found', $theme->getExtend(), $theme->getTemplate()));
+            if (!$parent instanceof Template) {
+                throw new Exception(\sprintf('Parent %s of theme %s not found', $theme->getExtend(), $theme->getTemplate()));
             }
 
             $template->setParent($parent);

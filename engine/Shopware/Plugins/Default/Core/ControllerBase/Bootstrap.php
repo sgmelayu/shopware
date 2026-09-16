@@ -1,39 +1,36 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\SitePageMenu;
+use Shopware\Models\Shop\Locale as ShopLocale;
 
 /**
  * Shopware ControllerBase Plugin
  */
 class Shopware_Plugins_Core_ControllerBase_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
-    /**
-     * Install plugin method
-     *
-     * @return bool
-     */
     public function install()
     {
         $this->subscribeEvent(
@@ -70,24 +67,27 @@ class Shopware_Plugins_Core_ControllerBase_Bootstrap extends Shopware_Components
         $shop = Shopware()->Shop();
         $view->assign('Controller', $args->getSubject()->Request()->getControllerName());
 
-        $view->assign('sBasketQuantity', $view->sBasketQuantity ?: 0);
-        $view->assign('sBasketAmount', $view->sBasketAmount ?: 0);
-        $view->assign('sNotesQuantity', $view->sNotesQuantity ?: 0);
-        $view->assign('sUserLoggedIn', $view->sUserLoggedIn ?: false);
+        $view->assign('sBasketQuantity', $view->getAssign('sBasketQuantity') ?: 0);
+        $view->assign('sBasketAmount', $view->getAssign('sBasketAmount') ?: 0);
+        $view->assign('sNotesQuantity', $view->getAssign('sNotesQuantity') ?: 0);
+        $view->assign('sUserLoggedIn', $view->getAssign('sUserLoggedIn') ?: false);
 
         $view->assign('Shop', $shop);
+        if (!$shop->getLocale() instanceof ShopLocale) {
+            throw new RuntimeException('Shop does not have a locale set');
+        }
         $view->assign('Locale', $shop->getLocale()->getLocale());
 
         $view->assign('sCategoryStart', $shop->getCategory()->getId());
-        $view->assign('sCategoryCurrent', $this->getCategoryCurrent($view->sCategoryStart));
-        $view->assign('sCategories', $this->getCategories($view->sCategoryCurrent));
-        $view->assign('sMainCategories', $view->sCategories);
-        $view->assign('sOutputNet', Shopware()->Session()->sOutputNet);
+        $view->assign('sCategoryCurrent', $this->getCategoryCurrent($view->getAssign('sCategoryStart')));
+        $view->assign('sCategories', $this->getCategories($view->getAssign('sCategoryCurrent')));
+        $view->assign('sMainCategories', $view->getAssign('sCategories'));
+        $view->assign('sOutputNet', Shopware()->Session()->get('sOutputNet'));
 
-        $activePage = isset($view->sCustomPage['id']) ? $view->sCustomPage['id'] : null;
+        $activePage = $view->getAssign('sCustomPage')['id'] ?? null;
         $view->assign('sMenu', $this->getMenu($shop->getId(), $activePage));
 
-        $view->assign('sShopname', Shopware()->Config()->shopName);
+        $view->assign('sShopname', Shopware()->Config()->get('shopName'));
     }
 
     /**
@@ -113,7 +113,9 @@ class Shopware_Plugins_Core_ControllerBase_Bootstrap extends Shopware_Components
     {
         if (!empty(Shopware()->System()->_GET['sCategory'])) {
             return (int) Shopware()->System()->_GET['sCategory'];
-        } elseif (Shopware()->Front()->Request()->get('sCategory')) {
+        }
+
+        if (Shopware()->Front()->Request()->get('sCategory')) {
             return (int) Shopware()->Front()->Request()->get('sCategory');
         }
 
@@ -143,18 +145,17 @@ class Shopware_Plugins_Core_ControllerBase_Bootstrap extends Shopware_Components
     public function getMenu($shopId = null, $activePageId = null)
     {
         if ($shopId === null) {
-            $context = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getShopContext();
+            $context = $this->get(ContextServiceInterface::class)->getShopContext();
             $shopId = $context->getShop()->getId();
         }
 
-        $data = Shopware()->Container()->get(SitePageMenu::class)
-            ->getTree($shopId, $activePageId);
-
-        return $data;
+        return $this->get(SitePageMenu::class)->getTree($shopId, $activePageId);
     }
 
     /**
      * Return box campaigns items
+     *
+     * @deprecated Will be removed in 5.8 without replacement
      *
      * @param int $parentId
      *
@@ -180,11 +181,6 @@ class Shopware_Plugins_Core_ControllerBase_Bootstrap extends Shopware_Components
         return $campaigns;
     }
 
-    /**
-     * Returns capabilities
-     *
-     * @return array
-     */
     public function getCapabilities()
     {
         return [

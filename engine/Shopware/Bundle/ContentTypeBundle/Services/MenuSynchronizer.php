@@ -1,30 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ContentTypeBundle\Services;
 
 use Doctrine\DBAL\Connection;
+use InvalidArgumentException;
+use PDO;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Snippet\Writer\DatabaseWriter;
 use Shopware\Models\Menu\Menu;
@@ -62,14 +64,14 @@ class MenuSynchronizer implements MenuSynchronizerInterface
                 $parent = null;
             } else {
                 if (!isset($menuItem['parent'])) {
-                    throw new \InvalidArgumentException('Root Menu Item must provide parent element');
+                    throw new InvalidArgumentException('Root Menu Item must provide parent element');
                 }
 
                 /** @var Menu $parent */
                 $parent = $this->menuRepository->findOneBy($menuItem['parent']);
 
-                if (!is_object($parent)) {
-                    throw new \InvalidArgumentException(sprintf('Unable to find parent for query %s', print_r($menuItem['parent'], true)));
+                if (!\is_object($parent)) {
+                    throw new InvalidArgumentException(\sprintf('Unable to find parent for query %s', print_r($menuItem['parent'], true)));
                 }
             }
 
@@ -81,7 +83,7 @@ class MenuSynchronizer implements MenuSynchronizerInterface
         $this->cleanupContentTypeEntries();
     }
 
-    protected function createMenuItem(array $menuItem, Menu $parent = null): Menu
+    protected function createMenuItem(array $menuItem, ?Menu $parent = null): Menu
     {
         $item = null;
 
@@ -91,7 +93,7 @@ class MenuSynchronizer implements MenuSynchronizerInterface
             'label' => $menuItem['name'],
         ]);
 
-        if (!is_object($item)) {
+        if (!\is_object($item)) {
             $item = new Menu();
         }
 
@@ -167,7 +169,7 @@ class MenuSynchronizer implements MenuSynchronizerInterface
             ->groupBy('content_type')
             ->having('COUNT(content_type) > 1')
             ->execute()
-            ->fetchAll(\PDO::FETCH_COLUMN);
+            ->fetchAll(PDO::FETCH_COLUMN);
 
         if (empty($ids)) {
             return;

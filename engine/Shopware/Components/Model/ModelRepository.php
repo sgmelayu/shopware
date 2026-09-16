@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Model;
 
 use Doctrine\ORM\EntityRepository;
+use Enlight_Hook;
 
 /**
  * Interface for the various standard models.
@@ -33,11 +34,15 @@ use Doctrine\ORM\EntityRepository;
  * These standard function must later be implemented in the various models.
  *
  * <code>
- * $modelRepository = new Shopware\Components\Models\ModelRepository;
+ * $modelRepository = new \Shopware\Components\Models\ModelRepository();
  * $modelRepository->createQueryBuilder();
  * </code>
+ *
+ * @template TEntityClass of ModelEntity
+ *
+ * @extends EntityRepository<TEntityClass>
  */
-class ModelRepository extends EntityRepository implements \Enlight_Hook
+class ModelRepository extends EntityRepository implements Enlight_Hook
 {
     /**
      * Creates a new QueryBuilder instance that is pre-populated for this entity name.
@@ -66,6 +71,8 @@ class ModelRepository extends EntityRepository implements \Enlight_Hook
      *      )));
      * </code>
      *
+     * @param array<string, string>|array<array{property: string, value: mixed, expression?: string}> $filter
+     *
      * @return QueryBuilder
      */
     public function addFilter(QueryBuilder $builder, array $filter)
@@ -83,10 +90,17 @@ class ModelRepository extends EntityRepository implements \Enlight_Hook
      *      )));
      * </code>
      *
+     * @param array<array{property: string, direction: string}> $orderBy
+     *
      * @return QueryBuilder
      */
     public function addOrderBy(QueryBuilder $builder, array $orderBy)
     {
         return $builder->addOrderBy($orderBy);
+    }
+
+    protected function getEntityManager(): ModelManager
+    {
+        return parent::getEntityManager();
     }
 }

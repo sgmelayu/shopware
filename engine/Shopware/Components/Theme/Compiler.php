@@ -1,36 +1,44 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Theme;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\AbstractQuery;
+use Enlight_Event_EventManager;
+use Enlight_Event_Exception;
+use Exception;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
 use Shopware\Bundle\PluginInstallerBundle\Service\UniqueIdGeneratorInterface;
 use Shopware\Components\ShopwareReleaseStruct;
 use Shopware\Components\Theme\Compressor\CompressorInterface;
-use Shopware\Components\Theme\Compressor\Js;
-use Shopware\Models\Shop;
+use Shopware\Models\Shop\Shop;
+use Shopware\Models\Shop\Template;
+use SplFileInfo;
+use SplFileObject;
 
 /**
  * The Theme\Compiler class is used for the less compiling in the store front.
@@ -38,77 +46,38 @@ use Shopware\Models\Shop;
  */
 class Compiler
 {
-    /**
-     * @var string
-     */
-    private $rootDir;
+    private string $rootDir;
 
-    /**
-     * @var LessCompiler
-     */
-    private $compiler;
+    private LessCompiler $compiler;
 
-    /**
-     * @var PathResolver
-     */
-    private $pathResolver;
+    private PathResolver $pathResolver;
 
-    /**
-     * @var Inheritance
-     */
-    private $inheritance;
+    private Inheritance $inheritance;
 
-    /**
-     * @var \Enlight_Event_EventManager
-     */
-    private $eventManager;
+    private Enlight_Event_EventManager $eventManager;
 
-    /**
-     * @var CompressorInterface
-     */
-    private $jsCompressor;
+    private CompressorInterface $jsCompressor;
 
-    /**
-     * @var Service
-     */
-    private $service;
+    private Service $service;
 
-    /**
-     * @var TimestampPersistor
-     */
-    private $timestampPersistor;
+    private TimestampPersistor $timestampPersistor;
 
-    /**
-     * @var LessCollector
-     */
-    private $lessCollector;
+    private LessCollector $lessCollector;
 
-    /**
-     * @var JavascriptCollector
-     */
-    private $javascriptCollector;
+    private JavascriptCollector $javascriptCollector;
 
-    /**
-     * @var ShopwareReleaseStruct
-     */
-    private $release;
+    private ShopwareReleaseStruct $release;
 
-    /**
-     * @var UniqueIdGeneratorInterface
-     */
-    private $uniqueIdGenerator;
+    private UniqueIdGeneratorInterface $uniqueIdGenerator;
 
-    /**
-     * @param string $rootDir
-     */
     public function __construct(
-        $rootDir,
+        string $rootDir,
         LessCompiler $compiler,
         PathResolver $pathResolver,
         Inheritance $inheritance,
         Service $service,
         CompressorInterface $jsCompressor,
-        \Enlight_Event_EventManager $eventManager,
+        Enlight_Event_EventManager $eventManager,
         TimestampPersistor $timestampPersistor,
         ShopwareReleaseStruct $release,
         UniqueIdGeneratorInterface $uniqueIdGenerator
@@ -140,9 +109,11 @@ class Compiler
      * Helper function which compiles a shop with new theme.
      * The function is called when the template cache is cleared.
      *
-     * @throws \Exception
+     * @throws Exception
+     *
+     * @return void
      */
-    public function compile(Shop\Shop $shop)
+    public function compile(Shop $shop)
     {
         if ($shop->getMain()) {
             $shop = $shop->getMain();
@@ -158,7 +129,10 @@ class Compiler
         $this->clearThemeCache($shop, $old);
     }
 
-    public function recompile(Shop\Shop $shop)
+    /**
+     * @return void
+     */
+    public function recompile(Shop $shop)
     {
         if ($shop->getMain()) {
             $shop = $shop->getMain();
@@ -171,11 +145,11 @@ class Compiler
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return Configuration
      */
-    public function getThemeConfiguration(Shop\Shop $shop)
+    public function getThemeConfiguration(Shop $shop)
     {
         $less = $this->lessCollector->collectLessDefinitions($shop->getTemplate(), $shop);
         $js = $this->javascriptCollector->collectJavascriptFiles($shop->getTemplate(), $shop);
@@ -222,9 +196,11 @@ class Compiler
      *
      * @param string $timestamp
      *
-     * @throws \Exception
+     * @throws Exception
+     *
+     * @return void
      */
-    public function compileLess($timestamp, Shop\Template $template, Shop\Shop $shop)
+    public function compileLess($timestamp, Template $template, Shop $shop)
     {
         if ($shop->getMain()) {
             $shop = $shop->getMain();
@@ -232,16 +208,16 @@ class Compiler
 
         $file = $this->pathResolver->getTmpCssFilePath($shop, $timestamp);
 
-        $dir = dirname($file);
+        $dir = \dirname($file);
         if (!is_dir($dir)) {
             if (@mkdir($dir, 0777, true) === false && !is_dir($dir)) {
-                throw new \RuntimeException(sprintf("Unable to create the %s directory (%s)\n", 'web', $dir));
+                throw new RuntimeException(\sprintf("Unable to create the %s directory (%s)\n", 'web', $dir));
             }
         } elseif (!is_writable($dir)) {
-            throw new \RuntimeException(sprintf("Unable to write in the %s directory (%s)\n", 'web', $dir));
+            throw new RuntimeException(\sprintf("Unable to write in the %s directory (%s)\n", 'web', $dir));
         }
 
-        $file = new \SplFileObject($file, 'w');
+        $file = new SplFileObject($file, 'w');
         if (!$file->flock(LOCK_EX | LOCK_NB)) {
             return;
         }
@@ -263,7 +239,7 @@ class Compiler
 
         $success = $file->fwrite($css);
         if ($success === null) {
-            throw new \RuntimeException('Could not write to ' . $file->getPath());
+            throw new RuntimeException('Could not write to ' . $file->getPath());
         }
         $file->flock(LOCK_UN);   // release the lock
 
@@ -277,16 +253,18 @@ class Compiler
      *
      * @param string $timestamp
      *
-     * @throws \Exception
+     * @throws Exception
+     *
+     * @return void
      */
-    public function compileJavascript($timestamp, Shop\Template $template, Shop\Shop $shop)
+    public function compileJavascript($timestamp, Template $template, Shop $shop)
     {
         if ($shop->getMain()) {
             $shop = $shop->getMain();
         }
 
         $file = $this->pathResolver->getTmpJsFilePath($shop, $timestamp);
-        $file = new \SplFileObject($file, 'w');
+        $file = new SplFileObject($file, 'w');
         if (!$file->flock(LOCK_EX | LOCK_NB)) {
             return;
         }
@@ -318,15 +296,17 @@ class Compiler
      *
      * @return string
      */
-    public function getThemeTimestamp(Shop\Shop $shop)
+    public function getThemeTimestamp(Shop $shop)
     {
         return $this->timestampPersistor->getCurrentTimestamp($shop->getId());
     }
 
     /**
      * @param int $timestamp
+     *
+     * @return void
      */
-    public function createThemeTimestamp(Shop\Shop $shop, $timestamp)
+    public function createThemeTimestamp(Shop $shop, $timestamp)
     {
         $this->timestampPersistor->updateTimestamp($shop->getId(), $timestamp);
     }
@@ -336,8 +316,10 @@ class Compiler
      * Removes all assets and timestamp files
      *
      * @param int $timestamp
+     *
+     * @return void
      */
-    public function clearThemeCache(Shop\Shop $shop, $timestamp)
+    public function clearThemeCache(Shop $shop, $timestamp)
     {
         if ($shop->getMain()) {
             $shop = $shop->getMain();
@@ -355,9 +337,9 @@ class Compiler
      * Helper function which compiles the passed less definition.
      * The shop parameter is required to build the shop url for the files.
      *
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      */
-    private function compileLessDefinition(Shop\Shop $shop, LessDefinition $definition)
+    private function compileLessDefinition(Shop $shop, LessDefinition $definition): void
     {
         // Set unique import directory for less @import commands
         if ($definition->getImportDirectory()) {
@@ -387,7 +369,7 @@ class Compiler
                 continue;
             }
 
-            // Creates the url for the compiler, this url will be prepend to each relative path.
+            // Creates the url for the compiler, this url will be prepended to each relative path.
             // The url is additionally used for the source map generation.
             $url = $this->formatPathToUrl($file);
 
@@ -403,15 +385,14 @@ class Compiler
      * the function throws the event `Theme_Compiler_Collect_Plugin_Less_Config`
      * to allow plugins to override the theme configuration.
      *
-     * @throws \Exception
-     *
-     * @return array
+     * @throws Exception
      */
-    private function getConfig(Shop\Template $template, Shop\Shop $shop)
+    private function getConfig(Template $template, Shop $shop): array
     {
         $config = $this->inheritance->buildConfig($template, $shop);
         $config['shopware-revision'] = md5($this->release->getRevision() . $this->uniqueIdGenerator->getUniqueId());
 
+        /** @var ArrayCollection<int, mixed> $collection */
         $collection = new ArrayCollection();
 
         $this->eventManager->collect(
@@ -421,8 +402,8 @@ class Compiler
         );
 
         foreach ($collection as $temp) {
-            if (!is_array($temp)) {
-                throw new \Exception('The passed plugin less config isn\'t an array!');
+            if (!\is_array($temp)) {
+                throw new Exception("The passed plugin less config isn't an array!");
             }
             $config = array_merge($config, $temp);
         }
@@ -433,11 +414,9 @@ class Compiler
     /**
      * Builds the configuration for the less compiler class.
      *
-     * @throws \Enlight_Event_Exception
-     *
-     * @return array
+     * @throws Enlight_Event_Exception
      */
-    private function getCompilerConfiguration(Shop\Shop $shop)
+    private function getCompilerConfiguration(Shop $shop): array
     {
         $settings = $this->service->getSystemConfiguration(
             AbstractQuery::HYDRATE_OBJECT
@@ -457,7 +436,7 @@ class Compiler
             ];
         }
 
-        $config = $this->eventManager->filter(
+        return $this->eventManager->filter(
             'Theme_Compiler_Configure',
             $config,
             [
@@ -465,20 +444,14 @@ class Compiler
                 'settings' => $settings,
             ]
         );
-
-        return $config;
     }
 
     /**
      * Helper function which creates a url for the passed directory/file path.
      * This urls are used for the less compiler, to create the source map
      * and to prepend this url for each relative path.
-     *
-     * @param string $path
-     *
-     * @return string
      */
-    private function formatPathToUrl($path)
+    private function formatPathToUrl(string $path): string
     {
         // Path normalizing
         $path = str_replace([$this->rootDir, '//'], ['', '/'], $path);
@@ -490,7 +463,7 @@ class Compiler
      * Helper function to clear the theme cache directory
      * before the new css and js files are compiled.
      */
-    private function clearDirectory(array $names = [])
+    private function clearDirectory(array $names = []): void
     {
         $dir = $this->pathResolver->getCacheDirectory();
 
@@ -498,15 +471,15 @@ class Compiler
             return;
         }
 
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator(
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
                 $dir,
-                \RecursiveDirectoryIterator::SKIP_DOTS
+                RecursiveDirectoryIterator::SKIP_DOTS
             ),
-            \RecursiveIteratorIterator::CHILD_FIRST
+            RecursiveIteratorIterator::CHILD_FIRST
         );
 
-        /** @var \SplFileInfo $path */
+        /** @var SplFileInfo $path */
         foreach ($iterator as $path) {
             if ($path->getFilename() === '.gitkeep') {
                 continue;
@@ -525,12 +498,9 @@ class Compiler
     }
 
     /**
-     * @param string   $original
-     * @param string[] $names
-     *
-     * @return bool
+     * @param array<string> $names
      */
-    private function fileNameMatch($original, $names)
+    private function fileNameMatch(string $original, array $names): bool
     {
         foreach ($names as $name) {
             if (strpos($original, $name) !== false) {

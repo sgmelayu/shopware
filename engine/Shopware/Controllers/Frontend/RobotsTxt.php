@@ -1,32 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Components\Model\ModelManager;
+use Shopware\Components\RobotsTxtGeneratorInterface;
 use Shopware\Components\Routing\Context;
 use Shopware\Models\Shop\Shop;
 
 class Shopware_Controllers_Frontend_RobotsTxt extends Enlight_Controller_Action
 {
+    /**
+     * @return void
+     */
     public function indexAction()
     {
         $shop = $this->get('shop');
@@ -36,7 +41,7 @@ class Shopware_Controllers_Frontend_RobotsTxt extends Enlight_Controller_Action
             return $context->getBaseUrl();
         }, $routerContexts);
 
-        $robotsTxtGenerator = $this->get(\Shopware\Components\RobotsTxtGeneratorInterface::class);
+        $robotsTxtGenerator = $this->get(RobotsTxtGeneratorInterface::class);
         $baseUrls = array_unique($baseUrls);
 
         $robotsTxtGenerator->setRouterContext($routerContexts);
@@ -53,21 +58,23 @@ class Shopware_Controllers_Frontend_RobotsTxt extends Enlight_Controller_Action
      */
     private function getRouterContext(Shop $mainShop): array
     {
-        $config = $this->container->get(\Shopware_Components_Config::class);
+        $config = $this->container->get(Shopware_Components_Config::class);
 
-        /** @var \Shopware\Models\Shop\Repository $shopRepository */
-        $shopRepository = $this->container->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Shop::class);
+        $shopRepository = $this->container->get(ModelManager::class)->getRepository(Shop::class);
         $context = [];
         $allShops = $mainShop->getChildren();
         $allShops[] = $mainShop;
 
         foreach ($allShops as $shop) {
-            $shop = $shopRepository->getById($shop->getId());
+            $detachedShop = $shopRepository->getActiveById($shop->getId());
+            if ($detachedShop === null) {
+                continue;
+            }
 
             $newConfig = clone $config;
-            $newConfig->setShop($shop);
+            $newConfig->setShop($detachedShop);
 
-            $context[$shop->getId()] = Context::createFromShop($shop, $newConfig);
+            $context[$detachedShop->getId()] = Context::createFromShop($detachedShop, $newConfig);
         }
 
         return $context;

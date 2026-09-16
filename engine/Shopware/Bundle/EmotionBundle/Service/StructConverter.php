@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EmotionBundle\Service;
 
+use Enlight_Event_EventManager;
 use Shopware\Bundle\EmotionBundle\ComponentHandler\ArticleComponentHandler;
 use Shopware\Bundle\EmotionBundle\ComponentHandler\ArticleSliderComponentHandler;
 use Shopware\Bundle\EmotionBundle\ComponentHandler\BannerComponentHandler;
@@ -33,39 +34,23 @@ use Shopware\Bundle\EmotionBundle\ComponentHandler\CategoryTeaserComponentHandle
 use Shopware\Bundle\EmotionBundle\ComponentHandler\ManufacturerSliderComponentHandler;
 use Shopware\Bundle\EmotionBundle\Struct\Element;
 use Shopware\Bundle\EmotionBundle\Struct\Emotion;
-use Shopware\Bundle\MediaBundle\MediaServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Product\Manufacturer;
 use Shopware\Components\Compatibility\LegacyStructConverter;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Shopware_Components_Config;
 
 class StructConverter
 {
-    /**
-     * @var LegacyStructConverter
-     */
-    private $converter;
+    private LegacyStructConverter $converter;
 
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
+    private Enlight_Event_EventManager $eventManager;
 
-    /**
-     * @var \Enlight_Event_EventManager
-     */
-    private $eventManager;
+    private Shopware_Components_Config $config;
 
-    /**
-     * @var ContainerInterface
-     */
-    private $container;
-
-    public function __construct(LegacyStructConverter $converter, MediaServiceInterface $mediaService, \Enlight_Event_EventManager $eventManager, ContainerInterface $container)
+    public function __construct(LegacyStructConverter $converter, Enlight_Event_EventManager $eventManager, Shopware_Components_Config $config)
     {
         $this->converter = $converter;
-        $this->mediaService = $mediaService;
         $this->eventManager = $eventManager;
-        $this->container = $container;
+        $this->config = $config;
     }
 
     /**
@@ -87,7 +72,7 @@ class StructConverter
             $category['hideFilter'] = !$category['displayFacets'];
             $category['external'] = $category['externalLink'];
             $category['mediaId'] = $category['media'] ? $category['media']['id'] : null;
-            $category['path'] = count($category['path']) ? '|' . implode('|', $category['path']) . '|' : null;
+            $category['path'] = \count($category['path']) ? '|' . implode('|', $category['path']) . '|' : null;
             $category['active'] = true;
         }
 
@@ -206,7 +191,7 @@ class StructConverter
                 foreach ($element->getData()->get('manufacturers') as $manufacturer) {
                     $manufacturerArray = $this->converter->convertManufacturerStruct($manufacturer);
 
-                    $manufacturerArray['link'] = $this->container->get(\Shopware_Components_Config::class)->get('baseFile') . '?controller=listing&action=manufacturer&sSupplier=' . $manufacturer->getId();
+                    $manufacturerArray['link'] = $this->config->get('baseFile') . '?controller=listing&action=manufacturer&sSupplier=' . $manufacturer->getId();
                     $manufacturerArray['website'] = $manufacturer->getLink();
 
                     $elementArray['data']['values'][$manufacturer->getId()] = $manufacturerArray;
@@ -219,7 +204,7 @@ class StructConverter
                     $entries[] = $this->converter->convertBlogStruct($blog);
                 }
 
-                $elementArray['data']['totalCount'] = count($entries);
+                $elementArray['data']['totalCount'] = \count($entries);
                 $elementArray['data']['entries'] = $entries;
                 break;
         }

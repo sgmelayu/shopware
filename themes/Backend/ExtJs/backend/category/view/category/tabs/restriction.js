@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Category
@@ -36,16 +35,16 @@
  */
 //{block name="backend/category/view/tabs/restriction"}
 Ext.define('Shopware.apps.Category.view.category.tabs.restriction', {
-   /**
-    * Parent Element Ext.container.Container
-    * @string
-    */
-    extend:'Ext.form.Panel',
+    /**
+     * Parent Element Ext.container.Container
+     * @string
+     */
+    extend: 'Ext.form.Panel',
     /**
      * Register the alias for this class.
      * @string
      */
-    alias:'widget.category-category-tabs-restriction',
+    alias: 'widget.category-category-tabs-restriction',
 
     cls: 'shopware-form',
 
@@ -62,7 +61,7 @@ Ext.define('Shopware.apps.Category.view.category.tabs.restriction', {
      * Display the the contents of this tab immediately
      * @boolean
      */
-    autoShow : true,
+    autoShow: true,
     /**
      * enable auto scroll
      * @boolean
@@ -89,15 +88,15 @@ Ext.define('Shopware.apps.Category.view.category.tabs.restriction', {
      * @object
      */
     snippets: {
-        availableCustomerGroups:'{s name="view/settings_block_category_available_customer_groups"}Available customer groups{/s}',
-        chosenCustomerGroups:'{s name="view/settings_block_category_chosen_customer_groups"}Block category for{/s}'
+        availableCustomerGroups: '{s name="view/settings_block_category_available_customer_groups"}Available customer groups{/s}',
+        chosenCustomerGroups: '{s name="view/settings_block_category_chosen_customer_groups"}Block category for{/s}'
     },
 
     /**
      * Initialize the Shopware.apps.Category.view.category.tabs.restriction and defines the necessary
      * default configuration
      */
-    initComponent:function ()
+    initComponent: function ()
     {
         var me = this;
         me.items = me.getItems();
@@ -108,17 +107,17 @@ Ext.define('Shopware.apps.Category.view.category.tabs.restriction', {
     /**
      * creates all fields for the tab
      */
-    getItems:function () {
+    getItems: function () {
         var me = this;
 
-        me.ddSelector = Ext.create('Shopware.DragAndDropSelector',{
+        me.ddSelector = Ext.create('Shopware.DragAndDropSelector', {
             fromTitle: me.snippets.availableCustomerGroups,
             toTitle: me.snippets.chosenCustomerGroups,
             fromStore: me.customerGroupsStore,
-            buttons:[ 'add', 'remove' ],
+            buttons: [ 'add', 'remove' ],
             selectedItems: me.record.getCustomerGroups(),
             showPagingToolbar: true,
-            buttonsText:{
+            buttonsText: {
                 add: '{s name="tabs/restriction/button_add"}Add{/s}',
                 remove: '{s name="tabs/restriction/button_remove"}Remove{/s}'
             }

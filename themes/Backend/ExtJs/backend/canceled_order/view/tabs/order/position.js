@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/canceled_order/view/main"}
@@ -36,8 +35,8 @@ Ext.define('Shopware.apps.CanceledOrder.view.tabs.order.Position', {
     collapsible: true,
     alias: 'widget.canceled-order-view-order-position',
 
-    snippets : {
-        columns : {
+    snippets: {
+        columns: {
             articleNumber: '{s name="columns/position/number"}Articlenumber{/s}',
             articleName: '{s name="columns/position/name"}Articlename{/s}',
             articleQuantity: '{s name="columns/position/quantity"}Quantity{/s}',
@@ -101,14 +100,14 @@ Ext.define('Shopware.apps.CanceledOrder.view.tabs.order.Position', {
                 renderer: me.priceColumn
             },
             {
-                xtype:'actioncolumn',
-                width:90,
-                items:[
+                xtype: 'actioncolumn',
+                width: 90,
+                items: [
                     {
-                        iconCls:'sprite-inbox',
-                        action:'openArticle',
+                        iconCls: 'sprite-inbox',
+                        action: 'openArticle',
                         tooltip: me.snippets.openArticle,
-                        handler:function (view, rowIndex) {
+                        handler: function (view, rowIndex) {
                             var store = view.getStore(),
                                 record = store.getAt(rowIndex);
 
@@ -130,7 +129,7 @@ Ext.define('Shopware.apps.CanceledOrder.view.tabs.order.Position', {
      * @param [string] - The price value
      * @return [string] - The passed value, formatted with Ext.util.Format.currency()
      */
-    priceColumn:function (value) {
+    priceColumn: function (value) {
         if ( value === Ext.undefined ) {
             return value;
         }

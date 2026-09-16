@@ -1,29 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Snippet;
 
+use Enlight_Components_Db_Adapter_Pdo_Mysql;
+use Enlight_Components_Snippet_Namespace;
+use Enlight_Config_Adapter_DbTable;
+use Enlight_Config_Adapter_File;
+use Exception;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Snippet\Writer\DatabaseWriter;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -42,7 +47,7 @@ class DatabaseHandler
     protected $em;
 
     /**
-     * @var \Enlight_Components_Db_Adapter_Pdo_Mysql
+     * @var Enlight_Components_Db_Adapter_Pdo_Mysql
      */
     protected $db;
 
@@ -54,7 +59,7 @@ class DatabaseHandler
     /**
      * @param string $kernelRoot
      */
-    public function __construct(ModelManager $em, \Enlight_Components_Db_Adapter_Pdo_Mysql $db, $kernelRoot)
+    public function __construct(ModelManager $em, Enlight_Components_Db_Adapter_Pdo_Mysql $db, $kernelRoot)
     {
         $this->em = $em;
         $this->db = $db;
@@ -87,7 +92,7 @@ class DatabaseHandler
 
         $localeRepository = $this->em->getRepository('Shopware\Models\Shop\Locale');
 
-        $inputAdapter = new \Enlight_Config_Adapter_File([
+        $inputAdapter = new Enlight_Config_Adapter_File([
             'configDir' => $snippetsDir,
         ]);
 
@@ -103,7 +108,7 @@ class DatabaseHandler
 
         foreach ($finder as $file) {
             $filePath = $file->getRelativePathname();
-            if (strpos($filePath, '.ini') == strlen($filePath) - 4) {
+            if (strpos($filePath, '.ini') == \strlen($filePath) - 4) {
                 $namespace = substr($filePath, 0, -4);
                 $namespace = str_replace('\\', '/', $namespace);
             } else {
@@ -112,7 +117,7 @@ class DatabaseHandler
 
             $this->printNotice('<info>Importing ' . $namespace . ' namespace</info>');
 
-            $namespaceData = new \Enlight_Components_Snippet_Namespace([
+            $namespaceData = new Enlight_Components_Snippet_Namespace([
                 'adapter' => $inputAdapter,
                 'name' => $namespace,
             ]);
@@ -128,7 +133,7 @@ class DatabaseHandler
                 if ($locale) {
                     $databaseWriter->write($values, $namespacePrefix . $namespace, $locale->getId(), 1);
 
-                    $this->printNotice('<info>Imported ' . count($values) . ' snippets into ' . $locale->getLocale() . '</info>');
+                    $this->printNotice('<info>Imported ' . \count($values) . ' snippets into ' . $locale->getLocale() . '</info>');
                 }
             }
 
@@ -142,7 +147,7 @@ class DatabaseHandler
      * @param string|null $snippetsDir
      * @param string      $localeName
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function dumpFromDatabase($snippetsDir, $localeName)
     {
@@ -155,13 +160,13 @@ class DatabaseHandler
 
         $locale = $this->em->getRepository('Shopware\Models\Shop\Locale')->findOneByLocale($localeName);
         if (!$locale) {
-            throw new \Exception(\sprintf('Locale "%s" not found.', $localeName));
+            throw new Exception(\sprintf('Locale "%s" not found.', $localeName));
         }
 
-        $outputAdapter = new \Enlight_Config_Adapter_File([
+        $outputAdapter = new Enlight_Config_Adapter_File([
             'configDir' => $snippetsDir . '/',
         ]);
-        $inputAdapter = new \Enlight_Config_Adapter_DbTable([
+        $inputAdapter = new Enlight_Config_Adapter_DbTable([
             'db' => $this->db,
             'table' => 's_core_snippets',
             'namespaceColumn' => 'namespace',
@@ -175,7 +180,7 @@ class DatabaseHandler
             $snippetRepository->getDistinctNamespacesQuery($locale->getId())->getArrayResult()
         );
 
-        if (count($namespaces) == 0) {
+        if (\count($namespaces) == 0) {
             $this->printWarning('<error>No snippets found for the given locale(s)</error>');
 
             return;
@@ -184,9 +189,9 @@ class DatabaseHandler
         $data = [];
 
         foreach ($namespaces as $namespace) {
-            if (!array_key_exists($namespace, $data)) {
+            if (!\array_key_exists($namespace, $data)) {
                 $data[$namespace] = true;
-                $content = new \Enlight_Components_Snippet_Namespace([
+                $content = new Enlight_Components_Snippet_Namespace([
                     'adapter' => $inputAdapter,
                     'name' => $namespace,
                     'section' => [
@@ -216,11 +221,11 @@ class DatabaseHandler
 
         $localeRepository = $this->em->getRepository(\Shopware\Models\Shop\Locale::class);
 
-        $inputAdapter = new \Enlight_Config_Adapter_File([
+        $inputAdapter = new Enlight_Config_Adapter_File([
             'configDir' => $snippetsDir,
         ]);
 
-        $outputAdapter = new \Enlight_Config_Adapter_DbTable([
+        $outputAdapter = new Enlight_Config_Adapter_DbTable([
             'db' => $this->db,
             'table' => 's_core_snippets',
             'namespaceColumn' => 'namespace',
@@ -233,7 +238,7 @@ class DatabaseHandler
 
         foreach ($finder as $file) {
             $filePath = $file->getRelativePathname();
-            if (strpos($filePath, '.ini') == strlen($filePath) - 4) {
+            if (strpos($filePath, '.ini') == \strlen($filePath) - 4) {
                 $namespace = substr($filePath, 0, -4);
                 $namespace = str_replace('\\', '/', $namespace);
             } else {
@@ -242,7 +247,7 @@ class DatabaseHandler
 
             $this->printNotice('<info>Processing ' . $namespace . ' namespace</info>');
 
-            $namespaceData = new \Enlight_Components_Snippet_Namespace([
+            $namespaceData = new Enlight_Components_Snippet_Namespace([
                 'adapter' => $inputAdapter,
                 'name' => $namespace,
             ]);
@@ -258,7 +263,7 @@ class DatabaseHandler
                 $namespaceData->setData($values);
                 $outputAdapter->delete($namespaceData, array_keys($values), $removeDirty);
 
-                $this->printNotice('<info>Deleted ' . count($values) . ' snippets from ' . $locale->getLocale() . '</info>');
+                $this->printNotice('<info>Deleted ' . \count($values) . ' snippets from ' . $locale->getLocale() . '</info>');
             }
 
             $this->printNotice('<info></info>');

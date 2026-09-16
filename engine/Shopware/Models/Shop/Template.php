@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Shop;
@@ -27,6 +27,8 @@ namespace Shopware\Models\Shop;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\Plugin\Plugin;
+use Shopware\Models\Shop\TemplateConfig\Element;
 use Shopware\Models\Shop\TemplateConfig\Layout;
 use Shopware\Models\Shop\TemplateConfig\Set;
 
@@ -39,15 +41,15 @@ use Shopware\Models\Shop\TemplateConfig\Set;
 class Template extends ModelEntity
 {
     /**
-     * @var \Shopware\Models\Shop\Template|null
+     * @var Template|null
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\Shop\Template")
      * @ORM\JoinColumn(name="parent_id", referencedColumnName="id")
      */
-    protected $parent = null;
+    protected $parent;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Shop\Shop>
+     * @var ArrayCollection<Shop>
      *
      * @ORM\OneToMany(
      *     targetEntity="Shopware\Models\Shop\Shop",
@@ -57,7 +59,7 @@ class Template extends ModelEntity
     protected $shops;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Shop\TemplateConfig\Element>
+     * @var ArrayCollection<Element>
      *
      * @ORM\OneToMany(
      *     targetEntity="Shopware\Models\Shop\TemplateConfig\Element",
@@ -69,7 +71,7 @@ class Template extends ModelEntity
     protected $elements;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Shop\TemplateConfig\Layout>
+     * @var ArrayCollection<Layout>
      *
      * @ORM\OneToMany(
      *     targetEntity="Shopware\Models\Shop\TemplateConfig\Layout",
@@ -81,7 +83,7 @@ class Template extends ModelEntity
     protected $layouts;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Shop\TemplateConfig\Set>
+     * @var ArrayCollection<Set>
      *
      * @ORM\OneToMany(
      *     targetEntity="Shopware\Models\Shop\TemplateConfig\Set",
@@ -188,7 +190,7 @@ class Template extends ModelEntity
     private $pluginId;
 
     /**
-     * @var \Shopware\Models\Plugin\Plugin|null
+     * @var Plugin|null
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Plugin\Plugin", inversedBy="templates")
      * @ORM\JoinColumn(name="plugin_id", referencedColumnName="id")
@@ -395,7 +397,7 @@ class Template extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Plugin\Plugin|null
+     * @return Plugin|null
      */
     public function getPlugin()
     {
@@ -403,7 +405,7 @@ class Template extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Plugin\Plugin|null $plugin
+     * @param Plugin|null $plugin
      */
     public function setPlugin($plugin)
     {
@@ -418,16 +420,13 @@ class Template extends ModelEntity
         return $this->getTemplate();
     }
 
-    /**
-     * @param \Shopware\Models\Shop\Template|null $parent
-     */
-    public function setParent(Template $parent = null)
+    public function setParent(?Template $parent = null)
     {
         $this->parent = $parent;
     }
 
     /**
-     * @return \Shopware\Models\Shop\Template|null
+     * @return Template|null
      */
     public function getParent()
     {
@@ -435,20 +434,20 @@ class Template extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Shop\TemplateConfig\Element[]|null $elements
+     * @param Element[]|null $elements
      */
     public function setElements($elements)
     {
         $this->setOneToMany(
             $elements,
-            \Shopware\Models\Shop\TemplateConfig\Element::class,
+            Element::class,
             'elements',
             'template'
         );
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Shop\TemplateConfig\Element>
+     * @return ArrayCollection<Element>
      */
     public function getElements()
     {
@@ -456,7 +455,7 @@ class Template extends ModelEntity
     }
 
     /**
-     * @param ArrayCollection<\Shopware\Models\Shop\Shop> $shops
+     * @param ArrayCollection<Shop> $shops
      */
     public function setShops($shops)
     {
@@ -464,7 +463,7 @@ class Template extends ModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Shop\Shop>
+     * @return ArrayCollection<Shop>
      */
     public function getShops()
     {
@@ -478,7 +477,7 @@ class Template extends ModelEntity
     {
         $this->setOneToMany(
             $layouts,
-            \Shopware\Models\Shop\TemplateConfig\Layout::class,
+            Layout::class,
             'layouts',
             'template'
         );

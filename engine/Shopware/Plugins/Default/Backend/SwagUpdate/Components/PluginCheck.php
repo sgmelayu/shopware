@@ -1,37 +1,40 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace ShopwarePlugins\SwagUpdate\Components;
 
 use Doctrine\DBAL\Connection;
+use Enlight_Components_Snippet_Namespace;
+use Exception;
 use Shopware\Bundle\PluginInstallerBundle\Context\PluginsByTechnicalNameRequest;
+use Shopware\Bundle\PluginInstallerBundle\Service\PluginStoreService;
 use Shopware\Components\DependencyInjection\Container;
 
 class PluginCheck
 {
     /**
-     * @var \Shopware\Components\DependencyInjection\Container
+     * @var Container
      */
     private $container;
 
@@ -45,11 +48,11 @@ class PluginCheck
      *
      * @param string $version
      *
-     * @return array
+     * @return array<array<string, bool|int|string>>
      */
     public function checkInstalledPluginsAvailableForNewVersion($version)
     {
-        $service = $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\PluginStoreService::class);
+        $service = $this->container->get(PluginStoreService::class);
         $installedPlugins = $this->getUserInstalledPlugins();
         $technicalNames = array_column($installedPlugins, 'name');
         $locale = $this->getLocale();
@@ -69,8 +72,8 @@ class PluginCheck
                 $key = strtolower($plugin['name']);
                 $name = $plugin['label'];
 
-                $inStore = array_key_exists($key, $storePlugins);
-                $targetVersionUpdateAvailable = array_key_exists($key, $updatesAvailable);
+                $inStore = \array_key_exists($key, $storePlugins);
+                $targetVersionUpdateAvailable = \array_key_exists($key, $updatesAvailable);
                 $description = $this->getPluginStateDescription($inStore, $targetVersionUpdateAvailable);
 
                 $results[] = [
@@ -79,13 +82,16 @@ class PluginCheck
                     'message' => $description,
                     'updatable' => $inStore && version_compare($plugin['version'], $storePlugins[$key]->getVersion(), '<'),
                     'updatableAfterUpgrade' => $inStore && $targetVersionUpdateAvailable && $storePlugins[$key]->getVersion() !== $updatesAvailable[$key]->getVersion(),
-                    'id' => sprintf('plugin_incompatible-%s', $name),
+                    'id' => \sprintf('plugin_incompatible-%s', $name),
                     'technicalName' => $technicalName,
-                    'errorLevel' => ($targetVersionUpdateAvailable) ? Validation::REQUIREMENT_VALID : Validation::REQUIREMENT_WARNING,
+                    'errorLevel' => $targetVersionUpdateAvailable ? Validation::REQUIREMENT_VALID : Validation::REQUIREMENT_WARNING,
+                    'success' => true,
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $results[] = [
+                'inStore' => false,
+                'success' => false,
                 'name' => 'Error',
                 'message' => 'Could not query plugins which are available for your shopware version',
                 'details' => $e->getCode() . ': ' . $e->getMessage(),
@@ -97,11 +103,13 @@ class PluginCheck
         usort($results, function ($a, $b) {
             if ($a['inStore'] < $b['inStore']) {
                 return -1;
-            } elseif ($a['inStore'] > $b['inStore']) {
+            }
+
+            if ($a['inStore'] > $b['inStore']) {
                 return 1;
             }
 
-            return $a['success'] > $b['success'];
+            return $a['success'] <=> $b['success'];
         });
 
         return $results;
@@ -110,33 +118,30 @@ class PluginCheck
     /**
      * Helper which returns an snippet-instance
      *
-     * @return \Enlight_Components_Snippet_Namespace
+     * @return Enlight_Components_Snippet_Namespace
      */
     public function getSnippetNamespace()
     {
         return $this->container->get('snippets')->getNamespace('backend/swag_update/main');
     }
 
-    /**
-     * @return string|null
-     */
-    private function getLocale()
+    private function getLocale(): string
     {
         try {
             return $this->container->get('auth')->getIdentity()->locale->getLocale();
-        } catch (\Exception $e) {
-            return null;
+        } catch (Exception $e) {
+            return '';
         }
     }
 
     /**
      * Returns a list of all plugins installed by the user
      *
-     * @return array
+     * @return array<array<string, string>>
      */
-    private function getUserInstalledPlugins()
+    private function getUserInstalledPlugins(): array
     {
-        $query = $this->container->get(\Doctrine\DBAL\Connection::class)->createQueryBuilder();
+        $query = $this->container->get(Connection::class)->createQueryBuilder();
         $query->select(['plugin.name', 'plugin.label', 'plugin.version'])
             ->from('s_core_plugins', 'plugin')
             ->where('plugin.name NOT IN (:names)')
@@ -144,19 +149,10 @@ class PluginCheck
             ->setParameter(':source', 'Default')
             ->setParameter(':names', ['PluginManager', 'StoreApi'], Connection::PARAM_STR_ARRAY);
 
-        /** @var \PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $query->execute()->fetchAllAssociative();
     }
 
-    /**
-     * @param bool $inStore
-     * @param bool $available
-     *
-     * @return string
-     */
-    private function getPluginStateDescription($inStore, $available)
+    private function getPluginStateDescription(bool $inStore, bool $available): string
     {
         switch (true) {
             case $inStore && $available:

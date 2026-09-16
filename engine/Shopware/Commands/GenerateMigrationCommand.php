@@ -1,31 +1,34 @@
 <?php
-declare(strict_types=1);
 
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use DirectoryIterator;
+use RecursiveRegexIterator;
+use RegexIterator;
+use RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -52,11 +55,11 @@ class GenerateMigrationCommand extends ShopwareCommand
         $migrationDirectory = $this->findMigrationDirectory($pluginName);
 
         if ($migrationDirectory === null) {
-            throw new \RuntimeException(sprintf('Plugin by name "%s" does not exists', $pluginName));
+            throw new RuntimeException(\sprintf('Plugin by name "%s" does not exists', $pluginName));
         }
 
         if (!file_exists($migrationDirectory) && !mkdir($migrationDirectory, 0777, true) && !is_dir($migrationDirectory)) {
-            throw new \RuntimeException(sprintf('Directory "%s" was not created', $migrationDirectory));
+            throw new RuntimeException(\sprintf('Directory "%s" was not created', $migrationDirectory));
         }
 
         $nextVersion = $this->getLatestMigrationVersion($migrationDirectory) + 1;
@@ -65,7 +68,7 @@ class GenerateMigrationCommand extends ShopwareCommand
 
         $io = new SymfonyStyle($input, $output);
 
-        $io->success(sprintf('Generated file "%s/%s"', $migrationDirectory, $fileName));
+        $io->success(\sprintf('Generated file "%s/%s"', $migrationDirectory, $fileName));
 
         return 0;
     }
@@ -73,10 +76,18 @@ class GenerateMigrationCommand extends ShopwareCommand
     private function findMigrationDirectory(?string $pluginName): ?string
     {
         if ($pluginName === null) {
-            return $this->container->getParameter('kernel.root_dir') . '/_sql/migrations';
+            $rootDir = $this->container->getParameter('kernel.root_dir');
+
+            if (!\is_string($rootDir)) {
+                throw new RuntimeException('Parameter kernel.root_dir has to be an string');
+            }
+
+            return $rootDir . '/_sql/migrations';
         }
 
-        foreach ($this->container->getParameter('shopware.plugin_directories') as $pluginDirectory) {
+        /** @var array<string, string> $pluginDirectories */
+        $pluginDirectories = $this->container->getParameter('shopware.plugin_directories');
+        foreach ($pluginDirectories as $pluginDirectory) {
             $path = $pluginDirectory . $pluginName;
             if (file_exists($path)) {
                 return $path . DIRECTORY_SEPARATOR . 'Resources' . DIRECTORY_SEPARATOR . 'migrations';
@@ -90,8 +101,8 @@ class GenerateMigrationCommand extends ShopwareCommand
     {
         $regexPattern = '/^([0-9]*)-.+\.php$/i';
 
-        $directoryIterator = new \DirectoryIterator($migrationFolder);
-        $regex = new \RegexIterator($directoryIterator, $regexPattern, \RecursiveRegexIterator::GET_MATCH);
+        $directoryIterator = new DirectoryIterator($migrationFolder);
+        $regex = new RegexIterator($directoryIterator, $regexPattern, RecursiveRegexIterator::GET_MATCH);
         $values = iterator_to_array($regex, false);
 
         if (empty($values)) {
@@ -105,7 +116,7 @@ class GenerateMigrationCommand extends ShopwareCommand
 
     private function createMigration(string $migrationFolder, string $migrationName, ?string $pluginName, int $nextVersion): string
     {
-        $fileName = sprintf('%d-%s.php', $nextVersion, $this->camelCaseToDash($migrationName));
+        $fileName = \sprintf('%d-%s.php', $nextVersion, $this->camelCaseToDash($migrationName));
 
         file_put_contents($migrationFolder . DIRECTORY_SEPARATOR . $fileName, $this->generateMigrationFileContent($pluginName, $nextVersion));
 
@@ -114,7 +125,7 @@ class GenerateMigrationCommand extends ShopwareCommand
 
     private function camelCaseToDash(string $string): string
     {
-        return strtolower(ltrim(preg_replace('/[A-Z]/', '-$0', $string), '-'));
+        return strtolower(ltrim((string) preg_replace('/[A-Z]/', '-$0', $string), '-'));
     }
 
     private function generateMigrationFileContent(?string $pluginName, int $nextVersion): string
@@ -128,28 +139,27 @@ class GenerateMigrationCommand extends ShopwareCommand
 
     private function createCoreMigration(int $nextVersion): string
     {
-        return sprintf('<?php
+        return \sprintf('<?php
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 class Migrations_Migration%d extends Shopware\Components\Migrations\AbstractMigration
 {
@@ -163,7 +173,7 @@ class Migrations_Migration%d extends Shopware\Components\Migrations\AbstractMigr
 
     private function createPluginMigration(string $pluginName, int $nextVersion): string
     {
-        return sprintf('<?php
+        return \sprintf('<?php
 
 namespace %s\Migrations;
 

@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Plugin;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Model\ModelRepository;
 use Shopware\Models\Config\ElementTranslation;
@@ -41,12 +42,12 @@ class FormSynchronizer
     private $em;
 
     /**
-     * @var ModelRepository
+     * @var ModelRepository<Form>
      */
     private $formRepository;
 
     /**
-     * @var ModelRepository
+     * @var ModelRepository<Locale>
      */
     private $localeRepository;
 
@@ -134,27 +135,27 @@ class FormSynchronizer
         $query->setParameter(':names', $names, Connection::PARAM_STR_ARRAY);
         $query->setParameter(':pluginId', $plugin->getId());
 
-        $ids = $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        $ids = $query->execute()->fetchAll(PDO::FETCH_COLUMN);
 
         if (empty($ids)) {
             return;
         }
 
-        //elements
+        // elements
         $query = $this->em->getConnection()->createQueryBuilder();
         $query->delete('s_core_config_elements');
         $query->where('id IN (:ids)');
         $query->setParameter(':ids', $ids, Connection::PARAM_INT_ARRAY);
         $query->execute();
 
-        //saved values
+        // saved values
         $query = $this->em->getConnection()->createQueryBuilder();
         $query->delete('s_core_config_values');
         $query->where('element_id IN (:ids)');
         $query->setParameter(':ids', $ids, Connection::PARAM_INT_ARRAY);
         $query->execute();
 
-        //translations
+        // translations
         $query = $this->em->getConnection()->createQueryBuilder();
         $query->delete('s_core_config_element_translations');
         $query->where('element_id IN (:ids)');
@@ -238,7 +239,6 @@ class FormSynchronizer
                 $localeCode = 'en_GB';
             }
 
-            /** @var Locale $locale */
             $locale = $this->localeRepository->findOneBy(['locale' => $localeCode]);
             if (empty($locale)) {
                 continue;
@@ -259,11 +259,11 @@ class FormSynchronizer
                         continue;
                     }
 
-                    if (array_key_exists('label', $translationArray)) {
+                    if (\array_key_exists('label', $translationArray)) {
                         $existingTranslation->setLabel($translationArray['label']);
                     }
 
-                    if (array_key_exists('description', $translationArray)) {
+                    if (\array_key_exists('description', $translationArray)) {
                         $existingTranslation->setDescription($translationArray['description']);
                     }
                     $isUpdate = true;
@@ -272,10 +272,10 @@ class FormSynchronizer
 
                 if (!$isUpdate) {
                     $elementTranslation = new ElementTranslation();
-                    if (array_key_exists('label', $translationArray)) {
+                    if (\array_key_exists('label', $translationArray)) {
                         $elementTranslation->setLabel($translationArray['label']);
                     }
-                    if (array_key_exists('description', $translationArray)) {
+                    if (\array_key_exists('description', $translationArray)) {
                         $elementTranslation->setDescription($translationArray['description']);
                     }
                     $elementTranslation->setLocale($locale);
@@ -293,10 +293,10 @@ class FormSynchronizer
             if ($existingTranslation->getLocale()->getLocale() != $locale->getLocale()) {
                 continue;
             }
-            if (array_key_exists('label', $translationArray)) {
+            if (\array_key_exists('label', $translationArray)) {
                 $existingTranslation->setLabel($translationArray['label']);
             }
-            if (array_key_exists('description', $translationArray)) {
+            if (\array_key_exists('description', $translationArray)) {
                 $existingTranslation->setDescription($translationArray['description']);
             }
             $isUpdate = true;
@@ -304,10 +304,10 @@ class FormSynchronizer
         }
         if (!$isUpdate) {
             $formTranslation = new FormTranslation();
-            if (array_key_exists('label', $translationArray)) {
+            if (\array_key_exists('label', $translationArray)) {
                 $formTranslation->setLabel($translationArray['label']);
             }
-            if (array_key_exists('description', $translationArray)) {
+            if (\array_key_exists('description', $translationArray)) {
                 $formTranslation->setDescription($translationArray['description']);
             }
             $formTranslation->setLocale($locale);

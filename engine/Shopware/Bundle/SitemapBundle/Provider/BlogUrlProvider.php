@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SitemapBundle\Provider;
@@ -30,34 +30,23 @@ use Shopware\Bundle\SitemapBundle\Struct\Url;
 use Shopware\Bundle\SitemapBundle\UrlProviderInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware\Components\Model\ModelManager;
-use Shopware\Components\Routing;
+use Shopware\Components\Routing\Context;
+use Shopware\Components\Routing\RouterInterface;
 use Shopware\Models\Blog\Blog;
 use Shopware\Models\Category\Category;
 use Shopware_Components_Translation as Translation;
 
 class BlogUrlProvider implements UrlProviderInterface
 {
-    /**
-     * @var ModelManager
-     */
-    private $modelManager;
+    private ModelManager $modelManager;
 
-    /**
-     * @var Routing\RouterInterface
-     */
-    private $router;
+    private RouterInterface $router;
 
-    /**
-     * @var Translation
-     */
-    private $translation;
+    private Translation $translation;
 
-    /**
-     * @var bool
-     */
-    private $allExported = false;
+    private bool $allExported = false;
 
-    public function __construct(ModelManager $modelManager, Routing\RouterInterface $router, Translation $translation)
+    public function __construct(ModelManager $modelManager, RouterInterface $router, Translation $translation)
     {
         $this->modelManager = $modelManager;
         $this->router = $router;
@@ -67,7 +56,7 @@ class BlogUrlProvider implements UrlProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function getUrls(Routing\Context $routingContext, ShopContextInterface $shopContext)
+    public function getUrls(Context $routingContext, ShopContextInterface $shopContext)
     {
         if ($this->allExported) {
             return [];
@@ -76,22 +65,20 @@ class BlogUrlProvider implements UrlProviderInterface
         $shopId = $shopContext->getShop()->getId();
         $parentId = $shopContext->getShop()->getCategory()->getId();
 
-        $categoryRepository = $this->modelManager->getRepository(Category::class);
-        $query = $categoryRepository->getBlogCategoriesByParentQuery($parentId);
+        $query = $this->modelManager->getRepository(Category::class)->getBlogCategoriesByParentQuery($parentId);
         $blogCategories = $query->getArrayResult();
 
         $blogIds = [];
 
         foreach ($blogCategories as $blogCategory) {
-            $blogIds[] = $blogCategory['id'];
+            $blogIds[] = (int) $blogCategory['id'];
         }
 
-        if (count($blogIds) === 0) {
+        if (\count($blogIds) === 0) {
             return [];
         }
 
-        $qb = $this->modelManager->getConnection()->createQueryBuilder();
-        $statement = $qb
+        $blogs = $this->modelManager->getConnection()->createQueryBuilder()
             ->addSelect('blog.id, blog.category_id, DATE(blog.display_date) as changed')
             ->from('s_blog', 'blog')
             ->where('blog.active = 1')
@@ -101,9 +88,9 @@ class BlogUrlProvider implements UrlProviderInterface
             ->andWhere('blog.shop_ids IS NULL OR blog.shop_ids LIKE :shopLike')
             ->setParameter(':shopLike', '%|' . $shopId . '|%')
             ->setParameter('ids', $blogIds, Connection::PARAM_INT_ARRAY)
-            ->execute();
+            ->execute()
+            ->fetchAllAssociative();
 
-        $blogs = $statement->fetchAll();
         $blogIds = array_column($blogs, 'id');
         $blogTranslations = $this->fetchTranslations($blogIds, $shopContext);
 
@@ -128,7 +115,7 @@ class BlogUrlProvider implements UrlProviderInterface
         $routes = $this->router->generateList(array_column($blogs, 'urlParams'), $routingContext);
         $urls = [];
 
-        for ($i = 0, $routeCount = count($routes); $i < $routeCount; ++$i) {
+        for ($i = 0, $routeCount = \count($routes); $i < $routeCount; ++$i) {
             $urls[] = new Url($routes[$i], $blogs[$i]['changed'], 'weekly', Blog::class, $blogs[$i]['id']);
         }
 
@@ -146,9 +133,11 @@ class BlogUrlProvider implements UrlProviderInterface
     }
 
     /**
-     * @return array
+     * @param array<int> $ids
+     *
+     * @return array<array<string, string>>
      */
-    private function fetchTranslations(array $ids, ShopContextInterface $shopContext)
+    private function fetchTranslations(array $ids, ShopContextInterface $shopContext): array
     {
         $data = $this->translation->readBatchWithFallback($shopContext->getShop()->getId(), $shopContext->getShop()->getFallbackId(), 'blog', $ids, false);
         $translation = [];

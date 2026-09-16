@@ -1,62 +1,66 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Modules\Category;
 
+use Doctrine\DBAL\Connection;
+use Enlight_Components_Test_TestCase;
+use sCategories;
+use Shopware\Bundle\MediaBundle\MediaServiceInterface;
 use Shopware\Tests\Functional\Bundle\StoreFrontBundle\Helper;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
 
-class sGetCategoriesTest extends \Enlight_Components_Test_TestCase
+class sGetCategoriesTest extends Enlight_Components_Test_TestCase
 {
+    use ContainerTrait;
+    use DatabaseTransactionBehaviour;
+
     /**
      * @var Helper
      */
     protected $helper;
 
     /**
-     * @var \sCategories
+     * @var sCategories
      */
     private $module;
 
     protected function setUp(): void
     {
-        $this->helper = new Helper();
+        $this->helper = new Helper($this->getContainer());
+        $connection = $this->getContainer()->get(Connection::class);
 
-        Shopware()->Db()->query(
+        $connection->executeQuery(
             "DELETE FROM s_categories WHERE description LIKE 'Foo%' AND parent = 3"
         );
 
-        $this->module = new \sCategories();
+        $this->module = new sCategories();
         $this->module->baseId = 3;
         $this->module->customerGroupId = 1;
 
         parent::setUp();
-    }
-
-    protected function tearDown(): void
-    {
-        $this->helper->cleanUp();
-        parent::tearDown();
     }
 
     public function testWithMainId()
@@ -64,8 +68,8 @@ class sGetCategoriesTest extends \Enlight_Components_Test_TestCase
         $first1 = $this->helper->createCategory(['name' => 'first1', 'parent' => 3]);
         $first2 = $this->helper->createCategory(['name' => 'first2', 'parent' => 3]);
         $second1 = $this->helper->createCategory(['name' => 'second1', 'parent' => $first1->getId()]);
-        $third1 = $this->helper->createCategory(['name' => 'third1', 'parent' => $second1->getId()]);
-        $third2 = $this->helper->createCategory(['name' => 'third2', 'parent' => $second1->getId()]);
+        $this->helper->createCategory(['name' => 'third1', 'parent' => $second1->getId()]);
+        $this->helper->createCategory(['name' => 'third2', 'parent' => $second1->getId()]);
 
         $result = $this->module->sGetCategories(3);
 
@@ -84,8 +88,8 @@ class sGetCategoriesTest extends \Enlight_Components_Test_TestCase
         $first2 = $this->helper->createCategory(['name' => 'first2', 'parent' => 3]);
         $second1 = $this->helper->createCategory(['name' => 'second1', 'parent' => $first1->getId()]);
         $second2 = $this->helper->createCategory(['name' => 'second2', 'parent' => $first1->getId()]);
-        $third1 = $this->helper->createCategory(['name' => 'third1', 'parent' => $second1->getId()]);
-        $third2 = $this->helper->createCategory(['name' => 'third2', 'parent' => $second2->getId()]);
+        $this->helper->createCategory(['name' => 'third1', 'parent' => $second1->getId()]);
+        $this->helper->createCategory(['name' => 'third2', 'parent' => $second2->getId()]);
 
         $result = $this->module->sGetCategories($first1->getId());
 
@@ -122,7 +126,7 @@ class sGetCategoriesTest extends \Enlight_Components_Test_TestCase
         $second1 = $this->helper->createCategory(['name' => 'second1', 'parent' => $first1->getId()]);
         $second2 = $this->helper->createCategory(['name' => 'second2', 'parent' => $first1->getId()]);
         $third1 = $this->helper->createCategory(['name' => 'third1', 'parent' => $second1->getId()]);
-        $third2 = $this->helper->createCategory(['name' => 'third2', 'parent' => $second2->getId()]);
+        $this->helper->createCategory(['name' => 'third2', 'parent' => $second2->getId()]);
 
         $result = $this->module->sGetCategories($second1->getId());
 
@@ -207,7 +211,7 @@ class sGetCategoriesTest extends \Enlight_Components_Test_TestCase
         Shopware()->Db()->executeUpdate('UPDATE s_categories SET mediaID = 564 WHERE id = ?', [$first1->getId()]);
 
         $result = $this->module->sGetCategories($second1->getId());
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = $this->getContainer()->get(MediaServiceInterface::class);
 
         $result = array_values($result);
         $category = $result[1];
@@ -275,7 +279,7 @@ class sGetCategoriesTest extends \Enlight_Components_Test_TestCase
             $category = $result[$index];
 
             foreach ($expectedCategory as $property => $value) {
-                if (is_array($value)) {
+                if (\is_array($value)) {
                     $array = $category[$property];
 
                     foreach ($value as $arrayProperty => $arrayValue) {
@@ -319,7 +323,7 @@ class sGetCategoriesTest extends \Enlight_Components_Test_TestCase
     {
         $first = $this->helper->createCategory(['name' => 'first',  'parent' => 3]);
         $second = $this->helper->createCategory(['name' => 'second', 'parent' => $first->getId()]);
-        $third = $this->helper->createCategory(['name' => 'third',  'parent' => $second->getId(), 'active' => false]);
+        $this->helper->createCategory(['name' => 'third',  'parent' => $second->getId(), 'active' => false]);
 
         $result = $this->module->sGetCategories($second->getId());
 
@@ -360,7 +364,7 @@ class sGetCategoriesTest extends \Enlight_Components_Test_TestCase
     private function assertAndGetSubCategories($category, $expectedIds)
     {
         $sub = $category['subcategories'];
-        static::assertCount(count($expectedIds), $sub);
+        static::assertCount(\count($expectedIds), $sub);
 
         foreach ($expectedIds as $id) {
             static::assertArrayHasKey($id, $sub);

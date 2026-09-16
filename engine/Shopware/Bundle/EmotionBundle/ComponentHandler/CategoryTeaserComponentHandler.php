@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EmotionBundle\ComponentHandler;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 use Shopware\Bundle\EmotionBundle\Struct\Collection\PrepareDataCollection;
 use Shopware\Bundle\EmotionBundle\Struct\Collection\ResolvedDataCollection;
 use Shopware\Bundle\EmotionBundle\Struct\Element;
@@ -35,39 +36,32 @@ use Shopware\Bundle\StoreFrontBundle\Service\BlogServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\CategoryServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Blog\Blog;
 use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Media;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class CategoryTeaserComponentHandler implements ComponentHandlerInterface
 {
-    const TYPE_IMAGE = 'selected_image';
-    const TYPE_ARTICLE_OR_BLOG = 'random_article_image';
+    public const TYPE_IMAGE = 'selected_image';
+    public const TYPE_ARTICLE_OR_BLOG = 'random_article_image';
 
-    const LEGACY_CONVERT_FUNCTION = 'getCategoryTeaser';
-    const COMPONENT_NAME = 'emotion-components-category-teaser';
+    public const LEGACY_CONVERT_FUNCTION = 'getCategoryTeaser';
+    public const COMPONENT_NAME = 'emotion-components-category-teaser';
 
-    /**
-     * @var StoreFrontCriteriaFactoryInterface
-     */
-    private $criteriaFactory;
+    private StoreFrontCriteriaFactoryInterface $criteriaFactory;
 
-    /**
-     * @var CategoryServiceInterface
-     */
-    private $categoryService;
+    private CategoryServiceInterface $categoryService;
 
-    /**
-     * @var BlogServiceInterface
-     */
-    private $blogService;
+    private BlogServiceInterface $blogService;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    public function __construct(StoreFrontCriteriaFactoryInterface $criteriaFactory, CategoryServiceInterface $categoryService, Connection $connection, BlogServiceInterface $blogService)
-    {
+    public function __construct(
+        StoreFrontCriteriaFactoryInterface $criteriaFactory,
+        CategoryServiceInterface $categoryService,
+        Connection $connection,
+        BlogServiceInterface $blogService
+    ) {
         $this->criteriaFactory = $criteriaFactory;
         $this->categoryService = $categoryService;
         $this->connection = $connection;
@@ -89,7 +83,7 @@ class CategoryTeaserComponentHandler implements ComponentHandlerInterface
     public function prepare(PrepareDataCollection $collection, Element $element, ShopContextInterface $context)
     {
         $imageType = $element->getConfig()->get('image_type');
-        $key = 'emotion-element--' . $element->getId();
+        $key = ComponentHandlerInterface::CRITERIA_KEY . $element->getId();
 
         switch ($imageType) {
             case self::TYPE_IMAGE:
@@ -119,7 +113,7 @@ class CategoryTeaserComponentHandler implements ComponentHandlerInterface
     public function handle(ResolvedDataCollection $collection, Element $element, ShopContextInterface $context)
     {
         $imageType = $element->getConfig()->get('image_type');
-        $key = 'emotion-element--' . $element->getId();
+        $key = ComponentHandlerInterface::CRITERIA_KEY . $element->getId();
 
         switch ($imageType) {
             case self::TYPE_IMAGE:
@@ -137,11 +131,14 @@ class CategoryTeaserComponentHandler implements ComponentHandlerInterface
 
                 if ($isBlog) {
                     $blog = $this->getRandomBlog($categoryId, $context);
-                    if (!$blog) {
+                    if (!$blog instanceof Blog) {
                         break;
                     }
                     $medias = $blog->getMedias();
                     $media = array_shift($medias);
+                    if (!$media instanceof Media) {
+                        break;
+                    }
 
                     $element->getData()->set('blog', $blog);
                     $element->getData()->set('image', $media);
@@ -152,10 +149,9 @@ class CategoryTeaserComponentHandler implements ComponentHandlerInterface
                 $products = $collection->getBatchResult()->get($key);
                 shuffle($products);
 
-                /** @var ListProduct|null $product */
                 $product = reset($products);
 
-                if (!$product || !$product->getCover()) {
+                if (!$product instanceof ListProduct || !$product->getCover() instanceof Media) {
                     break;
                 }
 
@@ -167,7 +163,7 @@ class CategoryTeaserComponentHandler implements ComponentHandlerInterface
         $this->fetchCategory($element, $context);
     }
 
-    private function fetchCategory(Element $element, ShopContextInterface $context)
+    private function fetchCategory(Element $element, ShopContextInterface $context): void
     {
         $categoryId = (int) $element->getConfig()->get('category_selection');
         $category = $this->categoryService->getList([$categoryId], $context);
@@ -179,12 +175,7 @@ class CategoryTeaserComponentHandler implements ComponentHandlerInterface
         $element->getData()->set('category', reset($category));
     }
 
-    /**
-     * @param int $categoryId
-     *
-     * @return Blog|null
-     */
-    private function getRandomBlog($categoryId, ShopContextInterface $context)
+    private function getRandomBlog(int $categoryId, ShopContextInterface $context): ?Blog
     {
         $blogId = $this->findBlogIdByCategoryId($categoryId);
         $blog = $this->blogService->getList([$blogId], $context);
@@ -194,10 +185,8 @@ class CategoryTeaserComponentHandler implements ComponentHandlerInterface
 
     /**
      * @param int $categoryId
-     *
-     * @return int
      */
-    private function findBlogIdByCategoryId($categoryId)
+    private function findBlogIdByCategoryId($categoryId): int
     {
         $builder = $this->connection->createQueryBuilder();
         $builder->select('blog.id')
@@ -212,7 +201,7 @@ class CategoryTeaserComponentHandler implements ComponentHandlerInterface
             ->setParameter('categoryId', $categoryId)
             ->setParameter('path', '%|' . $categoryId . '|%');
 
-        $blogIds = $builder->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        $blogIds = $builder->execute()->fetchAll(PDO::FETCH_COLUMN);
         shuffle($blogIds);
 
         return (int) reset($blogIds);

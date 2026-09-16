@@ -1,27 +1,32 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+namespace Shopware\Tests\Unit\Bundle\SearchBundle;
+
+use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 use Shopware\Bundle\SearchBundle\BatchProductNumberSearch;
 use Shopware\Bundle\SearchBundle\Condition\CategoryCondition;
 use Shopware\Bundle\SearchBundle\Condition\CloseoutCondition;
@@ -32,7 +37,7 @@ use Shopware\Bundle\SearchBundle\Sorting\PriceSorting;
 use Shopware\Bundle\SearchBundle\Sorting\ReleaseDateSorting;
 use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
 
-class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
+class BatchProductNumberSearchTest extends TestCase
 {
     /**
      * @var BatchProductNumberSearch
@@ -55,21 +60,20 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
      */
     public function invokeMethod($object, $methodName, array $parameters = [])
     {
-        $reflection = new \ReflectionClass(get_class($object));
-        $method = $reflection->getMethod($methodName);
+        $method = (new ReflectionClass(\get_class($object)))->getMethod($methodName);
         $method->setAccessible(true);
 
         return $method->invokeArgs($object, $parameters);
     }
 
-    public function testOptimizeCriteriaListWithEmptyCriteria()
+    public function testOptimizeCriteriaListWithEmptyCriteria(): void
     {
         $criteriaList = $this->invokeMethod($this->batchSearch, 'getOptimizedCriteriaList', [[]]);
 
         static::assertSame([], $criteriaList);
     }
 
-    public function testOptimizeCriteriaListWithSingleCriteria()
+    public function testOptimizeCriteriaListWithSingleCriteria(): void
     {
         $criteria = new Criteria();
         $criteria->addBaseCondition(new CategoryCondition([3]));
@@ -97,7 +101,7 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
         static::assertEquals($expectedOptimizedCriteriaList, $criteriaList);
     }
 
-    public function testOptimizeCriteriaListWithMultipleEqualCriteriaButMixedBaseConditions()
+    public function testOptimizeCriteriaListWithMultipleEqualCriteriaButMixedBaseConditions(): void
     {
         $criteria = new Criteria();
         $criteria->addBaseCondition(new CategoryCondition([3]));
@@ -131,7 +135,7 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
         static::assertEquals($expectedOptimizedCriteriaList, $criteriaList);
     }
 
-    public function testOptimizeCriteriaListWithMultipleDifferentCriteria()
+    public function testOptimizeCriteriaListWithMultipleDifferentCriteria(): void
     {
         $criteria = new Criteria();
         $criteria->addBaseCondition(new CategoryCondition([3]));
@@ -179,7 +183,7 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
         static::assertEquals($expectedOptimizedCriteriaList, $criteriaList);
     }
 
-    public function testOptimizeCriteriaListWithDifferentCriteriaSorting()
+    public function testOptimizeCriteriaListWithDifferentCriteriaSorting(): void
     {
         $criteria = new Criteria();
         $criteria->addCondition(new CategoryCondition([3]));
@@ -228,7 +232,7 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
         static::assertEquals($expectedOptimizedCriteriaList, $criteriaList);
     }
 
-    public function testOptimizeCriteriaListWithMultipleEqualCriteria()
+    public function testOptimizeCriteriaListWithMultipleEqualCriteria(): void
     {
         $criteria = new Criteria();
         $criteria->addBaseCondition(new CategoryCondition([3]));
@@ -266,7 +270,7 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
         static::assertEquals($expectedOptimizedCriteriaList, $criteriaList);
     }
 
-    public function testOptimizeCriteriaListWithMultipleEqualAndDifferentCriteria()
+    public function testOptimizeCriteriaListWithMultipleEqualAndDifferentCriteria(): void
     {
         $criteria = new Criteria();
         $criteria->addBaseCondition(new CategoryCondition([3]));
@@ -334,7 +338,7 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
         static::assertEquals($expectedOptimizedCriteriaList, $criteriaList);
     }
 
-    public function testOptimizeCriteriaListWithEqualCriteriaButDifferentSorting()
+    public function testOptimizeCriteriaListWithEqualCriteriaButDifferentSorting(): void
     {
         $criteria = new Criteria();
         $criteria->addBaseCondition(new CategoryCondition([3]));
@@ -386,7 +390,7 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
     /**
      * @covers \Shopware\Bundle\SearchBundle\BatchProductNumberSearch::getBaseProductsRange
      */
-    public function testGetBaseProductsRangeWithEmptyProducts()
+    public function testGetBaseProductsRangeWithEmptyProducts(): void
     {
         $products = $this->invokeMethod($this->batchSearch, 'getBaseProductsRange', [0, [], 1]);
         static::assertSame([], $products);
@@ -395,18 +399,18 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
     /**
      * @covers \Shopware\Bundle\SearchBundle\BatchProductNumberSearch::getBaseProductsRange
      */
-    public function testGetBaseProductsRangeWithMoreProductsThanRequested()
+    public function testGetBaseProductsRangeWithMoreProductsThanRequested(): void
     {
         $products = [
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
-            new BaseProduct(3, 3, 3),
-            new BaseProduct(4, 4, 4),
+            new BaseProduct(1, 1, '1'),
+            new BaseProduct(2, 2, '2'),
+            new BaseProduct(3, 3, '3'),
+            new BaseProduct(4, 4, '4'),
         ];
 
         $result = $this->invokeMethod($this->batchSearch, 'getBaseProductsRange', [0, $products, 1]);
         $expectedProducts = [
-            new BaseProduct(1, 1, 1),
+            new BaseProduct(1, 1, '1'),
         ];
 
         static::assertEquals($expectedProducts, $result);
@@ -415,19 +419,19 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
     /**
      * @covers \Shopware\Bundle\SearchBundle\BatchProductNumberSearch::getBaseProductsRange
      */
-    public function testMultipleCallGetBaseProductsRangeWithMoreProductsThanRequested()
+    public function testMultipleCallGetBaseProductsRangeWithMoreProductsThanRequested(): void
     {
         $products = [
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
-            new BaseProduct(3, 3, 3),
-            new BaseProduct(4, 4, 4),
+            new BaseProduct(1, 1, '1'),
+            new BaseProduct(2, 2, '2'),
+            new BaseProduct(3, 3, '3'),
+            new BaseProduct(4, 4, '4'),
         ];
 
         // first call
         $result = $this->invokeMethod($this->batchSearch, 'getBaseProductsRange', [0, $products, 1]);
         $expectedProducts = [
-            new BaseProduct(1, 1, 1),
+            new BaseProduct(1, 1, '1'),
         ];
 
         static::assertEquals($expectedProducts, $result);
@@ -435,8 +439,8 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
         // second call should not return the same product
         $result = $this->invokeMethod($this->batchSearch, 'getBaseProductsRange', [0, $products, 2]);
         $expectedProducts = [
-            new BaseProduct(2, 2, 2),
-            new BaseProduct(3, 3, 3),
+            new BaseProduct(2, 2, '2'),
+            new BaseProduct(3, 3, '3'),
         ];
 
         static::assertEquals($expectedProducts, $result);
@@ -445,23 +449,23 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
     /**
      * @covers \Shopware\Bundle\SearchBundle\BatchProductNumberSearch::getBaseProductsRange
      */
-    public function testGetBaseProductsRangeWithLessProductsThanRequested()
+    public function testGetBaseProductsRangeWithLessProductsThanRequested(): void
     {
         $products = [
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
-            new BaseProduct(3, 3, 3),
-            new BaseProduct(4, 4, 4),
+            new BaseProduct(1, 1, '1'),
+            new BaseProduct(2, 2, '2'),
+            new BaseProduct(3, 3, '3'),
+            new BaseProduct(4, 4, '4'),
         ];
 
         $result = $this->invokeMethod($this->batchSearch, 'getBaseProductsRange', [0, $products, 6]);
         $expectedProducts = [
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
-            new BaseProduct(3, 3, 3),
-            new BaseProduct(4, 4, 4),
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
+            new BaseProduct(1, 1, '1'),
+            new BaseProduct(2, 2, '2'),
+            new BaseProduct(3, 3, '3'),
+            new BaseProduct(4, 4, '4'),
+            new BaseProduct(1, 1, '1'),
+            new BaseProduct(2, 2, '2'),
         ];
 
         static::assertEquals($expectedProducts, $result);
@@ -470,36 +474,28 @@ class BatchProductNumberSearchTest extends \PHPUnit\Framework\TestCase
     /**
      * @covers \Shopware\Bundle\SearchBundle\BatchProductNumberSearch::getBaseProductsRange
      */
-    public function testGetBaseProductsRangeWithLessProductsThanRequestedAndDifferentHashes()
+    public function testGetBaseProductsRangeWithLessProductsThanRequestedAndDifferentHashes(): void
     {
         $products = [
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
-            new BaseProduct(3, 3, 3),
-            new BaseProduct(4, 4, 4),
+            new BaseProduct(1, 1, '1'),
+            new BaseProduct(2, 2, '2'),
+            new BaseProduct(3, 3, '3'),
+            new BaseProduct(4, 4, '4'),
         ];
 
         $result = $this->invokeMethod($this->batchSearch, 'getBaseProductsRange', [0, $products, 6]);
         $expectedProducts = [
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
-            new BaseProduct(3, 3, 3),
-            new BaseProduct(4, 4, 4),
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
+            new BaseProduct(1, 1, '1'),
+            new BaseProduct(2, 2, '2'),
+            new BaseProduct(3, 3, '3'),
+            new BaseProduct(4, 4, '4'),
+            new BaseProduct(1, 1, '1'),
+            new BaseProduct(2, 2, '2'),
         ];
 
         static::assertEquals($expectedProducts, $result);
 
         $result = $this->invokeMethod($this->batchSearch, 'getBaseProductsRange', [1, $products, 6]);
-        $expectedProducts = [
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
-            new BaseProduct(3, 3, 3),
-            new BaseProduct(4, 4, 4),
-            new BaseProduct(1, 1, 1),
-            new BaseProduct(2, 2, 2),
-        ];
 
         static::assertEquals($expectedProducts, $result);
     }

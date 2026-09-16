@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Plugin;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Enlight_Event_EventArgs;
 use PHPUnit\Framework\TestCase;
 use Shopware\Components\Plugin\ResourceSubscriber;
 use Shopware\Components\Theme\LessDefinition;
@@ -39,7 +41,7 @@ class ResourceSubscriberTest extends TestCase
         static::assertNull($subscriber->onCollectLess());
 
         $subscriberWithViews = new ResourceSubscriber(__DIR__ . '/examples/EmptyPlugin');
-        $templateEventArgs = new \Enlight_Event_EventArgs();
+        $templateEventArgs = new Enlight_Event_EventArgs();
         $subscriberWithViews->onRegisterTemplate($templateEventArgs);
         static::assertIsArray($templateEventArgs->getReturn());
         static::assertNotEmpty($templateEventArgs->getReturn());
@@ -49,6 +51,7 @@ class ResourceSubscriberTest extends TestCase
     {
         $subscriber = new ResourceSubscriber(__DIR__ . '/examples/TestPlugin');
 
+        static::assertInstanceOf(ArrayCollection::class, $subscriber->onCollectCss());
         static::assertSame(
             [
                 __DIR__ . '/examples/TestPlugin/Resources/frontend/css/foo/bar.css',
@@ -57,6 +60,7 @@ class ResourceSubscriberTest extends TestCase
             $subscriber->onCollectCss()->toArray()
         );
 
+        static::assertInstanceOf(ArrayCollection::class, $subscriber->onCollectJavascript());
         static::assertSame(
             [
                 __DIR__ . '/examples/TestPlugin/Resources/frontend/js/foo.js',
@@ -73,9 +77,9 @@ class ResourceSubscriberTest extends TestCase
         );
 
         $subscriberWithViews = new ResourceSubscriber(__DIR__ . '/examples/TestPlugin');
-        $templateEventArgs = new \Enlight_Event_EventArgs();
+        $templateEventArgs = new Enlight_Event_EventArgs();
         $subscriberWithViews->onRegisterTemplate($templateEventArgs);
-        static::assertTrue(is_array($templateEventArgs->getReturn()));
+        static::assertIsArray($templateEventArgs->getReturn());
         static::assertSame(
             [
                 __DIR__ . '/examples/TestPlugin/Resources/views',

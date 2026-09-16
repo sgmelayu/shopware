@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Document;
@@ -86,10 +86,10 @@ class Element extends ModelEntity
     /**
      * Owning Side
      *
-     * @var \Shopware\Models\Document\Document
+     * @var Document
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Document\Document", inversedBy="elements")
-     * @ORM\JoinColumn(name="documentID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="documentID", referencedColumnName="id", nullable=false)
      */
     private $document;
 
@@ -108,7 +108,7 @@ class Element extends ModelEntity
      *
      * @param string $name
      *
-     * @return \Shopware\Models\Document\Element
+     * @return Element
      */
     public function setName($name)
     {
@@ -132,7 +132,7 @@ class Element extends ModelEntity
      *
      * @param string $value
      *
-     * @return \Shopware\Models\Document\Element
+     * @return Element
      */
     public function setValue($value)
     {
@@ -156,7 +156,7 @@ class Element extends ModelEntity
      *
      * @param string $style
      *
-     * @return \Shopware\Models\Document\Element
+     * @return Element
      */
     public function setStyle($style)
     {
@@ -174,9 +174,9 @@ class Element extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Document\Document $document
+     * @param Document $document
      *
-     * @return \Shopware\Models\Document\Element
+     * @return Element
      */
     public function setDocument($document)
     {
@@ -186,7 +186,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Document\Document
+     * @return Document
      */
     public function getDocument()
     {

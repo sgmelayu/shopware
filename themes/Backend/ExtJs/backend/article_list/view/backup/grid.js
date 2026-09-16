@@ -2,30 +2,28 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/article_list/main"}
 //{block name="backend/article_list/view/backup/grid"}
 Ext.define('Shopware.apps.ArticleList.view.Backup.Grid', {
     extend: 'Ext.grid.Panel',
-
 
     alias: 'widget.multi-edit-backup-grid',
 
@@ -59,20 +57,20 @@ Ext.define('Shopware.apps.ArticleList.view.Backup.Grid', {
             format: 'Y-m-d H:i',
             menuDisabled: true,
             sortable: true
-        },{
+        }, {
             width: 120,
             header: '{s name="backup/items"}Affected products{/s}',
             dataIndex: 'items',
             menuDisabled: true,
             sortable: true
-        },{
+        }, {
             flex: 1,
             header: '{s name="backup/filter"}Filter string{/s}',
             dataIndex: 'filterString',
             menuDisabled: true,
             sortable: false,
             renderer: me.nl2brRenderer
-        },{
+        }, {
             flex: 1,
             header: '{s name="backup/operations"}Operations applied{/s}',
             dataIndex: 'operationString',
@@ -131,7 +129,6 @@ Ext.define('Shopware.apps.ArticleList.view.Backup.Grid', {
         return value.replace(/[\r\n]+/g, "<br>");
     },
 
-
     /**
      * Creates pagingbar
      *
@@ -142,8 +139,8 @@ Ext.define('Shopware.apps.ArticleList.view.Backup.Grid', {
 
         var pagingBar = Ext.create('Ext.toolbar.Paging', {
             store: me.store,
-            dock:'bottom',
-            displayInfo:true
+            dock: 'bottom',
+            displayInfo: true
         });
 
         return pagingBar;

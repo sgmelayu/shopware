@@ -1,32 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Order;
 
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 use Shopware\Models\Article\Detail as ArticleDetail;
+use Shopware\Models\Attribute\OrderDetail;
+use Shopware\Models\Tax\Tax;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -49,37 +52,37 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Detail extends ModelEntity
 {
     /**
-     * @var \Shopware\Models\Order\Order
+     * @var Order
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\Order\Order", inversedBy="details")
-     * @ORM\JoinColumn(name="orderID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="orderID", referencedColumnName="id", nullable=false)
      */
     protected $order;
 
     /**
-     * @var \Shopware\Models\Order\Status
+     * @var Status
      *
      * @Assert\NotBlank()
      *
-     * @var \Shopware\Models\Order\Status
+     * @var Status
      *
      * @ORM\OneToOne(targetEntity="\Shopware\Models\Order\DetailStatus")
-     * @ORM\JoinColumn(name="status", referencedColumnName="id")
+     * @ORM\JoinColumn(name="status", referencedColumnName="id", nullable=false)
      */
     protected $status;
 
     /**
-     * @var \Shopware\Models\Tax\Tax
+     * @var Tax|null
      *
      * @ORM\OneToOne(targetEntity="\Shopware\Models\Tax\Tax")
-     * @ORM\JoinColumn(name="taxID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="taxID", referencedColumnName="id", nullable=true)
      */
     protected $tax;
 
     /**
      * INVERSE SIDE
      *
-     * @var \Shopware\Models\Attribute\OrderDetail|null
+     * @var OrderDetail|null
      *
      * @ORM\OneToOne(targetEntity="Shopware\Models\Attribute\OrderDetail", mappedBy="orderDetail", orphanRemoval=true, cascade={"persist"})
      */
@@ -88,7 +91,7 @@ class Detail extends ModelEntity
     /**
      * INVERSE SIDE
      *
-     * @var \Shopware\Models\Order\Esd
+     * @var Esd|null
      *
      * @ORM\OneToOne(targetEntity="Shopware\Models\Order\Esd", mappedBy="orderDetail")
      */
@@ -122,7 +125,6 @@ class Detail extends ModelEntity
      * @var int
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="articleID", type="integer", nullable=false)
      */
     private $articleId;
@@ -138,7 +140,6 @@ class Detail extends ModelEntity
      * @var float
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="tax_rate", type="float", nullable=false)
      */
     private $taxRate;
@@ -168,7 +169,6 @@ class Detail extends ModelEntity
      * @var string
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="articleordernumber", type="string", length=255, nullable=false)
      */
     private $articleNumber;
@@ -177,7 +177,6 @@ class Detail extends ModelEntity
      * @var float
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="price", type="float", nullable=false)
      */
     private $price;
@@ -186,7 +185,6 @@ class Detail extends ModelEntity
      * @var int
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="quantity", type="integer", nullable=false)
      */
     private $quantity;
@@ -195,7 +193,6 @@ class Detail extends ModelEntity
      * @var string
      *
      * @Assert\NotBlank()
-     *
      * @ORM\Column(name="name", type="string", length=255, nullable=false)
      */
     private $articleName;
@@ -215,7 +212,7 @@ class Detail extends ModelEntity
     private $shippedGroup = 0;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="releasedate", type="date", nullable=true)
      */
@@ -379,7 +376,7 @@ class Detail extends ModelEntity
         return $this->articleDetail;
     }
 
-    public function setArticleDetail(ArticleDetail $articleDetail = null)
+    public function setArticleDetail(?ArticleDetail $articleDetail = null)
     {
         $this->articleDetail = $articleDetail;
     }
@@ -425,7 +422,7 @@ class Detail extends ModelEntity
     }
 
     /**
-     * @param \DateTimeInterface|null $releaseDate
+     * @param DateTimeInterface|null $releaseDate
      *
      * @return Detail
      */
@@ -437,7 +434,7 @@ class Detail extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getReleaseDate()
     {
@@ -529,7 +526,7 @@ class Detail extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Order\DetailStatus $status
+     * @param DetailStatus $status
      */
     public function setStatus($status)
     {
@@ -537,7 +534,7 @@ class Detail extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Tax\Tax|null
+     * @return Tax|null
      */
     public function getTax()
     {
@@ -545,7 +542,7 @@ class Detail extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Tax\Tax $tax
+     * @param Tax|null $tax
      */
     public function setTax($tax)
     {
@@ -553,7 +550,7 @@ class Detail extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Attribute\OrderDetail|null
+     * @return OrderDetail|null
      */
     public function getAttribute()
     {
@@ -561,17 +558,17 @@ class Detail extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Attribute\OrderDetail|array|null $attribute
+     * @param OrderDetail|array|null $attribute
      *
-     * @return \Shopware\Models\Order\Detail
+     * @return Detail
      */
     public function setAttribute($attribute)
     {
-        return $this->setOneToOne($attribute, \Shopware\Models\Attribute\OrderDetail::class, 'attribute', 'orderDetail');
+        return $this->setOneToOne($attribute, OrderDetail::class, 'attribute', 'orderDetail');
     }
 
     /**
-     * @param \Shopware\Models\Order\Esd $esd
+     * @param Esd|null $esd
      */
     public function setEsd($esd)
     {
@@ -579,7 +576,7 @@ class Detail extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Order\Esd
+     * @return Esd|null
      */
     public function getEsd()
     {

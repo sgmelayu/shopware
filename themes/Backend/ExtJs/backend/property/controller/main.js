@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Property
@@ -68,7 +67,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
      */
     snippets: {
         // Delete option
-        deleteOptionConfirmTitle:   '{s name="message/delete_option_confirm_title"}Delete selected option{/s}',
+        deleteOptionConfirmTitle: '{s name="message/delete_option_confirm_title"}Delete selected option{/s}',
         deleteOptionConfirmMessage: '{s name="message/delete_option_confirm_message"}Are you sure you want to delete the selected option?{/s}',
 
         deleteOptionSuccessTitle: '{s name="message/delete_option_success_message"}Successfully{/s}',
@@ -78,7 +77,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
         deleteOptionErrorMessage: '{s name="message/delete_option_error_message"}An error has occurred.{/s}',
 
         // Delete group
-        deleteGroupConfirmTitle:   '{s name="message/delete_group_confirm_title"}Delete selected Group{/s}',
+        deleteGroupConfirmTitle: '{s name="message/delete_group_confirm_title"}Delete selected Group{/s}',
         deleteGroupConfirmMessage: '{s name="message/delete_group_confirm_message"}Are you sure you want to delete the selected group?{/s}',
 
         deleteGroupSuccessTitle: '{s name="message/delete_group_success_message"}Successfully{/s}',
@@ -88,7 +87,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
         deleteGroupErrorMessage: '{s name="message/delete_group_error_message"}An error has occurred.{/s}',
 
         // Delete set
-        deleteSetConfirmTitle:   '{s name="message/delete_group_confirm_title"}Delete selected Group{/s}',
+        deleteSetConfirmTitle: '{s name="message/delete_group_confirm_title"}Delete selected Group{/s}',
         deleteSetConfirmMessage: '{s name="message/delete_group_confirm_message"}Are you sure you want to delete the selected group?{/s}',
 
         deleteSetSuccessTitle: '{s name="message/delete_group_success_message"}Successfully{/s}',
@@ -96,7 +95,6 @@ Ext.define('Shopware.apps.Property.controller.Main', {
 
         deleteSetErrorTitle: '{s name="message/delete_group_error_title"}Error{/s}',
         deleteSetErrorMessage: '{s name="message/delete_group_error_message"}An error has occurred.{/s}',
-
 
         // set assigned
         groupAlreadyAssigned: '{s name="message/group_already_assigned"}The group was already assigned.{/s}',
@@ -216,25 +214,25 @@ Ext.define('Shopware.apps.Property.controller.Main', {
             assignStore = me.subApplication.setAssignStore,
             alreadyAssigned = false;
 
-        if(element.records.length == 0){
+        if (element.records.length == 0){
             return;
         }
         var record = element.records[0],
             setId = assignStore.getProxy().extraParams.setId;
 
-        if(element.view.ownerCt.alias == "widget.property-main-groupGrid") {
+        if (element.view.ownerCt.alias == "widget.property-main-groupGrid") {
 
             assignStore.each(function(item) {
                 var optionId = item.data.optionId;
-                if(record.data.id == item.data.optionId) {
+                if (record.data.id == item.data.optionId) {
                     //record already assigned
-                    Shopware.Notification.createGrowlMessage(me.snippets.deleteGroupErrorTitle,me.snippets.groupAlreadyAssigned, me.snippets.growlMessage);
+                    Shopware.Notification.createGrowlMessage(me.snippets.deleteGroupErrorTitle, me.snippets.groupAlreadyAssigned, me.snippets.growlMessage);
                     me.subApplication.groupStore.load();
                     assignStore.load();
                     alreadyAssigned = true;
                 }
             });
-            if(!alreadyAssigned) {
+            if (!alreadyAssigned) {
                 //save group assignment
                 Ext.Ajax.request({
                     url: '{url controller="property" action="onAddAssignment"}',
@@ -245,7 +243,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
                     success: function(response, opts) {
                         me.subApplication.groupStore.load();
                         assignStore.load();
-                        Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle,me.snippets.groupSuccessfulAssigned, me.snippets.growlMessage);
+                        Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle, me.snippets.groupSuccessfulAssigned, me.snippets.growlMessage);
                     }
                 });
             }
@@ -256,13 +254,12 @@ Ext.define('Shopware.apps.Property.controller.Main', {
         }
     },
 
-
     /**
      * Internal helper function to save current postion of values
      */
     saveAssignmentPosition: function(store) {
         var me = this;
-        if(store.getProxy().extraParams.length == 0) {
+        if (store.getProxy().extraParams.length == 0) {
             return;
         }
         var orderedItems = [],
@@ -271,7 +268,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
 
         store.each(function(item) {
             orderedItems[index] = item.get('id');
-            index +=1;
+            index += 1;
         });
 
         // Send current positions to backend
@@ -280,10 +277,10 @@ Ext.define('Shopware.apps.Property.controller.Main', {
             method: 'POST',
             params: {
                 setId: setId,
-                data : Ext.encode(orderedItems)
+                data: Ext.encode(orderedItems)
             },
             success: function(response, opts) {
-                Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle,me.snippets.groupSuccessfulSorted, me.snippets.growlMessage);
+                Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle, me.snippets.groupSuccessfulSorted, me.snippets.growlMessage);
             }
         });
     },
@@ -312,7 +309,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
             url: '{url controller="property" action="changeGroupPosition"}',
             method: 'POST',
             params: {
-                data : Ext.encode(orderedItems)
+                data: Ext.encode(orderedItems)
             }
         });
     },
@@ -329,7 +326,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
      */
     onDropOption: function (node, data, overModel, dropPosition) {
         var me = this;
-            me.saveOptionPosition(true);
+        me.saveOptionPosition(true);
     },
 
     /**
@@ -343,7 +340,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
 
         store.each(function(item) {
             orderedItems[index] = item.data.id;
-            index +=1;
+            index += 1;
         });
 
         // Send current positions to backend
@@ -351,11 +348,11 @@ Ext.define('Shopware.apps.Property.controller.Main', {
             url: '{url controller="property" action="changeOptionPosition"}',
             method: 'POST',
             params: {
-                data : Ext.encode(orderedItems)
+                data: Ext.encode(orderedItems)
             },
             success: function(response, opts) {
-                if(showSuccessMessage) {
-                    Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle,me.snippets.optionSuccessfulSorted, me.snippets.growlMessage);
+                if (showSuccessMessage) {
+                    Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle, me.snippets.optionSuccessfulSorted, me.snippets.growlMessage);
                 }
             }
         });
@@ -401,7 +398,7 @@ Ext.define('Shopware.apps.Property.controller.Main', {
                 optionId: record.get('id')
             },
             success: function(response, opts) {
-                Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle,me.snippets.successfulRemovedAssignment, me.snippets.growlMessage);
+                Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle, me.snippets.successfulRemovedAssignment, me.snippets.growlMessage);
                 me.subApplication.setAssignStore.load();
             }
         });
@@ -428,14 +425,13 @@ Ext.define('Shopware.apps.Property.controller.Main', {
 
         record.save({
             callback: function() {
-                Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle,me.snippets.successfulSavedSet, me.snippets.growlMessage);
+                Shopware.Notification.createGrowlMessage(me.snippets.successfulTitle, me.snippets.successfulSavedSet, me.snippets.growlMessage);
                 me.subApplication.setStore.load();
                 me.getSetGrid().addBtn.enable();
 
             }
         });
     },
-
 
     /**
      * Event will be fired when the selected option changes
@@ -507,8 +503,6 @@ Ext.define('Shopware.apps.Property.controller.Main', {
             }
         });
     },
-
-
 
     /**
      * Event will be fired when the user clicks the delete icon in theconfig
@@ -646,7 +640,6 @@ Ext.define('Shopware.apps.Property.controller.Main', {
         });
     },
 
-
     /**
      * Fired after a row is edited and passes validation. This event is fired
      * after the store's update event is fired with this edit.
@@ -692,15 +685,14 @@ Ext.define('Shopware.apps.Property.controller.Main', {
      * @param value
      * @return void
      */
-    onSearchGroups:function (field, value) {
+    onSearchGroups: function (field, value) {
         var me = this,
             searchString = Ext.String.trim(value),
             store = me.subApplication.groupStore;
         store.filters.clear();
         store.currentPage = 1;
-        store.filter('filter',searchString);
+        store.filter('filter', searchString);
     },
-
 
     /**
      * Filters the grid with the passed search value to find the right item
@@ -709,13 +701,13 @@ Ext.define('Shopware.apps.Property.controller.Main', {
      * @param value
      * @return void
      */
-    onSearchSets:function (field, value) {
+    onSearchSets: function (field, value) {
         var me = this,
             searchString = Ext.String.trim(value),
             store = me.subApplication.setStore;
         store.filters.clear();
         store.currentPage = 1;
-        store.filter('filter',searchString);
+        store.filter('filter', searchString);
     },
 
     openGroupWindow: function (record) {

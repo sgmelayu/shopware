@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Struct;
 
+use DateTimeInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Customer\Group;
 
 class Customer extends Extendable
@@ -64,12 +65,12 @@ class Customer extends Extendable
     protected $paymentId;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      */
     protected $firstLogin;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      */
     protected $lastLogin;
 
@@ -124,7 +125,7 @@ class Customer extends Extendable
     protected $failedLogins;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      */
     protected $lockedUntil;
 
@@ -159,7 +160,7 @@ class Customer extends Extendable
     protected $lastname;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      */
     protected $birthday;
 
@@ -296,7 +297,7 @@ class Customer extends Extendable
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getFirstLogin()
     {
@@ -304,7 +305,7 @@ class Customer extends Extendable
     }
 
     /**
-     * @param \DateTimeInterface $firstLogin
+     * @param DateTimeInterface $firstLogin
      */
     public function setFirstLogin($firstLogin)
     {
@@ -312,7 +313,7 @@ class Customer extends Extendable
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getLastLogin()
     {
@@ -320,7 +321,7 @@ class Customer extends Extendable
     }
 
     /**
-     * @param \DateTimeInterface $lastLogin
+     * @param DateTimeInterface $lastLogin
      */
     public function setLastLogin($lastLogin)
     {
@@ -488,7 +489,7 @@ class Customer extends Extendable
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getLockedUntil()
     {
@@ -496,7 +497,7 @@ class Customer extends Extendable
     }
 
     /**
-     * @param \DateTimeInterface|null $lockedUntil
+     * @param DateTimeInterface|null $lockedUntil
      */
     public function setLockedUntil($lockedUntil)
     {
@@ -600,7 +601,7 @@ class Customer extends Extendable
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getBirthday()
     {
@@ -608,7 +609,7 @@ class Customer extends Extendable
     }
 
     /**
-     * @param \DateTimeInterface|null $birthday
+     * @param DateTimeInterface|null $birthday
      */
     public function setBirthday($birthday)
     {

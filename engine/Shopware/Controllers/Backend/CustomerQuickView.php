@@ -1,32 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
+use Shopware\Bundle\AttributeBundle\Repository\CustomerRepository;
 use Shopware\Bundle\AttributeBundle\Repository\SearchCriteria;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Attribute\Customer as CustomerAttribute;
 use Shopware\Models\Customer\Customer;
 
+/**
+ * @extends Shopware_Controllers_Backend_Application<Customer>
+ */
 class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controllers_Backend_Application
 {
     protected $model = Customer::class;
@@ -83,12 +88,12 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
      */
     public function delete($id)
     {
-        $this->get(\Doctrine\DBAL\Connection::class)->executeQuery(
+        $this->get(Connection::class)->executeQuery(
             'DELETE FROM s_customer_streams_mapping WHERE customer_id = :id',
             [':id' => $id]
         );
 
-        $this->get(\Doctrine\DBAL\Connection::class)->executeQuery(
+        $this->get(Connection::class)->executeQuery(
             'DELETE FROM s_customer_search_index WHERE id = :id',
             [':id' => $id]
         );
@@ -101,7 +106,7 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
      */
     protected function getListQuery()
     {
-        $query = $this->container->get(\Shopware\Components\Model\ModelManager::class)->createQueryBuilder();
+        $query = $this->container->get(ModelManager::class)->createQueryBuilder();
 
         $query->select([
             'customer.id',
@@ -187,7 +192,7 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
         foreach ($list['data'] as &$row) {
             $id = (int) $row['id'];
 
-            if (array_key_exists($id, $attributes)) {
+            if (\array_key_exists($id, $attributes)) {
                 $row['attribute'] = $attributes[$id];
             }
         }
@@ -216,12 +221,9 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
         return $fields;
     }
 
-    /**
-     * @return array
-     */
-    private function fetchAttributes(array $ids)
+    private function fetchAttributes(array $ids): array
     {
-        $query = $this->container->get(\Shopware\Components\Model\ModelManager::class)->createQueryBuilder();
+        $query = $this->container->get(ModelManager::class)->createQueryBuilder();
         $query->select(['attribute']);
         $query->from(CustomerAttribute::class, 'attribute', 'attribute.customerId');
         $query->where('attribute.customerId IN (:ids)');
@@ -230,7 +232,10 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
         return $query->getQuery()->getArrayResult();
     }
 
-    private function loadFromRepository()
+    /**
+     * @return array{success: true, data: array<array<string, mixed>>, total: int}
+     */
+    private function loadFromRepository(): array
     {
         $request = $this->Request();
         $criteria = new SearchCriteria(Customer::class);
@@ -240,7 +245,7 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
         $criteria->sortings = $request->getParam('sort', []);
         $criteria->conditions = $request->getParam('filter', []);
 
-        foreach ($criteria->sortings as $index => &$sorting) {
+        foreach ($criteria->sortings as &$sorting) {
             switch ($sorting['property']) {
                 case 'customerGroup':
                     $sorting['property'] = 'customerGroupId';
@@ -263,7 +268,7 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
             }
         }
 
-        foreach ($criteria->conditions as $index => &$condition) {
+        foreach ($criteria->conditions as &$condition) {
             switch ($condition['property']) {
                 case 'customerGroup':
                     $condition['property'] = 'customerGroupId';
@@ -274,14 +279,14 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
 
                 case 'lastLogin':
                 case 'firstLogin':
-                    $date = new \DateTime($condition['value']);
+                    $date = new DateTime($condition['value']);
                     $condition['value'] = $date->format('Y-m-d');
                     $condition['expression'] = '>=';
                     break;
             }
         }
 
-        $repository = $this->container->get(\Shopware\Bundle\AttributeBundle\Repository\CustomerRepository::class);
+        $repository = $this->container->get(CustomerRepository::class);
 
         $result = $repository->search($criteria);
 
@@ -304,6 +309,6 @@ class Shopware_Controllers_Backend_CustomerQuickView extends Shopware_Controller
             }
         }
 
-        return ['data' => array_values($sortedData), 'total' => $result->getCount()];
+        return ['success' => true, 'data' => $sortedData, 'total' => $result->getCount()];
     }
 }

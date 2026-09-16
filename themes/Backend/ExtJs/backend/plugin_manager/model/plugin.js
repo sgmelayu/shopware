@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    PluginManager
@@ -70,8 +69,8 @@ Ext.define('Shopware.apps.PluginManager.model.Plugin', {
         { name: 'useContactForm',     type: 'boolean',  defaultValue: false },
         { name: 'formId',             type: 'int', useNull: true, defaultValue: null },
         { name: 'link',               type: 'string', useNull: true },
-        { name: 'redirectToStore',    type: 'boolean', useNull: true},
-        { name: 'lowestPrice',        type: 'float', useNull: true},
+        { name: 'redirectToStore',    type: 'boolean', useNull: true },
+        { name: 'lowestPrice',        type: 'float', useNull: true },
 
         { name: 'groupingState', type: 'int', convert: function(value, record) {
 
@@ -82,7 +81,7 @@ Ext.define('Shopware.apps.PluginManager.model.Plugin', {
             } else {
                 return 0;
             }
-        }},
+        } },
         { name: 'changelog' }
     ],
 
@@ -104,19 +103,19 @@ Ext.define('Shopware.apps.PluginManager.model.Plugin', {
 
     allowInstall: function() {
         return (
-            !this.allowDummyUpdate()
-            && (this.get('id') > 0)
-            && this.get('capabilityInstall')
-            && this.get('installationDate') == null
+            !this.allowDummyUpdate() &&
+            (this.get('id') > 0) &&
+            this.get('capabilityInstall') &&
+            this.get('installationDate') == null
         );
     },
 
     allowUninstall: function () {
         return (
-            !this.allowDummyUpdate()
-            && (this.get('id') > 0)
-            && this.get('capabilityInstall')
-            && this.get('installationDate') != null
+            !this.allowDummyUpdate() &&
+            (this.get('id') > 0) &&
+            this.get('capabilityInstall') &&
+            this.get('installationDate') != null
         );
     },
 
@@ -130,10 +129,10 @@ Ext.define('Shopware.apps.PluginManager.model.Plugin', {
 
     allowReinstall: function () {
         return (
-            !this.allowDummyUpdate()
-            && (this.get('id') > 0)
-            && this.get('capabilityInstall')
-            && this.get('installationDate') != null
+            !this.allowDummyUpdate() &&
+            (this.get('id') > 0) &&
+            this.get('capabilityInstall') &&
+            this.get('installationDate') != null
         );
     },
 
@@ -148,30 +147,30 @@ Ext.define('Shopware.apps.PluginManager.model.Plugin', {
 
     allowActivate: function () {
         return (
-            !this.allowDummyUpdate()
-            && (this.get('id') > 0)
-            && this.get('capabilityActivate')
-            && this.get('installationDate') !== null
-            && this.get('active') == false
+            !this.allowDummyUpdate() &&
+            (this.get('id') > 0) &&
+            this.get('capabilityActivate') &&
+            this.get('installationDate') !== null &&
+            this.get('active') == false
         );
     },
 
     allowDeactivate: function () {
         return (
-            !this.allowDummyUpdate()
-            && (this.get('id') > 0)
-            && this.get('capabilityActivate')
-            && this.get('installationDate') !== null
-            && this.get('active') == true
+            !this.allowDummyUpdate() &&
+            (this.get('id') > 0) &&
+            this.get('capabilityActivate') &&
+            this.get('installationDate') !== null &&
+            this.get('active') == true
         );
     },
 
     allowUpdate: function () {
         return (
-            !this.allowDummyUpdate()
-            && (this.get('id') > 0)
-            && this.get('availableVersion') !== null
-            && this.get('version') !== this.get('availableVersion')
+            !this.allowDummyUpdate() &&
+            (this.get('id') > 0) &&
+            this.get('availableVersion') !== null &&
+            this.get('version') !== this.get('availableVersion')
         );
     },
 
@@ -185,19 +184,19 @@ Ext.define('Shopware.apps.PluginManager.model.Plugin', {
 
     allowConfigure: function () {
         return (
-            !this.allowDummyUpdate()
-            && (this.get('id') > 0)
-            && (this.get('formId') > 0)
-            && this.get('installationDate') != null
+            !this.allowDummyUpdate() &&
+            (this.get('id') > 0) &&
+            (this.get('formId') > 0) &&
+            this.get('installationDate') != null
         );
     },
 
     allowDelete: function () {
         return (
-            !this.allowDummyUpdate()
-            && (this.get('id') > 0)
-            && this.get('installationDate') == null
-            && this.get('source') != 'Default'
+            !this.allowDummyUpdate() &&
+            (this.get('id') > 0) &&
+            this.get('installationDate') == null &&
+            this.get('source') != 'Default'
         );
     },
 

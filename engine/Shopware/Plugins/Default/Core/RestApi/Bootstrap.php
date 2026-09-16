@@ -1,28 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Components\Model\ModelManager;
+use Shopware\Models\User\Role;
 use ShopwarePlugins\RestApi\Components\BasicAuthResolver;
+use ShopwarePlugins\RestApi\Components\Router;
 use ShopwarePlugins\RestApi\Components\StaticResolver;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -43,9 +46,6 @@ class Shopware_Plugins_Core_RestApi_Bootstrap extends Shopware_Components_Plugin
      */
     protected $isApiCall = false;
 
-    /**
-     * @return bool
-     */
     public function install()
     {
         $this->subscribeEvent('Enlight_Controller_Front_DispatchLoopStartup', 'onDispatchLoopStartup');
@@ -55,9 +55,6 @@ class Shopware_Plugins_Core_RestApi_Bootstrap extends Shopware_Components_Plugin
         return true;
     }
 
-    /**
-     * @return array
-     */
     public function getCapabilities()
     {
         return [
@@ -72,7 +69,7 @@ class Shopware_Plugins_Core_RestApi_Bootstrap extends Shopware_Components_Plugin
      */
     public function afterInit()
     {
-        $this->get(\Enlight_Loader::class)->registerNamespace(
+        $this->get(Enlight_Loader::class)->registerNamespace(
             'ShopwarePlugins\\RestApi\\Components',
             __DIR__ . '/Components/'
         );
@@ -81,7 +78,7 @@ class Shopware_Plugins_Core_RestApi_Bootstrap extends Shopware_Components_Plugin
     /**
      * Listener method for the Enlight_Controller_Front_DispatchLoopStartup event.
      *
-     * @param \Enlight_Controller_EventArgs $args
+     * @return void
      */
     public function onDispatchLoopStartup(Enlight_Controller_EventArgs $args)
     {
@@ -94,14 +91,14 @@ class Shopware_Plugins_Core_RestApi_Bootstrap extends Shopware_Components_Plugin
 
         $this->isApiCall = true;
 
-        $router = new \ShopwarePlugins\RestApi\Components\Router();
+        $router = new Router();
         $router->assembleRoute($this->request, $this->response);
     }
 
     /**
      * This pre-dispatch event-hook checks permissions
      *
-     * @param \Enlight_Controller_EventArgs $args
+     * @return void
      */
     public function onFrontPreDispatch(Enlight_Controller_EventArgs $args)
     {
@@ -132,10 +129,7 @@ class Shopware_Plugins_Core_RestApi_Bootstrap extends Shopware_Components_Plugin
 
         $user = $db->query($select)->fetchObject();
         if (!empty($user->roleID)) {
-            $user->role = $this->get(\Shopware\Components\Model\ModelManager::class)->find(
-                'Shopware\Models\User\Role',
-                $user->roleID
-            );
+            $user->role = $this->get(ModelManager::class)->find(Role::class, $user->roleID);
         }
         $auth->getStorage()->write($user);
 
@@ -165,12 +159,12 @@ class Shopware_Plugins_Core_RestApi_Bootstrap extends Shopware_Components_Plugin
      * Initiate shopware auth resource
      * database adapter by default
      *
-     * @return \Zend_Auth|null
+     * @return Zend_Auth|null
      */
     public function onInitResourceAuth(Enlight_Event_EventArgs $args)
     {
         if (!$this->isApiCall) {
-            return;
+            return null;
         }
 
         $adapter = new Zend_Auth_Adapter_Http([
@@ -182,13 +176,13 @@ class Shopware_Plugins_Core_RestApi_Bootstrap extends Shopware_Components_Plugin
 
         $adapter->setBasicResolver(
             new BasicAuthResolver(
-                $this->get(\Shopware\Components\Model\ModelManager::class)
+                $this->get(ModelManager::class)
             )
         );
 
         $adapter->setDigestResolver(
             new StaticResolver(
-                $this->get(\Shopware\Components\Model\ModelManager::class)
+                $this->get(ModelManager::class)
             )
         );
 

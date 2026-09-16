@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Blog
@@ -38,16 +37,16 @@ Ext.define('Shopware.apps.Blog.view.blog.detail.sidebar.Seo', {
      * Define that the billing field set is an extension of the Ext.form.FieldSet
      * @string
      */
-    extend:'Ext.form.Panel',
+    extend: 'Ext.form.Panel',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.blog-blog-detail-sidebar-seo',
+    alias: 'widget.blog-blog-detail-sidebar-seo',
 
     bodyPadding: 10,
     autoScroll: true,
-    border:false,
+    border: false,
     /**
      * Helper property which contains the name of the add event which fired when the user
      * clicks the button of the form panel
@@ -70,7 +69,7 @@ Ext.define('Shopware.apps.Blog.view.blog.detail.sidebar.Seo', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.registerEvents();
         me.title = '{s name="detail/sidebar/seo/title"}Search Engine Optimization{/s}';
@@ -132,9 +131,9 @@ Ext.define('Shopware.apps.Blog.view.blog.detail.sidebar.Seo', {
         return Ext.create('Ext.form.FieldSet', {
             layout: 'anchor',
             padding: 10,
-            title:'{s name="detail/sidebar/seo/field_set/on_page/title"}On-Page Optimization{/s}',
+            title: '{s name="detail/sidebar/seo/field_set/on_page/title"}On-Page Optimization{/s}',
             defaults: {
-                xtype:'textfield',
+                xtype: 'textfield',
                 anchor: '100%'
             },
             items: me.createFormItems()
@@ -190,7 +189,7 @@ Ext.define('Shopware.apps.Blog.view.blog.detail.sidebar.Seo', {
     createPreviewFieldSet: function () {
         var me = this;
         return {
-            xtype:'googlepreview',
+            xtype: 'googlepreview',
             fieldSetTitle: '{s name="detail/sidebar/seo/field_set/preview/title"}Preview{/s}',
             viewData: me.detailRecord,
             titleField: me.metaTitle,

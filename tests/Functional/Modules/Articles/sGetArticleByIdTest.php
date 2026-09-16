@@ -1,32 +1,38 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-namespace Shopware\Tests\Modules\Articles;
+namespace Shopware\Tests\Functional\Modules\Articles;
 
-class sGetArticleByIdTest extends \Enlight_Components_Test_Plugin_TestCase
+use Enlight_Components_Test_Plugin_TestCase;
+use sArticles;
+use Shopware\Bundle\MediaBundle\MediaServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+
+class sGetArticleByIdTest extends Enlight_Components_Test_Plugin_TestCase
 {
-    protected $articles = [
+    protected array $articles = [
         2 => [
             'articleID' => '2',
             'articleDetailsID' => '125',
@@ -3450,7 +3456,14 @@ class sGetArticleByIdTest extends \Enlight_Components_Test_Plugin_TestCase
         ],
     ];
 
-    protected $articleProperties = [
+    /**
+     * Module instance
+     *
+     * @var sArticles
+     */
+    protected $module;
+
+    private array $articleProperties = [
         'articleID',
         'articleDetailsID',
         'additionaltext',
@@ -3474,13 +3487,6 @@ class sGetArticleByIdTest extends \Enlight_Components_Test_Plugin_TestCase
     ];
 
     /**
-     * Module instance
-     *
-     * @var sArticles
-     */
-    protected $module;
-
-    /**
      * Test set up method
      */
     public function setUp(): void
@@ -3491,17 +3497,15 @@ class sGetArticleByIdTest extends \Enlight_Components_Test_Plugin_TestCase
 
     /**
      * Retrieve module instance
-     *
-     * @return sArticles
      */
-    public function Module()
+    public function Module(): sArticles
     {
         return $this->module;
     }
 
-    public function testArticles()
+    public function testArticles(): void
     {
-        Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->initializeShopContext();
+        Shopware()->Container()->get(ContextServiceInterface::class)->initializeShopContext();
         $this->dispatch('/');
 
         foreach ($this->articles as $id => $expected) {
@@ -3513,7 +3517,7 @@ class sGetArticleByIdTest extends \Enlight_Components_Test_Plugin_TestCase
         }
     }
 
-    public function testGetDisabledArticleById()
+    public function testGetDisabledArticleById(): void
     {
         $this->dispatch('/');
 
@@ -3525,40 +3529,40 @@ class sGetArticleByIdTest extends \Enlight_Components_Test_Plugin_TestCase
 
         Shopware()->Db()->query('UPDATE s_articles SET active = 1 WHERE id = ?', [$id]);
 
-        static::assertGreaterThan(0, count($this->Module()->sGetArticleById($id)));
+        static::assertGreaterThan(0, \count($this->Module()->sGetArticleById($id)));
     }
 
-    private function assertArticleData($expected, $data)
+    private function assertArticleData(array $expected, array $data): void
     {
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
         foreach ($this->articleProperties as $property) {
             if ($property === 'supplierImg') {
                 $expected[$property] = $mediaService->getUrl($expected[$property]);
             }
 
             static::assertEquals(
-                $expected[$property],
+                $expected[$property] ?? null,
                 $data[$property],
-                sprintf('Property %s dont match for article : %s - %s', $property, $expected['ordernumber'], $expected['articleName'])
+                \sprintf('Property %s dont match for article : %s - %s', $property, $expected['ordernumber'], $expected['articleName'])
             );
         }
     }
 
-    private function assertLinks($expected, $data)
+    private function assertLinks(array $expected, array $data): void
     {
         static::assertCount(
-            count($expected['sLinks']),
+            \count($expected['sLinks']),
             $data['sLinks'],
-            sprintf("Link count doesn't match for article : %s - %s", $expected['ordernumber'], $expected['articleName'])
+            \sprintf("Link count doesn't match for article : %s - %s", $expected['ordernumber'], $expected['articleName'])
         );
     }
 
-    private function assertRelated($expected, $data)
+    private function assertRelated(array $expected, array $data): void
     {
-        static::assertCount(count($expected['sRelatedArticles']), $data['sRelatedArticles']);
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        static::assertCount(\count($expected['sRelatedArticles']), $data['sRelatedArticles']);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
-        for ($i = 0; $i < count($expected['sRelatedArticles']); ++$i) {
+        for ($i = 0; $i < \count($expected['sRelatedArticles']); ++$i) {
             $expectedArticle = $expected['sRelatedArticles'][$i];
 
             if (isset($expectedArticle['supplierImg'])) {
@@ -3568,14 +3572,14 @@ class sGetArticleByIdTest extends \Enlight_Components_Test_Plugin_TestCase
             $gotArticle = $data['sRelatedArticles'][$i];
 
             foreach ($this->articleProperties as $property) {
-                if (!array_key_exists($property, $expectedArticle)) {
+                if (!\array_key_exists($property, $expectedArticle)) {
                     continue;
                 }
 
                 static::assertEquals(
                     $expectedArticle[$property],
                     $gotArticle[$property],
-                    sprintf("sRelatedArticles property %s doesn't match for article %s - %s", $property, $expected['ordernumber'], $expected['articleName'])
+                    \sprintf("sRelatedArticles property %s doesn't match for article %s - %s", $property, $expected['ordernumber'], $expected['articleName'])
                 );
             }
         }

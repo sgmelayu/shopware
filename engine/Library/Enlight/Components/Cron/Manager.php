@@ -22,11 +22,6 @@
  *
  * The Enlight_Components_Cron_Manager is responsible to store all registered cron jobs and
  * execute the cron jobs with the associated cron job arguments.
- *
- * @category   Enlight
- *
- * @copyright  Copyright (c) 2011, shopware AG (http://www.shopware.de)
- * @license    http://enlight.de/license     New BSD License
  */
 class Enlight_Components_Cron_Manager
 {
@@ -45,7 +40,6 @@ class Enlight_Components_Cron_Manager
     /**
      * Constructor can be injected with a read / write adapter object
      *
-     * @param Enlight_Components_Cron_Adapter $adapter
      * @param Enlight_Event_EventManager|null $eventManager
      * @param string                          $eventArgsClass
      *
@@ -65,8 +59,6 @@ class Enlight_Components_Cron_Manager
 
     /**
      * Sets the read / write adapter
-     *
-     * @param Enlight_Components_Cron_Adapter $adapter
      *
      * @return Enlight_Components_Cron_Manager
      */
@@ -90,11 +82,9 @@ class Enlight_Components_Cron_Manager
     /**
      * Sets an Event Manager. Needed to execute the cron
      *
-     * @param Enlight_Event_EventManager|null $eventManager
-     *
      * @return Enlight_Components_Cron_Manager
      */
-    public function setEventManager(Enlight_Event_EventManager $eventManager = null)
+    public function setEventManager(?Enlight_Event_EventManager $eventManager = null)
     {
         $this->eventManager = $eventManager;
 
@@ -114,21 +104,17 @@ class Enlight_Components_Cron_Manager
     /**
      * Deactivate a given Cron Job in the crontab
      *
-     * @param Enlight_Components_Cron_Job $job
-     *
-     * @return Enlight_Components_Cron_Adapter
+     * @return void
      */
     public function disableJob(Enlight_Components_Cron_Job $job)
     {
         $job->setActive(false);
 
-        return $this->adapter->updateJob($job);
+        $this->adapter->updateJob($job);
     }
 
     /**
      * Deactivate a given Cron Job
-     *
-     * @param \Enlight_Components_Cron_Job $job
      *
      * @throws Enlight_Exception
      *
@@ -143,8 +129,6 @@ class Enlight_Components_Cron_Manager
 
     /**
      * Updates a cron job
-     *
-     * @param \Enlight_Components_Cron_Job $job
      *
      * @throws Enlight_Exception
      *
@@ -172,7 +156,7 @@ class Enlight_Components_Cron_Manager
      *
      * @param int $id
      *
-     * @return null|Enlight_Components_Cron_Job
+     * @return Enlight_Components_Cron_Job|null
      */
     public function getJobById($id)
     {
@@ -189,7 +173,7 @@ class Enlight_Components_Cron_Manager
      *
      * @param string $name
      *
-     * @return null|Enlight_Components_Cron_Job
+     * @return Enlight_Components_Cron_Job|null
      */
     public function getJobByName($name)
     {
@@ -206,7 +190,7 @@ class Enlight_Components_Cron_Manager
      *
      * @param string $action
      *
-     * @return null|Enlight_Components_Cron_Job
+     * @return Enlight_Components_Cron_Job|null
      */
     public function getJobByAction($action)
     {
@@ -220,8 +204,6 @@ class Enlight_Components_Cron_Manager
 
     /**
      * Adds an job to the crontab
-     *
-     * @param Enlight_Components_Cron_Job $job
      *
      * @return Enlight_Components_Cron_Manager
      */
@@ -237,7 +219,7 @@ class Enlight_Components_Cron_Manager
      *
      * @param bool $force
      *
-     * @return null|Enlight_Components_Cron_Job
+     * @return Enlight_Components_Cron_Job|null
      */
     public function getNextJob($force = false)
     {
@@ -246,8 +228,6 @@ class Enlight_Components_Cron_Manager
 
     /**
      * Runs a job by handing it over to
-     *
-     * @param Enlight_Components_Cron_Job $job
      *
      * @throws Throwable
      *
@@ -293,7 +273,7 @@ class Enlight_Components_Cron_Manager
             ]);
 
             return $jobArgs;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $job->setData(['error' => $e->getMessage()]);
 
             if ($job->getDisableOnError()) {
@@ -318,8 +298,6 @@ class Enlight_Components_Cron_Manager
 
     /**
      * Ends a job by handing it over to
-     *
-     * @param Enlight_Components_Cron_Job $job
      */
     protected function endJob(Enlight_Components_Cron_Job $job)
     {

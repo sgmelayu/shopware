@@ -1,30 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Struct;
 
-class Attribute extends Struct implements \JsonSerializable, \ArrayAccess
+use ArrayAccess;
+use InvalidArgumentException;
+use JsonSerializable;
+use ReturnTypeWillChange;
+
+class Attribute extends Struct implements JsonSerializable, ArrayAccess
 {
     /**
      * Internal storage which contains all struct data.
@@ -34,12 +39,12 @@ class Attribute extends Struct implements \JsonSerializable, \ArrayAccess
     protected $storage = [];
 
     /**
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function __construct(array $data = [])
     {
         if (!$this->isValid($data)) {
-            throw new \InvalidArgumentException('Class values should be serializable');
+            throw new InvalidArgumentException('Class values should be serializable');
         }
         $this->storage = $data;
     }
@@ -53,7 +58,7 @@ class Attribute extends Struct implements \JsonSerializable, \ArrayAccess
      */
     public function exists($key)
     {
-        return array_key_exists($key, $this->storage);
+        return \array_key_exists($key, $this->storage);
     }
 
     /**
@@ -63,12 +68,12 @@ class Attribute extends Struct implements \JsonSerializable, \ArrayAccess
      *
      * @param string $name
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function set($name, $value)
     {
         if (!$this->isValid($value)) {
-            throw new \InvalidArgumentException('Class values should be serializable');
+            throw new InvalidArgumentException('Class values should be serializable');
         }
 
         $this->storage[$name] = $value;
@@ -95,42 +100,62 @@ class Attribute extends Struct implements \JsonSerializable, \ArrayAccess
     }
 
     /**
-     * {@inheritdoc}
+     * @return array<string, mixed>
+     *
+     * @deprecated - Native return type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->storage;
     }
 
     /**
-     * {@inheritdoc}
+     * @param mixed $offset attribute name
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return $this->exists($offset);
     }
 
     /**
-     * {@inheritdoc}
+     * @param mixed $offset attribute name
+     *
+     * @return mixed attribute value
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->get($offset);
     }
 
     /**
-     * {@inheritdoc}
+     * @param mixed $offset attribute name
+     * @param mixed $value  attribute value
      *
-     * @throws \InvalidArgumentException
+     * @return void
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         $this->set($offset, $value);
     }
 
     /**
-     * {@inheritdoc}
+     * @param mixed $offset attribute name
+     *
+     * @return void
+     *
+     * @deprecated - Native return and parameter type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         if ($this->exists($offset)) {
@@ -140,11 +165,11 @@ class Attribute extends Struct implements \JsonSerializable, \ArrayAccess
 
     private function isValid($value): bool
     {
-        if ($value instanceof \JsonSerializable || is_scalar($value) || $value === null) {
+        if ($value instanceof JsonSerializable || \is_scalar($value) || $value === null) {
             return true;
         }
 
-        if (is_array($value)) {
+        if (\is_array($value)) {
             foreach ($value as $val) {
                 if (!$this->isValid($val)) {
                     return false;

@@ -1,33 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\Mapping as ORM;
+use InvalidArgumentException;
 
 /**
  * Abstract class for shopware standard models.
+ *
+ * @ORM\MappedSuperclass()
  */
 abstract class ModelEntity
 {
@@ -44,7 +48,7 @@ abstract class ModelEntity
     public function fromArray(array $array = [], array $fillable = [])
     {
         foreach ($array as $key => $value) {
-            if (count($fillable) && !in_array($key, $fillable)) {
+            if (\count($fillable) && !\in_array($key, $fillable)) {
                 continue;
             }
 
@@ -122,7 +126,7 @@ abstract class ModelEntity
         }
 
         // If the parameter is no array, return
-        if (!is_array($data) || empty($data)) {
+        if (!\is_array($data) || empty($data)) {
             return $this;
         }
 
@@ -201,13 +205,13 @@ abstract class ModelEntity
         // Iterate all passed items
         foreach ($data as $item) {
             // To get the right collection item use the internal helper function
-            if (is_array($item) && isset($item['id']) && $item['id'] !== null) {
+            if (\is_array($item) && isset($item['id'])) {
                 $attribute = $this->getArrayCollectionElementById($this->$getterFunction(), $item['id']);
                 if (!$attribute instanceof $model) {
                     $attribute = new $model();
                 }
-                // If the item is an array without an id, create a new model.
-            } elseif (is_array($item)) {
+            // If the item is an array without an id, create a new model.
+            } elseif (\is_array($item)) {
                 $attribute = new $model();
             // If the item is no array, it could be an instance of the expected object.
             } else {
@@ -220,7 +224,7 @@ abstract class ModelEntity
             }
 
             // If the current item is an array, use the from array function to set the data.
-            if (is_array($item)) {
+            if (\is_array($item)) {
                 $attribute->fromArray($item);
             }
 
@@ -273,7 +277,7 @@ abstract class ModelEntity
      * @param string                 $model    Full namespace of the association model, example: '\Shopware\Models\Article\Supplier'
      * @param string                 $property Name of the association property, example: 'supplier'
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      *
      * @return $this
      */
@@ -297,7 +301,7 @@ abstract class ModelEntity
         }
 
         // If the parameter is no array, return
-        if (!is_array($data) || empty($data)) {
+        if (!\is_array($data) || empty($data)) {
             return $this;
         }
 
@@ -312,7 +316,7 @@ abstract class ModelEntity
         // If an id passed, the already assigned model has an id and the ids are not equal, we can't update the model instance.
         // Otherwise we would update the instance with the id 1 with the data for the instance with id 2.
         if (!empty($data['id']) && !empty($id) && $data['id'] !== $id) {
-            throw new \InvalidArgumentException('Passed id and id of the already assigned model are not equal');
+            throw new InvalidArgumentException('Passed id and id of the already assigned model are not equal');
         }
 
         $instance->fromArray($data);

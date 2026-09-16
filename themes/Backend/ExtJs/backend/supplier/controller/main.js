@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Supplier
@@ -41,26 +40,26 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend : 'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
 
     /**
      * ExtJS Shortcuts
      */
-    refs : [
+    refs: [
         /**
          * Addresses the main grid
          */
-        { ref : 'grid', selector : 'supplier-main-list' },
+        { ref: 'grid', selector: 'supplier-main-list' },
 
         /**
          * Address the detail view in the main window
          */
-        { ref : 'detailView', selector : 'supplier-main-detail' },
+        { ref: 'detailView', selector: 'supplier-main-detail' },
 
         /**
          * Image in the detailView
          */
-        { ref : 'detailViewImage', selector : 'supplier-main-detail img' }
+        { ref: 'detailViewImage', selector: 'supplier-main-detail img' }
     ],
 
     /**
@@ -68,14 +67,14 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
      * @object
      */
     messages: {
-        deleteDialogMessage : '{s name="dialog_text"}Are you sure you want to delete this supplier ([0])?{/s}',
-        deleteDialogMessageMulti : '{s name="dialog_multi"}Are you sure you want to delete these suppliers ([0])?{/s}',
-        deleteDialogForbidden : '{s name="delete_forbidden"}Suppliers with assigned articles can not be deleted.{/s}',
-        noDescriptionFound :'{s name="details_no_description"}No description saved{/s}',
-        deleteDialogSuccess :'{s name="dialog_multi_success"}Supplier has been deleted successfully.{/s}',
-        saveDialogSuccess :'{s name="dialog_save_success"}Supplier has been saved successfully.{/s}',
-        deleteDialogFailure :'{s name="dialog_multi_error"}Some suppliers could not be removed.{/s}',
-        deleteDialogTitle : '{s name="delete_dialog_title"}Delete selected supplier{/s}',
+        deleteDialogMessage: '{s name="dialog_text"}Are you sure you want to delete this supplier ([0])?{/s}',
+        deleteDialogMessageMulti: '{s name="dialog_multi"}Are you sure you want to delete these suppliers ([0])?{/s}',
+        deleteDialogForbidden: '{s name="delete_forbidden"}Suppliers with assigned articles can not be deleted.{/s}',
+        noDescriptionFound: '{s name="details_no_description"}No description saved{/s}',
+        deleteDialogSuccess: '{s name="dialog_multi_success"}Supplier has been deleted successfully.{/s}',
+        saveDialogSuccess: '{s name="dialog_save_success"}Supplier has been saved successfully.{/s}',
+        deleteDialogFailure: '{s name="dialog_multi_error"}Some suppliers could not be removed.{/s}',
+        deleteDialogTitle: '{s name="delete_dialog_title"}Delete selected supplier{/s}',
         growlMessage: '{s name="window_title"}{/s}'
     },
 
@@ -94,28 +93,28 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
 
         this.control({
             // Listener for the Add a new Supplier Action
-            'supplier-main-toolbar button[action=addSupplier]' : {
-                'click' : function () {
+            'supplier-main-toolbar button[action=addSupplier]': {
+                'click': function () {
                     /*{if {acl_is_allowed privilege=create}}*/
                     this.onCreateSupplier();
                     /*{/if} */
                 }
             },
             'grid': {
-                itemclick : me.onShowDetails,
-                selectionchange : me.onSelectionChange
+                itemclick: me.onShowDetails,
+                selectionchange: me.onSelectionChange
             },
             // Listener for the delete Logo button in the edit view
-            'supplier-main-edit button[action=deleteLogo]' : {
-                'click' : function (btn) {
+            'supplier-main-edit button[action=deleteLogo]': {
+                'click': function (btn) {
                     /*{if {acl_is_allowed privilege=update}}*/
                     this.onDeleteLogo(btn);
                     /* {/if} */
                 }
             },
             // Listener for saving the supplier info
-            'supplier-main-create button[action=saveSupplier]' : {
-                'click' : function(btn) {
+            'supplier-main-create button[action=saveSupplier]': {
+                'click': function(btn) {
                     /*{if {acl_is_allowed privilege=create}}*/
                     this.onSupplierSave(btn);
                     /* {/if} */
@@ -123,28 +122,28 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
                 }
             },
             // Listener for saving the modified supplier logo
-            'supplier-main-edit button[action=saveSupplier]' : {
-                'click' : function(btn) {
+            'supplier-main-edit button[action=saveSupplier]': {
+                'click': function(btn) {
                     /*{if {acl_is_allowed privilege=update}}*/
                     this.onSupplierSave(btn);
                     /* {/if} */
                 }
             },
             // Listener for the mass delete button in default view
-            'supplier-main-toolbar button[action=deleteSupplier]' : {
+            'supplier-main-toolbar button[action=deleteSupplier]': {
                 /*{if {acl_is_allowed privilege=delete}}*/
-                'click' : this.onDeleteMultipleSuppliers
+                'click': this.onDeleteMultipleSuppliers
                 /* {/if} */
 
             },
             // Listener for the default search
-            'supplier-main-toolbar textfield[action=searchSupplier]' : {
-                keyup : this.onSearch
+            'supplier-main-toolbar textfield[action=searchSupplier]': {
+                keyup: this.onSearch
             },
 
             // Listener for the action column in the grid
             'supplier-main-list actioncolumn': {
-                render : function (view) {
+                render: function (view) {
                     view.scope = me;
                     view.handler = me.handleActionColumn;
                 }
@@ -195,7 +194,7 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
 
         // show details and enable delete button
         if (selection.length > 0 ) {
-            if(allowDelete) {
+            if (allowDelete) {
                 deleteButton.setDisabled(false);
             }
         } else {
@@ -242,7 +241,7 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
                     win.close();
                     detailViewData.update(record);
                     detailView.collapse(false);
-                    Shopware.Msg.createGrowlMessage('',me.messages.saveDialogSuccess, me.messages.growlMessage);
+                    Shopware.Msg.createGrowlMessage('', me.messages.saveDialogSuccess, me.messages.growlMessage);
                 }
             });
         }
@@ -265,7 +264,7 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
             domEl = event.getTarget(),
             element = Ext.get(domEl);
 
-        if(!element.hasCls('x-grid-row-checker')) {
+        if (!element.hasCls('x-grid-row-checker')) {
             if (!record.get('description')) {
                 record.data.description = me.messages.noDescriptionFound;
             }
@@ -313,7 +312,7 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
      * @event keypressed
      * @param [object] field - Input field in which the search string has been put
      */
-    onSearch : function (field) {
+    onSearch: function (field) {
         var me = this,
             store = me.getStore('Supplier');
 
@@ -336,7 +335,7 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
      * @param [object] item - The item that has been clicked
      * @return void
      */
-    handleActionColumn : function (view, rowIndex, colIndex, item) {
+    handleActionColumn: function (view, rowIndex, colIndex, item) {
         var me = this.scope;
 
         switch (item.action) {
@@ -378,7 +377,7 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
      * @param [integer] rowIndex - The row number
      * @return void
      */
-    onEditSupplier : function (view, item, rowIndex) {
+    onEditSupplier: function (view, item, rowIndex) {
         /*{if {acl_is_allowed privilege=update}}*/
         var store = view.getStore(),
             me = this,
@@ -417,21 +416,21 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
         if (record.get('articleCounter') === 0) {
             // we do not just delete - we are polite and ask the user if he is sure.
             Ext.MessageBox.confirm(me.messages.deleteDialogTitle,
-                 Ext.String.format(me.messages.deleteDialogMessage, record.get('name')),
+                Ext.String.format(me.messages.deleteDialogMessage, record.get('name')),
                 function (response) {
                     if (response !== 'yes') {
                         return false;
                     }
-                record.destroy({
-                    success : function () {
-                        store.load();
-                        Shopware.Msg.createGrowlMessage('',me.messages.deleteDialogSuccess, me.messages.growlMessage);
-                    },
-                    failure : function () {
-                        Shopware.Msg.createGrowlMessage('', me.messages.deleteDialogFailure, me.messages.growlMessage);
-                    }
+                    record.destroy({
+                        success: function () {
+                            store.load();
+                            Shopware.Msg.createGrowlMessage('', me.messages.deleteDialogSuccess, me.messages.growlMessage);
+                        },
+                        failure: function () {
+                            Shopware.Msg.createGrowlMessage('', me.messages.deleteDialogFailure, me.messages.growlMessage);
+                        }
+                    });
                 });
-            });
         } else {
             Shopware.Msg.createGrowlMessage(
                 me.messages.deleteDialogTitle,
@@ -475,10 +474,10 @@ Ext.define('Shopware.apps.Supplier.controller.Main', {
 
                 Ext.each(selection, function (supplier) {
                     supplier.destroy({
-                        success : function () {
+                        success: function () {
                             store.remove(supplier);
                         },
-                        failure : function () {
+                        failure: function () {
                             errorOccurred = true;
                         }
                     });

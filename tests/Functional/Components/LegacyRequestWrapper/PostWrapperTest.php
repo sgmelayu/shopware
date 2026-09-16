@@ -1,41 +1,40 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-namespace Shopware\Tests\Components\LegacyRequestWrapper;
+namespace Shopware\Tests\Functional\Components\LegacyRequestWrapper;
 
-/**
- * @covers \Shopware\Components\LegacyRequestWrapper\PostWrapper
- */
-class PostWrapperTest extends \Enlight_Components_Test_Controller_TestCase
+use Enlight_Components_Test_Controller_TestCase;
+use Enlight_Controller_Request_Request;
+
+class PostWrapperTest extends Enlight_Components_Test_Controller_TestCase
 {
-    private static $resources = [
+    private static array $resources = [
         'Admin',
         'Articles',
         'Basket',
         'Categories',
-        'cms',
-        'Core',
         'Export',
         'Marketing',
         'Order',
@@ -53,8 +52,9 @@ class PostWrapperTest extends \Enlight_Components_Test_Controller_TestCase
      * Tests that setting a value inside any core class is equivalent to setting it in the
      * global $_POST
      */
-    public function testSetPost()
+    public function testSetPost(): array
     {
+        static::assertInstanceOf(Enlight_Controller_Request_Request::class, Shopware()->Front()->Request());
         $previousGetData = Shopware()->Front()->Request()->getPost();
 
         foreach (self::$resources as $name) {
@@ -79,8 +79,9 @@ class PostWrapperTest extends \Enlight_Components_Test_Controller_TestCase
      *
      * @depends testSetPost
      */
-    public function testOverwriteAndClearPost($getData)
+    public function testOverwriteAndClearPost(array $getData): void
     {
+        static::assertInstanceOf(Enlight_Controller_Request_Request::class, Shopware()->Front()->Request());
         static::assertNotEquals($getData, Shopware()->Front()->Request()->getPost());
 
         foreach (self::$resources as $name) {
@@ -91,8 +92,6 @@ class PostWrapperTest extends \Enlight_Components_Test_Controller_TestCase
                 static::assertNotEquals($getData, Shopware()->Modules()->getModule($name)->sSYSTEM->_POST->toArray());
             }
         }
-
-        return $getData;
     }
 
     /**
@@ -101,8 +100,9 @@ class PostWrapperTest extends \Enlight_Components_Test_Controller_TestCase
      *
      * @depends testSetPost
      */
-    public function testGetPost()
+    public function testGetPost(): void
     {
+        static::assertInstanceOf(Enlight_Controller_Request_Request::class, Shopware()->Front()->Request());
         $previousGetData = Shopware()->Front()->Request()->getPost();
 
         foreach (self::$resources as $name) {

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\HttpCache;
@@ -52,7 +52,7 @@ class DefaultRouteService
      */
     public function getDefaultNoCacheTags()
     {
-        $controllers = $this->config['noCacheControllers'];
+        $controllers = $this->config['noCacheControllers'] ?? null;
         $result = [];
 
         if (empty($controllers)) {
@@ -74,11 +74,13 @@ class DefaultRouteService
      * findRouteValue takes the current Request and tries to find a default max-age value for either the full route,
      * including the action, or at least the controller. If that fails, null is returned.
      *
-     * @return int|null
+     * @param array<string, array<string>> $values
+     *
+     * @return array<string>|int|null
      */
-    public function findRouteValue(Enlight_Controller_Request_Request $request, array $values = null)
+    public function findRouteValue(Enlight_Controller_Request_Request $request, ?array $values = null)
     {
-        if (!$values) {
+        if (empty($values)) {
             $values = $this->getDefaultRouteValues();
         }
 
@@ -98,9 +100,9 @@ class DefaultRouteService
     /**
      * Returns an array mapping controller names to their default max-age as set via the HttpCache Plugin.
      *
-     * @return array
+     * @return array<string, int>
      */
-    private function getDefaultRouteValues()
+    private function getDefaultRouteValues(): array
     {
         $controllers = $this->config['cacheControllers'];
         $result = [];

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    RiskManagement
@@ -73,35 +72,35 @@ Ext.define('Shopware.apps.RiskManagement.view.risk_management.Container', {
             newContainer,
             window = me.up('window');
 
-        if(!me.hasOwnProperty('values')){
+        if (!me.hasOwnProperty('values')){
             newContainer = true;
         }
         var comboBox1 = Ext.create('Ext.form.field.ComboBox', {
-            store: Ext.create('Shopware.apps.RiskManagement.store.Risks'),
-            displayField: 'description',
-            valueField: 'value',
-            editable: false,
-            value: (me.values && me.values.rule1) ? me.values.rule1 : '',
-            listeners: {
-                'change': function(comboBox, newValue){
-                    me.fireEvent('onChangeRisk', this, newValue, 1)
+                store: Ext.create('Shopware.apps.RiskManagement.store.Risks'),
+                displayField: 'description',
+                valueField: 'value',
+                editable: false,
+                value: (me.values && me.values.rule1) ? me.values.rule1 : '',
+                listeners: {
+                    'change': function(comboBox, newValue){
+                        me.fireEvent('onChangeRisk', this, newValue, 1)
+                    }
                 }
-            }
-        }),
+            }),
 
-        comboBox2 = Ext.create('Ext.form.field.ComboBox', {
-            store: Ext.create('Shopware.apps.RiskManagement.store.Risks'),
-            displayField: 'description',
-            valueField: 'value',
-            editable: false,
-            value: (me.values && me.values.rule2) ? me.values.rule2 : '',
-            listeners: {
-                'change': function(comboBox, newValue){
-                    me.fireEvent('onChangeRisk', this, newValue, 4)
+            comboBox2 = Ext.create('Ext.form.field.ComboBox', {
+                store: Ext.create('Shopware.apps.RiskManagement.store.Risks'),
+                displayField: 'description',
+                valueField: 'value',
+                editable: false,
+                value: (me.values && me.values.rule2) ? me.values.rule2 : '',
+                listeners: {
+                    'change': function(comboBox, newValue){
+                        me.fireEvent('onChangeRisk', this, newValue, 4)
+                    }
                 }
-            }
-        });
-        if(me.values && ['ZONEIS', 'ZONEISNOT', 'BILLINGZONEIS', 'BILLINGZONEISNOT'].indexOf(me.values.rule1) >= 0){
+            });
+        if (me.values && ['ZONEIS', 'ZONEISNOT', 'BILLINGZONEIS', 'BILLINGZONEISNOT'].indexOf(me.values.rule1) >= 0){
             var field1 = Ext.create('Ext.form.field.ComboBox', {
                 store: me.areasStore,
                 displayField: 'name',
@@ -113,25 +112,25 @@ Ext.define('Shopware.apps.RiskManagement.view.risk_management.Container', {
                     marginLeft: '10px'
                 }
             });
-        }else if(me.values && (me.values.rule1 == 'SUBSHOP' || me.values.rule1 == 'SUBSHOPNOT')){
+        } else if (me.values && (me.values.rule1 == 'SUBSHOP' || me.values.rule1 == 'SUBSHOPNOT')){
             var field1 = Ext.create('Ext.form.field.ComboBox', {
                 store: me.subShopStore,
                 displayField: 'name',
                 valueField: 'id',
                 editable: false,
-//                value: (me.values && me.values.value1) ? me.subShopStore.findRecord('id', me.values.value1).get('name') : '',
+                //                value: (me.values && me.values.value1) ? me.subShopStore.findRecord('id', me.values.value1).get('name') : '',
                 columnWidth: 0.1,
                 style: {
                     marginLeft: '10px'
                 }
             });
             // Use 'select' in order to be able to extract the shop-id later
-            if(me.values && me.values.value1) {
+            if (me.values && me.values.value1) {
                 field1.select( me.subShopStore.findRecord('id', me.values.value1));
-            }else{
+            } else {
                 field1.setValue('');
             }
-        }else{
+        } else {
             var field1 = Ext.create('Ext.form.field.Text', {
                 columnWidth: 0.1,
                 style: {
@@ -140,14 +139,14 @@ Ext.define('Shopware.apps.RiskManagement.view.risk_management.Container', {
                 value: (me.values && me.values.value1) ? me.values.value1 : ''
             });
         }
-        if(me.values && me.values.rule1 == 'INKASSO'){
+        if (me.values && me.values.rule1 == 'INKASSO'){
             field1.setValue('1');
             field1.hide();
-        }else{
+        } else {
             field1.show();
         }
 
-        if(me.values && ['ZONEIS', 'ZONEISNOT', 'BILLINGZONEIS', 'BILLINGZONEISNOT'].indexOf(me.values.rule2) >= 0){
+        if (me.values && ['ZONEIS', 'ZONEISNOT', 'BILLINGZONEIS', 'BILLINGZONEISNOT'].indexOf(me.values.rule2) >= 0){
             var field2 = Ext.create('Ext.form.field.ComboBox', {
                 store: me.areasStore,
                 displayField: 'name',
@@ -159,25 +158,25 @@ Ext.define('Shopware.apps.RiskManagement.view.risk_management.Container', {
                     marginLeft: '10px'
                 }
             });
-        }else if(me.values && (me.values.rule2 == 'SUBSHOP' || me.values.rule2 == 'SUBSHOPNOT')){
+        } else if (me.values && (me.values.rule2 == 'SUBSHOP' || me.values.rule2 == 'SUBSHOPNOT')){
             var field2 = Ext.create('Ext.form.field.ComboBox', {
                 store: me.subShopStore,
                 displayField: 'name',
                 valueField: 'id',
                 editable: false,
-//                value: (me.values && me.values.value2) ?  me.subShopStore.findRecord('id', me.values.value2).get('name') : '',
+                //                value: (me.values && me.values.value2) ?  me.subShopStore.findRecord('id', me.values.value2).get('name') : '',
                 columnWidth: 0.1,
                 style: {
                     marginLeft: '10px'
                 }
             });
             // Use 'select' in order to be able to extract the shop-id later
-            if(me.values && me.values.value2) {
+            if (me.values && me.values.value2) {
                 field2.select( me.subShopStore.findRecord('id', me.values.value2));
-            }else{
+            } else {
                 field2.setValue('');
             }
-        }else{
+        } else {
             var field2 = Ext.create('Ext.form.field.Text', {
                 columnWidth: 0.1,
                 style: {
@@ -186,10 +185,10 @@ Ext.define('Shopware.apps.RiskManagement.view.risk_management.Container', {
                 value: (me.values && me.values.value2) ? me.values.value2 : ''
             });
         }
-        if(me.values && me.values.rule2 == 'INKASSO'){
+        if (me.values && me.values.rule2 == 'INKASSO'){
             field2.setValue('1');
             field2.hide();
-        }else{
+        } else {
             field2.show();
         }
 
@@ -214,7 +213,7 @@ Ext.define('Shopware.apps.RiskManagement.view.risk_management.Container', {
                 value: (me.values && me.values.id) ? me.values.id : ''
             }
         ];
-        if(!newContainer){
+        if (!newContainer){
             /*{if {acl_is_allowed privilege=delete}}*/
             items.push({
                 xtype: 'button',
@@ -225,7 +224,7 @@ Ext.define('Shopware.apps.RiskManagement.view.risk_management.Container', {
                 rowIndex: (me.values && me.values.id) ? me.values.id : ''
             });
             /*{/if}*/
-        }else{
+        } else {
             /*{if {acl_is_allowed privilege=save}}*/
             items.push({
                 xtype: 'button',

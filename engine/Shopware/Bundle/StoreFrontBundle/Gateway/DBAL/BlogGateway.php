@@ -1,39 +1,39 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Doctrine\DBAL\Query\QueryBuilder;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\BlogGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\BlogHydrator;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class BlogGateway implements Gateway\BlogGatewayInterface
+class BlogGateway implements BlogGatewayInterface
 {
-    /**
-     * @var Hydrator\BlogHydrator
-     */
-    private $blogHydrator;
+    private BlogHydrator $blogHydrator;
 
     /**
      * The FieldHelper class is used for the
@@ -45,20 +45,15 @@ class BlogGateway implements Gateway\BlogGatewayInterface
      * Additionally the field helper reduce the work, to
      * select in a second step the different required
      * attribute tables for a parent table.
-     *
-     * @var FieldHelper
      */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\BlogHydrator $blogHydrator
+        BlogHydrator $blogHydrator
     ) {
         $this->connection = $connection;
         $this->blogHydrator = $blogHydrator;
@@ -68,31 +63,31 @@ class BlogGateway implements Gateway\BlogGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getList(array $blogIds, Struct\ShopContextInterface $context)
+    public function getList(array $blogIds, ShopContextInterface $context)
     {
         $data = $this->getQuery($blogIds, $context)
             ->execute()
-            ->fetchAll(\PDO::FETCH_ASSOC);
+            ->fetchAll(PDO::FETCH_ASSOC);
 
-        $articles = $this->getArticlesQuery(array_column($data, '__blog_id'))
+        $articles = $this->getProductsQuery(array_column($data, '__blog_id'))
             ->execute()
-            ->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_COLUMN);
+            ->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
 
         $medias = $this->getMediaQuery(array_column($data, '__blog_id'))
             ->execute()
-            ->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_COLUMN);
+            ->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
 
         $blogs = [];
         foreach ($data as $row) {
-            $id = $row['__blog_id'];
+            $id = (int) $row['__blog_id'];
 
             $blog = $this->blogHydrator->hydrate($row);
 
-            if (array_key_exists($id, $articles)) {
+            if (\array_key_exists($id, $articles)) {
                 $blog->setProductNumbers($articles[$id]);
             }
 
-            if (array_key_exists($id, $medias)) {
+            if (\array_key_exists($id, $medias)) {
                 $blog->setMediaIds($medias[$id]);
             }
 
@@ -104,10 +99,8 @@ class BlogGateway implements Gateway\BlogGatewayInterface
 
     /**
      * @param int[] $ids
-     *
-     * @return \Doctrine\DBAL\Query\QueryBuilder
      */
-    private function getQuery(array $ids, Struct\ShopContextInterface $context)
+    private function getQuery(array $ids, ShopContextInterface $context): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
 
@@ -132,10 +125,8 @@ class BlogGateway implements Gateway\BlogGatewayInterface
 
     /**
      * @param int[] $blogIds
-     *
-     * @return \Doctrine\DBAL\Query\QueryBuilder
      */
-    private function getArticlesQuery(array $blogIds)
+    private function getProductsQuery(array $blogIds): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
 
@@ -150,10 +141,8 @@ class BlogGateway implements Gateway\BlogGatewayInterface
 
     /**
      * @param int[] $blogIds
-     *
-     * @return \Doctrine\DBAL\Query\QueryBuilder
      */
-    private function getMediaQuery(array $blogIds)
+    private function getMediaQuery(array $blogIds): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
 

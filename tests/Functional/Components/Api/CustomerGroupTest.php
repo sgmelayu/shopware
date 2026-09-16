@@ -1,34 +1,36 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Api;
 
+use Shopware\Components\Api\Exception\CustomValidationException;
+use Shopware\Components\Api\Exception\NotFoundException;
+use Shopware\Components\Api\Exception\ParameterMissingException;
 use Shopware\Components\Api\Resource\CustomerGroup;
+use Shopware\Models\Customer\Group;
 
-/**
- * @CustomerGroup  Shopware
- */
 class CustomerGroupTest extends TestCase
 {
     /**
@@ -44,9 +46,9 @@ class CustomerGroupTest extends TestCase
         return new CustomerGroup();
     }
 
-    public function testCreateWithInvalidDataShouldThrowValidationException()
+    public function testCreateWithInvalidDataShouldThrowValidationException(): void
     {
-        $this->expectException('Shopware\Components\Api\Exception\CustomValidationException');
+        $this->expectException(CustomValidationException::class);
         // required parameter 'name' is missing
         $testData = [
             'key' => 'TS',
@@ -58,7 +60,7 @@ class CustomerGroupTest extends TestCase
         $this->resource->create($testData);
     }
 
-    public function testCreateShouldBeSuccessful()
+    public function testCreateShouldBeSuccessful(): int
     {
         $testData = [
             'key' => 'TS',
@@ -70,7 +72,7 @@ class CustomerGroupTest extends TestCase
 
         $customerGroup = $this->resource->create($testData);
 
-        static::assertInstanceOf('\Shopware\Models\Customer\Group', $customerGroup);
+        static::assertInstanceOf(Group::class, $customerGroup);
         static::assertGreaterThan(0, $customerGroup->getId());
 
         static::assertEquals($customerGroup->getKey(), $testData['key']);
@@ -85,7 +87,7 @@ class CustomerGroupTest extends TestCase
     /**
      * @depends testCreateShouldBeSuccessful
      */
-    public function testGetOneShouldBeSuccessful($id)
+    public function testGetOneShouldBeSuccessful($id): void
     {
         $CustomerGroup = $this->resource->getOne($id);
         static::assertGreaterThan(0, $CustomerGroup['id']);
@@ -94,7 +96,7 @@ class CustomerGroupTest extends TestCase
     /**
      * @depends testCreateShouldBeSuccessful
      */
-    public function testGetListShouldBeSuccessful()
+    public function testGetListShouldBeSuccessful(): void
     {
         $result = $this->resource->getList();
 
@@ -120,7 +122,7 @@ class CustomerGroupTest extends TestCase
 
         $customerGroup = $this->resource->update($id, $testData);
 
-        static::assertInstanceOf('\Shopware\Models\Customer\Group', $customerGroup);
+        static::assertInstanceOf(Group::class, $customerGroup);
         static::assertGreaterThan(0, $customerGroup->getId());
 
         static::assertEquals($customerGroup->getKey(), $testData['key']);
@@ -132,45 +134,45 @@ class CustomerGroupTest extends TestCase
         return $id;
     }
 
-    public function testUpdateWithInvalidIdShouldThrowNotFoundException()
+    public function testUpdateWithInvalidIdShouldThrowNotFoundException(): void
     {
-        $this->expectException('Shopware\Components\Api\Exception\NotFoundException');
+        $this->expectException(NotFoundException::class);
         $this->resource->update(9999999, []);
     }
 
-    public function testUpdateWithMissingIdShouldThrowParameterMissingException()
+    public function testUpdateWithMissingIdShouldThrowParameterMissingException(): void
     {
-        $this->expectException('Shopware\Components\Api\Exception\ParameterMissingException');
+        $this->expectException(ParameterMissingException::class);
         $this->resource->update('', []);
     }
 
     /**
      * @depends testUpdateShouldBeSuccessful
      */
-    public function testDeleteShouldBeSuccessful($id)
+    public function testDeleteShouldBeSuccessful($id): void
     {
         $customerGroup = $this->resource->delete($id);
 
-        static::assertInstanceOf('\Shopware\Models\Customer\Group', $customerGroup);
-        static::assertEquals(null, $customerGroup->getId());
+        static::assertInstanceOf(Group::class, $customerGroup);
+        static::assertSame(0, (int) $customerGroup->getId());
     }
 
-    public function testDeleteWithInvalidIdShouldThrowNotFoundException()
+    public function testDeleteWithInvalidIdShouldThrowNotFoundException(): void
     {
-        $this->expectException('Shopware\Components\Api\Exception\NotFoundException');
+        $this->expectException(NotFoundException::class);
         $this->resource->delete(9999999);
     }
 
-    public function testDeleteWithMissingIdShouldThrowParameterMissingException()
+    public function testDeleteWithMissingIdShouldThrowParameterMissingException(): void
     {
-        $this->expectException('Shopware\Components\Api\Exception\ParameterMissingException');
+        $this->expectException(ParameterMissingException::class);
         $this->resource->delete('');
     }
 
     /**
      * @depends testDeleteShouldBeSuccessful
      */
-    public function testCreateShouldShouldPopulateDefaultValues()
+    public function testCreateShouldShouldPopulateDefaultValues(): void
     {
         $defaults = [
             'taxInput' => 1,
@@ -185,7 +187,7 @@ class CustomerGroupTest extends TestCase
 
         $customerGroup = $this->resource->create($testData);
 
-        static::assertInstanceOf('\Shopware\Models\Customer\Group', $customerGroup);
+        static::assertInstanceOf(Group::class, $customerGroup);
         static::assertGreaterThan(0, $customerGroup->getId());
 
         static::assertEquals($customerGroup->getKey(), $testData['key']);

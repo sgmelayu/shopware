@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/index/view/widgets"}
@@ -129,20 +128,17 @@ Ext.define('Shopware.apps.Index.view.widgets.Sales', {
      * @return void
      */
     refreshView: function () {
-        var me = this,
-            reader;
+        var me = this;
 
         if (!me.turnoverStore) {
             return;
         }
 
-        reader = me.turnoverStore.getProxy().getReader();
-
         me.turnoverStore.load({
             callback: function () {
                 me.dataView.update([
                     {
-                        conversationRate: reader.jsonData.conversion
+                        conversationRate: me.readConversionRate()
                     }
                 ]);
             }
@@ -157,8 +153,7 @@ Ext.define('Shopware.apps.Index.view.widgets.Sales', {
      * @return [object] Ext.container.Container
      */
     createUpperContainer: function () {
-        var me = this,
-            reader = me.turnoverStore.getProxy().getReader();
+        var me = this;
 
         me.chart = me.createBarChart();
 
@@ -166,7 +161,7 @@ Ext.define('Shopware.apps.Index.view.widgets.Sales', {
             tpl: me.createConversationRateTemplate(),
             data: [
                 {
-                    conversationRate: reader.jsonData.conversion
+                    conversationRate: me.readConversionRate()
                 }
             ],
             columnWidth: 0.5
@@ -187,6 +182,17 @@ Ext.define('Shopware.apps.Index.view.widgets.Sales', {
     },
 
     /**
+     * Helper method for load and format of the conversion rate
+     *
+     * @return String
+     */
+    readConversionRate: function () {
+        var me = this,
+            reader = me.turnoverStore.getProxy().getReader();
+        return Ext.util.Format.number(reader.jsonData.conversion);
+    },
+
+    /**
      * Helper method which creates the template
      * for the conversation rate data view.
      *
@@ -202,10 +208,10 @@ Ext.define('Shopware.apps.Index.view.widgets.Sales', {
         return new Ext.XTemplate(
             '{literal}',
             '<tpl for=".">',
-                '<div class="conversation-rate">',
-                    '<strong class="title">' + me.snippets.conversation_rate + ':</strong>',
-                    '<span class="rate">{conversationRate}%</span>',
-                '</div>',
+            '<div class="conversation-rate">',
+            '<strong class="title">' + me.snippets.conversation_rate + ':</strong>',
+            '<span class="rate">{conversationRate}%</span>',
+            '</div>',
             '</tpl>',
             '{/literal}'
         );
@@ -293,6 +299,9 @@ Ext.define('Shopware.apps.Index.view.widgets.Sales', {
                         display: 'insideEnd',
                         orientation: 'horizontal',
                         field: 'turnover',
+                        renderer: function (value) {
+                            return Ext.util.Format.currency(value);
+                        },
                         fill: '#FFFFFF',
                         font: 'bold 12px/16px Arial, sans-serif',
                         'text-anchor': 'middle'
@@ -351,25 +360,37 @@ Ext.define('Shopware.apps.Index.view.widgets.Sales', {
                 header: me.snippets.headers.turnover,
                 dataIndex: 'turnover',
                 align: 'right',
-                flex: 1
+                flex: 1,
+                renderer: function (value) {
+                    return Ext.util.Format.currency(value);
+                }
             },
             {
                 header: me.snippets.headers.orders,
                 align: 'right',
                 dataIndex: 'orders',
-                flex: 1
+                flex: 1,
+                renderer: function (value) {
+                    return Ext.util.Format.number(value, '0,000');
+                }
             },
             {
                 header: me.snippets.headers.new_customers,
                 align: 'right',
                 dataIndex: 'newCustomers',
-                flex: 1
+                flex: 1,
+                renderer: function (value) {
+                    return Ext.util.Format.number(value, '0,000');
+                }
             },
             {
                 header: me.snippets.headers.visitors,
                 align: 'right',
                 dataIndex: 'visitors',
-                flex: 1
+                flex: 1,
+                renderer: function (value) {
+                    return Ext.util.Format.number(value, '0,000');
+                }
             }
         ];
     }

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Payment
@@ -48,7 +47,7 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
 
     refs: [
         { ref: 'mainWindow', selector: 'payment-main-window' },
@@ -62,21 +61,21 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
      * specific controller and opens a new Ext.window.Window
      * @return void
      */
-    init:function(){
+    init: function(){
         var me = this;
 
         me.control({
-            'payment-main-window payment-main-tree':{
-                itemclick:me.onItemClick
+            'payment-main-window payment-main-tree': {
+                itemclick: me.onItemClick
             },
-            'payment-main-window':{
-                savePayment:me.onSavePayment,
-                changeTab:me.onChangeTab
+            'payment-main-window': {
+                savePayment: me.onSavePayment,
+                changeTab: me.onChangeTab
             },
 
-            'payment-main-tree':{
+            'payment-main-tree': {
                 deletePayment: me.onDeletePayment,
-                createPayment:me.onCreatePayment
+                createPayment: me.onCreatePayment
             }
 
         });
@@ -95,17 +94,16 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
             paymentStore = this.subApplication.paymentStore,
             tabPanel = win.down('tabpanel');
 
-
-        if(selection[0].data.source == 1){
+        if (selection[0].data.source == 1){
             selection[0].destroy({
-                callback:function(data, operation){
+                callback: function(data, operation){
                     var records = operation.getRecords(),
                         record = records[0],
                         rawData = record.getProxy().getReader().rawData;
 
-                    if(operation.success){
+                    if (operation.success){
                         Shopware.Notification.createGrowlMessage('{s name="delete_growlMessage_subject"}Delete payment{/s}', '{s name="delete_growlMessage_content"}The payment has been successfully deleted.{/s}', '{s name="payment_title"}{/s}');
-                    }else{
+                    } else {
                         Shopware.Notification.createGrowlMessage('{s name="delete_growlMessage_subject"}Delete payment{/s}', rawData.errorMsg.errorInfo[2], '{s name="payment_title"}{/s}');
                     }
 
@@ -118,7 +116,6 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
         }
     },
 
-
     /**
      * Is fired, when the tab is changed
      * Automatically selects the countries/shops and sets the surcharge
@@ -127,7 +124,7 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
      * @param oldTab Contains the old tab, which was opened before the new tab
      * @param formPanel Contains the general formpanel
      */
-    onChangeTab:function(tabPanel, newTab, oldTab, formPanel){
+    onChangeTab: function(tabPanel, newTab, oldTab, formPanel){
         var grid = newTab.items.items[0],
             record = formPanel.getRecord(),
             recordStore;
@@ -149,7 +146,7 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
             callback: function(){
                 var matches = [];
                 //Selects each country and sets the surcharge
-                if(recordStore){
+                if (recordStore){
                     Ext.each(recordStore.data.items, function(item){
                         var tmpRecord = store.getById(item.get('id'));
                         matches.push(tmpRecord);
@@ -165,7 +162,7 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
      * Is fired, when the "create"-button is pressed
      * @param btn Contains the create-button
      */
-    onCreatePayment:function(btn){
+    onCreatePayment: function(btn){
         var win = btn.up('window'),
             tabPanel = win.down('tabpanel'),
             formPanel = win.down('form'),
@@ -193,7 +190,7 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
      * @param subShopGrid Contains the grid with all subShops
      * @param surchargeGrid Contains the grid with all surcharges
      */
-    onSavePayment:function(generalForm, countryGrid, subShopGrid, surchargeGrid){
+    onSavePayment: function(generalForm, countryGrid, subShopGrid, surchargeGrid){
         var record = generalForm.getRecord(),
             win = generalForm.up('window'),
             tree = win.down('treepanel'),
@@ -208,7 +205,7 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
 
         //Creates a string with the surcharges and the iso of the countries
         Ext.each(surchargeStore.data.items, function(item){
-            if(item.data.surcharge) {
+            if (item.data.surcharge) {
                 surchargeString = surchargeString + item.data.iso + ":" + item.data.surcharge + ";";
             }
         });
@@ -221,23 +218,23 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
             subshopStore = record['getShopsStore'];
 
         //If the tab is activated at least once, so changes could be made
-        if(subShopGrid.rendered) {
+        if (subShopGrid.rendered) {
             subshopStore.removeAll();
             subshopStore.add(subshops);
         }
 
         //If the tab is activated at least once, so changes could be made
-        if(countryGrid.rendered) {
+        if (countryGrid.rendered) {
             var updated = surchargeGrid.getStore().getUpdatedRecords(),
                 selection = countryGrid.getSelectionModel().getSelection();
 
             // Merge updated records to the main countyStore
-            if(updated.length) {
+            if (updated.length) {
                 Ext.each(updated, function(record) {
                     var id = record.get('id');
 
                     Ext.each(selection, function(tmpRecord) {
-                        if(tmpRecord.get('id') === id) {
+                        if (tmpRecord.get('id') === id) {
                             tmpRecord.set('surcharge', record.get('surcharge'));
 
                             // Clear dirty state
@@ -258,7 +255,7 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
                     record = records[0],
                     rawData = record.getProxy().getReader().rawData;
 
-                if(operation.success){
+                if (operation.success){
                     me.getAttributeForm().saveAttribute(record.get('id'));
                     paymentStore.load({
                         callback: function (records) {
@@ -291,7 +288,7 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
      * @param [Ext.view.View] view
      * @param [Ext.data.Model] record The clicked record
      */
-    onItemClick:function(view, record) {
+    onItemClick: function(view, record) {
         var win = view.up('window'),
             tabPanel = win.tabPanel,
             form = win.generalForm,
@@ -303,9 +300,9 @@ Ext.define('Shopware.apps.Payment.controller.Payment', {
 
         surchargeGrid.reconfigure(Ext.clone(record.getCountriesStore));
 
-        if(record.get('source') == 1){
+        if (record.get('source') == 1){
             btnDelete.enable();
-        }else{
+        } else {
             btnDelete.disable();
         }
 

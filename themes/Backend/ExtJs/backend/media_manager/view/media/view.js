@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    MediaManager
@@ -57,7 +56,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
         noMediaFound: '{s name="noMediaFound"}No Media found{/s}',
         uploadDataDragDrop: '{s name="uploadDataDragDrop"}Upload your Data via <strong>Drag & Drop</strong> here{/s}',
         noAdditionalInfo: '{s name="noAdditionalInfo"}No additional informations found{/s}',
-        moreInfoTitle:'{s name="moreInfoTitle"}More information{/s}',
+        moreInfoTitle: '{s name="moreInfoTitle"}More information{/s}',
         previewSize: '{s name="previewSizeFieldLabel"}Preview size{/s}',
         mediaInfo: {
             name: '{s name="mediaInfo/name"}Name:{/s}',
@@ -77,7 +76,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
             vector: '{s name="formatTypes/vector"}-vector{/s}',
             unknown: '{s name="formatTypes/unknown"}unknown file{/s}'
         },
-        fieldsText:{
+        fieldsText: {
             searchField: '{s name="fieldsText/searchField"}Search media...{/s}',
             deleteButton: '{s name="fieldsText/deleteButton"}delete marked file(s){/s}',
             addButton: '{s name="fieldsText/addButton"}add more files{/s}',
@@ -102,7 +101,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
         me.createPreviewSizeComboBox(me.bbar);
 
         // Are we're having file extensions which should filter the store?
-        if(me.validTypes) {
+        if (me.validTypes) {
             var proxy = me.mediaStore.getProxy();
             proxy.extraParams.validTypes = me.setValidTypes();
         }
@@ -134,7 +133,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
         // Create the items of the container
         me.items = [ me.cardContainer ];
 
-        if(me.createInfoPanel) {
+        if (me.createInfoPanel) {
             var infoPnl = me.createInfoPanel();
             me.items.push(infoPnl);
         }
@@ -161,7 +160,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
         Ext.each(types, function(typ) {
             filters += typ + '|';
         });
-        filters = filters.substr(0, filters.length-1);
+        filters = filters.substr(0, filters.length - 1);
 
         return filters;
     },
@@ -174,23 +173,23 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
     createMediaViewTemplate: function() {
         var me = this,
             tSize = me.thumbnailSize,
-            tStyle = Ext.String.format('style="width:[0]px;height:[0]px;"',tSize),
-            imgStyle = Ext.String.format('style="max-width:[0]px;max-height:[0]px"',tSize-2);
+            tStyle = Ext.String.format('style="width:[0]px;height:[0]px;"', tSize),
+            imgStyle = Ext.String.format('style="max-width:[0]px;max-height:[0]px"', tSize - 2);
 
         return new Ext.XTemplate(
             '{literal}<tpl for=".">',
-            Ext.String.format('<div class="thumb-wrap" id="{name}" [0]>',tStyle),
+            Ext.String.format('<div class="thumb-wrap" id="{name}" [0]>', tStyle),
             // If the type is image, then show the image
             '<tpl if="this.isImage(type, extension)">',
-            Ext.String.format('<div class="thumb" [0]>',tStyle),
-            Ext.String.format('<div class="inner-thumb" [0]>',tStyle),
+            Ext.String.format('<div class="thumb" [0]>', tStyle),
+            Ext.String.format('<div class="inner-thumb" [0]>', tStyle),
             Ext.String.format('<img src="{thumbnail}?{timestamp}" title="{name}" [0] /></div>', imgStyle),
             '</div>',
             '</tpl>',
 
             // All other types should render an icon
             '<tpl if="!this.isImage(type, extension)">',
-            Ext.String.format('<div class="thumb icon" [0]>',tStyle),
+            Ext.String.format('<div class="thumb icon" [0]>', tStyle),
             '<div class="icon-{[values.type.toLowerCase()]}">&nbsp;</div>',
             '</div>',
             '</tpl>',
@@ -222,13 +221,13 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
         var me = this;
 
         var multiSelect = true;
-        if(Ext.isBoolean(me.selectionMode)) {
+        if (Ext.isBoolean(me.selectionMode)) {
             multiSelect = me.selectionMode;
         }
 
         me.dataView = Ext.create('Ext.view.View', {
             itemSelector: '.thumb-wrap',
-            emptyText: '<div class="empty-text"><span>'+me.snippets.noMediaFound+'</span></div>',
+            emptyText: '<div class="empty-text"><span>' + me.snippets.noMediaFound + '</span></div>',
             multiSelect: multiSelect,
             store: me.mediaStore,
             tpl: me.createMediaViewTemplate(),
@@ -301,60 +300,60 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
 
         return new Ext.XTemplate(
             '{literal}<tpl for=".">',
-                '<div class="media-info-pnl">',
+            '<div class="media-info-pnl">',
 
-                    // If the type is image, then show the image
-                    '<tpl if="this.isImage(type, extension)">',
-                        '<div class="thumb">',
-                            '<div class="inner-thumb"><img src="{thumbnail}?{timestamp}" title="{name}" /></div>',
-                        '</div>',
-                    '</tpl>',
+            // If the type is image, then show the image
+            '<tpl if="this.isImage(type, extension)">',
+            '<div class="thumb">',
+            '<div class="inner-thumb"><img src="{thumbnail}?{timestamp}" title="{name}" /></div>',
+            '</div>',
+            '</tpl>',
 
-                    // All other types should render an icon
-                    '<tpl if="!this.isImage(type, extension)">',
-                        '<div class="thumb icon">',
-                            '<div class="icon-{[values.type.toLowerCase()]}">&nbsp;</div>',
-                        '</div>',
-                    '</tpl>',
-                    '<div class="base-info">',
-                        '<p>',
-                            '<strong>Download:</strong>',
-                            '<a class="link" target="_blank" href="{/literal}{url controller=MediaManager action=download}{literal}?mediaId={id}" title="{name}">{name}</a>',
-                        '</p>',
-                        '<p>',
-                            '<strong>'+me.snippets.mediaInfo.name+'</strong>',
-                            '<input type="text" disabled="disabled" value="{name}" />',
-                        '</p>',
-                        '<p>',
-                            '<strong>'+me.snippets.mediaInfo.uploadedon+'</strong>',
-                            '<span>{[this.formatDate(values.created)]}</span>',
-                        '</p>',
-                        '<p>',
-                            '<strong>'+me.snippets.mediaInfo.type+'</strong>',
-                            '<span>{[this.formatDataType(values.type, values.extension)]}</span>',
-                        '</p>',
-                        '<tpl if="width">',
-                            '<p>',
-                                '<strong>'+me.snippets.mediaInfo.resolution+'</strong>',
-                                '<span>{width} x {height} Pixel</span>',
-                            '</p>',
-                        '</tpl>',
+            // All other types should render an icon
+            '<tpl if="!this.isImage(type, extension)">',
+            '<div class="thumb icon">',
+            '<div class="icon-{[values.type.toLowerCase()]}">&nbsp;</div>',
+            '</div>',
+            '</tpl>',
+            '<div class="base-info">',
+            '<p>',
+            '<strong>Download:</strong>',
+            '<a class="link" target="_blank" href="{/literal}{url controller=MediaManager action=download}{literal}?mediaId={id}" title="{name}">{name}</a>',
+            '</p>',
+            '<p>',
+            '<strong>' + me.snippets.mediaInfo.name + '</strong>',
+            '<input type="text" disabled="disabled" value="{name}" />',
+            '</p>',
+            '<p>',
+            '<strong>' + me.snippets.mediaInfo.uploadedon + '</strong>',
+            '<span>{[this.formatDate(values.created)]}</span>',
+            '</p>',
+            '<p>',
+            '<strong>' + me.snippets.mediaInfo.type + '</strong>',
+            '<span>{[this.formatDataType(values.type, values.extension)]}</span>',
+            '</p>',
+            '<tpl if="width">',
+            '<p>',
+            '<strong>' + me.snippets.mediaInfo.resolution + '</strong>',
+            '<span>{width} x {height} Pixel</span>',
+            '</p>',
+            '</tpl>',
 
-                        '<tpl>',
-                            '<p>',
-                                '<strong>'+me.snippets.mediaInfo.adress+'</strong>',
-                                '<a class="link" target="_blank" href="{path}" title="{name}">'+ me.snippets.mediaInfo.mediaLink +'</a>',
-                            '</p>',
-                        '</tpl>',
+            '<tpl>',
+            '<p>',
+            '<strong>' + me.snippets.mediaInfo.adress + '</strong>',
+            '<a class="link" target="_blank" href="{path}" title="{name}">' + me.snippets.mediaInfo.mediaLink + '</a>',
+            '</p>',
+            '</tpl>',
 
-                        '<tpl if="thumbnails">',
-                            '<p>',
-                                '<strong>'+me.snippets.mediaInfo.thumbnails+'</strong>',
-                                '{[this.getThumbnailSizes(values.thumbnails)]}',
-                            '</p>',
-                        '</tpl>',
-                    '</div>',
-                '</div>',
+            '<tpl if="thumbnails">',
+            '<p>',
+            '<strong>' + me.snippets.mediaInfo.thumbnails + '</strong>',
+            '{[this.getThumbnailSizes(values.thumbnails)]}',
+            '</p>',
+            '</tpl>',
+            '</div>',
+            '</div>',
             '</tpl>{/literal}',
             {
                 /**
@@ -420,7 +419,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
                     var result = '';
 
                     extension = extension.toUpperCase();
-                    switch(type) {
+                    switch (type) {
                         case 'VIDEO':
                             result = extension + me.snippets.formatTypes.video;
                             break;
@@ -481,7 +480,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
             cls: Ext.baseCSSPrefix + 'more-info',
             style: 'background: #fff',
             collapsible: true,
-            autoScroll:true,
+            autoScroll: true,
             region: 'east',
             width: 210,
             items: [ me.infoView, me.attributeButton ]
@@ -521,16 +520,16 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
     createActionToolbar: function() {
         var me = this;
         /* {if {acl_is_allowed privilege=create}} */
-        if(Ext.isIE) {
+        if (Ext.isIE) {
             me.addBtn = Ext.create('Shopware.app.FileUpload', {
                 requestURL: '{url controller="mediaManager" action="upload"}',
                 padding: '6 0 0',
                 fileInputConfig: {
                     buttonOnly: true,
                     width: 190,
-                    buttonText : me.snippets.fieldsText.addButton,
-                    buttonConfig : {
-                        iconCls:'sprite-plus-circle'
+                    buttonText: me.snippets.fieldsText.addButton,
+                    buttonConfig: {
+                        iconCls: 'sprite-plus-circle'
                     }
                 }
             });
@@ -538,7 +537,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
             me.addBtn = Ext.create('Ext.form.field.File', {
                 buttonOnly: true,
                 width: 190,
-                buttonText : me.snippets.fieldsText.addButton,
+                buttonText: me.snippets.fieldsText.addButton,
                 listeners: {
                     scope: this,
 
@@ -552,8 +551,8 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
                         btn.fileInputEl.dom.multiple = true;
                     }
                 },
-                buttonConfig : {
-                    iconCls:'sprite-plus-circle'
+                buttonConfig: {
+                    iconCls: 'sprite-plus-circle'
                 }
             });
         }
@@ -571,7 +570,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
         /*{if {acl_is_allowed privilege=update}}*/
         me.replaceButton = Ext.create('Ext.button.Button', {
             text: '{s name="replace/media/button/text"}{/s}',
-            iconCls:'sprite-blue-document-convert',
+            iconCls: 'sprite-blue-document-convert',
             disabled: true,
             handler: Ext.bind(me.onClickReplaceButton, me)
         });
@@ -591,10 +590,10 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
         });
 
         /* {if {acl_is_allowed privilege=delete}} */
-        if(this.createDeleteButton) {
+        if (this.createDeleteButton) {
             this.deleteBtn = Ext.create('Ext.button.Button', {
                 text: me.snippets.fieldsText.deleteButton,
-                iconCls:'sprite-minus-circle-frame',
+                iconCls: 'sprite-minus-circle-frame',
                 action: 'mediamanager-media-view-delete',
                 disabled: true
             });
@@ -609,7 +608,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
          * Initialize the display type button
          */
 
-        me.displayTypeBtn = Ext.create('Ext.button.Cycle',{
+        me.displayTypeBtn = Ext.create('Ext.button.Cycle', {
             showText: true,
             prependText: '{s name="toolbar/view"}Display as{/s} ',
             action: 'mediamanager-media-view-layout',
@@ -621,7 +620,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
                     text: '{s name="toolbar/view_chart"}Grid{/s}',
                     layout: 'grid',
                     iconCls: 'sprite-application-icon-large'
-                },{
+                }, {
                     text: '{s name="toolbar/view_table"}Table{/s}',
                     layout: 'table',
                     checked: true,
@@ -664,14 +663,14 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
             store: Ext.create('Ext.data.Store', {
                 fields: [ 'value', 'name' ],
                 data: [
-                    { value: '20', name: '20 '+me.snippets.fieldsText.itemCount },
-                    { value: '40', name: '40 '+me.snippets.fieldsText.itemCount },
-                    { value: '60', name: '60 '+me.snippets.fieldsText.itemCount },
-                    { value: '80', name: '80 '+me.snippets.fieldsText.itemCount },
-                    { value: '100', name: '100 '+me.snippets.fieldsText.itemCount },
-                    { value: '150', name: '150 '+me.snippets.fieldsText.itemCount },
-                    { value: '200', name: '200 '+me.snippets.fieldsText.itemCount },
-                    { value: '250', name: '250 '+me.snippets.fieldsText.itemCount }
+                    { value: '20', name: '20 ' + me.snippets.fieldsText.itemCount },
+                    { value: '40', name: '40 ' + me.snippets.fieldsText.itemCount },
+                    { value: '60', name: '60 ' + me.snippets.fieldsText.itemCount },
+                    { value: '80', name: '80 ' + me.snippets.fieldsText.itemCount },
+                    { value: '100', name: '100 ' + me.snippets.fieldsText.itemCount },
+                    { value: '150', name: '150 ' + me.snippets.fieldsText.itemCount },
+                    { value: '200', name: '200 ' + me.snippets.fieldsText.itemCount },
+                    { value: '250', name: '250 ' + me.snippets.fieldsText.itemCount }
                 ]
             }),
             displayField: 'name',
@@ -685,7 +684,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
             height: 35
         });
 
-        if(me.createMediaQuantitySelection) {
+        if (me.createMediaQuantitySelection) {
             toolbar.add('->', pageSize, { xtype: 'tbspacer', width: 6 });
         }
 
@@ -742,7 +741,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
 
         iterations = iterations || 9;
 
-        for( ; i < iterations; i++) {
+        for ( ; i < iterations; i++) {
             size = imageSize * i;
             imageSizeData.push({ value: size, name: size + 'x' + size + 'px' });
         }
@@ -768,7 +767,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
         me.onUnlockDeleteButton();
         me.unlockReplaceMediaButton();
 
-        if(me.infoView) {
+        if (me.infoView) {
             me.infoView.update(record.data);
             me.attributeButton.setRecord(record);
         }
@@ -780,7 +779,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
      * @return void
      */
     onUnlockDeleteButton: function() {
-        if(this.deleteBtn) {
+        if (this.deleteBtn) {
             this.deleteBtn.setDisabled(false);
         }
     },
@@ -821,7 +820,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
      * @return void
      */
     onLockDeleteButton: function(rowModel) {
-        if(this.deleteBtn) {
+        if (this.deleteBtn) {
             this.deleteBtn.setDisabled(!rowModel.getSelection().length);
         }
     },
@@ -878,7 +877,7 @@ Ext.define('Shopware.apps.MediaManager.view.media.View', {
                     var selected = selModel.getSelection(),
                         record = view.getRecord(sourceEl);
 
-                    if(!selected.length) {
+                    if (!selected.length) {
                         selModel.select(record);
                         selected = selModel.getSelection();
                     }

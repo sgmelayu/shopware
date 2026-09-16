@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\DependencyInjection\Bridge\Db;
 use Shopware\Components\DependencyInjection\Container;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Session\PdoSessionHandler;
 use Shopware\Models\Shop\Locale;
 use Symfony\Component\HttpFoundation\Session\Attribute\NamespacedAttributeBag;
@@ -87,8 +88,6 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
     /**
      * Register shopware auth resource
      * create pre-dispatch hook to check backend permissions
-     *
-     * @return bool
      */
     public function install()
     {
@@ -116,9 +115,6 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
         return true;
     }
 
-    /**
-     * @return bool
-     */
     public function uninstall()
     {
         return false;
@@ -153,6 +149,8 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      * Set local no auth property
      *
      * @param bool $flag
+     *
+     * @return void
      */
     public function setNoAuth($flag = true)
     {
@@ -163,6 +161,8 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      * Set local no acl property
      *
      * @param bool $flag
+     *
+     * @return void
      */
     public function setNoAcl($flag = true)
     {
@@ -192,15 +192,17 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
     /**
      * This pre-dispatch event-hook checks backend permissions
      *
-     * @param \Enlight_Event_EventArgs $args
+     * @param Enlight_Controller_ActionEventArgs $args
      *
      * @throws Enlight_Controller_Exception
+     *
+     * @return void
      */
     public function onPreDispatchBackend(Enlight_Event_EventArgs $args)
     {
         $this->action = $args->getSubject();
         $this->request = $this->action->Request();
-        $this->aclResource = strtolower($this->request->getControllerName());
+        $this->aclResource = strtolower(str_replace('_', '', $this->request->getControllerName()));
 
         if ($this->aclResource === 'error' || $this->request->getModuleName() !== 'backend') {
             return;
@@ -254,7 +256,7 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
             }
 
             if (!$this->isAllowed($test)) {
-                throw new Enlight_Controller_Exception($test['errorMessage'] ?: 'Permission denied', 401);
+                throw new Enlight_Controller_Exception($test['errorMessage'] ?? 'Permission denied', 401);
             }
 
             return $auth;
@@ -268,8 +270,10 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      *
      * @param Zend_Auth $auth
      *
-     * @throws \Exception
-     * @throws \SmartyException
+     * @throws Exception
+     * @throws SmartyException
+     *
+     * @return void
      */
     public function registerAclPlugin($auth)
     {
@@ -283,7 +287,7 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
         }
 
         /** @var Enlight_Template_Manager $engine */
-        $engine = $container->get(\Enlight_Template_Manager::class);
+        $engine = $container->get(Enlight_Template_Manager::class);
         $engine->unregisterPlugin(
             Smarty::PLUGIN_FUNCTION,
             'acl_is_allowed'
@@ -340,7 +344,7 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
         );
 
         // if default shop locale is allowed, use it, otherwise use the first allowed locale
-        return in_array($defaultShopLocale, $backendLocales) ? $defaultShopLocale : array_shift($backendLocales);
+        return \in_array($defaultShopLocale, $backendLocales) ? $defaultShopLocale : array_shift($backendLocales);
     }
 
     /**
@@ -365,6 +369,19 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      */
     public function onInitResourceBackendSession(Enlight_Event_EventArgs $args)
     {
+        // If another session is already started, save and close it before starting the backend session below.
+        // We need to do this, because the other session would use the session id of the backend session and thus write
+        // its data into the wrong session.
+        Enlight_Components_Session_Namespace::ensureFrontendSessionClosed(Shopware()->Container());
+        // Ensure no session is active before starting the backend session below. We need to do this because there could
+        // be another session with inconsistent/invalid state in the container.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+            // The empty session id signals to `Enlight_Components_Session_Namespace::start()` that the session cookie
+            // should be used as session id.
+            session_id('');
+        }
+
         $sessionOptions = $this->getSessionOptions();
         $saveHandler = $this->createSaveHandler(Shopware()->Container());
         $storage = new NativeSessionStorage($sessionOptions);
@@ -376,11 +393,11 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
         }
 
         if (isset($sessionOptions['save_path'])) {
-            ini_set('session.save_path', $sessionOptions['save_path']);
+            ini_set('session.save_path', (string) $sessionOptions['save_path']);
         }
 
         if (isset($sessionOptions['save_handler'])) {
-            ini_set('session.save_handler', $sessionOptions['save_handler']);
+            ini_set('session.save_handler', (string) $sessionOptions['save_handler']);
         }
 
         $session = new Enlight_Components_Session_Namespace($storage, new NamespacedAttributeBag('ShopwareBackend'));
@@ -393,11 +410,11 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      * Initiate shopware auth resource
      * database adapter by default
      *
-     * @throws \Exception
-     * @throws \SmartyException
-     * @throws \Enlight_Exception
+     * @throws SmartyException
+     * @throws Enlight_Exception
+     * @throws Exception
      *
-     * @return \Zend_Auth
+     * @return Zend_Auth
      */
     public function onInitResourceAuth(Enlight_Event_EventArgs $args)
     {
@@ -416,9 +433,6 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
         return $resource;
     }
 
-    /**
-     * Returns capabilities
-     */
     public function getCapabilities()
     {
         return [
@@ -431,20 +445,24 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
     /**
      * Init backend locales
      *
-     * @throws \Exception
+     * @throws Exception
+     *
+     * @return void
      */
     protected function initLocale()
     {
         $container = $this->Application()->Container();
+        /** @var string $revision */
+        $revision = $container->getParameter('shopware.release.revision');
 
         $locale = $this->getCurrentLocale();
         $container->get('locale')->setLocale($locale->toString());
         $container->get('snippets')->setLocale($locale);
-        $template = $container->get(\Enlight_Template_Manager::class);
+        $template = $container->get(Enlight_Template_Manager::class);
         $baseHash = $this->request->getScheme() . '://'
                   . $this->request->getHttpHost()
                   . $this->request->getBaseUrl() . '?'
-                  . $container->getParameter('shopware.release.revision');
+                  . $revision;
         $baseHash = substr(sha1($baseHash), 0, 5);
         $template->setCompileId('backend_' . $locale->toString() . '_' . $baseHash);
 
@@ -456,13 +474,13 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
     /**
      * Loads current user's locale or, if none exists, the default fallback
      *
-     * @throws \Exception
+     * @throws Exception
      *
-     * @return \Shopware\Models\Shop\Locale
+     * @return Locale
      */
     protected function getCurrentLocale()
     {
-        $modelManager = $this->get(\Shopware\Components\Model\ModelManager::class);
+        $modelManager = $this->get(ModelManager::class);
 
         if (Shopware()->Container()->initialized('backendsession')) {
             $auth = $this->get('auth');
@@ -488,12 +506,11 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
      * Filters and transforms the session options array
      * so it complies with the format expected by Enlight_Components_Session
      *
-     * @throws \Symfony\Component\DependencyInjection\Exception\InvalidArgumentException
-     *
-     * @return array
+     * @return array<string, bool|string|int>
      */
-    private function getSessionOptions()
+    private function getSessionOptions(): array
     {
+        /** @var array<string, string> $options */
         $options = Shopware()->Container()->getParameter('shopware.backendsession');
 
         if ($this->request !== null && !isset($options['cookie_path'])) {
@@ -512,18 +529,15 @@ class Shopware_Plugins_Backend_Auth_Bootstrap extends Shopware_Components_Plugin
         return $options;
     }
 
-    /**
-     * @throws \InvalidArgumentException
-     *
-     * @return \SessionHandlerInterface|null
-     */
-    private function createSaveHandler(Container $container)
+    private function createSaveHandler(Container $container): ?PdoSessionHandler
     {
+        /** @var array<string, string> $sessionOptions */
         $sessionOptions = $container->getParameter('shopware.backendsession');
         if (isset($sessionOptions['save_handler']) && $sessionOptions['save_handler'] !== 'db') {
             return null;
         }
 
+        /** @var array<string, string> $dbOptions */
         $dbOptions = $container->getParameter('shopware.db');
         $conn = Db::createPDO($dbOptions);
 

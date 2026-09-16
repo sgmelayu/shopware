@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Partner
@@ -40,7 +39,7 @@ Ext.define('Shopware.apps.Partner.controller.Statistic', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
 
     /**
      * Creates the necessary event listener for this
@@ -49,19 +48,18 @@ Ext.define('Shopware.apps.Partner.controller.Statistic', {
      *
      * @return void
      */
-    init:function () {
+    init: function () {
         var me = this;
 
         me.control({
-            'partner-statistic-window datefield':{
-                change:me.onChangeDate
+            'partner-statistic-window datefield': {
+                change: me.onChangeDate
             },
-            'partner-statistic-window button[action=downloadStatistic]':{
-                click:me.onDownloadStatistic
+            'partner-statistic-window button[action=downloadStatistic]': {
+                click: me.onDownloadStatistic
             }
         });
     },
-
 
     /**
      * Event listener method which is fired when the user change
@@ -72,29 +70,29 @@ Ext.define('Shopware.apps.Partner.controller.Statistic', {
      * @param [Ext.Date] - The new value
      * @return void
      */
-    onChangeDate:function (field, value) {
+    onChangeDate: function (field, value) {
         var me = this,
-        extraParams = null;
+            extraParams = null;
         if ( Ext.typeOf(value) != 'date' ) {
             return;
         }
         var chartStore = me.subApplication.statisticChartStore;
         var listStore = me.subApplication.statisticListStore;
 
-        if(field.name == "toDate") {
+        if (field.name == "toDate") {
             extraParams = {
-                partnerId:chartStore.getProxy().extraParams.partnerId,
-                toDate:value,
-                fromDate:chartStore.getProxy().extraParams.fromDate
+                partnerId: chartStore.getProxy().extraParams.partnerId,
+                toDate: value,
+                fromDate: chartStore.getProxy().extraParams.fromDate
             };
             chartStore.getProxy().extraParams = extraParams;
             listStore.getProxy().extraParams = extraParams;
         }
         else {
             extraParams = {
-                partnerId:chartStore.getProxy().extraParams.partnerId,
-                toDate:chartStore.getProxy().extraParams.toDate,
-                fromDate:value
+                partnerId: chartStore.getProxy().extraParams.partnerId,
+                toDate: chartStore.getProxy().extraParams.toDate,
+                fromDate: value
             };
             chartStore.getProxy().extraParams = extraParams;
             listStore.getProxy().extraParams = extraParams;
@@ -110,26 +108,26 @@ Ext.define('Shopware.apps.Partner.controller.Statistic', {
      *
      * @return void
      */
-    onDownloadStatistic:function () {
+    onDownloadStatistic: function () {
         var me = this;
         var listStore = me.subApplication.statisticListStore,
-        partnerId = listStore.getProxy().extraParams.partnerId,
-        fromDate = listStore.getProxy().extraParams.fromDate,
-        toDate = listStore.getProxy().extraParams.toDate,
-        requestStringFromDate = '',
-        requestStringToDate = '';
+            partnerId = listStore.getProxy().extraParams.partnerId,
+            fromDate = listStore.getProxy().extraParams.fromDate,
+            toDate = listStore.getProxy().extraParams.toDate,
+            requestStringFromDate = '',
+            requestStringToDate = '';
 
-        if(fromDate != "undefined" && fromDate != null) {
+        if (fromDate != "undefined" && fromDate != null) {
             fromDate = me.convertDate(fromDate);
-            requestStringFromDate = '&fromDate='+fromDate;
+            requestStringFromDate = '&fromDate=' + fromDate;
         }
 
-        if(toDate != "undefined" && toDate != null) {
+        if (toDate != "undefined" && toDate != null) {
             toDate = me.convertDate(toDate);
-            requestStringToDate = '&toDate='+toDate;
+            requestStringToDate = '&toDate=' + toDate;
         }
 
-        window.open(' {url action="downloadStatistic"}?partnerId='+partnerId+requestStringFromDate+requestStringToDate);
+        window.open(' {url action="downloadStatistic"}?partnerId=' + partnerId + requestStringFromDate + requestStringToDate);
     },
 
     /**
@@ -137,12 +135,12 @@ Ext.define('Shopware.apps.Partner.controller.Statistic', {
      *
      * @param date
      */
-    convertDate:function(date){
+    convertDate: function(date){
         var day = (date.getDate() < 10) ? "0" + date.getDate() : date.getDate();
-        var month = (date.getMonth() +1 < 10) ? "0" + (date.getMonth() +1) : date.getMonth() +1;
+        var month = (date.getMonth() + 1 < 10) ? "0" + (date.getMonth() + 1) : date.getMonth() + 1;
         var year = date.getFullYear();
 
-        return year+"-"+month+"-"+day;
+        return year + "-" + month + "-" + day;
     }
 });
 //{/block}

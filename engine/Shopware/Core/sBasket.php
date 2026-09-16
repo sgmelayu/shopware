@@ -1,42 +1,51 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
+use Shopware\Bundle\CartBundle\CartKey;
+use Shopware\Bundle\CartBundle\CartPositionsMode;
 use Shopware\Bundle\OrderBundle\Service\OrderListProductServiceInterface;
 use Shopware\Bundle\StoreFrontBundle;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ListProductGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\AdditionalTextServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
 use Shopware\Components\Cart\BasketHelperInterface;
 use Shopware\Components\Cart\CartOrderNumberProviderInterface;
 use Shopware\Components\Cart\Struct\CartItemStruct;
 use Shopware\Components\Cart\Struct\DiscountContext;
+use Shopware\Components\Compatibility\LegacyStructConverter;
 use Shopware\Components\Random;
 use Symfony\Component\HttpFoundation\Cookie;
 
 /**
  * Shopware Class that handles cart operations
+ *
+ * @phpstan-type BasketArray array{content?:array<array<string, mixed>>, Amount?:string, AmountNet?:string, Quantity?:int, AmountNumeric?:float, AmountNetNumeric?:float, AmountWithTax?:string, AmountWithTaxNumeric?:float}
  */
-class sBasket implements \Enlight_Hook
+class sBasket implements Enlight_Hook
 {
     /**
      * Pointer to sSystem object
@@ -103,12 +112,12 @@ class sBasket implements \Enlight_Hook
     private $moduleManager;
 
     /**
-     * @var StoreFrontBundle\Service\ContextServiceInterface
+     * @var ContextServiceInterface
      */
     private $contextService;
 
     /**
-     * @var StoreFrontBundle\Service\AdditionalTextServiceInterface
+     * @var AdditionalTextServiceInterface
      */
     private $additionalTextService;
 
@@ -143,19 +152,19 @@ class sBasket implements \Enlight_Hook
     private $cartOrderNumberProvider;
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function __construct(
-        Enlight_Components_Db_Adapter_Pdo_Mysql $db = null,
-        Enlight_Event_EventManager $eventManager = null,
-        Shopware_Components_Snippet_Manager $snippetManager = null,
-        Shopware_Components_Config $config = null,
-        Enlight_Components_Session_Namespace $session = null,
-        Enlight_Controller_Front $front = null,
-        Shopware_Components_Modules $moduleManager = null,
-        \sSystem $systemModule = null,
-        StoreFrontBundle\Service\ContextServiceInterface $contextService = null,
-        StoreFrontBundle\Service\AdditionalTextServiceInterface $additionalTextService = null
+        ?Enlight_Components_Db_Adapter_Pdo_Mysql $db = null,
+        ?Enlight_Event_EventManager $eventManager = null,
+        ?Shopware_Components_Snippet_Manager $snippetManager = null,
+        ?Shopware_Components_Config $config = null,
+        ?Enlight_Components_Session_Namespace $session = null,
+        ?Enlight_Controller_Front $front = null,
+        ?Shopware_Components_Modules $moduleManager = null,
+        ?sSystem $systemModule = null,
+        ?ContextServiceInterface $contextService = null,
+        ?AdditionalTextServiceInterface $additionalTextService = null
     ) {
         $this->db = $db ?: Shopware()->Db();
         $this->eventManager = $eventManager ?: Shopware()->Events();
@@ -168,18 +177,18 @@ class sBasket implements \Enlight_Hook
 
         $this->contextService = $contextService;
         $this->additionalTextService = $additionalTextService;
-        $this->connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
+        $this->connection = Shopware()->Container()->get(Connection::class);
 
         if ($this->contextService === null) {
-            $this->contextService = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class);
+            $this->contextService = Shopware()->Container()->get(ContextServiceInterface::class);
         }
 
         if ($this->additionalTextService === null) {
-            $this->additionalTextService = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\AdditionalTextServiceInterface::class);
+            $this->additionalTextService = Shopware()->Container()->get(AdditionalTextServiceInterface::class);
         }
 
         if ($this->basketHelper === null) {
-            $this->basketHelper = Shopware()->Container()->get(\Shopware\Components\Cart\BasketHelperInterface::class);
+            $this->basketHelper = Shopware()->Container()->get(BasketHelperInterface::class);
         }
 
         $this->proportionalTaxCalculation = $this->config->get('proportionalTaxCalculation');
@@ -230,7 +239,7 @@ class sBasket implements \Enlight_Hook
             ]
         );
 
-        $result = $queryBuilder->execute()->fetch(\PDO::FETCH_ASSOC);
+        $result = $queryBuilder->execute()->fetch(PDO::FETCH_ASSOC);
 
         return $result === false ? [] : $result;
     }
@@ -289,19 +298,19 @@ class sBasket implements \Enlight_Hook
      */
     public function sGetAmountRestrictedArticles($articles, $supplier)
     {
-        if (!is_array($articles) && empty($supplier)) {
+        if (!\is_array($articles) && empty($supplier)) {
             return $this->sGetAmountArticles();
         }
 
         $extraConditions = [];
-        if (!empty($articles) && is_array($articles)) {
+        if (!empty($articles) && \is_array($articles)) {
             $extraConditions[] = $this->db->quoteInto('ordernumber IN (?) ', $articles);
         }
         if (!empty($supplier)) {
             $extraConditions[] = $this->db->quoteInto('s_articles.supplierID = ?', $supplier);
         }
 
-        if (count($extraConditions)) {
+        if (\count($extraConditions)) {
             $sqlExtra = ' AND ( ' . implode(' OR ', $extraConditions) . ' ) ';
         } else {
             $sqlExtra = '';
@@ -325,17 +334,17 @@ class sBasket implements \Enlight_Hook
      * Update vouchers in cart
      * Used only internally in sBasket
      *
-     * @throws \Exception
-     * @throws \Enlight_Exception
-     * @throws \Enlight_Event_Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Exception
+     * @throws Enlight_Exception
+     * @throws Enlight_Event_Exception
+     * @throws Zend_Db_Adapter_Exception
      */
     public function sUpdateVoucher()
     {
         $voucher = $this->sGetVoucher();
         if ($voucher) {
             $this->sDeleteArticle('voucher');
-            if (is_array($this->sAddVoucher($voucher['code']))) {
+            if (\is_array($this->sAddVoucher($voucher['code']))) {
                 $this->session->offsetSet('sBasketVoucherRemovedInCart', true);
             }
         }
@@ -345,9 +354,9 @@ class sBasket implements \Enlight_Hook
      * Insert basket discount
      * Used only internally in sBasket::sGetBasket()
      *
-     * @throws \Enlight_Exception
-     * @throws \Enlight_Event_Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Enlight_Exception
+     * @throws Enlight_Event_Exception
+     * @throws Zend_Db_Adapter_Exception
      */
     public function sInsertDiscount()
     {
@@ -366,7 +375,7 @@ class sBasket implements \Enlight_Hook
         );
 
         // No discounts
-        if (!count($getDiscounts)) {
+        if (!\count($getDiscounts)) {
             return;
         }
 
@@ -381,7 +390,7 @@ class sBasket implements \Enlight_Hook
             $sql,
             ['subject' => $this, 'params' => $params]
         );
-        $basketAmount = $this->db->fetchOne($sql, $params);
+        $basketAmount = (float) $this->db->fetchOne($sql, $params);
 
         // If no products in basket, return
         if (!$basketAmount) {
@@ -417,7 +426,7 @@ class sBasket implements \Enlight_Hook
             $tax = 19;
         }
 
-        if (!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']) {
+        if (empty($this->sSYSTEM->sUSERGROUPDATA['tax']) && $this->sSYSTEM->sUSERGROUPDATA['id']) {
             $discountNet = $discount;
         } else {
             $discountNet = round($discount / (100 + $tax) * 100, 3);
@@ -483,6 +492,7 @@ class sBasket implements \Enlight_Hook
             );
 
             $this->db->insert('s_order_basket', $params);
+            $this->db->insert('s_order_basket_attributes', ['basketID' => $this->db->lastInsertId()]);
         }
     }
 
@@ -506,7 +516,7 @@ class sBasket implements \Enlight_Hook
      * Add premium products to cart
      * Used internally in sBasket and in CheckoutController
      *
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Zend_Db_Adapter_Exception
      *
      * @return bool|int
      */
@@ -611,7 +621,7 @@ class sBasket implements \Enlight_Hook
                 'variant'
             );
 
-            $product = new StoreFrontBundle\Struct\ListProduct(
+            $product = new ListProduct(
                 $premium['articleID'],
                 $premium['variantID'],
                 $premium['ordernumber']
@@ -657,19 +667,37 @@ class sBasket implements \Enlight_Hook
     public function getMaxTax()
     {
         $sessionId = $this->session->get('sessionId');
+        if (!\is_string($sessionId)) {
+            return false;
+        }
 
-        $sql = <<<SQL
-SELECT a.taxID
-FROM s_order_basket b
-JOIN s_articles a ON a.id = b.articleID
-WHERE b.sessionID = ? AND b.modus = 0
-ORDER BY b.tax_rate DESC LIMIT 1;
-SQL;
-        $maxTaxId = $this->connection->fetchColumn($sql, [empty($sessionId) ? session_id() : $sessionId]);
+        $qb = $this->connection->createQueryBuilder();
+        $qb
+            ->select(['product.taxID'])
+            ->from('s_order_basket', 'basket')
+            ->join('basket', 's_articles', 'product', 'product.id = basket.articleID')
+            ->where($qb->expr()->andX(
+                $qb->expr()->eq('basket.sessionID', ':sessionId'),
+                $qb->expr()->eq('basket.modus', CartPositionsMode::PRODUCT)
+            ))
+            ->orderBy('basket.tax_rate', 'DESC')
+            ->setMaxResults(1)
+            ->setParameter('sessionId', $sessionId)
+        ;
 
+        $this->eventManager->notify(
+            'Shopware_Modules_Basket_GetMaxTax_QueryBuilder',
+            [
+                'sessionId' => $sessionId,
+                'queryBuilder' => $qb,
+            ]
+        );
+
+        $maxTaxId = $qb->execute()->fetchOne();
         if (!$maxTaxId) {
             return false;
         }
+
         $tax = $this->contextService->getShopContext()->getTaxRule($maxTaxId);
 
         return $tax->getTax();
@@ -682,10 +710,10 @@ SQL;
      * @param string $voucherCode Voucher code
      * @param string $basket
      *
-     * @throws \Exception
-     * @throws \Enlight_Exception
-     * @throws \Enlight_Event_Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Exception
+     * @throws Enlight_Exception
+     * @throws Enlight_Event_Exception
+     * @throws Zend_Db_Adapter_Exception
      *
      * @return array|bool True if successful, false if stopped by an event, array with error data if one occurred
      */
@@ -701,16 +729,19 @@ SQL;
         $voucherCode = strtolower(trim(stripslashes($voucherCode)));
 
         // Load the voucher details
+        $date = new DateTime();
+        $date = $date->format('Y-m-d');
+
         $voucherDetails = $this->db->fetchRow(
             'SELECT *
               FROM s_emarketing_vouchers
               WHERE modus != 1
-              AND LOWER(vouchercode) = ?
+              AND LOWER(vouchercode) = :vouchercode
               AND (
-                (valid_to >= CURDATE() AND valid_from <= CURDATE())
-                OR valid_to IS NULL
+                (valid_to >= :date OR valid_to IS NULL)
+                AND (valid_from <= :date OR valid_from IS NULL)
               )',
-            [$voucherCode]
+            ['vouchercode' => $voucherCode, 'date' => $date]
         ) ?: [];
 
         $individualCode = false;
@@ -723,8 +754,8 @@ SQL;
             return ['sErrorFlag' => true, 'sErrorMessages' => $sErrorMessages];
         }
 
-        if ($voucherDetails['id']) {
-            // If we have voucher details, its a reusable code
+        if (!empty($voucherDetails['id'])) {
+            // If we have voucher details, it's a reusable code
             // We need to check how many times it has already been used
             $usedVoucherCount = $this->db->fetchRow(
                 'SELECT COUNT(id) AS vouchers
@@ -734,31 +765,29 @@ SQL;
                 [$voucherDetails['ordercode']]
             ) ?: [];
         } else {
-            // If we don't have voucher details yet, need to check if its a one-time code
+            // If we don't have voucher details yet, need to check if it's a one-time code
             $voucherCodeDetails = $this->db->fetchRow(
                 'SELECT id, voucherID, code as vouchercode FROM s_emarketing_voucher_codes c WHERE c.code = ? AND c.cashed != 1 LIMIT 1;',
                 [$voucherCode]
-            );
+            ) ?: [];
 
             if ($voucherCodeDetails && $voucherCodeDetails['voucherID']) {
                 $voucherDetails = $this->db->fetchRow(
                     'SELECT description, numberofunits, customergroup, value, restrictarticles,
                     minimumcharge, shippingfree, bindtosupplier, taxconfig, valid_from,
                     valid_to, ordercode, modus, percental, strict, subshopID, customer_stream_ids
-                    FROM s_emarketing_vouchers WHERE modus = 1 AND id = ? AND (
-                      (valid_to >= CURDATE()
-                          AND valid_from <= CURDATE()
-                      )
-                      OR valid_to is NULL
+                    FROM s_emarketing_vouchers
+                    WHERE modus = 1 AND id = :voucherId AND (
+                        (valid_to >= :date OR valid_to IS NULL) AND (valid_from <= :date OR valid_from IS NULL)
                 ) LIMIT 1',
-                    [(int) $voucherCodeDetails['voucherID']]
-                );
+                    ['voucherId' => (int) $voucherCodeDetails['voucherID'], 'date' => $date]
+                ) ?: [];
                 unset($voucherCodeDetails['voucherID']);
                 $voucherDetails = array_merge($voucherCodeDetails, $voucherDetails);
-                $individualCode = ($voucherDetails && $voucherDetails['description']);
+                $individualCode = $voucherDetails && ($voucherDetails['description'] ?? null);
             }
         }
-        $streams = array_filter(explode('|', $voucherDetails['customer_stream_ids']));
+        $streams = array_filter(explode('|', $voucherDetails['customer_stream_ids'] ?? ''));
 
         if (!empty($streams)) {
             $context = $this->contextService->getShopContext();
@@ -780,7 +809,7 @@ SQL;
         // 3 - Voucher is reusable and has already been used to the limit
         if (!$voucherDetails
             || !$voucherCode
-            || ($voucherDetails['numberofunits'] <= $usedVoucherCount['vouchers'] && !$individualCode)
+            || (($voucherDetails['numberofunits'] ?? 0) <= ($usedVoucherCount['vouchers'] ?? 0) && !$individualCode)
         ) {
             $sErrorMessages[] = $this->snippetManager->getNamespace('frontend/basket/internalMessages')->get(
                 'VoucherFailureNotFound',
@@ -846,15 +875,15 @@ SQL;
             $voucherDetails['value'] *= $factor;
         }
 
-        $basketValue = $amount['totalAmount'] / $factor;
+        $basketValue = ($amount['totalAmount'] ?? 0) / $factor;
         // Check if the basket's value is above the voucher's
         if ($basketValue < $voucherDetails['minimumcharge']) {
             $snippet = $this->snippetManager->getNamespace('frontend/basket/internalMessages')->get(
                 'VoucherFailureMinimumCharge',
                 'The minimum charge for this voucher is {$sMinimumCharge|currency}'
             );
-            $smarty = Shopware()->Container()->get(\Enlight_Template_Manager::class);
-            $template = $smarty->createTemplate(sprintf('string:%s', $snippet));
+            $smarty = Shopware()->Container()->get(Enlight_Template_Manager::class);
+            $template = $smarty->createTemplate(\sprintf('string:%s', $snippet));
             $template->assign('sMinimumCharge', $voucherDetails['minimumcharge']);
 
             $sErrorMessages[] = $template->fetch();
@@ -880,7 +909,6 @@ SQL;
 
         if ($this->proportionalTaxCalculation && !$this->session->get('taxFree') && $voucherDetails['taxconfig'] === 'auto') {
             $taxCalculator = Shopware()->Container()->get('shopware.cart.proportional_tax_calculator');
-            $system = Shopware()->Container()->get('system');
             $prices = $this->basketHelper->getPositionPrices(
                 new DiscountContext(
                     $this->session->get('sessionId'),
@@ -896,7 +924,7 @@ SQL;
             $hasMultipleTaxes = $taxCalculator->hasDifferentTaxes($prices);
 
             if ($voucherDetails['percental']) {
-                $voucherPrices = $taxCalculator->recalculatePercentageDiscount('-' . $voucherValue, $prices, !$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']);
+                $voucherPrices = $taxCalculator->recalculatePercentageDiscount(-$voucherValue, $prices, !$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']);
             } else {
                 $voucherPrices = $taxCalculator->calculate($voucherDetails['value'], $prices, !$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']);
             }
@@ -951,6 +979,8 @@ SQL;
                 );
 
                 $this->db->query($sql, $params);
+                $insertId = (int) $this->db->lastInsertId('s_order_basket');
+                $this->connection->insert('s_order_basket_attributes', ['basketID' => $insertId]);
             }
 
             return !empty($prices);
@@ -1000,36 +1030,39 @@ SQL;
             ]
         );
 
-        $isInserted = (bool) $this->db->query($sql, $params);
-
-        if ($isInserted) {
-            $insertId = $this->db->lastInsertId('s_order_basket');
-
-            $this->eventManager->notify(
-                'Shopware_Modules_Basket_AddVoucher_Inserted',
-                [
-                    'subject' => $this,
-                    'basketId' => $insertId,
-                    'voucher' => $voucherDetails,
-                    'vouchername' => $voucherName,
-                    'shippingfree' => $freeShipping,
-                    'tax' => $tax,
-                ]
-            );
+        try {
+            $this->db->query($sql, $params);
+        } catch (Zend_Db_Exception $e) {
+            return false;
         }
 
-        return $isInserted;
+        $insertId = (int) $this->db->lastInsertId('s_order_basket');
+        $this->connection->insert('s_order_basket_attributes', ['basketID' => $insertId]);
+
+        $this->eventManager->notify(
+            'Shopware_Modules_Basket_AddVoucher_Inserted',
+            [
+                'subject' => $this,
+                'basketId' => $insertId,
+                'voucher' => $voucherDetails,
+                'vouchername' => $voucherName,
+                'shippingfree' => $freeShipping,
+                'tax' => $tax,
+            ]
+        );
+
+        return true;
     }
 
     /**
      * Get productId of all products from cart
      * Used in CheckoutController
      *
-     * @return array|null List of product ids in current basket, or null if none
+     * @return array<int>|null List of product ids in current basket, or null if none
      */
     public function sGetBasketIds()
     {
-        $products = $this->db->fetchCol(
+        $productIds = $this->db->fetchCol(
             'SELECT DISTINCT articleID
                 FROM s_order_basket
                 WHERE sessionID = ?
@@ -1037,8 +1070,13 @@ SQL;
                 ORDER BY modus ASC, datum DESC',
             [$this->session->get('sessionId')]
         );
+        if (empty($productIds)) {
+            return null;
+        }
 
-        return empty($products) ? null : $products;
+        return array_map(static function ($productId) {
+            return (int) $productId;
+        }, $productIds);
     }
 
     /**
@@ -1054,7 +1092,7 @@ SQL;
 
         if ($minimumOrder && !$this->sSYSTEM->sUSERGROUPDATA['minimumordersurcharge']) {
             $amount = $this->sGetAmount();
-            if ($amount['totalAmount'] < ($minimumOrder * $factor)) {
+            if (($amount['totalAmount'] ?? 0) < ($minimumOrder * $factor)) {
                 return $minimumOrder * $factor;
             }
         }
@@ -1066,8 +1104,8 @@ SQL;
      * Add surcharge for payment means to cart
      * Used only internally in sBasket::sGetBasket
      *
-     * @throws \Enlight_Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Enlight_Exception
+     * @throws Zend_Db_Adapter_Exception
      *
      * @return false|null False on failure, null on success
      */
@@ -1111,7 +1149,7 @@ SQL;
             $tax = 19;
         }
 
-        if (!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']) {
+        if (empty($this->sSYSTEM->sUSERGROUPDATA['tax']) && $this->sSYSTEM->sUSERGROUPDATA['id']) {
             $discountNet = $minimumOrderSurcharge;
         } else {
             $discountNet = round($minimumOrderSurcharge / (100 + $tax) * 100, 3);
@@ -1170,19 +1208,20 @@ SQL;
             );
         } else {
             $this->db->insert('s_order_basket', $params);
+            $this->db->insert('s_order_basket_attributes', ['basketID' => $this->db->lastInsertId()]);
         }
 
         return null;
     }
 
     /**
-     * Add percentual surcharge
+     * Add percentage surcharge
      * Used only internally in sBasket::sGetBasket
      *
-     * @throws \Enlight_Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Enlight_Exception
+     * @throws Zend_Db_Adapter_Exception
      *
-     * @return false|void|null False on failure, null on success
+     * @return false|null False on failure, null on success
      */
     public function sInsertSurchargePercent()
     {
@@ -1248,7 +1287,7 @@ SQL;
             $tax = 19;
         }
 
-        if (!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']) {
+        if (empty($this->sSYSTEM->sUSERGROUPDATA['tax']) && $this->sSYSTEM->sUSERGROUPDATA['id']) {
             $discountNet = $surcharge;
         } else {
             $discountNet = round($surcharge / (100 + $tax) * 100, 3);
@@ -1298,6 +1337,7 @@ SQL;
         }
 
         $this->db->insert('s_order_basket', $params);
+        $this->db->insert('s_order_basket_attributes', ['basketID' => $this->db->lastInsertId()]);
 
         return null;
     }
@@ -1319,12 +1359,14 @@ SQL;
     /**
      * Updates cart and returns it.
      *
-     * @throws \Exception
-     * @throws \Enlight_Exception
-     * @throws \Enlight_Event_Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Exception
+     * @throws Enlight_Exception
+     * @throws Enlight_Event_Exception
+     * @throws Zend_Db_Adapter_Exception
      *
-     * @return array Basket content
+     * @phpstan-return BasketArray
+     *
+     * @return array
      */
     public function sGetBasket()
     {
@@ -1378,10 +1420,12 @@ SQL;
     /**
      * Returns all basket data without refresh
      *
-     * @throws \Exception
-     * @throws \Enlight_Exception
+     * @throws Exception
+     * @throws Enlight_Exception
      *
-     * @return array
+     * @phpstan-return BasketArray
+     *
+     * @return array<string, mixed>
      */
     public function sGetBasketData()
     {
@@ -1400,7 +1444,7 @@ SQL;
             $totalAmountNet,
         ] = $this->getBasketProducts($getProducts);
 
-        if (static::roundTotal($totalAmount) < 0 || empty($totalCount)) {
+        if (self::roundTotal($totalAmount) < 0 || empty($totalCount)) {
             if (!$this->eventManager->notifyUntil('Shopware_Modules_Basket_sGetBasket_AllowEmptyBasket', [
                 'articles' => $getProducts,
                 'totalAmount' => $totalAmount,
@@ -1423,18 +1467,18 @@ SQL;
         $totalAmountNet = $this->moduleManager->Articles()->sFormatPrice($totalAmountNet);
 
         $result = [
-            'content' => $getProducts,
-            'Amount' => $totalAmount,
-            'AmountNet' => $totalAmountNet,
-            'Quantity' => $totalCount,
-            'AmountNumeric' => $totalAmountNumeric,
-            'AmountNetNumeric' => $totalAmountNetNumeric,
-            'AmountWithTax' => $totalAmountWithTax,
-            'AmountWithTaxNumeric' => $totalAmountWithTaxNumeric,
+            CartKey::POSITIONS => $getProducts,
+            CartKey::AMOUNT => $totalAmount,
+            CartKey::AMOUNT_NET => $totalAmountNet,
+            CartKey::QUANTITY => $totalCount,
+            CartKey::AMOUNT_NUMERIC => $totalAmountNumeric,
+            CartKey::AMOUNT_NET_NUMERIC => $totalAmountNetNumeric,
+            CartKey::AMOUNT_WITH_TAX => $totalAmountWithTax,
+            CartKey::AMOUNT_WITH_TAX_NUMERIC => $totalAmountWithTaxNumeric,
         ];
 
-        if (!empty($result['content'])) {
-            foreach ($result['content'] as $key => $value) {
+        if (!empty($result[CartKey::POSITIONS])) {
+            foreach ($result[CartKey::POSITIONS] as $key => $value) {
                 if (!empty($value['amountWithTax'])) {
                     $t = round((float) str_replace(',', '.', $value['amountWithTax']), 2);
                 } else {
@@ -1451,16 +1495,15 @@ SQL;
                     );
                 }
                 $calcDifference = $this->moduleManager->Articles()->sFormatPrice($t - $p);
-                $result['content'][$key]['tax'] = $calcDifference;
+                $result[CartKey::POSITIONS][$key]['tax'] = $calcDifference;
             }
         }
-        $result = $this->eventManager->filter(
+
+        return $this->eventManager->filter(
             'Shopware_Modules_Basket_GetBasket_FilterResult',
             $result,
             ['subject' => $this]
         );
-
-        return $result;
     }
 
     /**
@@ -1471,9 +1514,9 @@ SQL;
      * @param string $articleName
      * @param string $articleOrderNumber
      *
-     * @throws \DomainException
-     * @throws \Enlight_Exception         If entry could not be added to database
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws DomainException
+     * @throws Enlight_Exception         If entry could not be added to database
+     * @throws Zend_Db_Adapter_Exception
      *
      * @return bool If operation was successful
      */
@@ -1531,7 +1574,7 @@ SQL;
      * Get all products current on wishlist
      * Used in the NoteController
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array Product notes
      */
@@ -1539,17 +1582,17 @@ SQL;
     {
         $notes = $this->getNoteProducts();
         if (empty($notes)) {
-            return $notes;
+            return [];
         }
 
         $numbers = array_column($notes, 'ordernumber');
 
-        $context = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getShopContext();
+        $context = Shopware()->Container()->get(ContextServiceInterface::class)->getShopContext();
 
-        $products = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface::class)
+        $products = Shopware()->Container()->get(ListProductServiceInterface::class)
             ->getList($numbers, $context);
 
-        $products = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\AdditionalTextServiceInterface::class)
+        $products = Shopware()->Container()->get(AdditionalTextServiceInterface::class)
             ->buildAdditionalTextLists($products, $context);
 
         $promotions = [];
@@ -1578,22 +1621,21 @@ SQL;
     {
         $responseCookies = $this->front->Response()->getCookies();
 
-        if (!empty($responseCookies['sUniqueID-/']['value']) && $responseCookies['sUniqueID-/']['value']) {
+        if (!empty($responseCookies['sUniqueID-/']['value'])) {
             $uniqueId = $responseCookies['sUniqueID-/']['value'];
         } else {
             $uniqueId = $this->front->Request()->getCookie('sUniqueID');
         }
 
-        $count = (int) $this->db->fetchOne('
-            SELECT COUNT(*) FROM s_order_notes n, s_articles a
-            WHERE (sUniqueID = ? OR (userID != 0 AND userID = ?))
-            AND a.id = n.articleID AND a.active = 1
-        ', [
-            empty($uniqueId) ? $this->session->get('sessionId') : $uniqueId,
-            $this->session->get('sUserId', 0),
-        ]);
-
-        return $count;
+        return (int) $this->db->fetchOne(
+            'SELECT COUNT(*) FROM s_order_notes n, s_articles a
+             WHERE (sUniqueID = ? OR (userID != 0 AND userID = ?))
+                AND a.id = n.articleID AND a.active = 1',
+            [
+                empty($uniqueId) ? $this->session->get('sessionId') : $uniqueId,
+                $this->session->get('sUserId', 0),
+            ]
+        );
     }
 
     /**
@@ -1602,8 +1644,8 @@ SQL;
      *
      * @param int $id Id of the wishlist line
      *
-     * @throws \Zend_Db_Adapter_Exception
-     * @throws \Enlight_Exception         If entry could not be deleted from database
+     * @throws Zend_Db_Adapter_Exception
+     * @throws Enlight_Exception         If entry could not be deleted from database
      *
      * @return bool if the operation was successful
      */
@@ -1622,17 +1664,18 @@ SQL;
             return false;
         }
 
-        $delete = $this->db->query(
-            'DELETE FROM s_order_notes
-            WHERE (sUniqueID = ? OR (userID = ?  AND userID != 0))
-            AND id=?',
-            [
-                $this->front->Request()->getCookie('sUniqueID'),
-                $this->session->get('sUserId'),
-                $id,
-            ]
-        );
-        if (!$delete) {
+        try {
+            $this->db->query(
+                'DELETE FROM s_order_notes
+                WHERE (sUniqueID = ? OR (userID = ?  AND userID != 0))
+                AND id=?',
+                [
+                    $this->front->Request()->getCookie('sUniqueID'),
+                    $this->session->get('sUserId'),
+                    $id,
+                ]
+            );
+        } catch (Zend_Db_Exception $e) {
             throw new Enlight_Exception('Basket sDeleteNote ##01 Could not delete item');
         }
 
@@ -1646,11 +1689,11 @@ SQL;
      * @param int $id       Basket entry id
      * @param int $quantity Quantity
      *
-     * @throws \Enlight_Event_Exception
-     * @throws \Zend_Db_Adapter_Exception
-     * @throws \Enlight_Exception         If database could not be updated
+     * @throws Enlight_Event_Exception
+     * @throws Zend_Db_Adapter_Exception
+     * @throws Enlight_Exception         If database could not be updated
      *
-     * @return bool
+     * @return false|null
      */
     public function sUpdateArticle($id, $quantity)
     {
@@ -1671,7 +1714,7 @@ SQL;
      * @throws Enlight_Exception
      * @throws Zend_Db_Adapter_Exception
      *
-     * @return bool|null
+     * @return false|null
      */
     public function updateCartItems(array $cartItems)
     {
@@ -1716,7 +1759,7 @@ SQL;
                 $additionalInfo = $cartItem->getAdditionalInfo();
                 $updatedPrice = $cartItem->getUpdatedPrice();
 
-                if (in_array($customerGroupId, $additionalInfo['blocked_customer_groups'])) {
+                if (\in_array($customerGroupId, $additionalInfo['blocked_customer_groups'])) {
                     // if blocked for current customer group, delete product from basket
                     $this->sDeleteArticle($id);
                     $errors = true;
@@ -1753,7 +1796,7 @@ SQL;
                         'price' => $grossPrice,
                         'netprice' => $netPrice,
                         'currencyFactor' => $this->sSYSTEM->sCurrency['factor'],
-                        'articlename' => $additionalInfo['name'],
+                        'articlename' => $additionalInfo['name'] ?? null,
                     ]
                 );
 
@@ -1784,13 +1827,13 @@ SQL;
                     ]
                 );
 
-                $update = $this->db->query(
-                    $sql,
-                    $params
-                );
-
-                if (!$update || !$updatedPrice) {
-                    throw new Enlight_Exception(sprintf('Basket Update ##01 Could not update quantity %s', $sql));
+                try {
+                    $this->db->query(
+                        $sql,
+                        $params
+                    );
+                } catch (Zend_Db_Exception $e) {
+                    throw new Enlight_Exception(\sprintf('Basket Update ##01 Could not update quantity %s', $sql));
                 }
             }
         }
@@ -1903,12 +1946,12 @@ SQL;
      * @param string $id       Order number (s_articles_details.ordernumber)
      * @param int    $quantity Amount
      *
-     * @throws \Exception
-     * @throws \Enlight_Exception         If no price could be determined, or a database error occurs
-     * @throws \Enlight_Event_Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Exception
+     * @throws Enlight_Exception         If no price could be determined, or a database error occurs
+     * @throws Enlight_Event_Exception
+     * @throws Zend_Db_Adapter_Exception
      *
-     * @return int|false|void Id of the inserted basket entry, or false on failure
+     * @return int|false Id of the inserted basket entry, or false on failure
      */
     public function sAddArticle($id, $quantity = 1)
     {
@@ -1939,6 +1982,8 @@ SQL;
             return false;
         }
 
+        $quantity = max($quantity, (int) $product['minpurchase']);
+
         $chkBasketForProduct = $this->checkIfProductIsInBasket(
             $product['articleID'],
             $product['ordernumber'],
@@ -1948,13 +1993,13 @@ SQL;
         $quantity = $this->getBasketQuantity($quantity, $chkBasketForProduct, $product);
 
         if ($quantity <= 0) {
-            return;
+            return false;
         }
 
         if ($chkBasketForProduct) {
             $this->sUpdateArticle($chkBasketForProduct['id'], $quantity);
 
-            return $chkBasketForProduct['id'];
+            return (int) $chkBasketForProduct['id'];
         }
 
         $price = $this->getPriceForAddProduct($product);
@@ -2019,11 +2064,12 @@ SQL;
             ]
         );
 
-        $result = $this->db->query($sql, $params);
-
-        if (!$result) {
-            throw new Enlight_Exception(sprintf('BASKET-INSERT #02 SQL-Error%s', $sql));
+        try {
+            $this->db->query($sql, $params);
+        } catch (Zend_Db_Exception $e) {
+            throw new Enlight_Exception(\sprintf('BASKET-INSERT #02 SQL-Error%s', $sql));
         }
+
         $insertId = (int) $this->db->lastInsertId();
 
         $this->db->insert(
@@ -2055,10 +2101,10 @@ SQL;
      * Refresh basket after login / currency change
      * Used in multiple locations
      *
-     * @throws \Exception
-     * @throws \Enlight_Exception
-     * @throws \Enlight_Event_Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @throws Exception
+     * @throws Enlight_Exception
+     * @throws Enlight_Event_Exception
+     * @throws Zend_Db_Adapter_Exception
      */
     public function sRefreshBasket()
     {
@@ -2197,13 +2243,13 @@ SQL;
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array
      */
     private function convertListProductToNote(ListProduct $product, array $note)
     {
-        $structConverter = Shopware()->Container()->get(\Shopware\Components\Compatibility\LegacyStructConverter::class);
+        $structConverter = Shopware()->Container()->get(LegacyStructConverter::class);
         /** @var array $promotion */
         $promotion = $structConverter->convertListProductStruct($product);
 
@@ -2251,7 +2297,7 @@ SQL;
      * @param string $orderNumber
      * @param string $sessionId
      *
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      *
      * @return array Example: ["id" => "731", "quantity" => "100"]
      */
@@ -2277,10 +2323,7 @@ SQL;
             ]
         );
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $builder->execute();
-
-        return $statement->fetch() ?: [];
+        return $builder->execute()->fetch() ?: [];
     }
 
     /**
@@ -2294,7 +2337,7 @@ SQL;
     private function filterUsedVoucher($userId, $voucherDetails)
     {
         $sErrorMessages = [];
-        if ($userId && $voucherDetails['id']) {
+        if ($userId && !empty($voucherDetails['id'])) {
             $queryVoucher = $this->db->fetchAll(
                 'SELECT s_order_details.id AS id
                     FROM s_order, s_order_details
@@ -2308,7 +2351,7 @@ SQL;
                 ]
             );
 
-            if (!$voucherDetails['modus'] && count($queryVoucher) >= $voucherDetails['numorder']) {
+            if (!$voucherDetails['modus'] && \count($queryVoucher) >= $voucherDetails['numorder']) {
                 $sErrorMessages[] = $this->snippetManager
                     ->getNamespace('frontend/basket/internalMessages')->get(
                         'VoucherFailureAlreadyUsed',
@@ -2400,7 +2443,7 @@ SQL;
 
         if (!empty($voucherDetails['restrictarticles'])) {
             $restrictedProducts = array_filter(explode(';', $voucherDetails['restrictarticles']));
-            if (count($restrictedProducts) === 0) {
+            if (\count($restrictedProducts) === 0) {
                 $restrictedProducts[] = $voucherDetails['restrictarticles'];
             }
 
@@ -2556,17 +2599,19 @@ SQL;
      * Loads relevant associated data for the provided products
      * Used in sGetBasket
      *
-     * @throws \Exception
-     * @throws \Enlight_Event_Exception
+     * @param array<array<string, mixed>> $getProducts
      *
-     * @return array
+     * @throws Exception
+     * @throws Enlight_Event_Exception
+     *
+     * @return array{0: array<array<string, mixed>>, 1: float, 2: float, 3: int, 4: float}
      */
-    private function getBasketProducts(array $getProducts)
+    private function getBasketProducts(array $getProducts): array
     {
-        $totalAmount = 0;
-        $discount = 0;
-        $totalAmountWithTax = 0;
-        $totalAmountNet = 0;
+        $totalAmount = 0.0;
+        $discount = 0.0;
+        $totalAmountWithTax = 0.0;
+        $totalAmountNet = 0.0;
         $totalCount = 0;
 
         $numbers = [];
@@ -2584,10 +2629,10 @@ SQL;
                 ['subject' => $this, 'getArticles' => $getProducts]
             );
 
-            $getProducts[$key]['shippinginfo'] = (empty($getProducts[$key]['modus']));
+            $getProducts[$key]['shippinginfo'] = empty($getProducts[$key]['modus']);
 
             if (!empty($getProducts[$key]['releasedate'])
-                && strtotime($getProducts[$key]['releasedate']) <= time()
+                && (int) strtotime($getProducts[$key]['releasedate']) <= time()
             ) {
                 $getProducts[$key]['sReleaseDate'] = $getProducts[$key]['releasedate'] = '';
             }
@@ -2613,7 +2658,7 @@ SQL;
             }
 
             // Get additional basket meta data for each product
-            if ($getProducts[$key]['modus'] == 0) {
+            if ($getProducts[$key]['modus'] == CartPositionsMode::PRODUCT) {
                 if (isset($additionalDetails[$getProducts[$key]['ordernumber']])) {
                     $getProducts[$key]['additional_details'] = $additionalDetails[$getProducts[$key]['ordernumber']];
                     $getProducts[$key]['shippingtime'] = $additionalDetails[$getProducts[$key]['ordernumber']]['shippingtime'];
@@ -2676,21 +2721,23 @@ SQL;
                         ->round($netprice, $tax, $quantity);
 
                     // If basket comprised any discount, calculate brutto-value for the discount
-                    if ($this->sSYSTEM->sUSERGROUPDATA['basketdiscount'] && $this->sCheckForDiscount()) {
+                    if ($this->contextService->getShopContext()->getCurrentCustomerGroup()->getPercentageDiscount() && $this->sCheckForDiscount()) {
                         $discount += ($getProducts[$key]['amountWithTax'] / 100 * $this->sSYSTEM->sUSERGROUPDATA['basketdiscount']);
                     }
-                } elseif ($getProducts[$key]['modus'] == 3) {
+                } elseif ($getProducts[$key]['modus'] == CartPositionsMode::CUSTOMER_GROUP_DISCOUNT) {
                     $getProducts[$key]['amountWithTax'] = round(1 * (round($price, 2) / 100 * (100 + $tax)), 2);
                 // Basket discount
-                } elseif ($getProducts[$key]['modus'] == 2) {
+                } elseif ($getProducts[$key]['modus'] == CartPositionsMode::VOUCHER) {
                     $getProducts[$key]['amountWithTax'] = round(1 * (round($price, 2) / 100 * (100 + $tax)), 2);
 
                     if ($this->sSYSTEM->sUSERGROUPDATA['basketdiscount'] && $this->sCheckForDiscount()) {
-                        $discount += ($getProducts[$key]['amountWithTax'] / 100 * ($this->sSYSTEM->sUSERGROUPDATA['basketdiscount']));
+                        $discount += ($getProducts[$key]['amountWithTax'] / 100 * $this->sSYSTEM->sUSERGROUPDATA['basketdiscount']);
                     }
-                } elseif ($getProducts[$key]['modus'] == 4 || $getProducts[$key]['modus'] == 10) {
+                } elseif ($getProducts[$key]['modus'] == CartPositionsMode::PAYMENT_SURCHARGE_OR_DISCOUNT
+                                 || $getProducts[$key]['modus'] == CartPositionsMode::SWAG_BUNDLE_DISCOUNT
+                ) {
                     $getProducts[$key]['amountWithTax'] = round(1 * ($price / 100 * (100 + $tax)), 2);
-                    if ($this->sSYSTEM->sUSERGROUPDATA['basketdiscount'] && $this->sCheckForDiscount()) {
+                    if (isset($this->sSYSTEM->sUSERGROUPDATA['basketdiscount']) && $this->sCheckForDiscount()) {
                         $discount += ($getProducts[$key]['amountWithTax'] / 100 * $this->sSYSTEM->sUSERGROUPDATA['basketdiscount']);
                     }
                 }
@@ -2698,7 +2745,7 @@ SQL;
 
             $getProducts[$key]['amount'] = $quantity * round($price, 2);
 
-            //reset purchaseunit and save the original value in purchaseunitTemp
+            // reset purchaseunit and save the original value in purchaseunitTemp
             if ($getProducts[$key]['purchaseunit'] > 0) {
                 $getProducts[$key]['purchaseunitTemp'] = $getProducts[$key]['purchaseunit'];
                 $getProducts[$key]['purchaseunit'] = 1;
@@ -2713,8 +2760,7 @@ SQL;
                 $getProducts[$key]['itemInfoArray']['price'] = $this->moduleManager->Articles()->sFormatPrice($getProducts[$key]['amount'] / $quantity * $getProducts[$key]['purchaseunit']);
             }
 
-            if ($getProducts[$key]['modus'] == 2) {
-                // Vouchers
+            if ($getProducts[$key]['modus'] == CartPositionsMode::VOUCHER) {
                 if (!$this->sSYSTEM->sUSERGROUPDATA['tax'] && $this->sSYSTEM->sUSERGROUPDATA['id']) {
                     $getProducts[$key]['amountnet'] = $quantity * round($price, 2);
                 } else {
@@ -2758,8 +2804,7 @@ SQL;
 
             if (!empty($getProducts[$key]['additional_details']['image'])) {
                 $getProducts[$key]['image'] = $this->getBasketImage($getProducts[$key]['additional_details']['image']);
-            } elseif ((int) $getProducts[$key]['modus'] === 1 && !empty($getProducts[$key]['articleID'])) {
-                // Premium product image
+            } elseif ((int) $getProducts[$key]['modus'] === CartPositionsMode::PREMIUM_PRODUCT && !empty($getProducts[$key]['articleID'])) {
                 $getProducts[$key]['image'] = $this->moduleManager->Articles()
                     ->sGetArticlePictures(
                         $getProducts[$key]['articleID'],
@@ -2771,7 +2816,7 @@ SQL;
 
             // Links to details, basket
             $getProducts[$key]['linkDetails'] = $this->config->get('sBASEFILE') . '?sViewport=detail&sArticle=' . $getProducts[$key]['articleID'];
-            if ($getProducts[$key]['modus'] == 2) {
+            if ($getProducts[$key]['modus'] == CartPositionsMode::VOUCHER) {
                 $getProducts[$key]['linkDelete'] = $this->config->get('sBASEFILE') . '?sViewport=basket&sDelete=voucher';
             } else {
                 $getProducts[$key]['linkDelete'] = $this->config->get('sBASEFILE') . '?sViewport=basket&sDelete=' . $getProducts[$key]['id'];
@@ -2790,11 +2835,11 @@ SQL;
     }
 
     /**
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      *
-     * @return array
+     * @return array<array<string, mixed>>
      */
-    private function loadBasketProducts()
+    private function loadBasketProducts(): array
     {
         $attrs = $this->fieldHelper->getTableFields('s_order_basket_attributes', 's_order_basket_attributes');
 
@@ -2845,9 +2890,9 @@ SQL;
     /**
      * Gets additional product info for sUpdateArticle
      *
-     * @param CartItemStruct[] $cartItems
+     * @param array<CartItemStruct> $cartItems
      */
-    private function getAdditionalInfoForUpdateProduct(array $cartItems)
+    private function getAdditionalInfoForUpdateProduct(array $cartItems): void
     {
         $ids = [];
         foreach ($cartItems as $cartItem) {
@@ -2887,13 +2932,13 @@ SQL;
             ],
             [
                 'ids' => Connection::PARAM_INT_ARRAY,
-                'sessionId' => \PDO::PARAM_STR,
-                'mainCategoryId' => \PDO::PARAM_INT,
+                'sessionId' => PDO::PARAM_STR,
+                'mainCategoryId' => PDO::PARAM_INT,
             ]
         );
 
-        $additionalInformation = $stmt->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_UNIQUE);
-        $products = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Gateway\ListProductGatewayInterface::class)->getList(
+        $additionalInformation = $stmt->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE);
+        $products = Shopware()->Container()->get(ListProductGatewayInterface::class)->getList(
             array_column($additionalInformation, 'ordernumber'),
             $this->contextService->getShopContext()
         );
@@ -2906,27 +2951,27 @@ SQL;
             $additionalInfo = [];
             $quantity = $cartItem->getQuantity();
 
-            if ($additionalInformation[$cartItem->getId()]) {
+            if (isset($additionalInformation[$cartItem->getId()])) {
                 $additionalInfo = $additionalInformation[$cartItem->getId()];
             }
             // Check if quantity matches minimum purchase
-            if (!$additionalInfo['minpurchase']) {
+            if (empty($additionalInfo['minpurchase'])) {
                 $additionalInfo['minpurchase'] = 1;
             }
 
-            $additionalInfo['blocked_customer_groups'] = array_filter(explode('|', $additionalInfo['blocked_customer_groups']));
+            $additionalInfo['blocked_customer_groups'] = array_filter(explode('|', $additionalInfo['blocked_customer_groups'] ?? ''));
 
             if ($quantity < $additionalInfo['minpurchase']) {
                 $quantity = $additionalInfo['minpurchase'];
             }
 
             // Check if quantity matches the step requirements
-            if (!$additionalInfo['purchasesteps']) {
+            if (empty($additionalInfo['purchasesteps'])) {
                 $additionalInfo['purchasesteps'] = 1;
             }
 
             if (($quantity / $additionalInfo['purchasesteps']) != (int) ($quantity / $additionalInfo['purchasesteps'])) {
-                $quantity = (int) ($quantity / $additionalInfo['purchasesteps']) * $additionalInfo['purchasesteps'];
+                $quantity = (int) (($quantity / $additionalInfo['purchasesteps']) * $additionalInfo['purchasesteps']);
             }
 
             $maxPurchase = $this->config->get('sMAXPURCHASE');
@@ -2943,7 +2988,7 @@ SQL;
                 $additionalInfo['purchaseunit'] = 1;
             }
 
-            if (isset($products[$additionalInfo['ordernumber']])) {
+            if (isset($additionalInfo['ordernumber']) && isset($products[$additionalInfo['ordernumber']])) {
                 $additionalInfo['product'] = $products[$additionalInfo['ordernumber']];
 
                 $additionalInfo['name'] = $additionalInfo['product']->getName();
@@ -2961,9 +3006,9 @@ SQL;
     /**
      * Gets product base price info for sUpdateArticle
      *
-     * @param \Shopware\Components\Cart\Struct\CartItemStruct[] $cartItems
+     * @param CartItemStruct[] $cartItems
      *
-     * @throws \Enlight_Event_Exception
+     * @throws Enlight_Event_Exception
      */
     private function getPricesForItemUpdates(array $cartItems)
     {
@@ -2997,13 +3042,13 @@ SQL;
             ]
         );
 
-        $itemPrices = $queryBuilder->execute()->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_ASSOC);
+        $itemPrices = $queryBuilder->execute()->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_ASSOC);
         $customerPriceGroup = $this->sSYSTEM->sUSERGROUP;
 
         /** @var CartItemStruct $cartItem */
         foreach ($cartItems as $cartItem) {
             $quantity = $cartItem->getQuantity();
-            $prices = $itemPrices[$cartItem->getId()];
+            $prices = $itemPrices[$cartItem->getId()] ?? null;
             $additionalInfo = $cartItem->getAdditionalInfo();
             $priceResult = [];
 
@@ -3052,14 +3097,14 @@ SQL;
      *
      * @param int $quantity
      *
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      *
      * @return array
      */
     private function getTaxesForUpdateProduct($quantity, array $queryNewPrice, array $queryAdditionalInfo)
     {
         // Determinate tax rate for this cart position
-        $taxRate = $this->moduleManager->Articles()->getTaxRateByConditions($queryNewPrice['taxID']);
+        $taxRate = (float) $this->moduleManager->Articles()->getTaxRateByConditions($queryNewPrice['taxID']);
 
         $netPrice = $queryNewPrice['price'];
 
@@ -3090,8 +3135,8 @@ SQL;
 
         // Recalculate price per item, if purchase unit is set
         if ($queryAdditionalInfo['purchaseunit'] != 0) {
-            $grossPrice = $grossPrice / $queryAdditionalInfo['purchaseunit'];
-            $netPrice = $netPrice / $queryAdditionalInfo['purchaseunit'];
+            $grossPrice /= $queryAdditionalInfo['purchaseunit'];
+            $netPrice /= $queryAdditionalInfo['purchaseunit'];
         }
 
         if (empty($this->sSYSTEM->sCurrency['factor'])) {
@@ -3129,7 +3174,7 @@ SQL;
     }
 
     /**
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      *
      * @return array
      */
@@ -3149,7 +3194,7 @@ SQL;
             ->setParameter('pricegroup', $this->sSYSTEM->sUSERGROUP)
             ->setParameter('defaultPriceGroup', $defaultPriceGroup)
             ->execute()
-            ->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_UNIQUE | \PDO::FETCH_ASSOC);
+            ->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
         $price = $prices[$defaultPriceGroup];
 
@@ -3199,7 +3244,7 @@ SQL;
      *
      * @param string $id Product order number
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array|false Product data, or false if none found
      */
@@ -3209,6 +3254,7 @@ SQL;
             SELECT s_articles.id AS articleID, s_articles.main_detail_id, name AS articleName, taxID,
               additionaltext, s_articles_details.shippingfree, s_articles_details.laststock, instock,
               s_articles_details.id as articledetailsID, ordernumber,
+              s_articles_details.minpurchase,
               s_articles.configurator_set_id
             FROM s_articles, s_articles_details
             WHERE s_articles_details.ordernumber = ?
@@ -3254,7 +3300,7 @@ SQL;
 
         if ($product['configurator_set_id'] > 0) {
             $context = $this->contextService->getShopContext();
-            $productStruct = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface::class)
+            $productStruct = Shopware()->Container()->get(ListProductServiceInterface::class)
                 ->get($product['ordernumber'], $context);
             if ($productStruct === null) {
                 return false;
@@ -3266,19 +3312,14 @@ SQL;
         return $product;
     }
 
-    /**
-     * @param int $quantity
-     *
-     * @return int
-     */
-    private function getBasketQuantity($quantity, array $basketProduct, array $product)
+    private function getBasketQuantity(int $quantity, array $basketProduct, array $product): int
     {
-        $newQuantity = ($quantity + $basketProduct['quantity']) ?: 0;
+        $newQuantity = $quantity + ($basketProduct['quantity'] ?? 0);
 
         if ($product['laststock'] && $newQuantity > $product['instock']) {
             return (int) $product['instock'];
         }
 
-        return $newQuantity;
+        return (int) $newQuantity;
     }
 }

@@ -1,33 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Components\CSRFTokenValidationException;
 use Shopware\Components\CSRFWhitelistAware;
+use Shopware\Components\Theme\PathResolver;
 
 class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action implements CSRFWhitelistAware
 {
     /**
      * Disable front plugins
+     *
+     * @return void
      */
     public function init()
     {
@@ -50,10 +55,7 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
             $this->enableBackendTheme();
         }
 
-        if (strpos($this->Request()->getHeader('Content-Type'), 'application/json') === 0) {
-            $this->Front()->Plugins()->Json()->setRenderer();
-            $this->View()->assign('success', false);
-        } elseif ($this->Request()->isXmlHttpRequest() || !Shopware()->Container()->initialized('db')) {
+        if ($this->Request()->isXmlHttpRequest() || !$this->container->initialized('db')) {
             $this->View()->loadTemplate($templateModule . '/error/exception.tpl');
         } elseif (isset($_ENV['SHELL']) || PHP_SAPI === 'cli') {
             $this->View()->loadTemplate($templateModule . '/error/cli.tpl');
@@ -75,6 +77,8 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
     /**
      * Controller action that handles all error rendering
      * either by itself or by delegating specific scenarios to other actions
+     *
+     * @return void
      */
     public function errorAction()
     {
@@ -105,13 +109,15 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
 
     /**
      * Handles "Page Not Found" errors
+     *
+     * @return void
      */
     public function pageNotFoundErrorAction()
     {
         $response = $this->Response();
 
-        $targetEmotionId = Shopware()->Config()->get('PageNotFoundDestination');
-        $targetErrorCode = Shopware()->Config()->get('PageNotFoundCode', 404);
+        $targetEmotionId = (int) $this->get('config')->get('PageNotFoundDestination');
+        $targetErrorCode = $this->get('config')->get('PageNotFoundCode', 404);
 
         $response->setStatusCode($targetErrorCode);
 
@@ -122,28 +128,27 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
             case -2:
             case null:
                 $this->forward(
-                    Shopware()->Front()->Dispatcher()->getDefaultAction(),
-                    Shopware()->Front()->Dispatcher()->getDefaultControllerName()
+                    $this->get('front')->Dispatcher()->getDefaultAction(),
+                    $this->get('front')->Dispatcher()->getDefaultControllerName()
                 );
                 break;
             case -1:
                 $this->forward('genericError', null, null, ['code' => $targetErrorCode]);
                 break;
             default:
-
                 // Try to load the emotion landingpage, render default error in case it is unavailable
                 try {
                     $result = $this->get('shopware.emotion.emotion_landingpage_loader')->load(
                         $targetEmotionId,
-                        $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getShopContext()
+                        $this->get(ContextServiceInterface::class)->getShopContext()
                     );
 
                     $this->View()->loadTemplate('frontend/campaign/index.tpl');
-                    $this->View()->assign(json_decode(json_encode($result), true));
-                } catch (\Exception $ex) {
+                    $this->View()->assign(json_decode((string) json_encode($result), true));
+                } catch (Exception $ex) {
                     $this->forward(
-                        Shopware()->Front()->Dispatcher()->getDefaultAction(),
-                        Shopware()->Front()->Dispatcher()->getDefaultControllerName()
+                        $this->get('front')->Dispatcher()->getDefaultAction(),
+                        $this->get('front')->Dispatcher()->getDefaultControllerName()
                     );
                 }
         }
@@ -151,6 +156,8 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
 
     /**
      * Generic error handling controller action
+     *
+     * @return void
      */
     public function genericErrorAction()
     {
@@ -159,7 +166,7 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
         $response->setStatusCode($errorCode);
 
         if ($this->Request()->getModuleName() === 'frontend') {
-            $this->View()->assign('Shop', Shopware()->Shop());
+            $this->View()->assign('Shop', $this->get('shop'));
         }
 
         $error = $this->Request()->getParam('error_handler');
@@ -168,10 +175,15 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
          * If the system is configured to display the exception data, we need
          * to pass it to the template
         */
-        if ($this->Front()->getParam('showException') || $this->Request()->getModuleName() === 'backend') {
-            $path = Shopware()->Container()->getParameter('kernel.root_dir') . '/';
+        if ($this->Front()->getParam('showException')) {
+            $rootDir = $this->container->getParameter('shopware.app.rootDir');
+            if (!\is_string($rootDir)) {
+                throw new RuntimeException('Parameter shopware.app.rootDir has to be an string');
+            }
 
-            /** @var \Exception $exception */
+            $path = $rootDir . '/';
+
+            /** @var Exception $exception */
             $exception = $error->exception;
             $errorFile = $exception->getFile();
             $errorFile = str_replace($path, '', $errorFile);
@@ -194,6 +206,9 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
         }
     }
 
+    /**
+     * @return void
+     */
     public function serviceAction()
     {
         $this->Response()->setStatusCode(503);
@@ -219,10 +234,10 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
      * Ensure the backend theme is enabled.
      * This is important in cases when a backend request uses the storefront context eg. "$shop->registerResources($this)".
      */
-    private function enableBackendTheme()
+    private function enableBackendTheme(): void
     {
-        $directory = Shopware()->Container()->get(\Shopware\Components\Theme\PathResolver::class)->getExtJsThemeDirectory();
-        Shopware()->Container()->get('template')->setTemplateDir([
+        $directory = $this->get(PathResolver::class)->getExtJsThemeDirectory();
+        $this->get('template')->setTemplateDir([
             'backend' => $directory,
             'include_dir' => '.',
         ]);
@@ -230,17 +245,15 @@ class Shopware_Controllers_Frontend_Error extends Enlight_Controller_Action impl
 
     /**
      * Checks if the Response contains a CSRF Token validation exception
-     *
-     * @return bool
      */
-    private function isCsrfValidationException()
+    private function isCsrfValidationException(): bool
     {
         $exceptions = $this->Response()->getException();
         if (empty($exceptions)) {
             return false;
         }
         foreach ($exceptions as $exception) {
-            if ($exception instanceof \Shopware\Components\CSRFTokenValidationException) {
+            if ($exception instanceof CSRFTokenValidationException) {
                 return true;
             }
         }

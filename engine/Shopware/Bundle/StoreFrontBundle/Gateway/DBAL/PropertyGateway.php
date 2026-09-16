@@ -1,54 +1,53 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\PropertyHydrator;
+use Shopware\Bundle\StoreFrontBundle\Gateway\PropertyGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class PropertyGateway implements Gateway\PropertyGatewayInterface
+class PropertyGateway implements PropertyGatewayInterface
 {
     /**
      * Constant for the alphanumeric sort configuration of the category filters
      */
-    const FILTERS_SORT_ALPHANUMERIC = 0;
+    public const FILTERS_SORT_ALPHANUMERIC = 0;
 
     /**
      * Constant for the numeric sort configuration of the category filters
      */
-    const FILTERS_SORT_NUMERIC = 1;
+    public const FILTERS_SORT_NUMERIC = 1;
 
     /**
      * Constant for the position sort configuration of the category filters
      */
-    const FILTERS_SORT_POSITION = 3;
+    public const FILTERS_SORT_POSITION = 3;
 
-    /**
-     * @var Hydrator\PropertyHydrator
-     */
-    private $propertyHydrator;
+    private PropertyHydrator $propertyHydrator;
 
     /**
      * The FieldHelper class is used for the
@@ -60,20 +59,15 @@ class PropertyGateway implements Gateway\PropertyGatewayInterface
      * Additionally the field helper reduce the work, to
      * select in a second step the different required
      * attribute tables for a parent table.
-     *
-     * @var FieldHelper
      */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\PropertyHydrator $propertyHydrator
+        PropertyHydrator $propertyHydrator
     ) {
         $this->propertyHydrator = $propertyHydrator;
         $this->connection = $connection;
@@ -83,7 +77,7 @@ class PropertyGateway implements Gateway\PropertyGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getList(array $valueIds, Struct\ShopContextInterface $context, array $filterGroupIds = [])
+    public function getList(array $valueIds, ShopContextInterface $context, array $filterGroupIds = [])
     {
         $query = $this->connection->createQueryBuilder();
 
@@ -120,9 +114,7 @@ class PropertyGateway implements Gateway\PropertyGatewayInterface
         $this->fieldHelper->addPropertyGroupTranslation($query, $context);
         $this->fieldHelper->addPropertyOptionTranslation($query, $context);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-        $rows = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         return $this->propertyHydrator->hydrateValues($rows);
     }

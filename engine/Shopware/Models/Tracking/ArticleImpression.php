@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Tracking;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 
@@ -49,6 +51,7 @@ class ArticleImpression extends ModelEntity
      * Autoincrement Identifier
      *
      * @var int
+     *
      * @ORM\Column(name="id", type="integer", nullable=false)
      * @ORM\Id()
      * @ORM\GeneratedValue(strategy="IDENTITY")
@@ -56,9 +59,9 @@ class ArticleImpression extends ModelEntity
     private $id;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface
      *
-     * @ORM\Column(name="date", type="date", nullable=true)
+     * @ORM\Column(name="date", type="date", nullable=false)
      */
     private $date;
 
@@ -90,23 +93,23 @@ class ArticleImpression extends ModelEntity
     private $impressions;
 
     /**
-     * @var string|null
+     * @var string
      *
      * @ORM\Column(name="deviceType", type="string", length=50, nullable=false)
      */
     private $deviceType;
 
     /**
-     * @param int                     $articleId
-     * @param int                     $shopId
-     * @param \DateTimeInterface|null $date
-     * @param int                     $impressions
-     * @param string|null             $deviceType
+     * @param int                    $articleId
+     * @param int                    $shopId
+     * @param DateTimeInterface|null $date
+     * @param int                    $impressions
+     * @param string|null            $deviceType
      */
     public function __construct($articleId, $shopId, $date = null, $impressions = 1, $deviceType = null)
     {
         if ($date === null) {
-            $date = new \DateTime();
+            $date = new DateTime();
         }
         $this->setArticleId($articleId);
         $this->setShopId($shopId);
@@ -128,7 +131,7 @@ class ArticleImpression extends ModelEntity
     /**
      * Set the date
      *
-     * @param \DateTimeInterface|null $date
+     * @param DateTimeInterface $date
      */
     public function setDate($date)
     {
@@ -138,7 +141,7 @@ class ArticleImpression extends ModelEntity
     /**
      * Get the date
      *
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface
      */
     public function getDate()
     {
@@ -208,7 +211,7 @@ class ArticleImpression extends ModelEntity
     /**
      * Increases the number of impressions
      *
-     * @return \Shopware\Models\Tracking\ArticleImpression
+     * @return ArticleImpression
      */
     public function increaseImpressions()
     {

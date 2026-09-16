@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ContentTypeBundle\Services;
@@ -35,10 +35,13 @@ use Shopware\Bundle\ContentTypeBundle\Structs\Type;
 class TypeBuilder
 {
     /**
-     * @var array
+     * @var array<string, class-string<FieldInterface>>
      */
-    private $fields;
+    private array $fields;
 
+    /**
+     * @param array<string, class-string<FieldInterface>> $fields
+     */
     public function __construct(array $fields, array $types)
     {
         $this->fields = $fields;
@@ -151,7 +154,7 @@ class TypeBuilder
         $class->setTypeName($field['type']);
         $className = $this->getClassByAlias($field['type']) ?: $field['type'];
 
-        if (empty($className) || !class_exists($className) || !$this->implementsFieldInterface($className)) {
+        if (!\is_string($className) || !class_exists($className) || !$this->implementsFieldInterface($className)) {
             $className = DummyField::class;
         }
 
@@ -196,13 +199,21 @@ class TypeBuilder
         return $class;
     }
 
+    /**
+     * @return class-string<FieldInterface>|null
+     */
     public function getClassByAlias(string $alias)
     {
         return $this->fields[$alias] ?? null;
     }
 
+    /**
+     * @param class-string $className
+     */
     private function implementsFieldInterface(string $className): bool
     {
-        return array_key_exists(FieldInterface::class, class_implements($className));
+        $classImplements = class_implements($className);
+
+        return \is_array($classImplements) && \array_key_exists(FieldInterface::class, $classImplements);
     }
 }

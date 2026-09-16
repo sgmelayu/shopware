@@ -1,120 +1,145 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AttributeBundle\Service;
 
 use Doctrine\DBAL\Types\Type;
+use Shopware\Models\Article\Article;
+use Shopware\Models\Article\Detail;
+use Shopware\Models\Article\Supplier;
+use Shopware\Models\Blog\Blog;
+use Shopware\Models\Category\Category;
+use Shopware\Models\Country\Country;
+use Shopware\Models\Customer\Customer;
+use Shopware\Models\CustomerStream\CustomerStream;
+use Shopware\Models\Dispatch\Dispatch;
+use Shopware\Models\Emotion\Emotion;
+use Shopware\Models\Form\Form;
+use Shopware\Models\Mail\Mail;
+use Shopware\Models\Media\Media;
+use Shopware\Models\Newsletter\Newsletter;
+use Shopware\Models\Partner\Partner;
+use Shopware\Models\Payment\Payment;
+use Shopware\Models\Premium\Premium;
+use Shopware\Models\ProductFeed\ProductFeed;
+use Shopware\Models\ProductStream\ProductStream;
+use Shopware\Models\Property\Option;
+use Shopware\Models\Property\Value;
+use Shopware\Models\Shop\Shop;
+use Shopware\Models\Site\Site;
+use Shopware\Models\Voucher\Voucher;
+use Shopware_Components_Snippet_Manager;
 
 class TypeMapping implements TypeMappingInterface
 {
     /**
-     * @var array
+     * @var array<string, array{sql: string, dbal: string, allowDefaultValue: bool, quoteDefaultValue: bool, elastic: array}>
      */
-    private $types = [
+    private array $types = [
         TypeMappingInterface::TYPE_STRING => [
             'sql' => 'TEXT',
             'dbal' => 'string',
             'allowDefaultValue' => false,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'string'],
+            'elastic' => self::MAPPING_STRING_FIELD,
         ],
         TypeMappingInterface::TYPE_TEXT => [
             'sql' => 'TEXT',
             'dbal' => 'text',
             'allowDefaultValue' => false,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'string'],
+            'elastic' => self::MAPPING_STRING_FIELD,
         ],
         TypeMappingInterface::TYPE_HTML => [
             'sql' => 'MEDIUMTEXT',
             'dbal' => 'text',
             'allowDefaultValue' => false,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'string'],
+            'elastic' => self::MAPPING_STRING_FIELD,
         ],
         TypeMappingInterface::TYPE_INTEGER => [
             'sql' => 'INT(11)',
             'dbal' => 'integer',
             'allowDefaultValue' => true,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'long'],
+            'elastic' => self::MAPPING_LONG_FIELD,
         ],
         TypeMappingInterface::TYPE_FLOAT => [
             'sql' => 'DOUBLE',
             'dbal' => 'float',
             'allowDefaultValue' => true,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'double'],
+            'elastic' => self::MAPPING_DOUBLE_FIELD,
         ],
         TypeMappingInterface::TYPE_BOOLEAN => [
             'sql' => 'INT(1)',
             'dbal' => 'boolean',
             'allowDefaultValue' => true,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'boolean'],
+            'elastic' => self::MAPPING_BOOLEAN_FIELD,
         ],
         TypeMappingInterface::TYPE_DATE => [
             'sql' => 'DATE',
             'dbal' => 'date',
             'allowDefaultValue' => true,
             'quoteDefaultValue' => true,
-            'elastic' => ['type' => 'date', 'format' => 'yyyy-MM-dd'],
+            'elastic' => self::MAPPING_DATE_FIELD,
         ],
         TypeMappingInterface::TYPE_DATETIME => [
             'sql' => 'DATETIME',
             'dbal' => 'datetime',
             'allowDefaultValue' => true,
             'quoteDefaultValue' => true,
-            'elastic' => ['type' => 'date', 'format' => 'yyyy-MM-dd HH:mm:ss'],
+            'elastic' => self::MAPPING_DATE_TIME_FIELD,
         ],
         TypeMappingInterface::TYPE_COMBOBOX => [
             'sql' => 'MEDIUMTEXT',
             'dbal' => 'text',
             'allowDefaultValue' => false,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'string'],
+            'elastic' => self::MAPPING_STRING_FIELD,
         ],
         TypeMappingInterface::TYPE_SINGLE_SELECTION => [
             'sql' => 'TEXT',
             'dbal' => 'text',
             'allowDefaultValue' => false,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'string'],
+            'elastic' => self::MAPPING_STRING_FIELD,
         ],
         TypeMappingInterface::TYPE_MULTI_SELECTION => [
             'sql' => 'MEDIUMTEXT',
             'dbal' => 'text',
             'allowDefaultValue' => false,
             'quoteDefaultValue' => false,
-            'elastic' => ['type' => 'string'],
+            'elastic' => self::MAPPING_STRING_FIELD,
         ],
     ];
 
     /**
-     * @var array
+     * @var array<string, string>
      */
-    private $dbalTypes = [
+    private array $dbalTypes = [
         'array' => TypeMappingInterface::TYPE_TEXT,
         'simple_array' => TypeMappingInterface::TYPE_TEXT,
         'json_array' => TypeMappingInterface::TYPE_TEXT,
@@ -136,12 +161,9 @@ class TypeMapping implements TypeMappingInterface
         'guid' => TypeMappingInterface::TYPE_TEXT,
     ];
 
-    /**
-     * @var \Shopware_Components_Snippet_Manager
-     */
-    private $snippets;
+    private Shopware_Components_Snippet_Manager $snippets;
 
-    public function __construct(\Shopware_Components_Snippet_Manager $snippets)
+    public function __construct(Shopware_Components_Snippet_Manager $snippets)
     {
         $this->snippets = $snippets;
     }
@@ -168,30 +190,30 @@ class TypeMapping implements TypeMappingInterface
         $snippets = $this->snippets->getNamespace('backend/attributes/main');
 
         $entities = [
-            'Shopware\Models\Article\Article',
-            'Shopware\Models\Article\Detail',
-            'Shopware\Models\Media\Media',
-            'Shopware\Models\ProductStream\ProductStream',
-            'Shopware\Models\Property\Option',
-            'Shopware\Models\Property\Value',
-            'Shopware\Models\Category\Category',
-            'Shopware\Models\Article\Supplier',
-            'Shopware\Models\Blog\Blog',
-            'Shopware\Models\Form\Form',
-            'Shopware\Models\Customer\Customer',
-            'Shopware\Models\CustomerStream\CustomerStream',
-            'Shopware\Models\Dispatch\Dispatch',
-            'Shopware\Models\Payment\Payment',
-            'Shopware\Models\Mail\Mail',
-            'Shopware\Models\Emotion\Emotion',
-            'Shopware\Models\Premium\Premium',
-            'Shopware\Models\Voucher\Voucher',
-            'Shopware\Models\ProductFeed\ProductFeed',
-            'Shopware\Models\Newsletter\Newsletter',
-            'Shopware\Models\Partner\Partner',
-            'Shopware\Models\Shop\Shop',
-            'Shopware\Models\Site\Site',
-            'Shopware\Models\Country\Country',
+            Article::class,
+            Detail::class,
+            Media::class,
+            ProductStream::class,
+            Option::class,
+            Value::class,
+            Category::class,
+            Supplier::class,
+            Blog::class,
+            Form::class,
+            Customer::class,
+            CustomerStream::class,
+            Dispatch::class,
+            Payment::class,
+            Mail::class,
+            Emotion::class,
+            Premium::class,
+            Voucher::class,
+            ProductFeed::class,
+            Newsletter::class,
+            Partner::class,
+            Shop::class,
+            Site::class,
+            Country::class,
         ];
 
         $result = [];
@@ -209,11 +231,7 @@ class TypeMapping implements TypeMappingInterface
     {
         $name = strtolower($type->getName());
 
-        if (!isset($this->dbalTypes)) {
-            return 'string';
-        }
-
-        return $this->dbalTypes[$name];
+        return $this->dbalTypes[$name] ?? TypeMappingInterface::TYPE_STRING;
     }
 
     /**
@@ -240,6 +258,6 @@ class TypeMapping implements TypeMappingInterface
             return $this->types[$type]['elastic'];
         }
 
-        return ['type' => 'string'];
+        return TypeMappingInterface::MAPPING_STRING_FIELD;
     }
 }

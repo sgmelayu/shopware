@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/emotion/view/detail"}
@@ -41,7 +40,7 @@ Ext.define('Shopware.apps.Emotion.view.components.Base', {
         var me = this;
 
         // If we're having items already, don't override them
-        if(!me.items) {
+        if (!me.items) {
             me.items = [];
         }
 
@@ -59,7 +58,7 @@ Ext.define('Shopware.apps.Emotion.view.components.Base', {
             items: me.createGlobalFormElements()
         });
 
-        if(me.getSettings('component', true).description.length) {
+        if (me.getSettings('component', true).description.length) {
             me.items.push(me.createDescriptionContainer());
         }
         me.items.push(me.elementFieldset);
@@ -91,7 +90,7 @@ Ext.define('Shopware.apps.Emotion.view.components.Base', {
                     value = Ext.Date.parse(item.value, 'Y-m-d');
                 }
                 field.setValue(value);
-            } catch(e) { }
+            } catch (e) { }
         });
     },
 
@@ -148,22 +147,22 @@ Ext.define('Shopware.apps.Emotion.view.components.Base', {
             }
 
             constructedItem = {
-                xtype           : xtype,
-                helpText        : helpText || '',
-                fieldLabel      : fieldLabel || '',
-                fieldId         : item.get('id'),
-                valueType       : item.get('valueType'),
-                queryMode       : 'remote',
-                name            : item.get('name') || '',
-                displayField    : item.get('displayField'),
-                valueField      : item.get('valueField'),
-                checkedValue    : true,
-                uncheckedValue  : false,
-                supportText     : supportText || '',
-                allowBlank      : (item.get('allowBlank') ? true : false),
-                value           : item.get('defaultValue') || '',
-                boxLabel        : boxLabel,
-                translatable    : item.get('translatable')
+                xtype: xtype,
+                helpText: helpText || '',
+                fieldLabel: fieldLabel || '',
+                fieldId: item.get('id'),
+                valueType: item.get('valueType'),
+                queryMode: 'remote',
+                name: item.get('name') || '',
+                displayField: item.get('displayField'),
+                valueField: item.get('valueField'),
+                checkedValue: true,
+                uncheckedValue: false,
+                supportText: supportText || '',
+                allowBlank: (item.get('allowBlank') ? true : false),
+                value: item.get('defaultValue') || '',
+                boxLabel: boxLabel,
+                translatable: item.get('translatable')
             };
 
             if (item.get('store')) {
@@ -186,13 +185,13 @@ Ext.define('Shopware.apps.Emotion.view.components.Base', {
                         constructedItem.value = date;
                     }
                 } catch (e) {}
-            } else if(xtype === 'radiofield') {
+            } else if (xtype === 'radiofield') {
                 if (!radios[constructedItem.name]) {
                     radios[constructedItem.name] = {
-                        xtype     : 'radiogroup',
+                        xtype: 'radiogroup',
                         fieldLabel: constructedItem.fieldLabel,
-                        columns   : 2,
-                        items     : []
+                        columns: 2,
+                        items: []
                     };
                     items = me.pushItemToElements(radios[constructedItem.name], items);
                 }
@@ -262,15 +261,15 @@ Ext.define('Shopware.apps.Emotion.view.components.Base', {
                     return true;
                 }
 
-                if(!value.match(/^[A-Za-z0-9-_ ]+$/)) {
+                if (!value.match(/^[A-Za-z0-9-_ ]+$/)) {
                     return '{s name="base/validator_special_character_error"}The input value can not contain any special characters.{/s}';
                 }
 
-                if(value.match(/\s([-_ 0-9])/)) {
+                if (value.match(/\s([-_ 0-9])/)) {
                     return '{s name="base/validator_first_character_error"}Class names can not start with a number, whitespace, underscore or hyphen.{/s}';
                 }
 
-                if(value.match(/^[-_ 0-9]/)) {
+                if (value.match(/^[-_ 0-9]/)) {
                     return '{s name="base/validator_first_character_error"}Class names can not start with a number, whitespace, underscore or hyphen.{/s}';
                 }
 
@@ -310,9 +309,9 @@ Ext.define('Shopware.apps.Emotion.view.components.Base', {
      * @return [object|boolean] settings or false
      */
     getSettings: function(type, data) {
-        if(type) {
+        if (type) {
             var settings = this.settings[type];
-            if(data) {
+            if (data) {
                 return (!settings) ? false : (this.settings[type].data.items) ? this.settings[type].data.items : this.settings[type].data;
             }
             return this.settings[type];

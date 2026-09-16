@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    UserManager
@@ -53,8 +52,8 @@ Ext.define('Shopware.apps.Emotion.view.list.Toolbar', {
             emptyText: '{s name="toolbar/search_emotion"}{/s}',
             cls: 'searchfield',
             width: 200,
-            enableKeyEvents:true,
-            checkChangeBuffer:500,
+            enableKeyEvents: true,
+            checkChangeBuffer: 500,
             listeners: {
                 change: function(field, value) {
                     me.fireEvent('searchEmotions', value);
@@ -65,7 +64,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Toolbar', {
         me.filefield = Ext.create('Ext.form.field.File', {
             name: 'emotionfile',
             buttonOnly: true,
-            buttonConfig : {
+            buttonConfig: {
                 iconCls: 'sprite-import'
             },
             buttonText: '{s name="toolbar/import_emotion"}{/s}',
@@ -80,38 +79,38 @@ Ext.define('Shopware.apps.Emotion.view.list.Toolbar', {
 
         me.items = [
             /*{if {acl_is_allowed privilege=create}}*/
-        {
-            text: '{s name="toolbar/add_emotion"}{/s}',
-            iconCls: 'sprite-plus-circle',
-            action: 'emotion-list-toolbar-add'
-        }, {
-            text: '{s name="toolbar/add_emotion_from_preset"}{/s}',
-            iconCls: 'sprite-emotion-presets',
-            action: 'emotion-list-toolbar-add-preset'
-        }, {
-            xtype: 'form',
-            bodyStyle: 'background-color: #ebedef; padding: 0;',
-            border: false,
-            items: [
-                me.filefield
-            ]
-        },
-        /*{/if}*/
-        /*{if {acl_is_allowed privilege=delete}}*/
-        {
-            text: '{s name="toolbar/delete_selected_emotion"}{/s}',
-            iconCls: 'sprite-minus-circle',
-            action: 'emotion-list-toolbar-delete',
-            disabled: true,
-            handler: function() {
-                me.fireEvent('removeEmotions');
+            {
+                text: '{s name="toolbar/add_emotion"}{/s}',
+                iconCls: 'sprite-plus-circle',
+                action: 'emotion-list-toolbar-add'
+            }, {
+                text: '{s name="toolbar/add_emotion_from_preset"}{/s}',
+                iconCls: 'sprite-emotion-presets',
+                action: 'emotion-list-toolbar-add-preset'
+            }, {
+                xtype: 'form',
+                bodyStyle: 'background-color: #ebedef; padding: 0;',
+                border: false,
+                items: [
+                    me.filefield
+                ]
+            },
+            /*{/if}*/
+            /*{if {acl_is_allowed privilege=delete}}*/
+            {
+                text: '{s name="toolbar/delete_selected_emotion"}{/s}',
+                iconCls: 'sprite-minus-circle',
+                action: 'emotion-list-toolbar-delete',
+                disabled: true,
+                handler: function() {
+                    me.fireEvent('removeEmotions');
+                }
             }
-        }
-        /*{/if}*/
-        , '->', me.searchField, {
-            xtype: 'tbspacer',
-            width: 6
-        }];
+            /*{/if}*/
+            , '->', me.searchField, {
+                xtype: 'tbspacer',
+                width: 6
+            }];
         me.registerEvents();
         me.callParent(arguments);
     },
@@ -133,7 +132,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Toolbar', {
              *
              * @event
              */
-             'removeEmotions',
+            'removeEmotions',
             /**
              * Event will be fired when user clicks the "import" button
              *

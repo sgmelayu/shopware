@@ -1,28 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\MultiEdit\Resource\Product;
+
+use Enlight_Event_EventManager;
+use RuntimeException;
 
 /**
  * Grammar product resource. Will generate the grammar understood by the frontend lexer with all the supported columns
@@ -37,13 +40,13 @@ class Grammar
     protected $dqlHelper;
 
     /**
-     * @var \Enlight_Event_EventManager
+     * @var Enlight_Event_EventManager
      */
     protected $eventManager;
 
     /**
-     * @param DqlHelper                   $dqlHelper
-     * @param \Enlight_Event_EventManager $eventManager
+     * @param DqlHelper                  $dqlHelper
+     * @param Enlight_Event_EventManager $eventManager
      */
     public function __construct($dqlHelper, $eventManager)
     {
@@ -60,7 +63,7 @@ class Grammar
     }
 
     /**
-     * @return \Enlight_Event_EventManager
+     * @return Enlight_Event_EventManager
      */
     public function getEventManager()
     {
@@ -72,9 +75,9 @@ class Grammar
      * rules regarding the supported operators.
      * Most operator rules can be generated from the table definition.
      *
-     * @throws \RuntimeException When the column was not defined
+     * @throws RuntimeException When the column was not defined
      *
-     * @return array
+     * @return array<string, array<string>>
      */
     public function generateAttributesFromColumns()
     {
@@ -82,7 +85,7 @@ class Grammar
         $columnInfo = [];
 
         foreach ($this->getDqlHelper()->getEntities() as $entity) {
-            list($entity, $prefix) = $entity;
+            [$entity, $prefix] = $entity;
             $newMapping = [];
             $mappings = $this->getDqlHelper()->getEntityManager()->getClassMetadata($entity)->fieldMappings;
             foreach ($mappings as $key => $value) {
@@ -130,7 +133,7 @@ class Grammar
                     )) {
                         $attributes[$formattedColumn] = $event->getReturn();
                     } else {
-                        throw new \RuntimeException(sprintf('Column with type %s was not configured, yet', $type));
+                        throw new RuntimeException(\sprintf('Column with type %s was not configured, yet', $type));
                     }
             }
         }
@@ -141,7 +144,7 @@ class Grammar
     /**
      * Returns an array which represents the grammar of out product resource
      *
-     * @return array
+     * @return array<string, array<int|string, string|array<string>>>
      */
     public function getGrammar()
     {
@@ -178,12 +181,10 @@ class Grammar
         ];
 
         // Allow users to add own operators / rules
-        $grammar = $this->getEventManager()->filter(
+        return $this->getEventManager()->filter(
             'SwagMultiEdit_Product_Grammar_getGrammar_filterGrammar',
             $grammar,
             ['subject' => $this]
         );
-
-        return $grammar;
     }
 }

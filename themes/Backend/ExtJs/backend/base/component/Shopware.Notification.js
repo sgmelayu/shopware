@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -156,17 +155,17 @@ Ext.define('Shopware.Notification', {
      */
     alertMsgTpl: [
         '{literal}<tpl for=".">',
-            '<div class="{type}">',
-                '<tpl if="closeBtn">',
-                    '<a href="#" class="close close-alert">x</a>',
-                '</tpl>',
-                '<p>',
-                    '<tpl if="title">',
-                        '<strong>[Ext.String.getText(title)]</strong>&nbsp;',
-                    '</tpl>',
-                    '{text}',
-                '</p>',
-            '</div>',
+        '<div class="{type}">',
+        '<tpl if="closeBtn">',
+        '<a href="#" class="close close-alert">x</a>',
+        '</tpl>',
+        '<p>',
+        '<tpl if="title">',
+        '<strong>[Ext.String.getText(title)]</strong>&nbsp;',
+        '</tpl>',
+        '{text}',
+        '</p>',
+        '</div>',
         '</tpl>{/literal}'
     ],
 
@@ -177,9 +176,9 @@ Ext.define('Shopware.Notification', {
      */
     blockMsgTpl: [
         '{literal}<tpl for=".">',
-            '<p>',
-                '{text}',
-            '</p>',
+        '<p>',
+        '{text}',
+        '</p>',
         '</tpl>{/literal}'
     ],
 
@@ -190,13 +189,13 @@ Ext.define('Shopware.Notification', {
      */
     growlMsgTpl: [
         '{literal}<tpl for=".">',
-            '<div class="growl-icon {iconCls}"></div>',
-            '<div class="alert">',
-                '<tpl if="title">',
-                    '<div class="title">{title}</div>',
-                '</tpl>',
-                '<p class="text">{text}</p>',
-            '</div>',
+        '<div class="growl-icon {iconCls}"></div>',
+        '<div class="alert">',
+        '<tpl if="title">',
+        '<div class="title">{title}</div>',
+        '</tpl>',
+        '<p class="text">{text}</p>',
+        '</div>',
         '</tpl>{/literal}'
     ],
 
@@ -848,9 +847,9 @@ Ext.define('Shopware.Notification', {
      * @returns { boolean }
      */
     displayBrowserNotification: function () {
-        return !(window.document.hasFocus()
-            || !('Notification' in window)
-            || Notification.permission === 'denied'
-            || document.location.protocol !== 'https:');
+        return !(window.document.hasFocus() ||
+            !('Notification' in window) ||
+            Notification.permission === 'denied' ||
+            document.location.protocol !== 'https:');
     }
 });

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/snippet/view/main"}
@@ -40,13 +39,13 @@ Ext.define('Shopware.apps.Snippet.view.main.ImportExport', {
      * @object
      */
     snippets: {
-        title:                  '{s name="title"}Import / Export Snippets{/s}',
-        buttonChooseFile:       '{s name="button_choose_file"}Choose File{/s}',
-        emptyTextChooseFile:    '{s name="empty_text_choose_file"}Please choose a file..{/s}',
-        messageUploadFile:      '{s name="message_upload_file"}Uploading your file...{/s}',
-        buttonStartImport:      '{s name="button_start_import"}Start Import{/s}',
-        buttonExport:           '{s name="button_export"}Export{/s}',
-        fieldFile:              '{s name="field_file"}File{/s}'
+        title: '{s name="title"}Import / Export Snippets{/s}',
+        buttonChooseFile: '{s name="button_choose_file"}Choose File{/s}',
+        emptyTextChooseFile: '{s name="empty_text_choose_file"}Please choose a file..{/s}',
+        messageUploadFile: '{s name="message_upload_file"}Uploading your file...{/s}',
+        buttonStartImport: '{s name="button_start_import"}Start Import{/s}',
+        buttonExport: '{s name="button_export"}Export{/s}',
+        fieldFile: '{s name="field_file"}File{/s}'
     },
 
     /**
@@ -93,7 +92,7 @@ Ext.define('Shopware.apps.Snippet.view.main.ImportExport', {
                 fieldLabel: me.snippets.fieldFile,
                 allowBlank: false,
                 anchor: '100%',
-                buttonConfig : {
+                buttonConfig: {
                     iconCls: 'sprite-inbox-upload',
                     cls: 'small secondary'
                 }
@@ -173,7 +172,6 @@ Ext.define('Shopware.apps.Snippet.view.main.ImportExport', {
             }]
         };
     },
-
 
     /**
      * Creates store object used for the typ column

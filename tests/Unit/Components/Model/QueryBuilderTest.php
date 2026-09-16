@@ -1,69 +1,66 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Model;
 
 use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Query\Expr\Andx;
 use Doctrine\ORM\Query\Expr\Comparison;
 use Doctrine\ORM\Query\Parameter;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Model\QueryBuilder;
 use Shopware\Components\Model\QueryOperatorValidator;
 
 class QueryBuilderTest extends TestCase
 {
-    /**
-     * @var QueryBuilder
-     */
-    public $querybuilder;
+    public QueryBuilder $querybuilder;
 
     protected function setUp(): void
     {
         // Create a stub for the SomeClass class.
-        $emMock = $this->createMock(EntityManager::class);
+        $emMock = $this->createMock(ModelManager::class);
 
         $queryBuilder = new QueryBuilder($emMock, new QueryOperatorValidator(['foo', 'bar']));
 
         $this->querybuilder = $queryBuilder;
     }
 
-    public function testAddFilterBehavior()
+    public function testAddFilterBehavior(): void
     {
         $this->querybuilder->setParameter('foo', 'far');
         $this->querybuilder->addFilter(['yoo' => 'yar', 'bar' => 'boo']);
         $this->querybuilder->addFilter(['yaa' => 'yaa', 'baa' => 'baa']);
 
-        $expression = $this->querybuilder->getDQLPart('where');
-        $parts = $expression->getParts();
+        $parts = $this->querybuilder->getDQLPart('where')->getParts();
 
         static::assertCount(4, $parts);
-        static::assertSame(strpos($parts[0]->getRightExpr(), ':yoo'), 0);
-        static::assertSame(strpos($parts[1]->getRightExpr(), ':bar'), 0);
-        static::assertSame(strpos($parts[2]->getRightExpr(), ':yaa'), 0);
-        static::assertSame(strpos($parts[3]->getRightExpr(), ':baa'), 0);
+        static::assertSame(0, strpos($parts[0]->getRightExpr(), ':yoo'));
+        static::assertSame(0, strpos($parts[1]->getRightExpr(), ':bar'));
+        static::assertSame(0, strpos($parts[2]->getRightExpr(), ':yaa'));
+        static::assertSame(0, strpos($parts[3]->getRightExpr(), ':baa'));
 
         $result = $this->querybuilder->getParameters()->toArray();
 
@@ -78,7 +75,7 @@ class QueryBuilderTest extends TestCase
         static::assertEquals($expectedResult, $result);
     }
 
-    public function testAddParameterProvidesOldDoctrineSetParametersBehavior()
+    public function testAddParameterProvidesOldDoctrineSetParametersBehavior(): void
     {
         $this->querybuilder->setParameter('foo', 'bar');
         $this->querybuilder->setParameter('bar', 'foo');
@@ -93,7 +90,7 @@ class QueryBuilderTest extends TestCase
         static::assertEquals($expectedResult, $result);
     }
 
-    public function testSimpleFilter()
+    public function testSimpleFilter(): void
     {
         $filter = [
             'name' => 'myname',
@@ -101,12 +98,10 @@ class QueryBuilderTest extends TestCase
 
         $this->querybuilder->addFilter($filter);
 
-        /** @var Andx $expression */
-        $expression = $this->querybuilder->getDQLPart('where');
-        $parts = $expression->getParts();
+        $parts = $this->querybuilder->getDQLPart('where')->getParts();
 
         static::assertCount(1, $parts);
-        static::assertSame(strpos($parts[0]->getRightExpr(), ':name'), 0);
+        static::assertSame(0, strpos($parts[0]->getRightExpr(), ':name'));
 
         $expectedResult = [
             new Comparison('name', 'LIKE', $parts[0]->getRightExpr()),
@@ -121,7 +116,7 @@ class QueryBuilderTest extends TestCase
         static::assertEquals($expectedResult, $params);
     }
 
-    public function testMultipleSimpleFilter()
+    public function testMultipleSimpleFilter(): void
     {
         $filter = [
             'name' => 'myname',
@@ -130,13 +125,11 @@ class QueryBuilderTest extends TestCase
 
         $this->querybuilder->addFilter($filter);
 
-        /** @var Andx $expression */
-        $expression = $this->querybuilder->getDQLPart('where');
-        $parts = $expression->getParts();
+        $parts = $this->querybuilder->getDQLPart('where')->getParts();
 
         static::assertCount(2, $parts);
-        static::assertSame(strpos($parts[0]->getRightExpr(), ':name'), 0);
-        static::assertSame(strpos($parts[1]->getRightExpr(), ':foo'), 0);
+        static::assertSame(0, strpos($parts[0]->getRightExpr(), ':name'));
+        static::assertSame(0, strpos($parts[1]->getRightExpr(), ':foo'));
 
         $expectedResult = [
             new Comparison('name', 'LIKE', $parts[0]->getRightExpr()),
@@ -156,7 +149,7 @@ class QueryBuilderTest extends TestCase
     /**
      * Test that multiple filters on the same property stack
      */
-    public function testOverwriteFilter()
+    public function testOverwriteFilter(): void
     {
         $filter = [
             [
@@ -178,13 +171,11 @@ class QueryBuilderTest extends TestCase
 
         $this->querybuilder->addFilter($filter);
 
-        /** @var Andx $expression */
-        $expression = $this->querybuilder->getDQLPart('where');
-        $parts = $expression->getParts();
+        $parts = $this->querybuilder->getDQLPart('where')->getParts();
 
         static::assertCount(3, $parts);
-        static::assertSame(strpos($parts[0]->getRightExpr(), ':number'), 0);
-        static::assertSame(strpos($parts[1]->getRightExpr(), ':number'), 0);
+        static::assertSame(0, strpos($parts[0]->getRightExpr(), ':number'));
+        static::assertSame(0, strpos($parts[1]->getRightExpr(), ':number'));
         static::assertNotEquals($parts[0]->getRightExpr(), $parts[1]->getRightExpr());
 
         $expectedResult = [
@@ -204,7 +195,7 @@ class QueryBuilderTest extends TestCase
         static::assertEquals($expectedResult, $params);
     }
 
-    public function testComplexFilter()
+    public function testComplexFilter(): void
     {
         $filter = [[
             'property' => 'number',
@@ -214,12 +205,10 @@ class QueryBuilderTest extends TestCase
 
         $this->querybuilder->addFilter($filter);
 
-        /** @var Andx $expression */
-        $expression = $this->querybuilder->getDQLPart('where');
-        $parts = $expression->getParts();
+        $parts = $this->querybuilder->getDQLPart('where')->getParts();
 
         static::assertCount(1, $parts);
-        static::assertSame(strpos($parts[0]->getRightExpr(), ':number'), 0);
+        static::assertSame(0, strpos($parts[0]->getRightExpr(), ':number'));
 
         $expectedResult = [
             new Comparison('number', '>', $parts[0]->getRightExpr()),
@@ -234,7 +223,7 @@ class QueryBuilderTest extends TestCase
         static::assertEquals($expectedResult, $params);
     }
 
-    public function testMixedFilter()
+    public function testMixedFilter(): void
     {
         $filter = [
             [
@@ -247,13 +236,11 @@ class QueryBuilderTest extends TestCase
 
         $this->querybuilder->addFilter($filter);
 
-        /** @var Andx $expression */
-        $expression = $this->querybuilder->getDQLPart('where');
-        $parts = $expression->getParts();
+        $parts = $this->querybuilder->getDQLPart('where')->getParts();
 
         static::assertCount(2, $parts);
-        static::assertSame(strpos($parts[0]->getRightExpr(), ':number'), 0);
-        static::assertSame(strpos($parts[1]->getRightExpr(), ':name'), 0);
+        static::assertSame(0, strpos($parts[0]->getRightExpr(), ':number'));
+        static::assertSame(0, strpos($parts[1]->getRightExpr(), ':name'));
 
         $expectedResult = [
             new Comparison('number', '>', $parts[0]->getRightExpr()),
@@ -269,7 +256,7 @@ class QueryBuilderTest extends TestCase
         static::assertEquals($expectedResult, $params);
     }
 
-    public function testAddFilterAfterSetParameter()
+    public function testAddFilterAfterSetParameter(): void
     {
         $this->querybuilder->setParameter('name', 'myname');
 
@@ -279,12 +266,10 @@ class QueryBuilderTest extends TestCase
 
         $this->querybuilder->addFilter($filter);
 
-        /** @var Andx $expression */
-        $expression = $this->querybuilder->getDQLPart('where');
-        $parts = $expression->getParts();
+        $parts = $this->querybuilder->getDQLPart('where')->getParts();
 
         static::assertCount(1, $parts);
-        static::assertSame(strpos($parts[0]->getRightExpr(), ':examplekey'), 0);
+        static::assertSame(0, strpos($parts[0]->getRightExpr(), ':examplekey'));
 
         $expectedResult = [
             new Comparison('examplekey', 'LIKE', $parts[0]->getRightExpr()),
@@ -299,7 +284,7 @@ class QueryBuilderTest extends TestCase
         static::assertEquals($expectedResult, $params);
     }
 
-    public function testAddFilterArrayOfValues()
+    public function testAddFilterArrayOfValues(): void
     {
         $testValues = [
             'testArrayOfNumbers' => [
@@ -324,13 +309,11 @@ class QueryBuilderTest extends TestCase
 
         $this->querybuilder->addFilter($filter);
 
-        /** @var Andx $expression */
-        $expression = $this->querybuilder->getDQLPart('where');
-        $parts = $expression->getParts();
+        $parts = $this->querybuilder->getDQLPart('where')->getParts();
 
         static::assertCount(2, $parts);
-        static::assertSame(strpos($parts[0]->getRightExpr(), '(:number'), 0);
-        static::assertSame(strpos($parts[1]->getRightExpr(), '(:strings'), 0);
+        static::assertSame(0, strpos($parts[0]->getRightExpr(), '(:number'));
+        static::assertSame(0, strpos($parts[1]->getRightExpr(), '(:strings'));
 
         $expectedResult = [];
         $counter = 0;
@@ -354,16 +337,21 @@ class QueryBuilderTest extends TestCase
 
     /**
      * @dataProvider getInvalidFilterDataProvider
+     *
+     * @param array{property: string, value: int, expression: string} $filter
      */
-    public function testInvalidOperatorsThrowException(array $filter)
+    public function testInvalidOperatorsThrowException(array $filter): void
     {
         $this->querybuilder->resetDQLParts();
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage(sprintf('\'%s\' is no valid operator', $filter['expression']));
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage(\sprintf('\'%s\' is no valid operator', $filter['expression']));
         $this->querybuilder->addFilter([$filter]);
     }
 
-    public function getInvalidFilterDataProvider()
+    /**
+     * @return array<array<array{property: string, value: int, expression: string}>>
+     */
+    public function getInvalidFilterDataProvider(): array
     {
         return [
             [[

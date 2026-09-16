@@ -1,78 +1,65 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator;
 
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceDiscount;
+use Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceGroup;
+use Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceRule;
 
 class PriceHydrator extends Hydrator
 {
-    /**
-     * @var CustomerGroupHydrator
-     */
-    private $customerGroupHydrator;
+    private UnitHydrator $unitHydrator;
 
-    /**
-     * @var UnitHydrator
-     */
-    private $unitHydrator;
+    private AttributeHydrator $attributeHydrator;
 
-    /**
-     * @var AttributeHydrator
-     */
-    private $attributeHydrator;
-
-    /**
-     * @var ProductHydrator
-     */
-    private $productHydrator;
+    private ProductHydrator $productHydrator;
 
     public function __construct(
-        CustomerGroupHydrator $customerGroupHydrator,
         UnitHydrator $unitHydrator,
         AttributeHydrator $attributeHydrator,
         ProductHydrator $productHydrator
     ) {
-        $this->customerGroupHydrator = $customerGroupHydrator;
         $this->unitHydrator = $unitHydrator;
         $this->attributeHydrator = $attributeHydrator;
         $this->productHydrator = $productHydrator;
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceRule
+     * @return PriceRule
      */
     public function hydratePriceRule(array $data)
     {
-        $price = new Struct\Product\PriceRule();
+        $price = new PriceRule();
 
         $price->setId((int) $data['__price_id']);
         $price->setFrom((int) $data['__price_from']);
         $price->setPrice((float) $data['__price_price']);
         $price->setPseudoPrice((float) $data['__price_pseudoprice']);
+        $price->setRegulationPrice((float) $data['__price_regulation_price']);
 
-        if (strtolower($data['__price_to']) == 'beliebig') {
+        if (strtolower($data['__price_to']) === 'beliebig') {
             $price->setTo(null);
         } else {
             $price->setTo((int) $data['__price_to']);
@@ -90,7 +77,7 @@ class PriceHydrator extends Hydrator
      * This function uses the normally hydrate function of this class
      * and adds additionally the product unit information to the price.
      *
-     * @return Struct\Product\PriceRule
+     * @return PriceRule
      */
     public function hydrateCheapestPrice(array $data)
     {
@@ -107,11 +94,11 @@ class PriceHydrator extends Hydrator
     /**
      * @param array $data
      *
-     * @return Struct\Product\PriceGroup
+     * @return PriceGroup
      */
     public function hydratePriceGroup($data)
     {
-        $group = new Struct\Product\PriceGroup();
+        $group = new PriceGroup();
 
         $first = $data[0];
 
@@ -129,11 +116,11 @@ class PriceHydrator extends Hydrator
     }
 
     /**
-     * @return Struct\Product\PriceDiscount
+     * @return PriceDiscount
      */
     public function hydratePriceDiscount(array $data)
     {
-        $discount = new Struct\Product\PriceDiscount();
+        $discount = new PriceDiscount();
         $discount->setId((int) $data['__priceGroupDiscount_id']);
         $discount->setPercent((float) $data['__priceGroupDiscount_discount']);
         $discount->setQuantity((int) $data['__priceGroupDiscount_discountstart']);

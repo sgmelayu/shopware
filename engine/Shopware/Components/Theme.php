@@ -1,30 +1,46 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Shopware\Components\Form\Container\FieldSet;
+use Shopware\Components\Form\Container\Tab;
+use Shopware\Components\Form\Container\TabContainer;
+use Shopware\Components\Form\Field\Boolean as BooleanField;
+use Shopware\Components\Form\Field\Color;
+use Shopware\Components\Form\Field\Date;
+use Shopware\Components\Form\Field\Em;
+use Shopware\Components\Form\Field\Media;
+use Shopware\Components\Form\Field\NoUrl;
+use Shopware\Components\Form\Field\Number;
+use Shopware\Components\Form\Field\Percent;
+use Shopware\Components\Form\Field\Pixel;
+use Shopware\Components\Form\Field\Selection;
+use Shopware\Components\Form\Field\Text;
+use Shopware\Components\Form\Field\TextArea;
+use Shopware\Components\Theme\ConfigSet;
 
 /**
  * Base class for the Shopware themes.
@@ -179,10 +195,10 @@ class Theme
      */
     public function getTemplate()
     {
-        $class = get_class($this);
+        $class = \get_class($this);
         $paths = explode('\\', $class);
 
-        return $paths[count($paths) - 2];
+        return $paths[\count($paths) - 2];
     }
 
     /**
@@ -233,8 +249,10 @@ class Theme
      *      $container->addTab($tab);
      *  }
      * </code>
+     *
+     * @return void
      */
-    public function createConfig(Form\Container\TabContainer $container)
+    public function createConfig(TabContainer $container)
     {
     }
 
@@ -256,6 +274,10 @@ class Theme
      *
      *      $collection->add($set);
      *   }
+     *
+     * @param ArrayCollection<int, ConfigSet> $collection
+     *
+     * @return void
      */
     public function createConfigSets(ArrayCollection $collection)
     {
@@ -306,11 +328,11 @@ class Theme
      *
      * @param string $name
      *
-     * @return Form\Container\TabContainer
+     * @return TabContainer
      */
     protected function createTabPanel($name, array $options = [])
     {
-        $element = new Form\Container\TabContainer($name);
+        $element = new TabContainer($name);
         $element->fromArray($options);
 
         return $element;
@@ -322,11 +344,11 @@ class Theme
      * @param string $name
      * @param string $title
      *
-     * @return Form\Container\FieldSet
+     * @return FieldSet
      */
     protected function createFieldSet($name, $title, array $options = [])
     {
-        $element = new Form\Container\FieldSet($name, $title);
+        $element = new FieldSet($name, $title);
         $element->fromArray($options);
 
         return $element;
@@ -338,11 +360,11 @@ class Theme
      * @param string $name
      * @param string $title
      *
-     * @return Form\Container\Tab
+     * @return Tab
      */
     protected function createTab($name, $title, array $options = [])
     {
-        $element = new Form\Container\Tab($name, $title);
+        $element = new Tab($name, $title);
         $element->fromArray($options);
 
         return $element;
@@ -354,11 +376,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Text
+     * @return Text
      */
     protected function createTextField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Text($name);
+        $element = new Text($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -372,11 +394,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Number
+     * @return Number
      */
     protected function createNumberField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Number($name);
+        $element = new Number($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -390,11 +412,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Boolean
+     * @return BooleanField
      */
     protected function createCheckboxField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Boolean($name);
+        $element = new BooleanField($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -408,11 +430,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Color
+     * @return Color
      */
     protected function createColorPickerField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Color($name);
+        $element = new Color($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -426,11 +448,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Date
+     * @return Date
      */
     protected function createDateField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Date($name);
+        $element = new Date($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -444,11 +466,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Em
+     * @return Em
      */
     protected function createEmField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Em($name);
+        $element = new Em($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -462,11 +484,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Media
+     * @return Media
      */
     protected function createMediaField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Media($name);
+        $element = new Media($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -480,11 +502,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Percent
+     * @return Percent
      */
     protected function createPercentField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Percent($name);
+        $element = new Percent($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -498,11 +520,11 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\Pixel
+     * @return Pixel
      */
     protected function createPixelField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\Pixel($name);
+        $element = new Pixel($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -517,11 +539,11 @@ class Theme
      * @param string  $label
      * @param array[] $store [['text' => 'displayText', 'value'  => 10], ...]
      *
-     * @return Form\Field\Selection
+     * @return Selection
      */
     protected function createSelectField($name, $label, $defaultValue, array $store, array $options = [])
     {
-        $element = new Form\Field\Selection($name, $store);
+        $element = new Selection($name, $store);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);
@@ -535,11 +557,26 @@ class Theme
      * @param string $name
      * @param string $label
      *
-     * @return Form\Field\TextArea
+     * @return TextArea
      */
     protected function createTextAreaField($name, $label, $defaultValue, array $options = [])
     {
-        $element = new Form\Field\TextArea($name);
+        $element = new TextArea($name);
+        $element->fromArray($options);
+        $element->setLabel($label);
+        $element->setDefaultValue($defaultValue);
+
+        return $element;
+    }
+
+    /**
+     * Creates a custom no URL text field.
+     *
+     * @param array<string, string> $options
+     */
+    protected function createNoUrlField(string $name, string $label, string $defaultValue, array $options = []): NoUrl
+    {
+        $element = new NoUrl($name);
         $element->fromArray($options);
         $element->setLabel($label);
         $element->setDefaultValue($defaultValue);

@@ -1,35 +1,40 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle\Struct;
 
-class PriceStruct implements \JsonSerializable
+use JsonSerializable;
+use Shopware\Components\ObjectJsonSerializeTraitDeprecated;
+
+class PriceStruct implements JsonSerializable
 {
-    const TYPE_RENT = 'rent';
-    const TYPE_BUY = 'buy';
-    const TYPE_TEST = 'test';
-    const TYPE_UNLICENSED = 'unlicensed';
+    use ObjectJsonSerializeTraitDeprecated;
+
+    public const TYPE_RENT = 'rent';
+    public const TYPE_BUY = 'buy';
+    public const TYPE_TEST = 'test';
+    public const TYPE_UNLICENSED = 'unlicensed';
 
     /**
      * @var int
@@ -77,14 +82,6 @@ class PriceStruct implements \JsonSerializable
     public function __construct($type)
     {
         $this->type = $type;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function jsonSerialize()
-    {
-        return get_object_vars($this);
     }
 
     /**

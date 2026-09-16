@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleES\FacetHandler;
@@ -32,6 +32,7 @@ use ONGR\ElasticsearchDSL\Query\TermLevel\IdsQuery;
 use ONGR\ElasticsearchDSL\Query\TermLevel\TermQuery;
 use ONGR\ElasticsearchDSL\Search;
 use ONGR\ElasticsearchDSL\Sort\FieldSort;
+use PDO;
 use Shopware\Bundle\ESIndexingBundle\EsSearch;
 use Shopware\Bundle\ESIndexingBundle\IndexFactoryInterface;
 use Shopware\Bundle\ESIndexingBundle\Property\PropertyMapping;
@@ -54,32 +55,17 @@ use Shopware\Components\QueryAliasMapper;
 
 class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
 {
-    const AGGREGATION_SIZE = 5000;
+    public const AGGREGATION_SIZE = 5000;
 
-    /**
-     * @var QueryAliasMapper
-     */
-    private $queryAliasMapper;
+    private QueryAliasMapper $queryAliasMapper;
 
-    /**
-     * @var Client
-     */
-    private $client;
+    private Client $client;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var StructHydrator
-     */
-    private $hydrator;
+    private StructHydrator $hydrator;
 
-    /**
-     * @var IndexFactoryInterface
-     */
-    private $indexFactory;
+    private IndexFactoryInterface $indexFactory;
 
     public function __construct(
         QueryAliasMapper $queryAliasMapper,
@@ -154,7 +140,6 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
 
         $arguments = [
             'index' => $index->getName(),
-            'type' => PropertyMapping::TYPE,
             'body' => $search->toArray(),
             'rest_total_hits_as_int' => true,
             'track_total_hits' => true,
@@ -178,22 +163,22 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
      *
      * @return Group[]
      */
-    private function hydrateProperties($data, $optionIds)
+    private function hydrateProperties(array $data, array $optionIds): array
     {
         $groups = [];
         foreach ($data as $row) {
             $group = $this->hydrator->createPropertyGroup($row['_source']);
 
-            $options = array_filter($group->getOptions(), function (Option $option) use ($optionIds) {
-                return in_array($option->getId(), $optionIds);
+            $options = array_filter($group->getOptions(), static function (Option $option) use ($optionIds) {
+                return \in_array($option->getId(), $optionIds);
             });
 
-            usort($options, function (Option $a, Option $b) {
+            usort($options, static function (Option $a, Option $b) {
                 if ($a->getPosition() !== $b->getPosition()) {
-                    return $a->getPosition() > $b->getPosition();
+                    return $a->getPosition() <=> $b->getPosition();
                 }
 
-                return $a->getName() > $b->getName();
+                return $a->getName() <=> $b->getName();
             });
 
             $group->setOptions($options);
@@ -208,7 +193,7 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
      *
      * @return int[]
      */
-    private function getGroupIds($optionIds)
+    private function getGroupIds(array $optionIds): array
     {
         $query = $this->connection->createQueryBuilder();
         $query->select('DISTINCT optionID')
@@ -216,22 +201,18 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
             ->where('options.id IN (:ids)')
             ->setParameter(':ids', $optionIds, Connection::PARAM_INT_ARRAY);
 
-        return $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        return $query->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 
     /**
      * @param Group[] $groups
      * @param int[]   $actives
-     *
-     * @return FacetResultGroup
      */
-    private function createCollectionResult(array $groups, $actives)
+    private function createCollectionResult(array $groups, array $actives): FacetResultGroup
     {
         $results = [];
 
-        if (!$fieldName = $this->queryAliasMapper->getShortAlias('sFilterProperties')) {
-            $fieldName = 'sFilterProperties';
-        }
+        $fieldName = $this->queryAliasMapper->getShortAlias('sFilterProperties') ?? 'sFilterProperties';
 
         foreach ($groups as $group) {
             $items = [];
@@ -242,13 +223,13 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
                 $listItem = new MediaListItem(
                     $option->getId(),
                     $option->getName(),
-                    in_array($option->getId(), $actives),
+                    \in_array($option->getId(), $actives),
                     $option->getMedia(),
                     $option->getAttributes()
                 );
 
-                $isActive = ($isActive || $listItem->isActive());
-                $useMedia = ($useMedia || $listItem->getMedia() !== null);
+                $isActive = $isActive || $listItem->isActive();
+                $useMedia = $useMedia || $listItem->getMedia() !== null;
                 $items[] = $listItem;
             }
 
@@ -277,9 +258,9 @@ class PropertyFacetHandler implements HandlerInterface, ResultHydratorInterface
     }
 
     /**
-     * @return array
+     * @return array<int>
      */
-    private function getFilteredValues(Criteria $criteria)
+    private function getFilteredValues(Criteria $criteria): array
     {
         $values = [];
         foreach ($criteria->getConditions() as $condition) {

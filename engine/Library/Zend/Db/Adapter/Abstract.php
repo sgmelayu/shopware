@@ -1,26 +1,5 @@
 <?php
-/**
- * Shopware 5
- * Copyright (c) shopware AG
- *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
- *
- * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * "Shopware" is a registered trademark of shopware AG.
- * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
- */
+
 
 /**
  * @see Zend_Db
@@ -530,9 +509,9 @@ abstract class Zend_Db_Adapter_Abstract
      *
      * @throws Zend_Db_Adapter_Exception
      *
-     * @return int|false the number of affected rows
+     * @return int the number of affected rows
      */
-    public function insert($table, array $bind)
+    public function insert($table, array $bind): int
     {
         // extract and quote col names from the array keys
         $cols = [];
@@ -570,10 +549,8 @@ abstract class Zend_Db_Adapter_Abstract
         if ($this->supportsParameters('positional')) {
             $bind = array_values($bind);
         }
-        $stmt = $this->query($sql, $bind);
-        $result = $stmt->rowCount();
 
-        return $result;
+        return (int) $this->query($sql, $bind)->rowCount();
     }
 
     /**
@@ -696,17 +673,15 @@ abstract class Zend_Db_Adapter_Abstract
      * @param mixed                 $bind      data to bind into SELECT placeholders
      * @param mixed                 $fetchMode override current fetch mode
      *
-     * @return array|false
+     * @return array
      */
-    public function fetchAll($sql, $bind = [], $fetchMode = null)
+    public function fetchAll($sql, $bind = [], $fetchMode = null): array
     {
         if ($fetchMode === null) {
             $fetchMode = $this->_fetchMode;
         }
-        $stmt = $this->query($sql, $bind);
-        $result = $stmt->fetchAll($fetchMode);
 
-        return $result;
+        return $this->query($sql, $bind)->fetchAll($fetchMode);
     }
 
     /**

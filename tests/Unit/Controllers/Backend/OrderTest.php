@@ -1,53 +1,49 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-namespace Shopware\tests\Unit\Controllers\Backend;
+namespace Shopware\Tests\Unit\Controllers\Backend;
 
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
+use ReflectionMethod;
 use Shopware_Controllers_Backend_Order;
 
 class OrderTest extends TestCase
 {
-    /**
-     * @var \PHPUnit\Framework\MockObject\MockObject
-     */
-    private $controller;
+    private Shopware_Controllers_Backend_Order $controller;
 
-    /**
-     * @var \ReflectionMethod
-     */
-    private $method;
+    private ReflectionMethod $method;
 
     protected function setUp(): void
     {
         $this->controller = $this->createPartialMock(Shopware_Controllers_Backend_Order::class, []);
-        $class = new \ReflectionClass($this->controller);
-        $this->method = $class->getMethod('resolveSortParameter');
+        $this->method = (new ReflectionClass($this->controller))->getMethod('resolveSortParameter');
         $this->method->setAccessible(true);
     }
 
-    public function testSortByNonePrefixedColumn()
+    public function testSortByNonePrefixedColumn(): void
     {
         $sorts = [
             ['property' => 'orderTime', 'direction' => 'ASC'],
@@ -61,7 +57,7 @@ class OrderTest extends TestCase
         );
     }
 
-    public function testSortByMultipleColumnsWithoutPrefix()
+    public function testSortByMultipleColumnsWithoutPrefix(): void
     {
         $sorts = [
             ['property' => 'orderTime', 'direction' => 'ASC'],
@@ -77,7 +73,7 @@ class OrderTest extends TestCase
         );
     }
 
-    public function testResolveSortParametersKeepsDirection()
+    public function testResolveSortParametersKeepsDirection(): void
     {
         $sorts = [
             ['property' => 'orderTime', 'direction' => 'DESC'],
@@ -95,7 +91,7 @@ class OrderTest extends TestCase
         );
     }
 
-    public function testResolveFunctionsKeepsPrefixedProperties()
+    public function testResolveFunctionsKeepsPrefixedProperties(): void
     {
         $sorts = [
             ['property' => 'customer.name', 'direction' => 'DESC'],
@@ -113,7 +109,7 @@ class OrderTest extends TestCase
         );
     }
 
-    public function testCustomerNameColumnResolvedToBillingNames()
+    public function testCustomerNameColumnResolvedToBillingNames(): void
     {
         $sorts = [
             ['property' => 'customerName', 'direction' => 'DESC'],
@@ -129,7 +125,7 @@ class OrderTest extends TestCase
         );
     }
 
-    public function testCustomerEmailAliasResolvedToAssociatedColumn()
+    public function testCustomerEmailAliasResolvedToAssociatedColumn(): void
     {
         $sorts = [
             ['property' => 'customerEmail', 'direction' => 'DESC'],

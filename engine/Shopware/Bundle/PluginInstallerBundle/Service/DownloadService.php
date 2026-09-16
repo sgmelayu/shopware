@@ -1,35 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle\Service;
 
 use Doctrine\DBAL\Connection;
+use Exception;
+use RuntimeException;
 use Shopware\Bundle\PluginInstallerBundle\Context\DownloadRequest;
 use Shopware\Bundle\PluginInstallerBundle\Context\MetaRequest;
 use Shopware\Bundle\PluginInstallerBundle\Context\RangeDownloadRequest;
 use Shopware\Bundle\PluginInstallerBundle\StoreClient;
 use Shopware\Bundle\PluginInstallerBundle\Struct\MetaStruct;
+use Shopware\Components\HttpClient\HttpClientInterface;
 use ShopwarePlugins\SwagUpdate\Components\Steps\DownloadStep;
 use ShopwarePlugins\SwagUpdate\Components\Steps\FinishResult;
 use ShopwarePlugins\SwagUpdate\Components\Steps\ValidResult;
@@ -37,36 +40,28 @@ use ShopwarePlugins\SwagUpdate\Components\Struct\Version;
 
 class DownloadService
 {
-    /**
-     * @var StoreClient
-     */
-    private $storeClient;
+    private array $pluginDirectories;
 
-    /**
-     * @var array
-     */
-    private $pluginDirectories;
+    private StoreClient $storeClient;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var PluginExtractor
-     */
-    private $pluginExtractor;
+    private PluginExtractor $pluginExtractor;
+
+    private HttpClientInterface $httpClient;
 
     public function __construct(
         array $pluginDirectories,
         StoreClient $storeClient,
         Connection $connection,
-        PluginExtractor $pluginExtractor
+        PluginExtractor $pluginExtractor,
+        HttpClientInterface $httpClient
     ) {
         $this->pluginDirectories = $pluginDirectories;
         $this->storeClient = $storeClient;
         $this->connection = $connection;
         $this->pluginExtractor = $pluginExtractor;
+        $this->httpClient = $httpClient;
     }
 
     /**
@@ -83,16 +78,14 @@ class DownloadService
             'sha1' => $request->getSha1(),
         ]);
 
-        $step = new DownloadStep($version, $request->getDestination());
-
-        return $step->run($request->getOffset());
+        return (new DownloadStep($version, $request->getDestination()))->run($request->getOffset());
     }
 
     /**
      * @param string $file
      * @param string $pluginName
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function extractPluginZip($file, $pluginName)
     {
@@ -110,12 +103,12 @@ class DownloadService
         } elseif ($pluginZipDetector->isPlugin($archive)) {
             $this->pluginExtractor->extract($archive);
         } else {
-            throw new \RuntimeException('No Plugin found in archive.');
+            throw new RuntimeException('No Plugin found in archive.');
         }
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return MetaStruct
      */
@@ -153,39 +146,34 @@ class DownloadService
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return bool
      */
     public function download(DownloadRequest $request)
     {
-        $request = new MetaRequest(
+        $metaRequest = new MetaRequest(
             $request->getTechnicalName(),
             $request->getShopwareVersion(),
             $request->getDomain(),
             $request->getToken()
         );
 
-        $result = $this->getMetaInformation($request);
+        $result = $this->getMetaInformation($metaRequest);
 
-        /** @var \Shopware\Components\HttpClient\HttpClientInterface $client */
-        $client = Shopware()->Container()->get('http_client');
-
-        $response = $client->get($result->getUri());
+        $response = $this->httpClient->get($result->getUri());
         $file = $this->createDownloadZip($response->getBody());
 
-        $this->extractPluginZip($file, $request->getTechnicalName());
+        $this->extractPluginZip($file, $metaRequest->getTechnicalName());
         unlink($file);
 
         return true;
     }
 
     /**
-     * @param string $content
-     *
      * @return string file path to the downloaded file
      */
-    private function createDownloadZip($content)
+    private function createDownloadZip(string $content): string
     {
         $file = tempnam(sys_get_temp_dir(), 'plugin_') . '.zip';
         file_put_contents($file, $content);
@@ -193,12 +181,7 @@ class DownloadService
         return $file;
     }
 
-    /**
-     * @param string $name
-     *
-     * @return string
-     */
-    private function getPluginSource($name)
+    private function getPluginSource(string $name): string
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['plugin.source'])
@@ -207,9 +190,6 @@ class DownloadService
             ->setParameter(':name', $name)
             ->setMaxResults(1);
 
-        /** @var \PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetch(\PDO::FETCH_COLUMN);
+        return (string) $query->execute()->fetchOne();
     }
 }

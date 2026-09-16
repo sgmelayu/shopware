@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EsBackendBundle;
@@ -49,7 +49,7 @@ class SearchQueryBuilder
             }
         }
 
-        //use combination for more precision
+        // use combination for more precision
         foreach ($combines as $token) {
             foreach ($fields as $field => $priority) {
                 $bool->add(new MatchQuery($field, $token, ['boost' => $priority * 2]), BoolQuery::SHOULD);
@@ -60,46 +60,44 @@ class SearchQueryBuilder
     }
 
     /**
-     * @param string $term
-     *
-     * @return string[]
+     * @return array<string>
      */
-    private function tokenize($term)
+    private function tokenize(string $term): array
     {
         $string = mb_strtolower(html_entity_decode($term), 'UTF-8');
         $string = trim(str_replace(['.', '-', '/', '\\'], ' ', $string));
         $string = str_replace('<', ' <', $string);
         $string = strip_tags($string);
-        $string = trim(preg_replace("/[^\pL_0-9]/u", ' ', $string));
+        $string = trim((string) preg_replace("/[^\pL_0-9]/u", ' ', $string));
 
         $tokens = array_unique(explode(' ', $string));
         $tokens = array_map('trim', $tokens);
 
-        $tokens = array_filter(
+        return array_values(
             array_filter(
                 $tokens,
                 function ($token) {
-                    return strlen($token) >= 2;
+                    return \strlen($token) >= 2;
                 }
             )
         );
-
-        return $tokens;
     }
 
     /**
-     * @param string[] $items
+     * @param array<string> $items
      *
-     * @return string[]
+     * @return array<string>
      */
-    private function combine($items)
+    private function combine(array $items): array
     {
         $result = [];
 
         for ($i = 1; $i < 3; ++$i) {
             $combination = [];
             for ($x = 0; $x <= $i; ++$x) {
-                $combination[] = $items[$x];
+                if (\array_key_exists($x, $items)) {
+                    $combination[] = $items[$x];
+                }
             }
 
             $result[] = implode(' ', $combination);

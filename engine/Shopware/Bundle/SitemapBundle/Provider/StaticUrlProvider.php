@@ -1,55 +1,49 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SitemapBundle\Provider;
 
 use DateTime;
 use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
+use PDO;
+use Shopware\Bundle\SitemapBundle\Service\LinkFilter;
 use Shopware\Bundle\SitemapBundle\Struct\Url;
 use Shopware\Bundle\SitemapBundle\UrlProviderInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
-use Shopware\Components\Routing;
+use Shopware\Components\Routing\Context;
+use Shopware\Components\Routing\RouterInterface;
 use Shopware\Models\Site\Site;
 
 class StaticUrlProvider implements UrlProviderInterface
 {
-    /**
-     * @var Routing\RouterInterface
-     */
-    private $router;
+    private RouterInterface $router;
 
-    /**
-     * @var ConnectionInterface
-     */
-    private $connection;
+    private ConnectionInterface $connection;
 
-    /**
-     * @var bool
-     */
-    private $allExported;
+    private bool $allExported = false;
 
-    public function __construct(Routing\RouterInterface $router, ConnectionInterface $connection)
+    public function __construct(RouterInterface $router, ConnectionInterface $connection)
     {
         $this->router = $router;
         $this->connection = $connection;
@@ -58,10 +52,10 @@ class StaticUrlProvider implements UrlProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function getUrls(Routing\Context $routingContext, ShopContextInterface $shopContext)
+    public function getUrls(Context $routingContext, ShopContextInterface $shopContext)
     {
         if ($this->allExported) {
-            return null;
+            return [];
         }
 
         $shopId = $shopContext->getShop()->getId();
@@ -73,7 +67,7 @@ class StaticUrlProvider implements UrlProviderInterface
                 'sCustom' => $site['id'],
             ];
 
-            if (!$this->filterLink($site['link'], $site['urlParams'])) {
+            if (!LinkFilter::filterLink($site['link'], $site['urlParams'])) {
                 unset($sites[$key]);
                 continue;
             }
@@ -86,15 +80,15 @@ class StaticUrlProvider implements UrlProviderInterface
 
         $this->allExported = true;
 
-        if (count($sites) === 0) {
-            return null;
+        if (\count($sites) === 0) {
+            return [];
         }
 
         $routes = $this->router->generateList(array_column($sites, 'urlParams'), $routingContext);
 
         $urls = [];
 
-        for ($i = 0, $routeCount = count($routes); $i < $routeCount; ++$i) {
+        for ($i = 0, $routeCount = \count($routes); $i < $routeCount; ++$i) {
             $urls[] = new Url($routes[$i], $sites[$i]['changed'], 'weekly', Site::class, $sites[$i]['id']);
         }
 
@@ -111,12 +105,8 @@ class StaticUrlProvider implements UrlProviderInterface
 
     /**
      * Helper function to read all static pages of a shop from the database
-     *
-     * @param int $shopId
-     *
-     * @return array
      */
-    private function getSitesByShopId($shopId)
+    private function getSitesByShopId(int $shopId): array
     {
         $keys = $this->connection->createQueryBuilder()
             ->select('shopGroups.key')
@@ -125,7 +115,7 @@ class StaticUrlProvider implements UrlProviderInterface
             ->where('shopPages.shop_id = :shopId')
             ->setParameter('shopId', $shopId)
             ->execute()
-            ->fetchAll(\PDO::FETCH_COLUMN);
+            ->fetchAll(PDO::FETCH_COLUMN);
 
         $sites = [];
         foreach ($keys as $key) {
@@ -153,7 +143,7 @@ class StaticUrlProvider implements UrlProviderInterface
                 ->setParameter('g4', '%|' . $key . '|%')
                 ->setParameter('shopId', '%|' . $shopId . '|%')
                 ->execute()
-                ->fetchAll(\PDO::FETCH_ASSOC);
+                ->fetchAll(PDO::FETCH_ASSOC);
 
             foreach ($current as $item) {
                 $sites[$item['id']] = $item;
@@ -161,29 +151,5 @@ class StaticUrlProvider implements UrlProviderInterface
         }
 
         return array_values($sites);
-    }
-
-    /**
-     * Helper function to filter predefined links, which should not be in the sitemap (external links, sitemap links itself)
-     * Returns false, if the link is not allowed
-     *
-     * @param string $link
-     * @param array  $userParams
-     *
-     * @return bool
-     */
-    private function filterLink($link, &$userParams)
-    {
-        if (empty($link)) {
-            return true;
-        }
-        $userParams = parse_url($link, PHP_URL_QUERY);
-        parse_str($userParams, $userParams);
-        $blacklist = ['', 'sitemap', 'sitemapXml'];
-        if (in_array($userParams['sViewport'], $blacklist)) {
-            return false;
-        }
-
-        return true;
     }
 }

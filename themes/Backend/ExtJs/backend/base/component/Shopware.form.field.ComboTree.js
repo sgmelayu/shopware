@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -49,8 +48,8 @@
  * });
  */
 Ext.define('Shopware.form.field.ComboTree', {
-    extend:'Ext.form.Picker',
-    alias:'widget.combotree',
+    extend: 'Ext.form.Picker',
+    alias: 'widget.combotree',
     requires: [ 'Ext.tree.Panel' ],
     matchFieldWidth: false,
 
@@ -73,13 +72,13 @@ Ext.define('Shopware.form.field.ComboTree', {
      *
      * @return Ext.tree.Panel
      */
-    createPicker:function () {
+    createPicker: function () {
         var me = this;
 
         var treeConfig = Ext.apply({
             floating: true,
             hidden: true,
-            width:me.bodyEl.getWidth(),
+            width: me.bodyEl.getWidth(),
             store: me.store,
             displayField: 'name',
             useArrows: true,
@@ -87,9 +86,9 @@ Ext.define('Shopware.form.field.ComboTree', {
             autoScroll: true,
             queryMode: 'remote',
             height: 300,
-            listeners:{
-                scope:me,
-                itemclick:me.onItemClick
+            listeners: {
+                scope: me,
+                itemclick: me.onItemClick
             },
             flex: 1,
             root: {
@@ -97,7 +96,7 @@ Ext.define('Shopware.form.field.ComboTree', {
                 expanded: true
             }
         }, me.treeConfig);
-        me.treePanel = Ext.create('Ext.tree.Panel',treeConfig);
+        me.treePanel = Ext.create('Ext.tree.Panel', treeConfig);
         return me.treePanel;
     },
 
@@ -113,7 +112,7 @@ Ext.define('Shopware.form.field.ComboTree', {
      * @param e
      * @param eOpts
      */
-    onItemClick:function(view, record, item, index, e, eOpts){
+    onItemClick: function(view, record, item, index, e, eOpts){
         this.setFieldValue(record.data.id, record.data.name);
         this.fireEvent('select', this, record.data.name);
         this.collapse();
@@ -125,7 +124,7 @@ Ext.define('Shopware.form.field.ComboTree', {
     afterRender: function() {
         var me = this;
 
-        if(me.selectedRecord) {
+        if (me.selectedRecord) {
             var value = me.selectedRecord.get(me.treeField || me.displayField);
             me.inputEl.dom.value = value;
             me.setFieldValue(value);
@@ -141,7 +140,7 @@ Ext.define('Shopware.form.field.ComboTree', {
      */
     setFieldValue: function(value, label) {
         var me = this;
-        if(!label) {
+        if (!label) {
             label = value;
         }
         me.setValue(value);
@@ -153,7 +152,7 @@ Ext.define('Shopware.form.field.ComboTree', {
      *
      * @param value
      */
-    setValue:function(value){
+    setValue: function(value){
         var me = this,
             inputEl = me.inputEl;
 
@@ -161,10 +160,10 @@ Ext.define('Shopware.form.field.ComboTree', {
             inputEl.removeCls(me.emptyCls);
         }
         me.value = value;
-        
-        if (inputEl && !Ext.isEmpty(value)){
-            me.setRawValue(value); 
-        }  
+
+        if (inputEl && !Ext.isEmpty(value)){
+            me.setRawValue(value);
+        }
 
         me.applyEmptyText();
     },
@@ -173,15 +172,15 @@ Ext.define('Shopware.form.field.ComboTree', {
      * sets the RawValue
      * @param value
      */
-    setRawValue:function(value){
-        this.inputEl.dom.value = value==null?"":value;
+    setRawValue: function(value){
+        this.inputEl.dom.value = value == null ? "" : value;
     },
 
     /**
      * get the Value
      * @return Ext.value
      */
-    getValue:function(){
+    getValue: function(){
         return this.value;
     },
 
@@ -189,8 +188,8 @@ Ext.define('Shopware.form.field.ComboTree', {
      * get the RawValue
      * @return Ext.value
      */
-    getRawValue:function(){
-        if(this.inputEl){
+    getRawValue: function(){
+        if (this.inputEl){
             return this.inputEl.dom.value;
         }
         return 0;
@@ -204,12 +203,12 @@ Ext.define('Shopware.form.field.ComboTree', {
      */
     onStoreHasLoaded: function(store) {
         var me = this,
-                activeRecord;
+            activeRecord;
 
-        if(me.value) {
+        if (me.value) {
             activeRecord = store.getNodeById(me.value);
 
-            if(!activeRecord) {
+            if (!activeRecord) {
                 return;
             }
             me.setRawValue(activeRecord.get(me.displayField));
@@ -223,7 +222,7 @@ Ext.define('Shopware.form.field.ComboTree', {
      */
     getSubmitValue: function() {
         var me = this;
-        if(!me.getRawValue()) {
+        if (!me.getRawValue()) {
             return "";
         }
         return this.value;
@@ -236,8 +235,8 @@ Ext.define('Shopware.form.field.ComboTree', {
      * @return void
      */
     destroy: function() {
-//        this.fromStore.destroy();
-//        Ext.destroyMembers(this, 'fromField', 'toField');
+        //        this.fromStore.destroy();
+        //        Ext.destroyMembers(this, 'fromField', 'toField');
         this.callParent();
     }
 });

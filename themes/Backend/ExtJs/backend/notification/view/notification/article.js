@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Notification
@@ -38,13 +37,13 @@
 Ext.define('Shopware.apps.Notification.view.notification.Article', {
     extend: 'Ext.grid.Panel',
     alias: 'widget.notification-notification-article',
-    autoScroll:true,
-    ui:'shopware-ui',
+    autoScroll: true,
+    ui: 'shopware-ui',
     /**
      * Initialize the Shopware.apps.Customer.view.main.List and defines the necessary
      * default configuration
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         me.registerEvents();
@@ -62,19 +61,19 @@ Ext.define('Shopware.apps.Notification.view.notification.Article', {
      *
      * @return void
      */
-    registerEvents:function () {
+    registerEvents: function () {
         this.addEvents(
-                /**
-                 * Event will be fired when the user clicks the user icon in the
-                 * action column
-                 *
-                 * @event statistic
-                 * @param [object] View - Associated Ext.view.Table
-                 * @param [integer] rowIndex - Row index
-                 * @param [integer] colIndex - Column index
-                 * @param [object] item - Associated HTML DOM node
-                 */
-                'showCustomers'
+            /**
+             * Event will be fired when the user clicks the user icon in the
+             * action column
+             *
+             * @event statistic
+             * @param [object] View - Associated Ext.view.Table
+             * @param [integer] rowIndex - Row index
+             * @param [integer] colIndex - Column index
+             * @param [object] item - Associated HTML DOM node
+             */
+            'showCustomers'
         );
 
         return true;
@@ -84,7 +83,7 @@ Ext.define('Shopware.apps.Notification.view.notification.Article', {
      *
      * @return [array] grid columns
      */
-    getColumns:function () {
+    getColumns: function () {
         var me = this;
 
         var columnsData = [
@@ -117,41 +116,40 @@ Ext.define('Shopware.apps.Notification.view.notification.Article', {
                 flex: 1
             },
             {
-                xtype:'actioncolumn',
-                width:30,
-                align:'center',
-                items:me.getActionColumnItems()
+                xtype: 'actioncolumn',
+                width: 30,
+                align: 'center',
+                items: me.getActionColumnItems()
             }
         ];
         return columnsData;
     },
-
 
     /**
      * Creates the grid toolbar with search field
      *
      * @return [Ext.toolbar.Toolbar] grid toolbar
      */
-    getToolbar:function () {
+    getToolbar: function () {
         return Ext.create('Ext.toolbar.Toolbar',
-                {
-                    dock:'top',
-                    ui:'shopware-ui',
-                    items:[
-                        '->',
-                        {
-                            xtype:'textfield',
-                            name:'searchField',
-                            action:'searchArticle',
-                            width:170,
-                            cls:'searchfield',
-                            enableKeyEvents:true,
-                            checkChangeBuffer:500,
-                            emptyText:'{s name="list/field/search_article"}Search...{/s}'
-                        },
-                        { xtype:'tbspacer', width:6 }
-                    ]
-                });
+            {
+                dock: 'top',
+                ui: 'shopware-ui',
+                items: [
+                    '->',
+                    {
+                        xtype: 'textfield',
+                        name: 'searchField',
+                        action: 'searchArticle',
+                        width: 170,
+                        cls: 'searchfield',
+                        enableKeyEvents: true,
+                        checkChangeBuffer: 500,
+                        emptyText: '{s name="list/field/search_article"}Search...{/s}'
+                    },
+                    { xtype: 'tbspacer', width: 6 }
+                ]
+            });
     },
     /**
      * Creates the paging toolbar for the grid to allow
@@ -162,9 +160,9 @@ Ext.define('Shopware.apps.Notification.view.notification.Article', {
     getPagingBar: function () {
         var me = this;
         return Ext.create('Ext.toolbar.Paging', {
-            store:me.articleStore,
-            dock:'bottom',
-            displayInfo:true
+            store: me.articleStore,
+            dock: 'bottom',
+            displayInfo: true
         });
 
     },
@@ -176,13 +174,13 @@ Ext.define('Shopware.apps.Notification.view.notification.Article', {
      */
     getActionColumnItems: function () {
         var me = this,
-                actionColumnData = [];
+            actionColumnData = [];
 
         actionColumnData.push({
-            iconCls:'sprite-users',
-            cls:'users',
-            tooltip:'{s name="list/action_column/users"}Show notification customers{/s}',
-            handler:function (view, rowIndex, colIndex, item) {
+            iconCls: 'sprite-users',
+            cls: 'users',
+            tooltip: '{s name="list/action_column/users"}Show notification customers{/s}',
+            handler: function (view, rowIndex, colIndex, item) {
                 me.fireEvent('showCustomers', view, rowIndex, colIndex, item);
             }
         });
@@ -211,12 +209,12 @@ Ext.define('Shopware.apps.Notification.view.notification.Article', {
      */
     summaryRenderer: function(scope, value, summaryData, dataIndex) {
         var store = scope.getStore(),
-                proxy = store.getProxy(),
-                reader = proxy.getReader(),
-                rawData = reader.rawData;
+            proxy = store.getProxy(),
+            reader = proxy.getReader(),
+            rawData = reader.rawData;
 
-            //get the total summary out of the store to get the totals data not only the page summary
-            var summaryValue = (dataIndex === 'registered') ? rawData.totalRegistered : rawData.totalNotNotified;
+        //get the total summary out of the store to get the totals data not only the page summary
+        var summaryValue = (dataIndex === 'registered') ? rawData.totalRegistered : rawData.totalNotNotified;
 
         return '<b> {s name="list/summary/label/total"}Total:{/s} ' + summaryValue + '</b>';
     }

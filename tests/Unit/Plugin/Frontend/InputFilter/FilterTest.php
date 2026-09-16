@@ -1,48 +1,45 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Plugin\Frontend\InputFilter;
 
 use PHPUnit\Framework\TestCase;
+use Shopware_Plugins_Frontend_InputFilter_Bootstrap;
 
 class FilterTest extends TestCase
 {
-    /** @var \Shopware_Plugins_Frontend_InputFilter_Bootstrap */
-    private $inputFilter;
+    private Shopware_Plugins_Frontend_InputFilter_Bootstrap $inputFilter;
 
     /**
      * {@inheritdoc}
      */
     public function setUp(): void
     {
-        $this->inputFilter = $this->createMock(\Shopware_Plugins_Frontend_InputFilter_Bootstrap::class);
+        $this->inputFilter = $this->createMock(Shopware_Plugins_Frontend_InputFilter_Bootstrap::class);
     }
 
-    /**
-     * @return array
-     */
-    public function sqlProvider()
+    public function sqlProvider(): array
     {
         return [
             ['SELECT * FROM s_core_auth'],
@@ -70,10 +67,7 @@ class FilterTest extends TestCase
         ];
     }
 
-    /**
-     * @return array
-     */
-    public function striptagsDataProvider()
+    public function striptagsDataProvider(): array
     {
         return [
             [
@@ -109,52 +103,43 @@ class FilterTest extends TestCase
 
     /**
      * @dataProvider sqlProvider
-     *
-     * @param string $statement
      */
-    public function testSql($statement)
+    public function testSql(string $statement): void
     {
         $regex = '#' . $this->inputFilter->sqlRegex . '#msi';
-        $statement = \Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($statement, $regex);
+        $statement = Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($statement, $regex);
 
         static::assertNull($statement);
     }
 
     /**
      * @dataProvider striptagsDataProvider
-     *
-     * @param string $input
      */
-    public function testStripTagsEnabled($input, array $expected)
+    public function testStripTagsEnabled(string $input, array $expected): void
     {
         static::assertEquals(
             $expected['enabled'],
-            \Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($input, '#PreventRegexMatch#', true)
+            Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($input, '#PreventRegexMatch#', true)
         );
     }
 
     /**
      * @dataProvider striptagsDataProvider
-     *
-     * @param string $input
      */
-    public function testStripTagsDisabled($input, array $expected)
+    public function testStripTagsDisabled(string $input, array $expected): void
     {
         static::assertEquals(
             $expected['disabled'],
-            \Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($input, '#PreventRegexMatch#', false)
+            Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($input, '#PreventRegexMatch#', false)
         );
     }
 
     /**
      * @dataProvider stripxssDataProvider
-     *
-     * @param string $input
-     * @param string $expected
      */
-    public function testXssFilter($input, $expected)
+    public function testXssFilter(string $input, ?string $expected): void
     {
-        $result = \Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($input, '#' . $this->inputFilter->xssRegex . '#msi');
+        $result = Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($input, '#' . $this->inputFilter->xssRegex . '#msi');
 
         static::assertEquals(
             $expected,
@@ -163,9 +148,40 @@ class FilterTest extends TestCase
     }
 
     /**
-     * @return array
+     * @dataProvider stripAntiXssDataProvider
+     *
+     * @param array<mixed> $additions
      */
-    public function stripxssDataProvider()
+    public function testAntiXssFilter(string $input, ?string $expected, array $additions = []): void
+    {
+        $result = Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterValue($input, '/(?!x)x/', ...$additions);
+
+        static::assertEquals(
+            $expected,
+            $result
+        );
+    }
+
+    /**
+     * @dataProvider stripxssArrayDataProvider
+     *
+     * @param array<mixed, mixed>  $input
+     * @param ?array<mixed, mixed> $expected
+     */
+    public function testXssFilterOnArray(array $input, ?array $expected, bool $stripTag): void
+    {
+        $result = Shopware_Plugins_Frontend_InputFilter_Bootstrap::filterArrayValue($input, '#' . $this->inputFilter->xssRegex . '#msi', $stripTag);
+
+        static::assertEquals(
+            $expected,
+            $result
+        );
+    }
+
+    /**
+     * @return array<array<string, mixed>>
+     */
+    public function stripxssDataProvider(): array
     {
         return [
             [
@@ -227,6 +243,127 @@ class FilterTest extends TestCase
             [
                 'input' => 'jemand@fara-data-foo.com',
                 'expected' => 'jemand@fara-data-foo.com',
+            ],
+            [
+                'input' => '',
+                'expected' => '',
+            ],
+            [
+                'input' => '"%26%2362%26%2360img/src%26%2361x%20onerror%26%2361alert()%26%2362',
+                'expected' => '"><img/>',
+            ],
+        ];
+    }
+
+    /**
+     * @return array<array<string, mixed>>
+     */
+    public function stripAntiXssDataProvider(): array
+    {
+        return [
+            [
+                'input' => '<li style="list-style-image: url(javascript:alert(0))">',
+                'expected' => '<li style="list-style-image: url((0))">',
+                'additions' => [
+                    false,
+                    [],
+                    ['style'],
+                ],
+            ],
+            [
+                'input' => '<iframe width="560" onclick="alert(\'xss\')" height="315" src="https://www.youtube.com/embed/foobar?rel=0&controls=0&showinfo=0" frameborder="0" allowfullscreen></iframe>',
+                'expected' => '<iframe width="560"  height="315" src="https://www.youtube.com/embed/foobar?rel=0&controls=0&showinfo=0" frameborder="0" allowfullscreen></iframe>',
+                'additions' => [
+                    false,
+                    ['iframe'],
+                    [],
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * @return array<array<string, mixed>>
+     */
+    public function stripxssArrayDataProvider(): array
+    {
+        return [
+            [
+                'input' => [
+                    'sessionKey' => 'checkoutBillingAddressId,checkoutShippingAddressId',
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'expected' => [
+                    'sessionKey' => 'checkoutBillingAddressId,checkoutShippingAddressId',
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'stripTag' => true,
+            ],
+            [
+                'input' => [
+                    "\"><svg onload=\"prompt('Hey Shopware!')\">" => 'checkoutBillingAddressId,checkoutShippingAddressId',
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'expected' => [
+                    '">' => 'checkoutBillingAddressId,checkoutShippingAddressId',
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'stripTag' => true,
+            ],
+            [
+                'input' => [
+                    'sessionKey' => "\"><svg onload=\"prompt('Hey Shopware!')\">",
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'expected' => [
+                    'sessionKey' => '">',
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'stripTag' => true,
+            ],
+            [
+                'input' => [
+                    "\"><svg onload=\"prompt('Hey Shopware!')\">" => 'checkoutBillingAddressId,checkoutShippingAddressId',
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'expected' => [
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'stripTag' => false,
+            ],
+            [
+                'input' => [
+                    'sessionKey' => "\"><svg onload=\"prompt('Hey Shopware!')\">",
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'expected' => [
+                    'sessionKey' => null,
+                    'setDefaultBillingAddress' => '',
+                    'setDefaultShippingAddress' => 'fooo',
+                ],
+                'stripTag' => false,
+            ],
+            [
+                'input' => [
+                    'multiArray' => [
+                        'innerArray' => "><svg onload=\"prompt('Hey Shopware!')\">",
+                    ],
+                ],
+                'expected' => [
+                    'multiArray' => [
+                        'innerArray' => null,
+                    ],
+                ],
+                'stripTag' => false,
             ],
         ];
     }

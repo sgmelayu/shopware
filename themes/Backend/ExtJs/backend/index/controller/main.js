@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -45,9 +44,8 @@ Ext.define('Shopware.apps.Index.controller.Main', {
         var me = this,
             firstRunWizardStep = Ext.util.Cookies.get('firstRunWizardStep'),
             firstRunWizardEnabled = me.subApplication.firstRunWizardEnabled,
-            enableInstallationFeedback = me.subApplication.enableInstallationFeedback,
-            enableBetaFeedback = me.subApplication.enableBetaFeedback,
-            biOverviewEnabled = me.subApplication.biOverviewEnabled;
+            biOverviewEnabled = me.subApplication.biOverviewEnabled,
+            paypalSettingsEnabled = Ext.util.Cookies.get('paypalConfigurationPostponed');
 
         if (!firstRunWizardEnabled) {
             firstRunWizardStep = 0;
@@ -59,60 +57,40 @@ Ext.define('Shopware.apps.Index.controller.Main', {
             Ext.util.Cookies.set('firstRunWizardStep', firstRunWizardStep);
 
             Shopware.app.Application.addSubApplication({
-                    name: 'Shopware.apps.PluginManager',
-                    params: {
-                        hidden: true
-                    }
-                },
-                undefined,
-                function() {
-                    Shopware.app.Application.addSubApplication({
-                        name: 'Shopware.apps.FirstRunWizard'
-                    });
+                name: 'Shopware.apps.PluginManager',
+                params: {
+                    hidden: true
                 }
+            },
+            undefined,
+            function() {
+                Shopware.app.Application.addSubApplication({
+                    name: 'Shopware.apps.FirstRunWizard'
+                });
+            }
             );
-
 
         } else {
             me.initBackendDesktop();
 
-            if (enableInstallationFeedback) {
-                Ext.Function.defer(function() {
-                    Shopware.app.Application.addSubApplication({
-                        name: 'Shopware.apps.Feedback',
-                        params: {
-                            installationFeedback: true
-                        }
-                    });
-                }, 2000);
-            }
+            if (paypalSettingsEnabled) {
+                try {
+                    Ext.create('Shopware.apps.PaypalUnifiedSettings');
+                } catch (exception) {
+                    Shopware.Notification.createGrowlMessage('{s name="title/paypal_settings_unavailable"}{/s}', '{s name="content/paypal_settings_unavailable"}{/s}');
 
-            if (enableBetaFeedback && (typeof Storage !== "undefined")) {
-                var item = window.localStorage.getItem("hideBetaFeedback");
-                if (!item) {
-                    Ext.Function.defer(function() {
-                        Shopware.app.Application.addSubApplication({
-                            name: 'Shopware.apps.Feedback',
-                            params: {
-                                previewFeedback: true
-                            }
-                        });
-                    }, 2000);
+                    return;
+                } finally {
+                    Ext.util.Cookies.clear('paypalConfigurationPostponed');
                 }
-            }
 
-            /*{if {acl_is_allowed privilege=manage resource=benchmark}}*/
-            if (biOverviewEnabled) {
                 Ext.Function.defer(function() {
                     Shopware.app.Application.addSubApplication({
-                        name: 'Shopware.apps.Benchmark',
-                        params: {
-                            isTeaser: true
-                        }
+                        name: 'Shopware.apps.PaypalUnifiedSettings',
+                        action: 'index'
                     });
                 }, 2000);
             }
-            /* {/if} */
         }
     },
 
@@ -130,11 +108,6 @@ Ext.define('Shopware.apps.Index.controller.Main', {
 
         me.addKeyboardEvents();
         me.checkLoginStatus();
-        /*{if {acl_is_allowed privilege=submit resource=benchmark}}*/
-        if (me.subApplication.biIsActive) {
-            me.checkBenchmarksStatus();
-        }
-        /*{/if}*/
     },
 
     /**
@@ -192,7 +165,7 @@ Ext.define('Shopware.apps.Index.controller.Main', {
             /*{/if}*/
 
             /*{if {acl_is_allowed privilege=read resource=customer}}*/
-             // Order overview - CTRL + ALT + K
+            // Order overview - CTRL + ALT + K
             {
                 key: "k",
                 ctrl: true,
@@ -234,7 +207,7 @@ Ext.define('Shopware.apps.Index.controller.Main', {
                 ctrl: true,
                 alt: true,
                 handler: function(keyCode, e) {
-                    switch(keyCode) {
+                    switch (keyCode) {
                         // Frontend Cache - CTRL + ALT + F
                         case 70: var action = 'Frontend'; break;
                         // Template Cache - CTRL + ALT + T
@@ -268,7 +241,7 @@ Ext.define('Shopware.apps.Index.controller.Main', {
                     success: function(response) {
                         var json = Ext.decode(response.responseText);
 
-                        if(!json.success) {
+                        if (!json.success) {
                             window.location.href = '{url controller=index}';
                         }
                     },
@@ -278,71 +251,6 @@ Ext.define('Shopware.apps.Index.controller.Main', {
                 });
             }
         });
-    },
-
-    /**
-     * Helper method which checks for new Benchmark data periodically (every 10 seconds).
-     *
-     * @private
-     * @return void
-     */
-    checkBenchmarksStatus: function () {
-        var interval = 10000,
-            checkBenchmarksFn = function () {
-                Ext.Ajax.request({
-                    url: '{url controller=benchmark action=checkBenchmarks}',
-                    success: function(response) {
-                        var res = Ext.decode(response.responseText);
-
-                        interval = 10000;
-
-                        // Set interval to 5 minutes if all data was sent
-                        if (!res.statistics && res.bi) {
-                            interval = 300000;
-                        }
-
-                        // If we received new BI statistics, we print a growl message
-                        if (res.bi) {
-                            Shopware.Notification.createStickyGrowlMessage({
-                                title: '{s name="title/new_benchmark"}{/s}',
-                                text: '{s name="content/new_benchmark"}{/s}',
-                                btnDetail: {
-                                    text: '{s name="open"}{/s}',
-                                    callback: function () {
-                                        Shopware.app.Application.addSubApplication({
-                                            name: 'Shopware.apps.Benchmark',
-                                            params: {
-                                                shopId: res.shopId
-                                            }
-                                        });
-                                    }
-                                }
-                            });
-                        }
-
-                        // If neither sending nor receiving is necessary, set interval to 12 hours
-                        if (!res.statistics && !res.bi && !res.message) {
-                            interval = 43200000;
-                        }
-
-                        if (!res.success) {
-                            interval = 43200000;
-                            var cur = new Date();
-                            cur.setSeconds(cur.getSeconds() + 900);
-
-                            Ext.util.Cookies.set('benchmarkWait', '1', cur);
-                        }
-
-                        window.setTimeout(checkBenchmarksFn, interval);
-                    }
-                });
-            };
-
-        if (Ext.util.Cookies.get('benchmarkWait')) {
-            return;
-        }
-
-        window.setTimeout(checkBenchmarksFn, interval);
     }
 });
 
@@ -359,7 +267,6 @@ Ext.define('Shopware.apps.Index.view.Main', {
     layout: 'fit',
     bodyStyle: 'background: transparent'
 });
-
 
 /**
  * Wrapper methods which allows to open deprecated
@@ -423,49 +330,49 @@ createKeyNavOverlay = function() {
             fields: [ 'name', 'key', 'alt', 'ctrl' ],
             data: [
                 /*{if {acl_is_allowed privilege=read resource=article}}*/
-                { name: '{s name="title/article"}Article{/s}', key: 'n', alt: true , ctrl: true },
+                { name: '{s name="title/article"}Article{/s}', key: 'n', alt: true, ctrl: true },
                 /*{/if}*/
                 /*{if {acl_is_allowed privilege=read resource=articlelist}}*/
-                { name: '{s name="title/article_overview"}Article overview{/s}', key: 'o', alt: true , ctrl: true },
+                { name: '{s name="title/article_overview"}Article overview{/s}', key: 'o', alt: true, ctrl: true },
                 /*{/if}*/
                 /*{if {acl_is_allowed privilege=read resource=order}}*/
-                { name: '{s name="title/order"}Order{/s}', key: 'b', alt: true , ctrl: true },
+                { name: '{s name="title/order"}Order{/s}', key: 'b', alt: true, ctrl: true },
                 /*{/if}*/
                 /*{if {acl_is_allowed privilege=read resource=customer}}*/
-                { name: '{s name="title/customer"}Customer{/s}', key: 'k', alt: true , ctrl: true },
+                { name: '{s name="title/customer"}Customer{/s}', key: 'k', alt: true, ctrl: true },
                 /*{/if}*/
                 /*{if {acl_is_allowed privilege=read resource=pluginmanager}}*/
-                { name: '{s name="title/plugin_manager"}Plugin manager{/s}', key: 'p', alt: true , ctrl: true },
+                { name: '{s name="title/plugin_manager"}Plugin manager{/s}', key: 'p', alt: true, ctrl: true },
                 /*{/if}*/
                 /*{if {acl_is_allowed privilege=clear resource=performance}}*/
-                { name: '{s name="title/cache_template"}Clear template cache{/s}', key: 't', alt: true , ctrl: true },
-                { name: '{s name="title/cache_config"}Clear config cache{/s}', key: 'x', alt: true , ctrl: true },
-                { name: '{s name="title/cache_frontend"}Clear shop cache{/s}', key: 'f', alt: true , ctrl: true }
+                { name: '{s name="title/cache_template"}Clear template cache{/s}', key: 't', alt: true, ctrl: true },
+                { name: '{s name="title/cache_config"}Clear config cache{/s}', key: 'x', alt: true, ctrl: true },
+                { name: '{s name="title/cache_frontend"}Clear shop cache{/s}', key: 'f', alt: true, ctrl: true }
                 /*{/if}*/
             ]
         }),
         tpl = new Ext.XTemplate(
             '{literal}<tpl for=".">',
-                '<div class="row">',
-                    '<span class="title">{name}:</span>',
-                    '<div class="keys">',
+            '<div class="row">',
+            '<span class="title">{name}:</span>',
+            '<div class="keys">',
 
-                        // Ctrl key
-                        '<tpl if="ctrl === true">',
-                            '<span class="sprite-key_ctrl_alternative">ctrl</span>',
-                        '</tpl>',
+            // Ctrl key
+            '<tpl if="ctrl === true">',
+            '<span class="sprite-key_ctrl_alternative">ctrl</span>',
+            '</tpl>',
 
-                        // Alt key
-                        '<tpl if="alt === true">',
-                            '<span class="key_sep">+</span>',
-                            '<span class="sprite-key_alt_alternative">alt</span>',
-                        '</tpl>',
+            // Alt key
+            '<tpl if="alt === true">',
+            '<span class="key_sep">+</span>',
+            '<span class="sprite-key_alt_alternative">alt</span>',
+            '</tpl>',
 
-                        // Output the actual key
-                        '<span class="key_sep">+</span>',
-                        '<span class="sprite-key_{key}">{key}</span>',
-                    '</div>',
-                '</div>',
+            // Output the actual key
+            '<span class="key_sep">+</span>',
+            '<span class="sprite-key_{key}">{key}</span>',
+            '</div>',
+            '</div>',
             '</tpl>{/literal}'
         ),
         emptyTpl = '<span class="no-shortcuts">{s name="shortcuts/no_shortcuts_acl"}Due to your permissions, there are no shortcuts available{/s}</span>',
@@ -507,7 +414,7 @@ openSearchResult = function(module, id) {
         Shopware.searchField.searchDropDown.hide();
     }, 100);
 
-    switch(module) {
+    switch (module) {
         case 'articles':
             Shopware.app.Application.addSubApplication({
                 name: 'Shopware.apps.Article',
@@ -577,7 +484,7 @@ createShopwareVersionMessage = function() {
             autoScroll: true,
             cls: Ext.baseCSSPrefix + 'about-shopware-content',
             html: '<p>' +
-                    '<strong>Shopware {$SHOPWARE_VERSION} {$SHOPWARE_VERSION_TEXT}</strong>' +
+                    '<strong>Unofficial Shopware {$SHOPWARE_VERSION} {$SHOPWARE_VERSION_TEXT}</strong>' +
                     '<span>Build Rev {$SHOPWARE_REVISION}</span></p>' +
                     '{if $product == "CE"}<p><strong>Community Edition under <a href="http://www.gnu.org/licenses/agpl.html" target="_blank">AGPL license</a></strong><span>No support included in this shopware package.</span></p>{else}' +
                     '<p><strong>{if $product == "PE"}Professional Edition{elseif $product == "PP"}Professional Plus Edition{elseif $product == "EE"}Enterprise Edition{elseif $product == "EB"}Enterprise Business Edition{elseif $product == "EC"}Enterprise Cluster Edition{/if} under commercial / proprietary license</strong><span>See <a href="https://api.shopware.com/gtc/en_GB.html" target="_blank">TOS</a> for details</span></p>{/if}' +

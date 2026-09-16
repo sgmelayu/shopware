@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\User;
 
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\User\Resource as UserResource;
 
 /**
  * Shopware rule model represents a acl rule in shopware.
@@ -48,17 +49,17 @@ class Rule extends ModelEntity
     /**
      * The role property is the owning side of the association between rule and permission.
      *
-     * @var \Shopware\Models\User\Role
+     * @var Role
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\User\Role", inversedBy="rules", fetch="EAGER")
-     * @ORM\JoinColumn(name="roleID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="roleID", referencedColumnName="id", nullable=false)
      */
     private $role;
 
     /**
      * The resource property is the owning side of the association between rule and permission.
      *
-     * @var \Shopware\Models\User\Resource|null
+     * @var UserResource|null
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\User\Resource", fetch="EAGER")
      * @ORM\JoinColumn(name="resourceID", referencedColumnName="id", nullable=true)
@@ -68,7 +69,7 @@ class Rule extends ModelEntity
     /**
      * The privilege property is the owning side of the association between rule and permission.
      *
-     * @var \Shopware\Models\User\Privilege|null
+     * @var Privilege|null
      *
      * @ORM\OneToOne(targetEntity="\Shopware\Models\User\Privilege", fetch="EAGER")
      * @ORM\JoinColumn(name="privilegeID", referencedColumnName="id", nullable=true)
@@ -83,9 +84,9 @@ class Rule extends ModelEntity
     private $privilegeId;
 
     /**
-     * @ORM\Column(name="roleID", type="integer", nullable=true)
+     * @ORM\Column(name="roleID", type="integer", nullable=false)
      *
-     * @var int|null
+     * @var int
      */
     private $roleId;
 
@@ -100,7 +101,7 @@ class Rule extends ModelEntity
      * Returns the instance of the Shopware\Models\User\Role model which
      * contains all data about the assigned role.
      *
-     * @return \Shopware\Models\User\Role
+     * @return Role
      */
     public function getRole()
     {
@@ -111,7 +112,7 @@ class Rule extends ModelEntity
      * Returns the instance of the Shopware\Models\User\Resource model which
      * contains all data about the assigned resource.
      *
-     * @return \Shopware\Models\User\Resource|null
+     * @return UserResource|null
      */
     public function getResource()
     {
@@ -122,7 +123,7 @@ class Rule extends ModelEntity
      * Returns the instance of the Shopware\Models\User\Privilege model which
      * contains all data about the assigned privilege.
      *
-     * @return \Shopware\Models\User\Privilege|null
+     * @return Privilege|null
      */
     public function getPrivilege()
     {
@@ -146,7 +147,7 @@ class Rule extends ModelEntity
     }
 
     /**
-     * @return int|null
+     * @return int
      */
     public function getRoleId()
     {
@@ -178,7 +179,7 @@ class Rule extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\User\Role $role
+     * @param Role $role
      */
     public function setRole($role)
     {
@@ -186,7 +187,7 @@ class Rule extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\User\Resource|null $resource
+     * @param UserResource|null $resource
      */
     public function setResource($resource)
     {
@@ -194,7 +195,7 @@ class Rule extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\User\Privilege|null $privilege
+     * @param Privilege|null $privilege
      */
     public function setPrivilege($privilege)
     {

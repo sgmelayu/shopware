@@ -17,20 +17,25 @@
  * @license    http://enlight.de/license     New BSD License
  */
 
+use Symfony\Component\HttpFoundation\Request;
+
+/**
+ * Request object which should be used in tests
+ */
 class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Request_RequestHttp
 {
     /**
      * Valid request method types
      *
-     * @var array
+     * @var string[]
      */
     protected $_validMethodTypes = [
-        'DELETE',
-        'GET',
-        'HEAD',
-        'OPTIONS',
-        'POST',
-        'PUT',
+        Request::METHOD_DELETE,
+        Request::METHOD_GET,
+        Request::METHOD_HEAD,
+        Request::METHOD_OPTIONS,
+        Request::METHOD_POST,
+        Request::METHOD_PUT,
     ];
 
     /**
@@ -131,7 +136,6 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
      * Set a cookie
      *
      * @param string $key
-     * @param mixed  $value
      *
      * @return Enlight_Controller_Request_RequestTestCase
      */
@@ -145,8 +149,6 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
 
     /**
      * Set multiple cookies at once
-     *
-     * @param array $cookies
      *
      * @return self
      */
@@ -184,8 +186,8 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
     public function setMethod($type)
     {
         $type = strtoupper(trim((string) $type));
-        if (!in_array($type, $this->_validMethodTypes, true)) {
-            throw new \Exception('Invalid request method specified');
+        if (!\in_array($type, $this->_validMethodTypes, true)) {
+            throw new Exception('Invalid request method specified');
         }
 
         $this->method = $type;
@@ -228,8 +230,6 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
     /**
      * Set request headers
      *
-     * @param array $headers
-     *
      * @return Enlight_Controller_Request_RequestTestCase
      */
     public function setHeaders(array $headers)
@@ -245,7 +245,6 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
      * Get request header
      *
      * @param string $header
-     * @param mixed  $default
      *
      * @return string|null
      */
@@ -355,9 +354,13 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
     {
         if ($key === null) {
             return array_merge($_SERVER, $this->_serverParams);
-        } elseif (isset($this->_serverParams[$key])) {
-            return $this->_serverParams[$key] !== null ? $this->_serverParams[$key] : $default;
-        } elseif ($this->server->has($key)) {
+        }
+
+        if (isset($this->_serverParams[$key])) {
+            return $this->_serverParams[$key] ?: $default;
+        }
+
+        if ($this->server->has($key)) {
             return $this->server->get($key);
         }
 
@@ -380,7 +383,7 @@ class Enlight_Controller_Request_RequestTestCase extends Enlight_Controller_Requ
     public function setDeviceType($deviceType)
     {
         $deviceType = strtolower($deviceType);
-        $this->deviceType = in_array($deviceType, $this->validDeviceTypes, true) ? $deviceType : 'desktop';
+        $this->deviceType = \in_array($deviceType, $this->validDeviceTypes, true) ? $deviceType : 'desktop';
     }
 
     /**

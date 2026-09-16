@@ -1,36 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\CategoryHandling;
 
+use PDO;
+use RuntimeException;
 use Shopware\Bundle\AttributeBundle\Service\DataPersisterInterface;
 use Shopware\Components\Model\CategoryDenormalization;
 
 class CategoryDuplicator
 {
     /**
-     * @var \PDO
+     * @var PDO
      */
     protected $connection;
 
@@ -45,7 +47,7 @@ class CategoryDuplicator
     private $attributePersister;
 
     public function __construct(
-        \PDO $connection,
+        PDO $connection,
         CategoryDenormalization $categoryDenormalization,
         DataPersisterInterface $attributePersister
     ) {
@@ -61,7 +63,7 @@ class CategoryDuplicator
      * @param int  $parentId
      * @param bool $copyArticleAssociations
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      *
      * @return int
      */
@@ -70,10 +72,10 @@ class CategoryDuplicator
         $originalCategoryStmt = $this->connection
             ->prepare('SELECT * FROM s_categories WHERE id = :id');
         $originalCategoryStmt->execute([':id' => $originalCategoryId]);
-        $originalCategory = $originalCategoryStmt->fetch(\PDO::FETCH_ASSOC);
+        $originalCategory = $originalCategoryStmt->fetch(PDO::FETCH_ASSOC);
 
         if (empty($originalCategory)) {
-            throw new \RuntimeException(sprintf('Category "%s" not found', $originalCategoryId));
+            throw new RuntimeException(\sprintf('Category "%s" not found', $originalCategoryId));
         }
 
         $newPosStmt = $this->connection
@@ -86,10 +88,10 @@ class CategoryDuplicator
 
         unset($originalCategory['id'], $originalCategory['path']);
 
-        $valuePlaceholders = array_fill(0, count($originalCategory), '?');
+        $valuePlaceholders = array_fill(0, \count($originalCategory), '?');
         $insertStmt = $this->connection->prepare(
             'INSERT INTO s_categories (`' . implode('`, `', array_keys($originalCategory)) . '`)
-            VALUES (' . implode(', ', $valuePlaceholders) . ')'
+             VALUES (' . implode(', ', $valuePlaceholders) . ')'
         );
         $insertStmt->execute(array_values($originalCategory));
         $newCategoryId = (int) $this->connection->lastInsertId();
@@ -154,17 +156,16 @@ class CategoryDuplicator
             'SELECT articleID FROM s_articles_categories WHERE categoryID = :categoryID'
         );
         $assocProductsStmt->execute([':categoryID' => $originalCategoryId]);
-        $products = $assocProductsStmt->fetchAll(\PDO::FETCH_COLUMN, 0);
+        $products = $assocProductsStmt->fetchAll(PDO::FETCH_COLUMN, 0);
 
         if ($products) {
-            $insertStmt = $this->connection->prepare(
+            $this->connection->query(
                 'INSERT INTO s_articles_categories (categoryID, articleID)
-            VALUES (' . $newCategoryId . ', ' . implode('), (' . $newCategoryId . ', ', $products) . ')'
+                 VALUES (' . $newCategoryId . ', ' . implode('), (' . $newCategoryId . ', ', $products) . ')'
             );
-            $insertStmt->execute();
 
             foreach ($products as $productId) {
-                $this->categoryDenormalization->addAssignment($productId, $newCategoryId);
+                $this->categoryDenormalization->addAssignment((int) $productId, $newCategoryId);
             }
         }
     }

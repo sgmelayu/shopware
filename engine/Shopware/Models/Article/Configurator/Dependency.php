@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Article\Configurator;
@@ -43,9 +43,9 @@ class Dependency extends ModelEntity
     private $id;
 
     /**
-     * @var int|null
+     * @var int
      *
-     * @ORM\Column(name="configurator_set_id", type="integer", nullable=true)
+     * @ORM\Column(name="configurator_set_id", type="integer", nullable=false)
      */
     private $configuratorSetId;
 
@@ -64,7 +64,7 @@ class Dependency extends ModelEntity
     private $childId;
 
     /**
-     * @var \Shopware\Models\Article\Configurator\Option
+     * @var Option|null
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Article\Configurator\Option", inversedBy="dependencyParents")
      * @ORM\JoinColumn(name="parent_id", referencedColumnName="id")
@@ -72,7 +72,7 @@ class Dependency extends ModelEntity
     private $parentOption;
 
     /**
-     * @var \Shopware\Models\Article\Configurator\Option|null
+     * @var Option|null
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Article\Configurator\Option", inversedBy="dependencyChildren")
      * @ORM\JoinColumn(name="child_id", referencedColumnName="id")
@@ -80,10 +80,10 @@ class Dependency extends ModelEntity
     private $childOption;
 
     /**
-     * @var \Shopware\Models\Article\Configurator\Set|null
+     * @var Set
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Article\Configurator\Set", inversedBy="dependencies")
-     * @ORM\JoinColumn(name="configurator_set_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="configurator_set_id", referencedColumnName="id", nullable=false)
      */
     private $configuratorSet;
 
@@ -96,7 +96,7 @@ class Dependency extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Article\Configurator\Option|null
+     * @return Option|null
      */
     public function getParentOption()
     {
@@ -104,7 +104,7 @@ class Dependency extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Article\Configurator\Option $parentOption
+     * @param Option|null $parentOption
      */
     public function setParentOption($parentOption)
     {
@@ -112,7 +112,7 @@ class Dependency extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Article\Configurator\Option|null
+     * @return Option|null
      */
     public function getChildOption()
     {
@@ -120,7 +120,7 @@ class Dependency extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Article\Configurator\Option $childOption
+     * @param Option|null $childOption
      */
     public function setChildOption($childOption)
     {
@@ -128,7 +128,7 @@ class Dependency extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Article\Configurator\Set|null
+     * @return Set
      */
     public function getConfiguratorSet()
     {
@@ -136,7 +136,7 @@ class Dependency extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Article\Configurator\Set $configuratorSet
+     * @param Set $configuratorSet
      */
     public function setConfiguratorSet($configuratorSet)
     {

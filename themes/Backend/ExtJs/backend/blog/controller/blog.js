@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Blog
@@ -40,17 +39,17 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
 
     /**
      * All references to get the elements by the applicable selector
      */
-    refs:[
-        { ref:'grid', selector:'blog-blog-list' },
-        { ref:'detailWindow', selector:'blog-blog-window' },
-        { ref:'optionsPanel', selector:'blog-blog-detail-sidebar-options' },
-        { ref:'commentPanel', selector:'blog-blog-detail-comments' },
-        { ref:'attributeForm', selector: 'blog-blog-window shopware-attribute-form' }
+    refs: [
+        { ref: 'grid', selector: 'blog-blog-list' },
+        { ref: 'detailWindow', selector: 'blog-blog-window' },
+        { ref: 'optionsPanel', selector: 'blog-blog-detail-sidebar-options' },
+        { ref: 'commentPanel', selector: 'blog-blog-detail-comments' },
+        { ref: 'attributeForm', selector: 'blog-blog-window shopware-attribute-form' }
     ],
 
     /**
@@ -85,22 +84,22 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      *
      * @return void
      */
-    init:function () {
+    init: function () {
         var me = this;
 
         me.control({
-            'blog-blog-tree':{
+            'blog-blog-tree': {
                 // event will be fired if an tree item is clicked
                 'itemclick': me.onItemClick
             },
-            'blog-blog-list button[action=add]':{
-                click:me.onCreateBlogArticle
+            'blog-blog-list button[action=add]': {
+                click: me.onCreateBlogArticle
             },
-            'blog-blog-list textfield[action=searchBlogArticles]':{
-                change:me.onSearchBlog
+            'blog-blog-list textfield[action=searchBlogArticles]': {
+                change: me.onSearchBlog
             },
-            'blog-blog-list button[action=deleteBlogArticles]':{
-                click:me.onDeleteMultipleBlogArticles
+            'blog-blog-list button[action=deleteBlogArticles]': {
+                click: me.onDeleteMultipleBlogArticles
             },
             'blog-blog-list': {
                 deleteBlogArticle: me.onDeleteSingleBlogArticle,
@@ -129,14 +128,14 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      * @event editSettings
      * @return void
      */
-    onItemClick:function (view, record) {
+    onItemClick: function (view, record) {
         var me = this,
             listStore = me.subApplication.listStore;
-            me.selectedCategoryRecord = record;
-            listStore.getProxy().extraParams = {
-                categoryId: record.getId()
-            };
-            listStore.load();
+        me.selectedCategoryRecord = record;
+        listStore.getProxy().extraParams = {
+            categoryId: record.getId()
+        };
+        listStore.load();
     },
 
     /**
@@ -145,15 +144,15 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      *
      * @return void
      */
-    onCreateBlogArticle:function () {
+    onCreateBlogArticle: function () {
         var me = this,
             model = Ext.create('Shopware.apps.Blog.model.Detail');
 
         // Reset the detail Record
         me.detailRecord = null;
 
-        if(me.selectedCategoryRecord && me.selectedCategoryRecord.get("blog")) {
-            model.set("categoryId",me.selectedCategoryRecord.getId());
+        if (me.selectedCategoryRecord && me.selectedCategoryRecord.get("blog")) {
+            model.set("categoryId", me.selectedCategoryRecord.getId());
         }
 
         me.getView('blog.Window').create({
@@ -172,14 +171,14 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      * @param { integer } rowIndex - The row number
      * @return void
      */
-    onEditItem:function (view, rowIndex) {
+    onEditItem: function (view, rowIndex) {
         var me = this,
             store = me.subApplication.detailStore,
             record = me.subApplication.listStore.getAt(rowIndex),
             commentStore = me.subApplication.commentStore;
 
         store.load({
-            filters : [{
+            filters: [{
                 property: 'id',
                 value: record.get("id")
             }],
@@ -189,7 +188,7 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
                 }
                 me.detailRecord = records[0];
                 commentStore.getProxy().extraParams = {
-                    blogId:record.get("id")
+                    blogId: record.get("id")
                 };
 
                 me.getView('blog.Window').create({
@@ -204,7 +203,6 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
         });
     },
 
-
     /**
      * Opens the Ext.window.window which displays
      * the Ext.form.Panel to duplicate an existing blog article
@@ -213,14 +211,14 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      * @param { integer} rowIndex - The row number
      * @return void
      */
-    onDuplicateBlogArticle:function (view, rowIndex) {
+    onDuplicateBlogArticle: function (view, rowIndex) {
         var me = this,
             store = me.subApplication.detailStore,
             record = me.subApplication.listStore.getAt(rowIndex),
             id = record.get("id");
 
         store.load({
-            filters : [{
+            filters: [{
                 property: 'id',
                 value: id
             }],
@@ -250,13 +248,13 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      * @param value
      * @return void
      */
-    onSearchBlog:function (field, value) {
+    onSearchBlog: function (field, value) {
         var me = this,
             searchString = Ext.String.trim(value),
             store = me.subApplication.listStore;
         store.filters.clear();
         store.currentPage = 1;
-        store.filter('filter',searchString);
+        store.filter('filter', searchString);
     },
 
     /**
@@ -267,33 +265,33 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      * @param { integer } rowIndex - Position of the event
      * @return void
      */
-    onDeleteSingleBlogArticle:function (grid, rowIndex) {
+    onDeleteSingleBlogArticle: function (grid, rowIndex) {
         var me = this,
-                store = me.subApplication.listStore,
-                record = store.getAt(rowIndex);
+            store = me.subApplication.listStore,
+            record = store.getAt(rowIndex);
         store.currentPage = 1;
         // we do not just delete - we are polite and ask the user if he is sure.
         Ext.MessageBox.confirm(
             me.snippets.confirmDeleteSingleBlogArticleTitle,
             Ext.String.format(me.snippets.confirmDeleteSingleBlogArticle, record.get('title')), function (response) {
-            if (response !== 'yes') {
-                return false;
-            }
-            record.destroy({
-                callback:function (data, operation) {
-                    var records = operation.getRecords(),
+                if (response !== 'yes') {
+                    return false;
+                }
+                record.destroy({
+                    callback: function (data, operation) {
+                        var records = operation.getRecords(),
                             record = records[0],
                             rawData = record.getProxy().getReader().rawData;
 
-                    if ( operation.success === true ) {
-                        Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleBlogArticleSuccess, me.snippets.growlMessage);
-                    } else {
-                        Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleBlogArticleError + rawData.errorMsg, me.snippets.growlMessage);
+                        if ( operation.success === true ) {
+                            Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleBlogArticleSuccess, me.snippets.growlMessage);
+                        } else {
+                            Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleBlogArticleError + rawData.errorMsg, me.snippets.growlMessage);
+                        }
                     }
-                }
+                });
+                store.load();
             });
-            store.load();
-        });
 
     },
 
@@ -302,38 +300,38 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      *
      * @return void
      */
-    onDeleteMultipleBlogArticles:function () {
+    onDeleteMultipleBlogArticles: function () {
         var me = this,
-                grid = me.getGrid(),
-                sm = grid.getSelectionModel(),
-                selection = sm.getSelection(),
-                store = me.subApplication.listStore,
-                noOfElements = selection.length;
+            grid = me.getGrid(),
+            sm = grid.getSelectionModel(),
+            selection = sm.getSelection(),
+            store = me.subApplication.listStore,
+            noOfElements = selection.length;
 
         store.currentPage = 1;
 
         // Get the user to confirm the delete process
         Ext.MessageBox.confirm(
-                me.snippets.confirmDeleteSingleBlogArticleTitle,
-                Ext.String.format(me.snippets.confirmDeleteMultipleBlogArticles, noOfElements), function (response) {
-            if (response !== 'yes') {
-                return false;
-            }
-            if (selection.length > 0) {
-                store.remove(selection);
-                store.save({
-                    callback: function(batch) {
-                        var rawData = batch.proxy.getReader().rawData;
-                        if (rawData.success === true) {
-                            store.load();
-                            Shopware.Notification.createGrowlMessage('', me.snippets.deleteMultipleBlogArticlesSuccess, me.snippets.growlMessage);
-                        } else {
-                            Shopware.Notification.createGrowlMessage('',me.snippets.deleteMultipleBlogArticlesError + rawData.errorMsg , me.snippets.growlMessage);
+            me.snippets.confirmDeleteSingleBlogArticleTitle,
+            Ext.String.format(me.snippets.confirmDeleteMultipleBlogArticles, noOfElements), function (response) {
+                if (response !== 'yes') {
+                    return false;
+                }
+                if (selection.length > 0) {
+                    store.remove(selection);
+                    store.save({
+                        callback: function(batch) {
+                            var rawData = batch.proxy.getReader().rawData;
+                            if (rawData.success === true) {
+                                store.load();
+                                Shopware.Notification.createGrowlMessage('', me.snippets.deleteMultipleBlogArticlesSuccess, me.snippets.growlMessage);
+                            } else {
+                                Shopware.Notification.createGrowlMessage('', me.snippets.deleteMultipleBlogArticlesError + rawData.errorMsg, me.snippets.growlMessage);
+                            }
                         }
-                    }
-                });
-            }
-        })
+                    });
+                }
+            })
     },
 
     /**
@@ -381,7 +379,7 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
      *
      * @param record
      */
-    onOpenArticleModule:function (record) {
+    onOpenArticleModule: function (record) {
         var me = this;
         Shopware.app.Application.addSubApplication({
             name: 'Shopware.apps.Article',
@@ -418,7 +416,7 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
 
         // Check if all required fields are valid
         if (!form.isValid()) {
-            Shopware.Notification.createGrowlMessage('',me.snippets.onSaveChangesNotValid, me.snippets.growlMessage);
+            Shopware.Notification.createGrowlMessage('', me.snippets.onSaveChangesNotValid, me.snippets.growlMessage);
             return;
         }
 
@@ -430,7 +428,7 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
         record.set('authorId', values.authorId);
 
         record.save({
-            callback: function (self,operation) {
+            callback: function (self, operation) {
                 if (operation.success) {
                     // save attributes
                     var response = Ext.JSON.decode(operation.response.responseText);
@@ -446,9 +444,9 @@ Ext.define('Shopware.apps.Blog.controller.Blog', {
                     me.getCommentPanel().enable();
                     listStore.load();
                     // To remove all red flags
-                    Shopware.Notification.createGrowlMessage('',me.snippets.onSaveChangesSuccess, me.snippets.growlMessage);
+                    Shopware.Notification.createGrowlMessage('', me.snippets.onSaveChangesSuccess, me.snippets.growlMessage);
                 } else {
-                    Shopware.Notification.createGrowlMessage('',me.snippets.onSaveChangesError, me.snippets.growlMessage);
+                    Shopware.Notification.createGrowlMessage('', me.snippets.onSaveChangesError, me.snippets.growlMessage);
                 }
             }
         });

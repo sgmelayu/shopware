@@ -1,32 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ESIndexingBundle\Product;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\FieldHelper;
 use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\ConfiguratorHydrator;
+use Shopware\Bundle\StoreFrontBundle\Struct\Configurator\Group;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware_Components_Config;
 
@@ -102,16 +104,13 @@ class ProductConfigurationLoader
 
         $query->setParameter(':articleIds', $articleIds, Connection::PARAM_STR_ARRAY);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_COLUMN);
+        return $query->execute()->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_COLUMN);
     }
 
     /**
      * Fetches  all groups with all options for provided products
      *
-     * @return array<int, array<\Shopware\Bundle\StoreFrontBundle\Struct\Configurator\Group>>
+     * @return array<int, array<Group>>
      */
     public function getConfigurations(array $articleIds, ShopContextInterface $context)
     {
@@ -147,7 +146,7 @@ class ProductConfigurationLoader
         $query->where('variant.articleId IN (:articleIds)');
         $query->setParameter(':articleIds', $articleIds, Connection::PARAM_STR_ARRAY);
 
-        $data = $query->execute()->fetchAll(\PDO::FETCH_GROUP);
+        $data = $query->execute()->fetchAll(PDO::FETCH_GROUP);
 
         $result = [];
         foreach ($data as $productId => $rows) {

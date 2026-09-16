@@ -109,11 +109,13 @@
                 cache: false,
                 success: function (response) {
                     $el.html(response);
-                    $.publish('plugin/swCaptcha/onSendRequestSuccess', [ me ]);
+                    $el.parent('div').addClass('panel--body is--wide');
+                    $el.parent('div').css('display', 'inline-block');
+                    $.publish('plugin/swCaptcha/onSendRequestSuccess', [me]);
                 }
             });
 
-            $.publish('plugin/swCaptcha/onSendRequest', [ me ]);
+            $.publish('plugin/swCaptcha/onSendRequest', [me]);
         }
     });
 })(jQuery, window);

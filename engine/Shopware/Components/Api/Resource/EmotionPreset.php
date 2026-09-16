@@ -1,30 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Api\Resource;
 
 use Doctrine\DBAL\Connection;
+use Exception;
+use PDO;
 use Shopware\Components\Api\Exception\CustomValidationException;
 use Shopware\Components\Api\Exception\NotFoundException;
 use Shopware\Components\Api\Exception\ParameterMissingException;
@@ -79,7 +81,7 @@ class EmotionPreset extends Resource
      *
      * @throws NotFoundException
      * @throws ParameterMissingException
-     * @throws \Exception
+     * @throws Exception
      */
     public function delete($presetId)
     {
@@ -91,11 +93,11 @@ class EmotionPreset extends Resource
         $preset = $this->models->find(Preset::class, $presetId);
 
         if (!$preset) {
-            throw new NotFoundException(sprintf('Emotion preset with id %s not found', $presetId));
+            throw new NotFoundException(\sprintf('Emotion preset with id %s not found', $presetId));
         }
 
         if (!$preset->getCustom()) {
-            throw new PrivilegeException(sprintf('Emotion preset %s is not defined as custom preset', $preset->getName()));
+            throw new PrivilegeException(\sprintf('Emotion preset %s is not defined as custom preset', $preset->getName()));
         }
 
         $this->models->remove($preset);
@@ -111,10 +113,10 @@ class EmotionPreset extends Resource
      */
     public function create(array $data, $locale = 'de_DE')
     {
-        if (!array_key_exists('name', $data)) {
+        if (!\array_key_exists('name', $data)) {
             throw new ParameterMissingException('name');
         }
-        if (!array_key_exists('presetData', $data)) {
+        if (!\array_key_exists('presetData', $data)) {
             throw new ParameterMissingException('presetData');
         }
 
@@ -125,7 +127,7 @@ class EmotionPreset extends Resource
      * @param int    $id
      * @param string $locale
      *
-     * @throws \Shopware\Components\Api\Exception\NotFoundException
+     * @throws NotFoundException
      *
      * @return Preset
      */
@@ -134,7 +136,7 @@ class EmotionPreset extends Resource
         /** @var Preset|null $preset */
         $preset = $this->models->getRepository(Preset::class)->find($id);
         if (!$preset) {
-            throw new NotFoundException(sprintf('Preset with id %s not found', $id));
+            throw new NotFoundException(\sprintf('Preset with id %s not found', $id));
         }
 
         $preset->getTranslations()->clear();
@@ -162,7 +164,7 @@ class EmotionPreset extends Resource
             unset($translation);
         }
 
-        if (!is_array($data['requiredPlugins'])) {
+        if (!isset($data['requiredPlugins']) || !\is_array($data['requiredPlugins'])) {
             $data['requiredPlugins'] = [];
         }
 
@@ -204,7 +206,7 @@ class EmotionPreset extends Resource
             ->getSingleScalarResult();
 
         if ($result > 0) {
-            throw new CustomValidationException(sprintf('Preset with name %s already exists', $preset->getName()));
+            throw new CustomValidationException(\sprintf('Preset with name %s already exists', $preset->getName()));
         }
     }
 
@@ -239,8 +241,13 @@ class EmotionPreset extends Resource
     {
         $pluginNames = [];
         foreach ($presets as $id => $preset) {
-            $plugins = json_decode($preset['requiredPlugins'], true) ?? [];
-            $preset['requiredPlugins'] = array_combine(array_column($plugins, 'name'), $plugins);
+            $plugins = json_decode($preset['requiredPlugins'] ?? '', true) ?? [];
+            $combinedPlugins = array_combine(array_column($plugins, 'name'), $plugins);
+            if (!\is_array($combinedPlugins)) {
+                $preset['requiredPlugins'] = [];
+            } else {
+                $preset['requiredPlugins'] = $combinedPlugins;
+            }
             $pluginNames = array_merge($pluginNames, array_keys($preset['requiredPlugins']));
             $presets[$id] = $preset;
         }
@@ -256,8 +263,8 @@ class EmotionPreset extends Resource
                 'premium' => $preset['premium'],
                 'custom' => $preset['custom'],
                 'thumbnail' => $preset['thumbnail'],
-                'preview' => $preset['preview'],
-                'presetData' => $preset['presetData'],
+                'preview' => $preset['preview'] ?? null,
+                'presetData' => $preset['presetData'] ?? null,
                 'requiredPlugins' => $this->getPluginsForPreset($preset, $localPlugins),
                 'assetsImported' => $preset['assetsImported'],
             ];
@@ -309,7 +316,7 @@ class EmotionPreset extends Resource
         $query->where('plugin.name IN (:names)');
         $query->setParameter(':names', $technicalNames, Connection::PARAM_STR_ARRAY);
 
-        return $query->execute()->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_UNIQUE);
+        return $query->execute()->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE);
     }
 
     /**
@@ -329,12 +336,12 @@ class EmotionPreset extends Resource
                     'installed' => false,
                     'plugin_label' => $plugin['label'],
                     'plugin_name' => $plugin['name'],
-                    'current_version' => null,
+                    'current_version' => '',
                     'valid' => false,
                 ], $plugin);
 
                 $plugin['updateRequired'] = version_compare($plugin['version'], $plugin['current_version'], '>');
-                $plugin['valid'] = ($plugin['active'] && $plugin['installed'] && !$plugin['updateRequired']);
+                $plugin['valid'] = $plugin['active'] && $plugin['installed'] && !$plugin['updateRequired'];
 
                 return $plugin;
             },

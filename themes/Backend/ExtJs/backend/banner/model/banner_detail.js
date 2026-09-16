@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Banner
@@ -39,12 +38,12 @@ Ext.define('Shopware.apps.Banner.model.BannerDetail', {
      * Extends the default extjs 4 model
      * @string
      */
-    extend : 'Ext.data.Model',
+    extend: 'Ext.data.Model',
     /**
      * Set an alias to make the handling a bit easier
      * @string
      */
-    alias : 'model.bannermodel',
+    alias: 'model.bannermodel',
     /**
      * Defined items used by that model
      *
@@ -54,20 +53,20 @@ Ext.define('Shopware.apps.Banner.model.BannerDetail', {
      *
      * @array
      */
-    fields : [
+    fields: [
         //{block name="backend/banner/model/banner/fields"}{/block}
-        { name : 'id',              type: 'int' },
-        { name : 'description',     type: 'string' },
-        { name : 'validFromDate', type: 'date', dateFormat: 'd.m.Y' },
-        { name : 'validFromTime', type: 'date', dateFormat: 'H:i' },
-        { name : 'validToDate',   type: 'date', dateFormat: 'd.m.Y' },
-        { name : 'validToTime',   type: 'date', dateFormat: 'H:i' },
-        { name : 'link',            type: 'string' },
-        { name : 'image',             type: 'string' },
-        { name : 'media-manager-selection', type: 'string' },
-        { name : 'linkTarget',     type: 'string' },
-        { name : 'categoryId',      type: 'int' },
-        { name : 'extension',       type: 'string' }
+        { name: 'id',              type: 'int' },
+        { name: 'description',     type: 'string' },
+        { name: 'validFromDate', type: 'date', dateFormat: 'd.m.Y' },
+        { name: 'validFromTime', type: 'date', dateFormat: 'H:i' },
+        { name: 'validToDate',   type: 'date', dateFormat: 'd.m.Y' },
+        { name: 'validToTime',   type: 'date', dateFormat: 'H:i' },
+        { name: 'link',            type: 'string' },
+        { name: 'image',             type: 'string' },
+        { name: 'media-manager-selection', type: 'string' },
+        { name: 'linkTarget',     type: 'string' },
+        { name: 'categoryId',      type: 'int' },
+        { name: 'extension',       type: 'string' }
     ],
 
     /**
@@ -75,23 +74,23 @@ Ext.define('Shopware.apps.Banner.model.BannerDetail', {
      *
      * @int
      */
-    idProperty : 'id',
+    idProperty: 'id',
     /**
      * Defines the proxies where the data will later be loaded
      * @obj
      */
-    proxy : {
-        type : 'ajax',
-        api : {
-            read    : '{url controller="banner" action="getAllBanners"}',
-            update  : '{url controller="banner" action="updateBanner"}',
-            create  : '{url controller="banner" action="createBanner"}',
-            destroy : '{url controller="banner" action="deleteBanner" targetField=banners}'
+    proxy: {
+        type: 'ajax',
+        api: {
+            read: '{url controller="banner" action="getAllBanners"}',
+            update: '{url controller="banner" action="updateBanner"}',
+            create: '{url controller="banner" action="createBanner"}',
+            destroy: '{url controller="banner" action="deleteBanner" targetField=banners}'
         },
         // Data will be delivered as json and sits in the field data
-        reader : {
-            type : 'json',
-            root : 'data'
+        reader: {
+            type: 'json',
+            root: 'data'
         }
     }
 });

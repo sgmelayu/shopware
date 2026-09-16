@@ -1,39 +1,40 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Doctrine\DBAL\Query\QueryBuilder;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\ConfiguratorHydrator;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ProductConfigurationGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class ProductConfigurationGateway implements Gateway\ProductConfigurationGatewayInterface
+class ProductConfigurationGateway implements ProductConfigurationGatewayInterface
 {
-    /**
-     * @var Hydrator\ConfiguratorHydrator
-     */
-    private $configuratorHydrator;
+    private ConfiguratorHydrator $configuratorHydrator;
 
     /**
      * The FieldHelper class is used for the
@@ -45,20 +46,15 @@ class ProductConfigurationGateway implements Gateway\ProductConfigurationGateway
      * Additionally the field helper reduce the work, to
      * select in a second step the different required
      * attribute tables for a parent table.
-     *
-     * @var FieldHelper
      */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\ConfiguratorHydrator $configuratorHydrator
+        ConfiguratorHydrator $configuratorHydrator
     ) {
         $this->connection = $connection;
         $this->configuratorHydrator = $configuratorHydrator;
@@ -68,7 +64,7 @@ class ProductConfigurationGateway implements Gateway\ProductConfigurationGateway
     /**
      * {@inheritdoc}
      */
-    public function get(Struct\BaseProduct $product, Struct\ShopContextInterface $context)
+    public function get(BaseProduct $product, ShopContextInterface $context)
     {
         $groups = $this->getList([$product], $context);
 
@@ -78,7 +74,7 @@ class ProductConfigurationGateway implements Gateway\ProductConfigurationGateway
     /**
      * {@inheritdoc}
      */
-    public function getList($products, Struct\ShopContextInterface $context)
+    public function getList($products, ShopContextInterface $context)
     {
         if (empty($products)) {
             return [];
@@ -90,12 +86,7 @@ class ProductConfigurationGateway implements Gateway\ProductConfigurationGateway
         }
         $ids = array_unique($ids);
 
-        $query = $this->getQuery($ids, $context);
-
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_GROUP);
+        $data = $this->getQuery($ids, $context)->execute()->fetchAll(PDO::FETCH_GROUP);
 
         $result = [];
         foreach ($data as $key => $groups) {
@@ -107,10 +98,8 @@ class ProductConfigurationGateway implements Gateway\ProductConfigurationGateway
 
     /**
      * @param int[] $ids
-     *
-     * @return \Doctrine\DBAL\Query\QueryBuilder
      */
-    private function getQuery($ids, Struct\ShopContextInterface $context)
+    private function getQuery(array $ids, ShopContextInterface $context): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
 

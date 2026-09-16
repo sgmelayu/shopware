@@ -1,26 +1,28 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
+
+use Shopware\Bundle\AttributeBundle\Service\DataLoader;
 
 /**
  * Shopware class that handle static shop pages and dynamic content
@@ -28,7 +30,7 @@
  *
  * Used by Frontend_Custom and Frontend_Content controllers
  */
-class sCms implements \Enlight_Hook
+class sCms implements Enlight_Hook
 {
     /**
      * Database connection which used for each database operation in this class.
@@ -39,15 +41,6 @@ class sCms implements \Enlight_Hook
     private $db;
 
     /**
-     * Shopware configuration object which used for
-     * each config access in this class.
-     * Injected over the class constructor
-     *
-     * @var Shopware_Components_Config
-     */
-    private $config;
-
-    /**
      * The Front controller object
      *
      * @var Enlight_Controller_Front
@@ -55,29 +48,18 @@ class sCms implements \Enlight_Hook
     private $front;
 
     /**
-     * Module manager for core class instances
-     *
-     * @var Shopware_Components_Modules
-     */
-    private $moduleManager;
-
-    /**
      * @var Shopware_Components_Translation
      */
     private $translationComponent;
 
     public function __construct(
-        Enlight_Components_Db_Adapter_Pdo_Mysql $db = null,
-        Shopware_Components_Config $config = null,
-        Enlight_Controller_Front $front = null,
-        Shopware_Components_Modules $moduleManager = null,
-        Shopware_Components_Translation $translationComponent = null
+        ?Enlight_Components_Db_Adapter_Pdo_Mysql $db = null,
+        ?Enlight_Controller_Front $front = null,
+        ?Shopware_Components_Translation $translationComponent = null
     ) {
         $this->db = $db ?: Shopware()->Db();
-        $this->config = $config ?: Shopware()->Config();
         $this->front = $front ?: Shopware()->Front();
-        $this->moduleManager = $moduleManager ?: Shopware()->Modules();
-        $this->translationComponent = $translationComponent ?: Shopware()->Container()->get(\Shopware_Components_Translation::class);
+        $this->translationComponent = $translationComponent ?: Shopware()->Container()->get(Shopware_Components_Translation::class);
     }
 
     /**
@@ -124,11 +106,11 @@ class sCms implements \Enlight_Hook
         }
 
         // load attributes
-        $staticPage['attribute'] = Shopware()->Container()->get(\Shopware\Bundle\AttributeBundle\Service\DataLoader::class)->load('s_cms_static_attributes', $staticId);
+        $staticPage['attribute'] = Shopware()->Container()->get(DataLoader::class)->load('s_cms_static_attributes', $staticId);
 
         if ($translations) {
             foreach ($translations as $property => $translation) {
-                if (strlen($translation) > 0) {
+                if ($translation !== '') {
                     if (strpos($property, '__attribute_') === 0) {
                         $property = str_replace('__attribute_', '', $property);
                         $staticPage['attribute'][$property] = $translation;
@@ -241,7 +223,7 @@ class sCms implements \Enlight_Hook
 
         if ($translations) {
             foreach ($translations as $property => $translation) {
-                if (strlen($translation) > 0) {
+                if ($translation !== '') {
                     $parent[$property] = $translation;
                 }
             }

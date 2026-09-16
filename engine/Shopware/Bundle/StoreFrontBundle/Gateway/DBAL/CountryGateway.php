@@ -1,39 +1,41 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Doctrine\DBAL\Query\QueryBuilder;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\CountryGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\CountryHydrator;
+use Shopware\Bundle\StoreFrontBundle\Struct\Country;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\Struct;
 
-class CountryGateway implements Gateway\CountryGatewayInterface
+class CountryGateway implements CountryGatewayInterface
 {
-    /**
-     * @var Hydrator\CountryHydrator
-     */
-    private $countryHydrator;
+    private CountryHydrator $countryHydrator;
 
     /**
      * The FieldHelper class is used for the
@@ -45,20 +47,15 @@ class CountryGateway implements Gateway\CountryGatewayInterface
      * Additionally the field helper reduce the work, to
      * select in a second step the different required
      * attribute tables for a parent table.
-     *
-     * @var FieldHelper
      */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\CountryHydrator $countryHydrator
+        CountryHydrator $countryHydrator
     ) {
         $this->connection = $connection;
         $this->countryHydrator = $countryHydrator;
@@ -68,7 +65,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getArea($id, Struct\ShopContextInterface $context)
+    public function getArea($id, ShopContextInterface $context)
     {
         $areas = $this->getAreas([$id], $context);
 
@@ -78,7 +75,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getCountry($id, Struct\ShopContextInterface $context)
+    public function getCountry($id, ShopContextInterface $context)
     {
         $countries = $this->getCountries([$id], $context);
 
@@ -88,7 +85,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getState($id, Struct\ShopContextInterface $context)
+    public function getState($id, ShopContextInterface $context)
     {
         $states = $this->getStates([$id], $context);
 
@@ -98,7 +95,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getAreas(array $ids, Struct\ShopContextInterface $context)
+    public function getAreas(array $ids, ShopContextInterface $context)
     {
         if (empty($ids)) {
             return [];
@@ -112,10 +109,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
             ->where('countryArea.id IN (:ids)')
             ->setParameter(':ids', $ids, Connection::PARAM_INT_ARRAY);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         $areas = [];
         foreach ($data as $row) {
@@ -129,7 +123,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getCountries(array $ids, Struct\ShopContextInterface $context)
+    public function getCountries(array $ids, ShopContextInterface $context)
     {
         if (empty($ids)) {
             return [];
@@ -145,10 +139,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
 
         $this->fieldHelper->addCountryTranslation($query, $context);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         $countries = [];
         foreach ($data as $row) {
@@ -159,10 +150,39 @@ class CountryGateway implements Gateway\CountryGatewayInterface
         return $this->sortByIds($ids, $countries);
     }
 
+    public function getFallbackCountry(ShopContextInterface $context): ?Country
+    {
+        $query = $this->connection->createQueryBuilder();
+
+        $query->select($this->fieldHelper->getCountryFields());
+        $query->from('s_core_countries', 'country')
+            ->leftJoin('country', 's_core_countries_attributes', 'countryAttribute', 'countryAttribute.countryID = country.id')
+            ->orderBy('country.position', 'ASC');
+
+        $this->fieldHelper->addCountryTranslation($query, $context);
+
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($data as $row) {
+            $country = $this->countryHydrator->hydrateCountry($row);
+            if (!$country->isActive()) {
+                continue;
+            }
+
+            if (!$country->allowShipping()) {
+                continue;
+            }
+
+            return $country;
+        }
+
+        return null;
+    }
+
     /**
      * {@inheritdoc}
      */
-    public function getStates(array $ids, Struct\ShopContextInterface $context)
+    public function getStates(array $ids, ShopContextInterface $context)
     {
         if (empty($ids)) {
             return [];
@@ -173,10 +193,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
         $query->where('countryState.id IN (:ids)')
             ->setParameter(':ids', $ids, Connection::PARAM_INT_ARRAY);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         $states = [];
         foreach ($data as $row) {
@@ -190,7 +207,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getCountryStates($countryIds, Struct\ShopContextInterface $context)
+    public function getCountryStates($countryIds, ShopContextInterface $context)
     {
         if (empty($countryIds)) {
             return [];
@@ -201,7 +218,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
         $query->where('countryState.countryID IN (:ids)')
             ->setParameter(':ids', $countryIds, Connection::PARAM_INT_ARRAY);
 
-        $data = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         $states = [];
         foreach ($data as $row) {
@@ -214,12 +231,14 @@ class CountryGateway implements Gateway\CountryGatewayInterface
     }
 
     /**
-     * @param int[] $ids
-     * @param array $data
+     * @template TStruct of Struct
      *
-     * @return array
+     * @param int[]               $ids
+     * @param array<int, TStruct> $data
+     *
+     * @return array<int, TStruct>
      */
-    private function sortByIds($ids, $data)
+    private function sortByIds(array $ids, array $data): array
     {
         $sorted = [];
         foreach ($ids as $id) {
@@ -231,10 +250,7 @@ class CountryGateway implements Gateway\CountryGatewayInterface
         return $sorted;
     }
 
-    /**
-     * @return \Doctrine\DBAL\Query\QueryBuilder
-     */
-    private function createStateQuery(Struct\ShopContextInterface $context)
+    private function createStateQuery(ShopContextInterface $context): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
         $query->select($this->fieldHelper->getStateFields());

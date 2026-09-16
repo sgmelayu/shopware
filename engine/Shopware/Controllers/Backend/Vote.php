@@ -1,30 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
 use Shopware\Models\Article\Vote;
 
+/**
+ * @extends Shopware_Controllers_Backend_Application<Vote>
+ */
 class Shopware_Controllers_Backend_Vote extends Shopware_Controllers_Backend_Application
 {
     protected $model = Vote::class;
@@ -33,7 +36,7 @@ class Shopware_Controllers_Backend_Vote extends Shopware_Controllers_Backend_App
 
     public function save($data)
     {
-        if (!empty($data['answer']) && $data['answer_date'] == null) {
+        if (!empty($data['answer']) && empty($data['answer_date'])) {
             $data['answerDate'] = new DateTime();
         }
         if (empty($data['shopId'])) {
@@ -54,11 +57,10 @@ class Shopware_Controllers_Backend_Vote extends Shopware_Controllers_Backend_App
             return $list;
         }
 
-        //assign shops over additional query to improve performance
+        // assign shops over additional query to improve performance
         $shops = $this->getShops($shopIds);
-        $list = $this->assignShops($list, $shops);
 
-        return $list;
+        return $this->assignShops($list, $shops);
     }
 
     protected function getListQuery()
@@ -70,11 +72,6 @@ class Shopware_Controllers_Backend_Vote extends Shopware_Controllers_Backend_App
         return $query;
     }
 
-    /**
-     * @param int $id
-     *
-     * @return \Shopware\Components\Model\QueryBuilder
-     */
     protected function getDetailQuery($id)
     {
         $query = parent::getDetailQuery($id);
@@ -99,10 +96,10 @@ class Shopware_Controllers_Backend_Vote extends Shopware_Controllers_Backend_App
     }
 
     /**
-     * @param array[] $list
-     * @param array[] $shops indexed by id
+     * @param array{success: true, data: array<array<string, mixed>>, total: int} $list
+     * @param array<int, array<string, mixed>>                                    $shops indexed by id
      *
-     * @return array[]
+     * @return array{success: true, data: array<array<string, mixed>>, total: int}
      */
     protected function assignShops($list, $shops)
     {
@@ -119,17 +116,17 @@ class Shopware_Controllers_Backend_Vote extends Shopware_Controllers_Backend_App
     }
 
     /**
-     * @param int[] $shopIds
+     * @param array<int, int|string> $shopIds
      *
-     * @return array indexed by id
+     * @return array<int, array<string, mixed>> indexed by id
      */
-    private function getShops(array $shopIds)
+    private function getShops(array $shopIds): array
     {
         if (empty($shopIds)) {
             return [];
         }
 
-        $query = $this->container->get(\Doctrine\DBAL\Connection::class)->createQueryBuilder();
+        $query = $this->container->get(Connection::class)->createQueryBuilder();
         $query->select('*');
         $query->from('s_core_shops', 'shops');
         $query->where('shops.id IN (:ids)');

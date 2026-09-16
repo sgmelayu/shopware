@@ -31,12 +31,12 @@
 abstract class Enlight_Plugin_Bootstrap extends Enlight_Class
 {
     /**
-     * @var string contains the name of the plugin
+     * @var string|null contains the name of the plugin
      */
     protected $name;
 
     /**
-     * @var Enlight_Plugin_PluginCollection Contains an instance of the Enlight_Plugin_PluginCollection
+     * @var Enlight_Plugin_PluginCollection|null Contains an instance of the Enlight_Plugin_PluginCollection
      */
     protected $collection;
 
@@ -54,6 +54,8 @@ abstract class Enlight_Plugin_Bootstrap extends Enlight_Class
 
     /**
      * Is executed after the collection has been added.
+     *
+     * @return void
      */
     public function afterInit()
     {
@@ -62,7 +64,7 @@ abstract class Enlight_Plugin_Bootstrap extends Enlight_Class
     /**
      * Getter method for the plugin name property.
      *
-     * @return string
+     * @return string|null
      */
     public function getName()
     {
@@ -72,11 +74,9 @@ abstract class Enlight_Plugin_Bootstrap extends Enlight_Class
     /**
      * Setter method for the collection property.
      *
-     * @param Enlight_Plugin_PluginCollection|null $collection
-     *
      * @return Enlight_Plugin_Bootstrap
      */
-    public function setCollection(Enlight_Plugin_PluginCollection $collection = null)
+    public function setCollection(?Enlight_Plugin_PluginCollection $collection = null)
     {
         $this->collection = $collection;
         $this->afterInit();
@@ -87,7 +87,7 @@ abstract class Enlight_Plugin_Bootstrap extends Enlight_Class
     /**
      * Getter method for the collection property.
      *
-     * @return Enlight_Plugin_PluginCollection
+     * @return Enlight_Plugin_PluginCollection|null
      */
     public function Collection()
     {
@@ -101,6 +101,10 @@ abstract class Enlight_Plugin_Bootstrap extends Enlight_Class
      */
     public function Application()
     {
+        if (!$this->collection instanceof Enlight_Plugin_PluginCollection) {
+            throw new RuntimeException('Could not get "Application". Plugin collection is not set.');
+        }
+
         return $this->collection->Application();
     }
 
@@ -109,10 +113,14 @@ abstract class Enlight_Plugin_Bootstrap extends Enlight_Class
      *
      * @param string $name
      *
-     * @return mixed
+     * @return mixed|object|null
      */
     public function get($name)
     {
+        if (!$this->collection instanceof Enlight_Plugin_PluginCollection) {
+            throw new RuntimeException(\sprintf('Could not get "%s". Plugin collection is not set.', $name));
+        }
+
         return $this->collection->Application()->Container()->get($name);
     }
 }

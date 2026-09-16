@@ -1,30 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Theme;
 
+use Enlight_Event_EventManager;
+use Exception;
 use Shopware\Models\Shop\Template;
+use SplFileObject;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
@@ -43,7 +46,7 @@ class Generator
     private $fileSystem;
 
     /**
-     * @var \Enlight_Event_EventManager
+     * @var Enlight_Event_EventManager
      */
     private $eventManager;
 
@@ -176,7 +179,7 @@ EOD;
         ],
     ];
 
-    public function __construct(PathResolver $pathResolver, Filesystem $fileSystem, \Enlight_Event_EventManager $eventManager)
+    public function __construct(PathResolver $pathResolver, Filesystem $fileSystem, Enlight_Event_EventManager $eventManager)
     {
         $this->pathResolver = $pathResolver;
         $this->fileSystem = $fileSystem;
@@ -187,17 +190,15 @@ EOD;
      * Function which generates a new shopware theme
      * into the engine/Shopware/Themes directory.
      *
-     * @param Template $parent
-     *
-     * @throws \Exception
+     * @throws Exception
      */
-    public function generateTheme(array $data, Template $parent = null)
+    public function generateTheme(array $data, ?Template $parent = null)
     {
         if (!is_writable($this->pathResolver->getFrontendThemeDirectory())) {
-            throw new \Exception(sprintf('Theme directory %s isn\'t writable', $this->pathResolver->getFrontendThemeDirectory()));
+            throw new Exception(\sprintf('Theme directory %s isn\'t writable', $this->pathResolver->getFrontendThemeDirectory()));
         }
         if (!isset($data['template']) || empty($data['template'])) {
-            throw new \Exception('Passed data array contains no valid theme name under the array key "template".');
+            throw new Exception('Passed data array contains no valid theme name under the array key "template".');
         }
 
         // Ensure that the first character is upper case.
@@ -270,10 +271,8 @@ EOD;
 
     /**
      * Generates the Theme.php file for the theme.
-     *
-     * @param Template $parent
      */
-    private function generateThemePhp(array $data, Template $parent = null)
+    private function generateThemePhp(array $data, ?Template $parent = null)
     {
         $source = str_replace('$TEMPLATE$', $data['template'], $this->phpSource);
 
@@ -288,7 +287,7 @@ EOD;
         $source = $this->replacePlaceholder('license', $data['license'], $source);
         $source = $this->replacePlaceholder('description', $data['description'], $source);
 
-        $output = new \SplFileObject(
+        $output = new SplFileObject(
             $this->getThemeDirectory($data['template']) . DIRECTORY_SEPARATOR . 'Theme.php',
             'w+'
         );
@@ -335,14 +334,14 @@ EOD;
     private function generateStructure($directory, $baseDir)
     {
         foreach ($directory as $key => $value) {
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 $this->fileSystem->mkdir($baseDir . DIRECTORY_SEPARATOR . $key);
 
                 $this->generateStructure($value, $baseDir . DIRECTORY_SEPARATOR . $key);
             } else {
                 // Switch between create file or create directory
                 if (strpos($value, '.') !== false) {
-                    $output = new \SplFileObject(
+                    $output = new SplFileObject(
                         $baseDir . DIRECTORY_SEPARATOR . $value,
                         'w+'
                     );

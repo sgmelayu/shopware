@@ -1,31 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Model;
 
-use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Persistence\Proxy;
+use Exception;
 
 /**
  * @ORM\MappedSuperclass()
@@ -33,9 +35,12 @@ use Doctrine\ORM\Mapping as ORM;
  */
 abstract class LazyFetchModelEntity extends ModelEntity
 {
+    /**
+     * @var EntityManagerInterface|null
+     */
     private static $em;
 
-    public static function setEntityManager(EntityManager $em)
+    public static function setEntityManager(EntityManagerInterface $em)
     {
         self::$em = $em;
     }
@@ -47,38 +52,40 @@ abstract class LazyFetchModelEntity extends ModelEntity
      */
     public function isProxy($object)
     {
-        return $object instanceof \Doctrine\ORM\Proxy\Proxy;
+        return $object instanceof Proxy;
     }
 
     /**
-     * @param object        $object
-     * @param array         $condition
-     * @param EntityManager $em
+     * @template TModel of object
      *
-     * @throws \Exception
+     * @param TModel|null $object
+     * @param array       $condition
      *
-     * @return object|null
+     * @throws Exception
+     *
+     * @return TModel|null
      */
-    public function fetchLazy($object, $condition, EntityManager $em = null)
+    public function fetchLazy($object, $condition, ?EntityManagerInterface $em = null)
     {
-        if (!$this->isProxy($object) || $object->__isInitialized() || !$this->getId()) {
+        if (!$object instanceof Proxy || $object->__isInitialized() || !$this->getId() || !method_exists($object, 'getId')) {
             return $object;
         }
 
-        if ($this->isProxy($object) && $object->getId()) {
+        if ($object->getId()) {
             $object->__load();
 
             return $object;
         }
 
-        if ($em == null) {
+        if ($em === null) {
             $em = self::$em;
         }
 
         if ($em === null) {
-            throw new \Exception('Lazy fetch class not supported.');
+            throw new Exception('Lazy fetch class not supported.');
         }
 
+        /** @var class-string<TModel> $class */
         $class = get_parent_class($object);
 
         return $em->getRepository($class)->findOneBy($condition);

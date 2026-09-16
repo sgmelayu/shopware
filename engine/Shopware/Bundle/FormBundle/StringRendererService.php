@@ -1,45 +1,41 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\FormBundle;
 
+use Exception;
+
 class StringRendererService implements StringRendererServiceInterface
 {
-    /**
-     * @var string
-     */
-    private $placeholderRegEx = '/(\{\$){1}[:\'a-zA-Z0-9\.\|\$_]+(\}){1}/';
+    private string $placeholderRegEx = '/(\{\$){1}[:\'a-zA-Z0-9\.\|\$_]+(\}){1}/';
+
+    private string $functionRegEx = '/((\{\$){1})|(\})|(\|{1}(.+)\}{1})/';
 
     /**
-     * @var string
+     * @var list<string>
      */
-    private $functionRegEx = '/((\{\$){1})|(\})|(\|{1}(.+)\}{1})/';
-
-    /**
-     * @var array
-     */
-    private $whiteListTypeArray = [
+    private array $whiteListTypeArray = [
         'string',
         'integer',
         'double',
@@ -58,10 +54,10 @@ class StringRendererService implements StringRendererServiceInterface
 
         $placeholders = array_shift($placeholders);
 
-        foreach ($placeholders as $placeholder) {
+        foreach ($placeholders ?? [] as $placeholder) {
             $placeholderString = preg_replace($this->functionRegEx, '', $placeholder);
 
-            if (strlen($placeholderString) < 1) {
+            if (!\is_string($placeholderString) || $placeholderString === '') {
                 continue;
             }
 
@@ -76,7 +72,7 @@ class StringRendererService implements StringRendererServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return string
      */
@@ -91,7 +87,7 @@ class StringRendererService implements StringRendererServiceInterface
         }
 
         while ($currentLayer = array_shift($placeholder)) {
-            if (!array_key_exists($currentLayer, $variable)) {
+            if (!\array_key_exists($currentLayer, $variable)) {
                 return '';
             }
 
@@ -102,8 +98,8 @@ class StringRendererService implements StringRendererServiceInterface
             return '';
         }
 
-        if (!in_array(gettype($variable), $this->whiteListTypeArray)) {
-            throw new \Exception(sprintf('Could not render type of %s', gettype($variable)));
+        if (!\in_array(\gettype($variable), $this->whiteListTypeArray)) {
+            throw new Exception(\sprintf('Could not render type of %s', \gettype($variable)));
         }
 
         return (string) $variable;

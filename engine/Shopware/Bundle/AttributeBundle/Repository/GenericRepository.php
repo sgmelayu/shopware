@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AttributeBundle\Repository;
 
 use Shopware\Bundle\AttributeBundle\Repository\Reader\ReaderInterface;
 use Shopware\Bundle\AttributeBundle\Repository\Searcher\SearcherInterface;
+use Shopware\Components\Model\ModelEntity;
 use Shopware\Components\Model\ModelManager;
 
 class GenericRepository implements RepositoryInterface
@@ -46,12 +47,12 @@ class GenericRepository implements RepositoryInterface
     protected $entityManager;
 
     /**
-     * @var string
+     * @var class-string<ModelEntity>
      */
     protected $entity;
 
     /**
-     * @param string $entity
+     * @param class-string<ModelEntity> $entity
      */
     public function __construct(
         $entity,
@@ -72,7 +73,7 @@ class GenericRepository implements RepositoryInterface
      */
     public function supports($entity)
     {
-        return $entity == $this->entity;
+        return $entity === $this->entity;
     }
 
     /**
@@ -83,7 +84,7 @@ class GenericRepository implements RepositoryInterface
         if ($criteria->ids) {
             $data = $this->getList($criteria->ids);
 
-            return new SearchResult(count($data), $data);
+            return new SearchResult(\count($data), $data);
         }
 
         $result = $this->searcher->search($criteria);

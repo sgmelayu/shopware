@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -166,10 +165,10 @@ Ext.define('Shopware.apps.Index.controller.ThemeCacheWarmUp', {
                 }
 
                 if (success && json.success) {
-                    if (offset+2 == batchSize) {
+                    if (offset + 2 == batchSize) {
                         if (me.window.progressBar) {
                             me.window.progressBar.updateProgress(
-                                (offset+1) / batchSize,
+                                (offset + 1) / batchSize,
                                 Ext.String.format('{s name="progress_bar/clearing_http_cache"}Clearing HTTP cache{/s}'),
                                 true
                             );
@@ -179,7 +178,7 @@ Ext.define('Shopware.apps.Index.controller.ThemeCacheWarmUp', {
                             me.clearHttpCache();
                         });
                     } else {
-                        me.runRequest(shops, offset+1);
+                        me.runRequest(shops, offset + 1);
                     }
                 } else {
                     message = Ext.String.format('{s name="response/error/detail"}A server error occurred while processing your request for shop [0]{/s}', shop.get('name'));
@@ -219,7 +218,7 @@ Ext.define('Shopware.apps.Index.controller.ThemeCacheWarmUp', {
             url: '{url controller=Cache action=clearCache}',
             method: 'POST',
             params: {
-                'cache[http]' : 'on'
+                'cache[http]': 'on'
             },
             timeout: 4000000,
             success: function(response) {

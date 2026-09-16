@@ -1,58 +1,61 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Theme;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Psr\Log\Test\TestLogger;
+use Shopware\Components\Form\Container\FieldSet;
+use Shopware\Components\Form\Container\Tab;
+use Shopware\Components\Form\Container\TabContainer;
+use Shopware\Components\Form\Field\Color;
+use Shopware\Components\Form\Field\Percent;
+use Shopware\Components\Form\Field\Text;
+use Shopware\Components\Theme\Configurator;
 use Shopware\Models\Shop\Template;
+use Shopware\Models\Shop\TemplateConfig\Element;
+use Shopware\Models\Shop\TemplateConfig\Layout;
+use Shopware\Models\Shop\TemplateConfig\Set;
 
 class ConfiguratorTest extends Base
 {
-    /**
-     * @var \Shopware\Components\Theme\Configurator
-     */
-    protected $configurator;
-
-    protected function setUp(): void
+    public function testContainerNames(): void
     {
-        parent::setUp();
-    }
-
-    public function testContainerNames()
-    {
-        $container = new \Shopware\Components\Form\Container\TabContainer('test1');
-        $tab = new \Shopware\Components\Form\Container\Tab('test2', 'test2');
+        $container = new TabContainer('test1');
+        $tab = new Tab('test2', 'test2');
         $container->addTab($tab);
 
-        $tab->addElement(new \Shopware\Components\Form\Field\Color('color'));
-        $tab->addElement(new \Shopware\Components\Form\Field\Text('text'));
+        $tab->addElement(new Color('color'));
+        $tab->addElement(new Text('text'));
 
-        $fieldSet = new \Shopware\Components\Form\Container\FieldSet('fieldset', 'title');
-        $fieldSet->addElement(new \Shopware\Components\Form\Field\Percent('percent'));
+        $fieldSet = new FieldSet('fieldset', 'title');
+        $fieldSet->addElement(new Percent('percent'));
 
         $tab->addElement($fieldSet);
 
-        $configurator = Shopware()->Container()->get(\Shopware\Components\Theme\Configurator::class);
+        $configurator = Shopware()->Container()->get(Configurator::class);
         $names = $this->invokeMethod(
             $configurator,
             'getContainerNames',
@@ -74,20 +77,20 @@ class ConfiguratorTest extends Base
         static::assertContains('fieldset', $names['containers']);
     }
 
-    public function testRemoveUnused()
+    public function testRemoveUnused(): void
     {
         $entityManager = $this->getEntityManager();
 
-        $containers = new \Doctrine\Common\Collections\ArrayCollection();
+        $containers = new ArrayCollection();
         for ($i = 1; $i < 5; ++$i) {
-            $layout = new \Shopware\Models\Shop\TemplateConfig\Layout();
+            $layout = new Layout();
             $layout->setName('container' . $i);
             $containers->add($layout);
         }
 
-        $elements = new \Doctrine\Common\Collections\ArrayCollection();
+        $elements = new ArrayCollection();
         for ($i = 1; $i < 5; ++$i) {
-            $layout = new \Shopware\Models\Shop\TemplateConfig\Element();
+            $layout = new Element();
             $layout->setName('field' . $i);
             $elements->add($layout);
         }
@@ -98,8 +101,8 @@ class ConfiguratorTest extends Base
         $entityManager->expects(static::exactly(3))
             ->method('remove')
             ->with(static::logicalOr(
-                static::isInstanceOf('Shopware\Models\Shop\TemplateConfig\Layout'),
-                static::isInstanceOf('Shopware\Models\Shop\TemplateConfig\Element')
+                static::isInstanceOf(Layout::class),
+                static::isInstanceOf(Element::class)
             ));
 
         $eventManager = $this->getEventManager();
@@ -110,22 +113,23 @@ class ConfiguratorTest extends Base
                 'fields' => ['field1', 'field3', 'field4'],
             ]);
 
-        $configurator = $this->getMockBuilder('Shopware\Components\Theme\Configurator')
+        $configurator = $this->getMockBuilder(Configurator::class)
             ->setConstructorArgs([
                 $entityManager,
                 $this->getUtilClass(),
                 $this->getFormPersister(),
                 $eventManager,
+                new TestLogger(),
             ])
             ->getMock();
 
-        $container = new \Shopware\Components\Form\Container\TabContainer('container1');
-        $tab = new \Shopware\Components\Form\Container\Tab('container4', 'title');
+        $container = new TabContainer('container1');
+        $tab = new Tab('container4', 'title');
 
         $container->addElement($tab);
-        $tab->addElement(new \Shopware\Components\Form\Field\Text('field1'));
-        $tab->addElement(new \Shopware\Components\Form\Field\Text('field3'));
-        $tab->addElement(new \Shopware\Components\Form\Field\Text('field4'));
+        $tab->addElement(new Text('field1'));
+        $tab->addElement(new Text('field3'));
+        $tab->addElement(new Text('field4'));
 
         $this->invokeMethod(
             $configurator,
@@ -138,35 +142,35 @@ class ConfiguratorTest extends Base
         );
     }
 
-    public function testValidateConfigSuccess()
+    public function testValidateConfigSuccess(): void
     {
-        $container = new \Shopware\Components\Form\Container\TabContainer('test');
-        $tab = new \Shopware\Components\Form\Container\Tab('tab', 'tab');
+        $container = new TabContainer('test');
+        $tab = new Tab('tab', 'tab');
         $container->addTab($tab);
-        $tab->addElement(new \Shopware\Components\Form\Field\Text('Text'));
+        $tab->addElement(new Text('Text'));
 
-        $configurator = Shopware()->Container()->get(\Shopware\Components\Theme\Configurator::class);
+        $configurator = Shopware()->Container()->get(Configurator::class);
         $this->invokeMethod(
             $configurator,
             'validateConfig',
             [$container]
         );
 
-        static::assertTrue(true, 'validateConfig doesn\'t throw an exception');
+        $this->expectNotToPerformAssertions();
     }
 
-    public function testValidateConfigException()
+    public function testValidateConfigException(): void
     {
         $this->expectException('Exception');
         $this->expectExceptionMessage('Field Shopware\Components\Form\Field\Text requires a configured name');
-        $container = new \Shopware\Components\Form\Container\TabContainer('test');
-        $container->setName(null);
+        $container = new TabContainer('test');
+        $container->setName('');
 
-        $tab = new \Shopware\Components\Form\Container\Tab('tab', 'tab');
+        $tab = new Tab('tab', 'tab');
         $container->addTab($tab);
-        $tab->addElement(new \Shopware\Components\Form\Field\Text(null));
+        $tab->addElement(new Text(''));
 
-        $configurator = Shopware()->Container()->get(\Shopware\Components\Theme\Configurator::class);
+        $configurator = Shopware()->Container()->get(Configurator::class);
         $this->invokeMethod(
             $configurator,
             'validateConfig',
@@ -174,7 +178,7 @@ class ConfiguratorTest extends Base
         );
     }
 
-    public function testSynchronizeSetsAdd()
+    public function testSynchronizeSetsAdd(): void
     {
         $template = new Template();
 
@@ -184,8 +188,8 @@ class ConfiguratorTest extends Base
         $entityManager->expects(static::once())
             ->method('flush');
 
-        $configurator = $this->getMockBuilder('Shopware\Components\Theme\Configurator')
-            ->setConstructorArgs([$entityManager, $this->getUtilClass(), $this->getFormPersister(), $this->getEventManager()])
+        $configurator = $this->getMockBuilder(Configurator::class)
+            ->setConstructorArgs([$entityManager, $this->getUtilClass(), $this->getFormPersister(), $this->getEventManager(), new TestLogger()])
             ->getMock();
 
         $this->invokeMethod(
@@ -206,20 +210,19 @@ class ConfiguratorTest extends Base
         static::assertEquals('set2', $set->getName());
     }
 
-    public function testSynchronizeSetsRemove()
+    public function testSynchronizeSetsRemove(): void
     {
-        $existing = new \Doctrine\Common\Collections\ArrayCollection();
+        $existing = new ArrayCollection();
 
         for ($i = 1; $i < 5; ++$i) {
-            $set = new \Shopware\Models\Shop\TemplateConfig\Set();
+            $set = new Set();
             $set->setName('set' . $i);
             $existing->add($set);
         }
 
         $template = $this->createMock(Template::class);
 
-        $template->expects(static::any())
-            ->method('getConfigSets')
+        $template->method('getConfigSets')
             ->willReturn($existing);
 
         $entityManager = $this->getEntityManager();
@@ -228,10 +231,10 @@ class ConfiguratorTest extends Base
 
         $entityManager->expects(static::exactly(2))
             ->method('remove')
-            ->with(static::isInstanceOf('Shopware\Models\Shop\TemplateConfig\Set'));
+            ->with(static::isInstanceOf(Set::class));
 
-        $configurator = $this->getMockBuilder('Shopware\Components\Theme\Configurator')
-            ->setConstructorArgs([$entityManager, $this->getUtilClass(), $this->getFormPersister(), $this->getEventManager()])
+        $configurator = $this->getMockBuilder(Configurator::class)
+            ->setConstructorArgs([$entityManager, $this->getUtilClass(), $this->getFormPersister(), $this->getEventManager(), new TestLogger()])
             ->getMock();
 
         $theme = $this->getResponsiveTheme();

@@ -1,31 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\User\Privilege;
-use Shopware\Models\User\Resource;
+use Shopware\Models\User\Resource as UserResource;
 use Shopware\Models\User\Role;
 use Shopware\Models\User\Rule;
 
@@ -48,14 +48,14 @@ class Shopware_Components_Acl extends Zend_Acl
     /**
      * Get all resources from database and add to acl tree
      *
-     * @return \Shopware_Components_Acl
+     * @return Shopware_Components_Acl
      */
     public function initAclResources()
     {
-        $repository = $this->em->getRepository(Resource::class);
+        $repository = $this->em->getRepository(UserResource::class);
         $resources = $repository->findAll();
 
-        /** @var Shopware\Models\User\Resource $resource */
+        /** @var UserResource $resource */
         foreach ($resources as $resource) {
             $this->addResource($resource);
         }
@@ -66,16 +66,16 @@ class Shopware_Components_Acl extends Zend_Acl
     /**
      * Get all roles from s_core_auth_roles - check for parent role and add to tree
      *
-     * @return \Shopware_Components_Acl
+     * @return Shopware_Components_Acl
      */
     public function initAclRoles()
     {
         $repository = $this->em->getRepository(Role::class);
         $roles = $repository->findAll();
 
-        /** @var \Shopware\Models\User\Role $role */
+        /** @var Role $role */
         foreach ($roles as $role) {
-            /** @var \Shopware\Models\User\Role|null $parent */
+            /** @var Role|null $parent */
             $parent = $role->getParent();
 
             // Parent exist and not already added?
@@ -98,13 +98,13 @@ class Shopware_Components_Acl extends Zend_Acl
      * If resourceID != null AND privilegeID = null -> Module admin
      * If resourceID & privilegeID is set - Grant permission to a certain privilege of a particular module
      *
-     * @return \Shopware_Components_Acl
+     * @return Shopware_Components_Acl
      */
     public function initAclRoleConditions()
     {
         $rules = $this->em->getRepository(Rule::class)->findAll();
 
-        /** @var \Shopware\Models\User\Rule $rule */
+        /** @var Rule $rule */
         foreach ($rules as $rule) {
             $role = $rule->getRole();
 
@@ -132,7 +132,7 @@ class Shopware_Components_Acl extends Zend_Acl
      */
     public function hasResourceInDatabase($resourceName)
     {
-        $repository = $this->em->getRepository(Resource::class);
+        $repository = $this->em->getRepository(UserResource::class);
         $resource = $repository->findOneBy(['name' => $resourceName]);
 
         return !empty($resource);
@@ -148,14 +148,14 @@ class Shopware_Components_Acl extends Zend_Acl
      *
      * @throws Enlight_Exception
      */
-    public function createResource($resourceName, array $privileges = null, $menuItemName = null, $pluginID = null)
+    public function createResource($resourceName, ?array $privileges = null, $menuItemName = null, $pluginID = null)
     {
         // Check if resource already exists
         if ($this->hasResourceInDatabase($resourceName)) {
-            throw new Enlight_Exception(sprintf('Resource "%s" already exists', $resourceName));
+            throw new Enlight_Exception(\sprintf('Resource "%s" already exists', $resourceName));
         }
 
-        $resource = new Resource();
+        $resource = new UserResource();
         $resource->setName($resourceName);
         $resource->setPluginId($pluginID);
 
@@ -204,9 +204,9 @@ class Shopware_Components_Acl extends Zend_Acl
      */
     public function deleteResource($resourceName)
     {
-        $repository = $this->em->getRepository(Resource::class);
+        $repository = $this->em->getRepository(UserResource::class);
 
-        /** @var \Shopware\Models\User\Resource|null $resource */
+        /** @var UserResource|null $resource */
         $resource = $repository->findOneBy(['name' => $resourceName]);
         if ($resource === null) {
             return false;
@@ -231,7 +231,7 @@ class Shopware_Components_Acl extends Zend_Acl
     /**
      * Create Shopware acl tree
      */
-    private function initShopwareAclTree()
+    private function initShopwareAclTree(): void
     {
         $this->initAclResources()
             ->initAclRoles()

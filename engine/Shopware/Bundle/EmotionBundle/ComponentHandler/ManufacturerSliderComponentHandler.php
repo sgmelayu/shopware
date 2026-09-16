@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EmotionBundle\ComponentHandler;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 use Shopware\Bundle\EmotionBundle\Struct\Collection\PrepareDataCollection;
 use Shopware\Bundle\EmotionBundle\Struct\Collection\ResolvedDataCollection;
 use Shopware\Bundle\EmotionBundle\Struct\Element;
@@ -33,21 +34,15 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class ManufacturerSliderComponentHandler implements ComponentHandlerInterface
 {
-    const TYPE_STATIC = 'selected_manufacturers';
-    const TYPE_BY_CATEGORY = 'manufacturers_by_cat';
+    public const TYPE_STATIC = 'selected_manufacturers';
+    public const TYPE_BY_CATEGORY = 'manufacturers_by_cat';
 
-    const LEGACY_CONVERT_FUNCTION = 'getManufacturerSlider';
-    const COMPONENT_NAME = 'emotion-components-manufacturer-slider';
+    public const LEGACY_CONVERT_FUNCTION = 'getManufacturerSlider';
+    public const COMPONENT_NAME = 'emotion-components-manufacturer-slider';
 
-    /**
-     * @var ManufacturerServiceInterface
-     */
-    private $manufacturerService;
+    private ManufacturerServiceInterface $manufacturerService;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(ManufacturerServiceInterface $manufacturerService, Connection $connection)
     {
@@ -102,11 +97,9 @@ class ManufacturerSliderComponentHandler implements ComponentHandlerInterface
     }
 
     /**
-     * @param int $categoryId
-     *
      * @return int[]
      */
-    private function getManufacturerIdsByCategoryId($categoryId, ShopContextInterface $context)
+    private function getManufacturerIdsByCategoryId(int $categoryId, ShopContextInterface $context): array
     {
         $builder = $this->connection->createQueryBuilder();
         $builder->select('manufacturer.id')
@@ -124,6 +117,6 @@ class ManufacturerSliderComponentHandler implements ComponentHandlerInterface
                 ->setParameter('customerGroupId', $context->getCurrentCustomerGroup()->getId())
         ;
 
-        return $builder->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        return $builder->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 }

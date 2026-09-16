@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Api;
@@ -34,9 +35,9 @@ class CategoryTest extends AbstractApiTestCase
         $this->client->request('GET', '/api/categories/');
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(401, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(401, $response->getStatusCode());
 
         $result = $response->getContent();
 
@@ -55,9 +56,9 @@ class CategoryTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('GET', '/api/categories/' . $id);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(404, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(404, $response->getStatusCode());
 
         $result = $response->getContent();
 
@@ -69,7 +70,7 @@ class CategoryTest extends AbstractApiTestCase
         static::assertArrayHasKey('message', $result);
     }
 
-    public function testPostCategoriesShouldBeSuccessful(): string
+    public function testPostCategoriesShouldBeSuccessful(): int
     {
         $requestData = [
             'name' => 'Test Category',
@@ -79,9 +80,9 @@ class CategoryTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('POST', '/api/categories/', [], $requestData);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(201, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(201, $response->getStatusCode());
         static::assertArrayHasKey('location', $response->headers->all());
 
         $result = $response->getContent();
@@ -90,8 +91,10 @@ class CategoryTest extends AbstractApiTestCase
         static::assertArrayHasKey('success', $result);
         static::assertTrue($result['success']);
 
-        $location = $response->headers->get('Location');
-        $identifier = (int) array_pop(explode('/', $location));
+        $location = $response->headers->get('location');
+        static::assertIsString($location);
+        $location = explode('/', $location);
+        $identifier = (int) array_pop($location);
 
         static::assertGreaterThan(0, $identifier);
 
@@ -112,9 +115,9 @@ class CategoryTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('POST', '/api/categories/', [], $requestData);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(400, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(400, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -127,14 +130,14 @@ class CategoryTest extends AbstractApiTestCase
     /**
      * @depends testPostCategoriesShouldBeSuccessful
      */
-    public function testGetCategoriesWithIdShouldBeSuccessful($id): void
+    public function testGetCategoriesWithIdShouldBeSuccessful(int $id): void
     {
         $this->authenticatedApiRequest('GET', '/api/categories/' . $id, []);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -153,7 +156,7 @@ class CategoryTest extends AbstractApiTestCase
     /**
      * @depends testPostCategoriesShouldBeSuccessful
      */
-    public function testPutCategoriesWithInvalidDataShouldReturnError(string $id): void
+    public function testPutCategoriesWithInvalidDataShouldReturnError(int $id): void
     {
         $requestData = [
             'active' => true,
@@ -163,9 +166,9 @@ class CategoryTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('PUT', '/api/categories/' . $id, [], $requestData);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(400, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(400, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -178,10 +181,8 @@ class CategoryTest extends AbstractApiTestCase
 
     /**
      * @depends testPostCategoriesShouldBeSuccessful
-     *
-     * @return string
      */
-    public function testPutCategoriesShouldBeSuccessful(string $id)
+    public function testPutCategoriesShouldBeSuccessful(int $id): int
     {
         $requestData = [
             'name' => 'Changed test category',
@@ -190,8 +191,8 @@ class CategoryTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('PUT', '/api/categories/' . $id, [], $requestData);
         $response = $this->client->getResponse();
 
-        static::assertEquals(200, $response->getStatusCode());
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
+        static::assertSame(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
         static::assertNull(
             $response->headers->get('Set-Cookie'),
             'There should be no set-cookie header set.'
@@ -211,9 +212,9 @@ class CategoryTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('GET', '/api/categories/' . $id, []);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -227,7 +228,7 @@ class CategoryTest extends AbstractApiTestCase
         static::assertIsArray($data);
         static::assertArrayHasKey('id', $data);
         static::assertArrayHasKey('name', $data);
-        static::assertEquals('Changed test category', $data['name']);
+        static::assertSame('Changed test category', $data['name']);
 
         return $id;
     }
@@ -235,14 +236,14 @@ class CategoryTest extends AbstractApiTestCase
     /**
      * @depends testPostCategoriesShouldBeSuccessful
      */
-    public function testDeleteCategoriesShouldBeSuccessful($id)
+    public function testDeleteCategoriesShouldBeSuccessful(int $id): int
     {
         $this->authenticatedApiRequest('DELETE', '/api/categories/' . $id, []);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -253,16 +254,16 @@ class CategoryTest extends AbstractApiTestCase
         return $id;
     }
 
-    public function testDeleteCategoryWithInvalidIdShouldReturnMessage()
+    public function testDeleteCategoryWithInvalidIdShouldReturnMessage(): void
     {
         $id = 99999999;
 
         $this->authenticatedApiRequest('DELETE', '/api/categories/' . $id, []);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(404, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(404, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -285,9 +286,9 @@ class CategoryTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('PUT', '/api/categories/' . $id, [], $requestData);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(404, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(404, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -298,14 +299,14 @@ class CategoryTest extends AbstractApiTestCase
         static::assertArrayHasKey('message', $result);
     }
 
-    public function testGetCategoriesShouldBeSuccessful()
+    public function testGetCategoriesShouldBeSuccessful(): void
     {
         $this->authenticatedApiRequest('GET', '/api/categories/', []);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->getHeader('Content-Type'));
-        static::assertEquals(null, $response->getHeader('Set-Cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->getHeader('Content-Type'));
+        static::assertNull($response->getHeader('Set-Cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $response = $response->getContent();
         $response = json_decode($response, true);
@@ -338,7 +339,7 @@ class CategoryTest extends AbstractApiTestCase
 
         static::assertArrayHasKey('success', $result);
         static::assertArrayHasKey('message', $result);
-        static::assertEquals('Field product_id is missing in manualSorting array', $result['message']);
+        static::assertSame('Field product_id is missing in manualSorting array', $result['message']);
     }
 
     public function testUpdateCategoriesWithSortingWithValidArray(): void
@@ -360,7 +361,7 @@ class CategoryTest extends AbstractApiTestCase
 
         static::assertArrayHasKey('success', $result);
         static::assertTrue($result['success']);
-        static::assertEquals(3, $result['data']['id']);
+        static::assertSame(3, $result['data']['id']);
     }
 
     /**

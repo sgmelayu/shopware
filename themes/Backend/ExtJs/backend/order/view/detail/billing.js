@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -40,12 +39,12 @@ Ext.define('Shopware.apps.Order.view.detail.Billing', {
      * Define that the billing field set is an extension of the Ext.form.FieldSet
      * @string
      */
-    extend:'Ext.form.FieldSet',
+    extend: 'Ext.form.FieldSet',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.order-billing-field-set',
+    alias: 'widget.order-billing-field-set',
     /**
      * Set css class for this component
      * @string
@@ -60,26 +59,26 @@ Ext.define('Shopware.apps.Order.view.detail.Billing', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
-        title:'{s name="billing/title"}Billing data{/s}',
-        salutation:{
-            label:'{s name="address/salutation"}Salutation{/s}'
+    snippets: {
+        title: '{s name="billing/title"}Billing data{/s}',
+        salutation: {
+            label: '{s name="address/salutation"}Salutation{/s}'
         },
-        titleField:'{s name="address/title_field"}Title{/s}',
-        firstName:'{s name="address/first_name"}First name{/s}',
-        lastName:'{s name="address/last_name"}Last name{/s}',
-        street:'{s name="address/street"}Street{/s}',
-        zipCode:'{s name="address/zip_code"}Zip code{/s}',
-        city:'{s name="address/city"}City{/s}',
-        additionalAddressLine1:'{s name="address/additionalAddressLine1"}Additional address line 1{/s}',
-        additionalAddressLine2:'{s name="address/additionalAddressLine2"}Additional address line 2{/s}',
-        state:'{s name="address/state"}State{/s}',
-        birthday:'{s name="address/birthday_label"}Day of birth{/s}',
-        country:'{s name="address/country"}Country{/s}',
-        phone:'{s name="address/phone"}Phone{/s}',
-        company:'{s name="address/company"}Company{/s}',
-        department:'{s name="address/department"}Department{/s}',
-        vatId:'{s name="address/vat_id"}VAT ID{/s}'
+        titleField: '{s name="address/title_field"}Title{/s}',
+        firstName: '{s name="address/first_name"}First name{/s}',
+        lastName: '{s name="address/last_name"}Last name{/s}',
+        street: '{s name="address/street"}Street{/s}',
+        zipCode: '{s name="address/zip_code"}Zip code{/s}',
+        city: '{s name="address/city"}City{/s}',
+        additionalAddressLine1: '{s name="address/additionalAddressLine1"}Additional address line 1{/s}',
+        additionalAddressLine2: '{s name="address/additionalAddressLine2"}Additional address line 2{/s}',
+        state: '{s name="address/state"}State{/s}',
+        birthday: '{s name="address/birthday_label"}Day of birth{/s}',
+        country: '{s name="address/country"}Country{/s}',
+        phone: '{s name="address/phone"}Phone{/s}',
+        company: '{s name="address/company"}Company{/s}',
+        department: '{s name="address/department"}Department{/s}',
+        vatId: '{s name="address/vat_id"}VAT ID{/s}'
     },
 
     /**
@@ -92,18 +91,18 @@ Ext.define('Shopware.apps.Order.view.detail.Billing', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.title = me.snippets.title;
 
         me.items = me.createElements();
         me.addEvents(
-                /**
-                 * Fired when the user changes his country. Used to fill the state box
-                 * @param field
-                 * @param newValue
-                 */
-                'countryChanged'
+            /**
+             * Fired when the user changes his country. Used to fill the state box
+             * @param field
+             * @param newValue
+             */
+            'countryChanged'
 
         );
         me.callParent(arguments);
@@ -115,41 +114,41 @@ Ext.define('Shopware.apps.Order.view.detail.Billing', {
      *
      * @return [Array] Contains the left and right container
      */
-    createElements:function () {
+    createElements: function () {
         var leftContainer, rightContainer, me = this;
 
         leftContainer = Ext.create('Ext.container.Container', {
-            columnWidth:.5,
-            border:false,
-            layout:'anchor',
-            defaults:{
-                anchor:'95%',
-                labelWidth:155,
-                minWidth:250,
+            columnWidth: .5,
+            border: false,
+            layout: 'anchor',
+            defaults: {
+                anchor: '95%',
+                labelWidth: 155,
+                minWidth: 250,
                 labelStyle: 'font-weight: 700;',
                 style: {
                     margin: '0 0 10px'
                 },
-                xtype:'textfield'
+                xtype: 'textfield'
             },
-            items:me.createLeftElements()
+            items: me.createLeftElements()
         });
 
         rightContainer = Ext.create('Ext.container.Container', {
-            columnWidth:.5,
-            border:false,
-            layout:'anchor',
-            defaults:{
-                anchor:'95%',
-                labelWidth:155,
-                minWidth:250,
+            columnWidth: .5,
+            border: false,
+            layout: 'anchor',
+            defaults: {
+                anchor: '95%',
+                labelWidth: 155,
+                minWidth: 250,
                 labelStyle: 'font-weight: 700;',
                 style: {
                     margin: '0 0 10px'
                 },
-                xtype:'textfield'
+                xtype: 'textfield'
             },
-            items:me.createRightElements()
+            items: me.createRightElements()
         });
 
         var id = null;
@@ -172,46 +171,46 @@ Ext.define('Shopware.apps.Order.view.detail.Billing', {
      *
      * @return Ext.container.Container Contains the three components
      */
-    createLeftElements:function () {
+    createLeftElements: function () {
         var me = this;
 
         return [{
-            xtype:'combobox',
+            xtype: 'combobox',
             queryMode: 'local',
-            triggerAction:'all',
-            name:'billing[salutation]',
-            fieldLabel:me.snippets.salutation.label,
-            mode:'local',
-            editable:false,
+            triggerAction: 'all',
+            name: 'billing[salutation]',
+            fieldLabel: me.snippets.salutation.label,
+            mode: 'local',
+            editable: false,
             allowBlank: false,
             valueField: 'key',
             displayField: 'label',
             store: Ext.create('Shopware.apps.Base.store.Salutation').load()
         }, {
-            name:'billing[title]',
-            fieldLabel:me.snippets.titleField,
+            name: 'billing[title]',
+            fieldLabel: me.snippets.titleField,
             allowBlank: true
         }, {
-            name:'billing[firstName]',
-            fieldLabel:me.snippets.firstName,
-            allowBlank:false
+            name: 'billing[firstName]',
+            fieldLabel: me.snippets.firstName,
+            allowBlank: false
         }, {
-            name:'billing[lastName]',
-            fieldLabel:me.snippets.lastName,
-            required:true,
-            allowBlank:false
+            name: 'billing[lastName]',
+            fieldLabel: me.snippets.lastName,
+            required: true,
+            allowBlank: false
         }, {
-            name:'billing[company]',
-            fieldLabel:me.snippets.company
+            name: 'billing[company]',
+            fieldLabel: me.snippets.company
         }, {
-            name:'billing[department]',
-            fieldLabel:me.snippets.department
+            name: 'billing[department]',
+            fieldLabel: me.snippets.department
         }, {
-            name:'billing[vatId]',
-            fieldLabel:me.snippets.vatId
+            name: 'billing[vatId]',
+            fieldLabel: me.snippets.vatId
         }, {
-            name:'billing[phone]',
-            fieldLabel:me.snippets.phone
+            name: 'billing[phone]',
+            fieldLabel: me.snippets.phone
         }];
     },
 
@@ -220,39 +219,39 @@ Ext.define('Shopware.apps.Order.view.detail.Billing', {
      *
      * @return Ext.container.Container Contains the three components
      */
-    createRightElements:function () {
+    createRightElements: function () {
         var me = this;
 
         me.countryStateCombo = Ext.create('Ext.form.field.ComboBox', {
-            name:'billing[stateId]',
+            name: 'billing[stateId]',
             action: 'billingStateId',
-            fieldLabel:me.snippets.state,
+            fieldLabel: me.snippets.state,
             valueField: 'id',
             displayField: 'name',
             forceSelection: true,
-            labelWidth:155,
+            labelWidth: 155,
             store: Ext.create('Shopware.store.CountryState'),
             minWidth: 250,
             editable: false,
             hidden: true,
-            triggerAction:'all',
+            triggerAction: 'all',
             queryMode: 'local'
         });
 
         me.countryCombo = Ext.create('Ext.form.field.ComboBox', {
-            triggerAction:'all',
-            name:'billing[countryId]',
-            fieldLabel:me.snippets.country,
-            valueField:'id',
+            triggerAction: 'all',
+            name: 'billing[countryId]',
+            fieldLabel: me.snippets.country,
+            valueField: 'id',
             queryMode: 'local',
-            displayField:'name',
+            displayField: 'name',
             forceSelection: true,
-            store:me.countriesStore,
-            labelWidth:155,
-            minWidth:250,
-            required:true,
-            editable:false,
-            allowBlank:false,
+            store: me.countriesStore,
+            labelWidth: 155,
+            minWidth: 250,
+            required: true,
+            editable: false,
+            allowBlank: false,
             listeners: {
                 change: function(field, newValue, oldValue, record) {
                     me.fireEvent('countryChanged', field, newValue, me.countryStateCombo, me.record.getBilling().first());
@@ -261,26 +260,26 @@ Ext.define('Shopware.apps.Order.view.detail.Billing', {
         });
 
         return [{
-            name:'billing[street]',
-            fieldLabel:me.snippets.street,
-            required:true,
-            allowBlank:false
+            name: 'billing[street]',
+            fieldLabel: me.snippets.street,
+            required: true,
+            allowBlank: false
         }, {
-            name:'billing[additionalAddressLine1]',
-            fieldLabel:me.snippets.additionalAddressLine1
+            name: 'billing[additionalAddressLine1]',
+            fieldLabel: me.snippets.additionalAddressLine1
         }, {
-            name:'billing[additionalAddressLine2]',
-            fieldLabel:me.snippets.additionalAddressLine2
+            name: 'billing[additionalAddressLine2]',
+            fieldLabel: me.snippets.additionalAddressLine2
         }, {
-            name:'billing[zipCode]',
-            fieldLabel:me.snippets.zipCode,
-            required:true,
-            allowBlank:false
+            name: 'billing[zipCode]',
+            fieldLabel: me.snippets.zipCode,
+            required: true,
+            allowBlank: false
         }, {
-            name:'billing[city]',
-            fieldLabel:me.snippets.city,
-            required:true,
-            allowBlank:false
+            name: 'billing[city]',
+            fieldLabel: me.snippets.city,
+            required: true,
+            allowBlank: false
         }, me.countryStateCombo, me.countryCombo];
     }
 });

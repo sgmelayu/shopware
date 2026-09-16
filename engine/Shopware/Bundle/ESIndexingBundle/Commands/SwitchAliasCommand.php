@@ -1,34 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ESIndexingBundle\Commands;
 
 use Elasticsearch\Client;
+use RuntimeException;
+use Shopware\Bundle\ESIndexingBundle\IndexFactory;
 use Shopware\Bundle\ESIndexingBundle\Struct\ShopIndex;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ShopGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
 use Shopware\Commands\ShopwareCommand;
-use Shopware\Models\Shop\Repository;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Shop\Shop as ShopModel;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
@@ -52,8 +55,7 @@ class SwitchAliasCommand extends ShopwareCommand implements CompletionAwareInter
     public function completeArgumentValues($argumentName, CompletionContext $context)
     {
         if ($argumentName === 'shopId') {
-            /** @var Repository $shopRepository */
-            $shopRepository = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class)->getRepository(ShopModel::class);
+            $shopRepository = $this->getContainer()->get(ModelManager::class)->getRepository(ShopModel::class);
             $queryBuilder = $shopRepository->createQueryBuilder('shop');
 
             if (is_numeric($context->getCurrentWord())) {
@@ -71,7 +73,7 @@ class SwitchAliasCommand extends ShopwareCommand implements CompletionAwareInter
 
         if ($argumentName === 'index') {
             /** @var Client $client */
-            $client = $this->container->get(\Elasticsearch\Client::class);
+            $client = $this->container->get(Client::class);
 
             return array_keys($client->indices()->getAliases());
         }
@@ -101,18 +103,18 @@ class SwitchAliasCommand extends ShopwareCommand implements CompletionAwareInter
         $indexName = $input->getArgument('index');
 
         /** @var Shop $shop */
-        $shop = $this->container->get(\Shopware\Bundle\StoreFrontBundle\Gateway\ShopGatewayInterface::class)->get($shopId);
+        $shop = $this->container->get(ShopGatewayInterface::class)->get($shopId);
 
         /** @var ShopIndex $index */
-        $index = $this->container->get(\Shopware\Bundle\ESIndexingBundle\IndexFactory::class)
+        $index = $this->container->get(IndexFactory::class)
             ->createShopIndex($shop, $type);
 
         /** @var Client $client */
-        $client = $this->container->get(\Elasticsearch\Client::class);
+        $client = $this->container->get(Client::class);
 
         $exist = $client->indices()->exists(['index' => $indexName]);
         if (!$exist) {
-            throw new \RuntimeException(sprintf('Index "%s" does not exist', $indexName));
+            throw new RuntimeException(\sprintf('Index "%s" does not exist', $indexName));
         }
 
         $actions = [

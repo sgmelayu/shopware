@@ -1,58 +1,56 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Routing;
 
 /**
- * Interface of Shopware Router 2
- *
- * Replace the default router of shopware 4 / enlight
- *
- * @see \Symfony\Component\Routing\UrlMatcherInterface
- * @see \Symfony\Component\Routing\UrlGeneratorInterface
- * @see http://api.symfony.com/2.0/Symfony/Component/Routing/RouterInterface.html
+ * @see \Symfony\Component\Routing\Matcher\UrlMatcherInterface
+ * @see \Symfony\Component\Routing\Generator\UrlGeneratorInterface
+ * @see https://symfony.com/doc/4.4/routing.html
  * @see \Enlight_Controller_Router
  * @see http://framework.zend.com/manual/1.12/de/zend.controller.router.html#zend.controller.router.subclassing
  */
 interface RouterInterface
 {
     /**
-     * @param array[]|string[] $list
+     * @param array<int, array<string, mixed>>|array<array-key, string> $list
      *
-     * @return string[]|false[]
+     * @return array<array-key, string>
      */
-    public function generateList(array $list, Context $context = null);
+    public function generateList(array $list, ?Context $context = null);
 
     /**
-     * @param array|string $userParams
+     * @param array<string, mixed> $userParams
      *
-     * @return string|false
+     * @return string
      */
-    public function assemble($userParams = [], Context $context = null);
+    public function assemble($userParams = [], ?Context $context = null);
 
     /**
      * Switch the context
+     *
+     * @return void
      */
     public function setContext(Context $context);
 
@@ -64,7 +62,7 @@ interface RouterInterface
     /**
      * @param string $pathInfo
      *
-     * @return array|false
+     * @return array<string, mixed>|false
      */
-    public function match($pathInfo, Context $context = null);
+    public function match($pathInfo, ?Context $context = null);
 }

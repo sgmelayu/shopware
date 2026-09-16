@@ -17,19 +17,25 @@
  * @license    http://enlight.de/license     New BSD License
  */
 
+/**
+ * Interface for HTTP responses
+ */
 interface Enlight_Controller_Response_Response
 {
     /**
      * Sets a cookie method
      *
+     * @see http://www.php.net/manual/de/function.setcookie.php
+     *
      * @param string $name
      * @param string $value
-     * @param int $expire
+     * @param int    $expire
      * @param string $path
      * @param string $domain
-     * @param bool $secure
-     * @param bool $httpOnly
-     * @return \Enlight_Controller_Response_Response* @link http://www.php.net/manual/de/function.setcookie.php
+     * @param bool   $secure
+     * @param bool   $httpOnly
+     *
+     * @return Enlight_Controller_Response_Response
      */
     public function setCookie($name, $value = null, $expire = 0, $path = null, $domain = null, $secure = false, $httpOnly = false);
 
@@ -51,8 +57,9 @@ interface Enlight_Controller_Response_Response
      *
      * @param string $name
      * @param string $value
-     * @param boolean $replace
-     * @return \Enlight_Controller_Response_Response
+     * @param bool   $replace
+     *
+     * @return Enlight_Controller_Response_Response
      */
     public function setHeader($name, $value, $replace = false);
 
@@ -63,15 +70,16 @@ interface Enlight_Controller_Response_Response
      * redirects.
      *
      * @param string $url
-     * @param int $code
-     * @return \Enlight_Controller_Response_Response
+     * @param int    $code
+     *
+     * @return Enlight_Controller_Response_Response
      */
     public function setRedirect($url, $code = 302);
 
     /**
      * Is this a redirect?
      *
-     * @return boolean
+     * @return bool
      */
     public function isRedirect();
 
@@ -85,22 +93,23 @@ interface Enlight_Controller_Response_Response
     /**
      * Clear headers
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function clearHeaders();
 
     /**
      * Clears the specified HTTP header
      *
-     * @param  string $name
-     * @return \Enlight_Controller_Response_Response
+     * @param string $name
+     *
+     * @return Enlight_Controller_Response_Response
      */
     public function clearHeader($name);
 
     /**
      * Clear all headers, normal and raw
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function clearAllHeaders();
 
@@ -108,7 +117,8 @@ interface Enlight_Controller_Response_Response
      * Set HTTP response code to use with headers
      *
      * @param int $code
-     * @return \Enlight_Controller_Response_Response
+     *
+     * @return Enlight_Controller_Response_Response
      */
     public function setHttpResponseCode($code);
 
@@ -122,9 +132,11 @@ interface Enlight_Controller_Response_Response
     /**
      * Can we send headers?
      *
-     * @param boolean $throw Whether or not to throw an exception if headers have been sent; defaults to false
-     * @return boolean
+     * @param bool $throw Whether or not to throw an exception if headers have been sent; defaults to false
+     *
      * @throws RuntimeException
+     *
+     * @return bool
      */
     public function canSendHeaders($throw = false);
 
@@ -134,7 +146,7 @@ interface Enlight_Controller_Response_Response
      * Sends any headers specified. If an {@link setHttpResponseCode() HTTP response code}
      * has been specified, it is sent with the first header.
      *
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function sendHeaders();
 
@@ -147,18 +159,19 @@ interface Enlight_Controller_Response_Response
      * If $name is a string, sets the named segment in the body array to
      * $content.
      *
-     * @param mixed $content
-     * @param null|string $name
-     * @return \Enlight_Controller_Response_Response
+     * @param string|null $name
+     *
+     * @return Enlight_Controller_Response_Response
      */
     public function setBody($content, $name = null);
 
     /**
      * Append content to the body content
      *
-     * @param string $content
-     * @param null|string $name
-     * @return \Enlight_Controller_Response_Response
+     * @param string      $content
+     * @param string|null $name
+     *
+     * @return Enlight_Controller_Response_Response
      */
     public function appendBody($content, $name = null);
 
@@ -169,8 +182,9 @@ interface Enlight_Controller_Response_Response
      * just that named segment; if no segment matching $name exists, returns
      * false to indicate an error.
      *
-     * @param  string $name Named segment to clear
-     * @return boolean
+     * @param string $name Named segment to clear
+     *
+     * @return bool
      */
     public function clearBody($name = null);
 
@@ -182,7 +196,8 @@ interface Enlight_Controller_Response_Response
      * $spec is a string and matches a named segment, returns the contents of
      * that segment; otherwise, returns null.
      *
-     * @param boolean $spec
+     * @param bool $spec
+     *
      * @return string|array|null
      */
     public function getBody($spec = false);
@@ -195,7 +210,8 @@ interface Enlight_Controller_Response_Response
      *
      * @param string $name
      * @param string $content
-     * @return \Enlight_Controller_Response_Response
+     *
+     * @return Enlight_Controller_Response_Response
      */
     public function append($name, $content);
 
@@ -213,53 +229,56 @@ interface Enlight_Controller_Response_Response
     /**
      * Register an exception with the response
      *
-     * @param Exception $e
-     * @return \Enlight_Controller_Response_Response
+     * @return Enlight_Controller_Response_Response
      */
     public function setException(Exception $e);
 
     /**
      * Retrieve the exception stack
      *
-     * @return \Exception[]
+     * @return Exception[]
      */
     public function getException();
 
     /**
      * Has an exception been registered with the response?
      *
-     * @return boolean
+     * @return bool
      */
     public function isException();
 
     /**
      * Does the response object contain an exception of a given type?
      *
-     * @param  string $type
-     * @return boolean
+     * @param string $type
+     *
+     * @return bool
      */
     public function hasExceptionOfType($type);
 
     /**
      * Does the response object contain an exception with a given message?
      *
-     * @param  string $message
-     * @return boolean
+     * @param string $message
+     *
+     * @return bool
      */
     public function hasExceptionOfMessage($message);
 
     /**
      * Does the response object contain an exception with a given code?
      *
-     * @param  int $code
-     * @return boolean
+     * @param int $code
+     *
+     * @return bool
      */
     public function hasExceptionOfCode($code);
 
     /**
      * Retrieve all exceptions of a given type
      *
-     * @param  string $type
+     * @param string $type
+     *
      * @return false|array
      */
     public function getExceptionByType($type);
@@ -267,15 +286,14 @@ interface Enlight_Controller_Response_Response
     /**
      * Retrieve all exceptions of a given message
      *
-     * @param  string $message
+     * @param string $message
+     *
      * @return false|array
      */
     public function getExceptionByMessage($message);
 
     /**
      * Retrieve all exceptions of a given code
-     *
-     * @param mixed $code
      */
     public function getExceptionByCode($code);
 }

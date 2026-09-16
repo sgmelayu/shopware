@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Category
@@ -97,22 +96,22 @@ Ext.define('Shopware.apps.Category.controller.MultiRequest', {
         configs.push({
             progress: window.rebuildCategoryProgress,
             requestUrl: '{url controller="Category" action="rebuildCategoryPath"}',
-            initUrl:    '{url controller="Category" action="getRebuildCategoryPathCount"}',
-            snippet:    '{s name="batch/progress/rebuildCategoryPath"}Rebuild category path [0] of [1]{/s}'
+            initUrl: '{url controller="Category" action="getRebuildCategoryPathCount"}',
+            snippet: '{s name="batch/progress/rebuildCategoryPath"}Rebuild category path [0] of [1]{/s}'
         });
 
         configs.push({
             progress: window.removeOldAssignmentsProgress,
             requestUrl: '{url controller="Category" action="removeOldAssignments"}',
-            initUrl:    '{url controller="Category" action="getRemoveOldAssignmentsCount"}',
-            snippet:    '{s name="batch/progress/removeOldAssignments"}Remove old assignments [0] of [1]{/s}'
+            initUrl: '{url controller="Category" action="getRemoveOldAssignmentsCount"}',
+            snippet: '{s name="batch/progress/removeOldAssignments"}Remove old assignments [0] of [1]{/s}'
         });
 
         configs.push({
             progress: window.rebuildAssignmentsProgress,
             requestUrl: '{url controller="Category" action="rebuildAssignments"}',
-            initUrl:    '{url controller="Category" action="getRebuildAssignmentsCount"}',
-            snippet:    '{s name="batch/progress/rebuildAssignments"}Rebuild assignments [0] of [1]{/s}'
+            initUrl: '{url controller="Category" action="getRebuildAssignmentsCount"}',
+            snippet: '{s name="batch/progress/rebuildAssignments"}Rebuild assignments [0] of [1]{/s}'
         });
 
         var currentConfig = configs.shift();
@@ -139,7 +138,7 @@ Ext.define('Shopware.apps.Category.controller.MultiRequest', {
         });
     },
 
-     /**
+    /**
      * Runs the actual request
      * Method is called recursively until all data was processed
      */

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Category
@@ -95,13 +94,12 @@ Ext.define('Shopware.apps.Category.controller.ManualSorting', {
     },
 
     drop: function (store, droppedItems) {
-        var pageIndex = (store.currentPage - 1)* store.pageSize,
+        var pageIndex = (store.currentPage - 1) * store.pageSize,
             data = {};
 
         Ext.each(droppedItems, function (droppedItem) {
             data[droppedItem.get('id')] = pageIndex + (store.indexOf(droppedItem) + 1)
         });
-
 
         Ext.Ajax.request({
             url: '{url controller=ManualSorting action=assignPosition}?' + Ext.urlEncode(this.getTable().getStore().getProxy().extraParams),
@@ -137,7 +135,7 @@ Ext.define('Shopware.apps.Category.controller.ManualSorting', {
         var selectedRecord = this.getGrid().dataView.getSelectionModel().getSelection()[0],
             store = this.getGrid().store,
             newPage = store.currentPage + 1,
-            newPosition = ((newPage -1) * store.pageSize) + 1;
+            newPosition = ((newPage - 1) * store.pageSize) + 1;
 
         selectedRecord.set('position', newPosition);
 
@@ -148,7 +146,7 @@ Ext.define('Shopware.apps.Category.controller.ManualSorting', {
         var selectedRecord = this.getGrid().dataView.getSelectionModel().getSelection()[0],
             store = this.getGrid().store,
             newPage = store.currentPage - 1,
-            newPosition = ((newPage -1) * store.pageSize) + 1;
+            newPosition = ((newPage - 1) * store.pageSize) + 1;
 
         selectedRecord.set('position', newPosition);
 
@@ -158,7 +156,7 @@ Ext.define('Shopware.apps.Category.controller.ManualSorting', {
     tableMoveToPrevPage: function(record) {
         var store = this.getTable().store,
             newPage = store.currentPage - 1,
-            newPosition = ((newPage -1) * store.pageSize) + 1;
+            newPosition = ((newPage - 1) * store.pageSize) + 1;
 
         record.set('position', newPosition);
 
@@ -168,7 +166,7 @@ Ext.define('Shopware.apps.Category.controller.ManualSorting', {
     tableMoveToNextPage: function(record) {
         var store = this.getTable().store,
             newPage = store.currentPage + 1,
-            newPosition = ((newPage -1) * store.pageSize) + 1;
+            newPosition = ((newPage - 1) * store.pageSize) + 1;
 
         record.set('position', newPosition);
 
@@ -189,7 +187,7 @@ Ext.define('Shopware.apps.Category.controller.ManualSorting', {
             },
             success: function () {
                 var data = {};
-                data[record.get('id')] = ((store.currentPage -1) * store.pageSize) + 1;
+                data[record.get('id')] = ((store.currentPage - 1) * store.pageSize) + 1;
 
                 Ext.Ajax.request({
                     url: '{url controller=ManualSorting action=assignPosition}?' + Ext.urlEncode(extraParams),

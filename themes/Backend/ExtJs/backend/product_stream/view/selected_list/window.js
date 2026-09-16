@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    ProductStream
@@ -31,7 +30,7 @@
 Ext.define('Shopware.apps.ProductStream.view.selected_list.Window', {
     extend: 'Enlight.app.Window',
     alias: 'widget.product-stream-selected-list-window',
-    title : '{s name="detail_window_title"}Product stream details{/s}',
+    title: '{s name="detail_window_title"}Product stream details{/s}',
     height: '90%',
     width: '90%',
     layout: 'fit',
@@ -93,7 +92,7 @@ Ext.define('Shopware.apps.ProductStream.view.selected_list.Window', {
         var me = this;
 
         var container = Ext.create('Ext.container.Container', {
-            layout: { type: 'vbox', align: 'stretch'},
+            layout: { type: 'vbox', align: 'stretch' },
             flex: 1,
             title: '{s name="configuration_title"}{/s}',
             padding: 10,

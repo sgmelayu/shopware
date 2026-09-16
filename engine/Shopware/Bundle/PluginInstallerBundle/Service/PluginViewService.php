@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle\Service;
 
+use Exception;
 use Shopware\Bundle\PluginInstallerBundle\Context\BaseRequest;
 use Shopware\Bundle\PluginInstallerBundle\Context\ListingRequest;
 use Shopware\Bundle\PluginInstallerBundle\Context\PluginsByTechnicalNameRequest;
@@ -95,11 +96,11 @@ class PluginViewService
             $storePlugin = null;
             $localPlugin = null;
 
-            if (array_key_exists($name, $localePlugins)) {
+            if (\array_key_exists($name, $localePlugins)) {
                 $localPlugin = $localePlugins[$name];
             }
 
-            if (array_key_exists($name, $storePlugins)) {
+            if (\array_key_exists($name, $storePlugins)) {
                 $storePlugin = $storePlugins[$name];
             }
 
@@ -149,7 +150,7 @@ class PluginViewService
                 $local->getPlugins(),
                 $context
             );
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $local->getPlugins();
         }
 
@@ -199,7 +200,7 @@ class PluginViewService
         foreach ($plugins as $plugin) {
             $key = strtolower($plugin->getTechnicalName());
 
-            if (!array_key_exists($key, $store)) {
+            if (!\array_key_exists($key, $store)) {
                 $merged[$key] = $plugin;
                 continue;
             }
@@ -224,11 +225,7 @@ class PluginViewService
      */
     private function getAdditionallyLocalData($plugins)
     {
-        $context = new PluginsByTechnicalNameRequest(
-            null,
-            null,
-            array_keys($plugins)
-        );
+        $context = new PluginsByTechnicalNameRequest('', '', array_keys($plugins));
 
         $local = $this->localPluginService->getPlugins($context);
 
@@ -237,7 +234,7 @@ class PluginViewService
         foreach ($plugins as &$plugin) {
             $key = strtolower($plugin->getTechnicalName());
 
-            if (!array_key_exists($key, $local)) {
+            if (!\array_key_exists($key, $local)) {
                 $merged[$key] = $plugin;
                 continue;
             }

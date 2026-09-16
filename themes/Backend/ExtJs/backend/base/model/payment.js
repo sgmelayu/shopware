@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -46,28 +45,28 @@ Ext.define('Shopware.apps.Base.model.Payment', {
      * Extends the standard Ext Model
      * @string
      */
-    extend:'Shopware.data.Model',
+    extend: 'Shopware.data.Model',
 
     /**
      * unique id
      * @int
      */
-    idProperty:'id',
+    idProperty: 'id',
 
     /**
      * The fields used for this model
      * @array
      */
-    fields:[
+    fields: [
         //{block name="backend/base/model/payment/fields"}{/block}
-        { name:'id', type: 'int' },
-        { name:'name', type: 'string' },
+        { name: 'id', type: 'int' },
+        { name: 'name', type: 'string' },
         // No need for a snippet matcher anymore.
         // All payments are translated on the server which thereby enabling custom
         // payments methods to be translated as well.
-        { name:'description', type: 'string' },
-        { name:'position', type: 'int' },
-        { name:'active', type: 'boolean' }
+        { name: 'description', type: 'string' },
+        { name: 'position', type: 'int' },
+        { name: 'active', type: 'boolean' }
     ]
 });
 //{/block}

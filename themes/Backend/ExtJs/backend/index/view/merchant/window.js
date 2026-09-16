@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/index/view/widgets"}
@@ -29,7 +28,7 @@
 //{block name="backend/index/view/merchant/window"}
 Ext.define('Shopware.apps.Index.view.merchant.Window', {
     extend: 'Enlight.app.Window',
-    alias : 'widget.merchant-window',
+    alias: 'widget.merchant-window',
     width: 600,
     height: 500,
     stateful: true,
@@ -76,7 +75,7 @@ Ext.define('Shopware.apps.Index.view.merchant.Window', {
 
         me.callParent(arguments);
 
-        if(me.record) {
+        if (me.record) {
             me.formPanel.loadRecord(me.record);
         }
     },
@@ -96,7 +95,7 @@ Ext.define('Shopware.apps.Index.view.merchant.Window', {
             items: [{
                 xtype: 'hidden',
                 name: 'userId'
-            },{
+            }, {
                 xtype: 'hidden',
                 name: 'status'
             }, {
@@ -146,7 +145,7 @@ Ext.define('Shopware.apps.Index.view.merchant.Window', {
             form = me.formPanel.getForm(),
             messages = me.snippets.messages;
 
-        if(!form.isValid()) {
+        if (!form.isValid()) {
             return false;
         }
 
@@ -155,7 +154,7 @@ Ext.define('Shopware.apps.Index.view.merchant.Window', {
             success: function(form, operation) {
                 var response = operation.result;
                 me.setLoading(false);
-                if(!response.success) {
+                if (!response.success) {
                     Shopware.Notification.createGrowlMessage(me.title, messages.error);
                     return false;
                 }

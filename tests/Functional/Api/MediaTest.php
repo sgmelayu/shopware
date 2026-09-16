@@ -1,29 +1,31 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Api;
 
+use Shopware\Components\Api\Resource\Media as MediaResource;
 use Shopware\Models\Media\Media;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
@@ -40,9 +42,9 @@ class MediaTest extends AbstractApiTestCase
         $this->client->request('GET', '/api/media');
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(401, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(401, $response->getStatusCode());
 
         $result = $response->getContent();
 
@@ -61,9 +63,9 @@ class MediaTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('GET', '/api/media/' . $id);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(404, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(404, $response->getStatusCode());
 
         $result = $response->getContent();
 
@@ -80,9 +82,9 @@ class MediaTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('GET', '/api/media/');
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('content-type'));
-        static::assertEquals(null, $response->headers->get('set-cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('content-type'));
+        static::assertNull($response->headers->get('set-cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $response = $response->getContent();
         $response = json_decode($response, true);
@@ -109,9 +111,9 @@ class MediaTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('POST', '/api/media/', [], $requestData);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(400, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(400, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -126,15 +128,15 @@ class MediaTest extends AbstractApiTestCase
     {
         $requestData = [
             'album' => -1,
-            'file' => 'http://assets.shopware.com/sw_logo_white.png',
+            'file' => 'file://' . __DIR__ . '/fixtures/test-bild.jpg',
             'description' => 'flipflops',
         ];
 
         $this->authenticatedApiRequest('POST', '/api/media/', [], $requestData);
         $response = $this->client->getResponse();
 
-        static::assertEquals(201, $response->getStatusCode());
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
+        static::assertSame(201, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
         static::assertNull(
             $response->headers->get('Set-Cookie'),
             'There should be no set-cookie header set.'
@@ -147,7 +149,9 @@ class MediaTest extends AbstractApiTestCase
         static::assertTrue($result['success']);
 
         $location = $response->headers->get('location');
-        $identifier = (int) array_pop(explode('/', $location));
+        static::assertIsString($location);
+        $location = explode('/', $location);
+        $identifier = (int) array_pop($location);
 
         static::assertGreaterThan(0, $identifier);
 
@@ -161,14 +165,14 @@ class MediaTest extends AbstractApiTestCase
     /**
      * @depends testPostMediaShouldBeSuccessful
      */
-    public function testGetMediaWithIdShouldBeSuccessful($id)
+    public function testGetMediaWithIdShouldBeSuccessful(int $id): void
     {
         $this->authenticatedApiRequest('GET', '/api/media/' . $id);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $response = $response->getContent();
         $response = json_decode($response, true);
@@ -186,14 +190,14 @@ class MediaTest extends AbstractApiTestCase
     /**
      * @depends testPostMediaShouldBeSuccessful
      */
-    public function testDeleteMediaWithIdShouldBeSuccessful($id)
+    public function testDeleteMediaWithIdShouldBeSuccessful(int $id): void
     {
         $this->authenticatedApiRequest('DELETE', '/api/media/' . $id);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -219,8 +223,8 @@ class MediaTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('POST', '/api/media/', $requestData, null, $files);
         $response = $this->client->getResponse();
 
-        static::assertEquals(201, $response->getStatusCode());
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
+        static::assertSame(201, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
         static::assertNull(
             $response->headers->get('Set-Cookie'),
             'There should be no set-cookie header set.'
@@ -232,8 +236,10 @@ class MediaTest extends AbstractApiTestCase
         static::assertArrayHasKey('success', $result);
         static::assertTrue($result['success']);
 
-        $location = $response->headers->get('Location');
-        $identifier = (int) array_pop(explode('/', $location));
+        $location = $response->headers->get('location');
+        static::assertIsString($location);
+        $location = explode('/', $location);
+        $identifier = (int) array_pop($location);
 
         static::assertGreaterThan(0, $identifier);
 
@@ -243,14 +249,14 @@ class MediaTest extends AbstractApiTestCase
     /**
      * @depends testPostMediaWithFileUploadShouldBeSuccessful
      */
-    public function testGetMediaWithUploadedFileByIdShouldBeSuccessful($id): void
+    public function testGetMediaWithUploadedFileByIdShouldBeSuccessful(int $id): void
     {
         $this->authenticatedApiRequest('GET', '/api/media/' . $id);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $response = $response->getContent();
         $response = json_decode($response, true);
@@ -263,7 +269,7 @@ class MediaTest extends AbstractApiTestCase
         $data = $response['data'];
         static::assertIsArray($data);
         static::assertArrayHasKey('name', $data);
-        static::assertEquals(0, strpos($data['name'], self::UPLOAD_FILE_NAME));
+        static::assertSame(0, strpos($data['name'], self::UPLOAD_FILE_NAME));
     }
 
     public function testPostMediaWithFileUploadAndOverwrittenNameShouldBeSuccessful(): int
@@ -284,8 +290,8 @@ class MediaTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('POST', '/api/media/', $requestData, null, $files);
         $response = $this->client->getResponse();
 
-        static::assertEquals(201, $response->getStatusCode());
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
+        static::assertSame(201, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
         static::assertNull(
             $response->headers->get('Set-Cookie'),
             'There should be no set-cookie header set.'
@@ -298,7 +304,9 @@ class MediaTest extends AbstractApiTestCase
         static::assertTrue($result['success']);
 
         $location = $response->headers->get('location');
-        $identifier = (int) array_pop(explode('/', $location));
+        static::assertIsString($location);
+        $location = explode('/', $location);
+        $identifier = (int) array_pop($location);
 
         static::assertGreaterThan(0, $identifier);
 
@@ -308,14 +316,14 @@ class MediaTest extends AbstractApiTestCase
     /**
      * @depends testPostMediaWithFileUploadAndOverwrittenNameShouldBeSuccessful
      */
-    public function testGetMediaWithUploadedFileAndOverwrittenNameByIdShouldBeSuccessful($identifier): void
+    public function testGetMediaWithUploadedFileAndOverwrittenNameByIdShouldBeSuccessful(int $identifier): void
     {
         $this->authenticatedApiRequest('GET', '/api/media/' . $identifier);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(200, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(200, $response->getStatusCode());
 
         $response = $response->getContent();
         $response = json_decode($response, true);
@@ -328,7 +336,7 @@ class MediaTest extends AbstractApiTestCase
         $data = $response['data'];
         static::assertIsArray($data);
         static::assertArrayHasKey('name', $data);
-        static::assertEquals(0, strpos($data['name'], self::UPLOAD_OVERWRITTEN_FILE_NAME));
+        static::assertSame(0, strpos($data['name'], self::UPLOAD_OVERWRITTEN_FILE_NAME));
     }
 
     public function testDeleteMediaWithInvalidIdShouldFailWithMessage(): void
@@ -338,9 +346,9 @@ class MediaTest extends AbstractApiTestCase
         $this->authenticatedApiRequest('DELETE', '/api/media/' . $id);
         $response = $this->client->getResponse();
 
-        static::assertEquals('application/json', $response->headers->get('Content-Type'));
-        static::assertEquals(null, $response->headers->get('Set-Cookie'));
-        static::assertEquals(404, $response->getStatusCode());
+        static::assertSame('application/json', $response->headers->get('Content-Type'));
+        static::assertNull($response->headers->get('Set-Cookie'));
+        static::assertSame(404, $response->getStatusCode());
 
         $result = $response->getContent();
         $result = json_decode($result, true);
@@ -354,8 +362,8 @@ class MediaTest extends AbstractApiTestCase
     public function testMediaUploadTraversal(): void
     {
         $file = '../../image.jpg';
-        $media = new \Shopware\Components\Api\Resource\Media();
+        $media = new MediaResource();
 
-        static::assertEquals('image.jpg', $media->getUniqueFileName('/tmp', $file));
+        static::assertSame('image.jpg', $media->getUniqueFileName('/tmp', $file));
     }
 }

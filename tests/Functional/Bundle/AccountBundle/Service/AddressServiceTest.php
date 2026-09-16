@@ -1,79 +1,66 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\AccountBundle\Service;
 
 use Doctrine\DBAL\Connection;
+use Enlight_Components_Test_TestCase;
+use PDO;
+use Shopware\Bundle\AccountBundle\Service\AddressServiceInterface;
 use Shopware\Bundle\AccountBundle\Service\RegisterServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Components\Api\Exception\ValidationException;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Country\Country;
 use Shopware\Models\Customer\Address;
 use Shopware\Models\Customer\Customer;
 
-class AddressServiceTest extends \Enlight_Components_Test_TestCase
+class AddressServiceTest extends Enlight_Components_Test_TestCase
 {
-    /**
-     * @var \Shopware\Bundle\AccountBundle\Service\AddressServiceInterface
-     */
-    protected static $addressService;
+    private static AddressServiceInterface $addressService;
+
+    private static ModelManager $modelManager;
+
+    private static Connection $connection;
+
+    private static ContextServiceInterface $contextService;
+
+    private static RegisterServiceInterface $registerService;
 
     /**
-     * @var ModelManager
+     * @var array<class-string, int[]>
      */
-    protected static $modelManager;
+    private static array $_cleanup = [];
 
-    /**
-     * @var Connection
-     */
-    protected static $connection;
-
-    /**
-     * @var ContextServiceInterface
-     */
-    protected static $contextService;
-
-    /**
-     * @var RegisterServiceInterface
-     */
-    protected static $registerService;
-
-    /**
-     * @var array
-     */
-    protected static $_cleanup = [];
-
-    /**
-     * Set up fixtures
-     */
     public static function setUpBeforeClass(): void
     {
-        self::$addressService = Shopware()->Container()->get(\Shopware\Bundle\AccountBundle\Service\AddressServiceInterface::class);
-        self::$modelManager = Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class);
-        self::$connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
-        self::$contextService = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class);
-        self::$registerService = Shopware()->Container()->get(\Shopware\Bundle\AccountBundle\Service\RegisterServiceInterface::class);
+        self::$addressService = Shopware()->Container()->get(AddressServiceInterface::class);
+        self::$modelManager = Shopware()->Container()->get(ModelManager::class);
+        self::$connection = Shopware()->Container()->get(Connection::class);
+        self::$contextService = Shopware()->Container()->get(ContextServiceInterface::class);
+        self::$registerService = Shopware()->Container()->get(RegisterServiceInterface::class);
 
         self::$modelManager->clear();
     }
@@ -87,7 +74,9 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
 
         foreach (self::$_cleanup as $entityName => $ids) {
             foreach ($ids as $id) {
-                self::$modelManager->remove(self::$modelManager->find($entityName, $id));
+                $model = self::$modelManager->find($entityName, $id);
+                static::assertNotNull($model);
+                self::$modelManager->remove($model);
             }
         }
 
@@ -95,16 +84,16 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
         self::$modelManager->clear();
     }
 
-    public function testCreateWithEmptyData()
+    public function testCreateWithEmptyData(): void
     {
-        $this->expectException('Shopware\Components\Api\Exception\ValidationException');
+        $this->expectException(ValidationException::class);
         $address = new Address();
         $customer = new Customer();
 
         self::$addressService->create($address, $customer);
     }
 
-    public function testCreateWithEmptyCustomer()
+    public function testCreateWithEmptyCustomer(): void
     {
         $this->expectException('InvalidArgumentException');
         $address = new Address();
@@ -121,16 +110,16 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
         self::$addressService->create($address, $customer);
     }
 
-    public function testCreateWithEmptyAddress()
+    public function testCreateWithEmptyAddress(): void
     {
-        $this->expectException('Shopware\Components\Api\Exception\ValidationException');
+        $this->expectException(ValidationException::class);
         $address = new Address();
         $customer = $this->createCustomer();
 
         self::$addressService->create($address, $customer);
     }
 
-    public function testCreateAddress()
+    public function testCreateAddress(): int
     {
         $addressData = [
             'salutation' => 'mr',
@@ -149,7 +138,6 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
 
         self::$addressService->create($address, $customer);
 
-        static::assertInstanceOf(Address::class, $address);
         static::assertNotNull($address->getId());
 
         foreach ($addressData as $key => $value) {
@@ -163,7 +151,7 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
     /**
      * @depends testCreateAddress
      */
-    public function testSetDefaultBilling($addressId)
+    public function testSetDefaultBilling(int $addressId): int
     {
         $address = self::$modelManager->find(Address::class, $addressId);
 
@@ -181,7 +169,7 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
     /**
      * @depends testSetDefaultBilling
      */
-    public function testUpdateBilling($addressId)
+    public function testUpdateBilling(int $addressId): int
     {
         $address = self::$modelManager->find(Address::class, $addressId);
 
@@ -198,7 +186,7 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
     /**
      * @depends testCreateAddress
      */
-    public function testSetDefaultShipping($addressId)
+    public function testSetDefaultShipping(int $addressId): int
     {
         $address = self::$modelManager->find(Address::class, $addressId);
 
@@ -216,7 +204,7 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
     /**
      * @depends testSetDefaultBilling
      */
-    public function testDeleteDefaultAddressShouldFail($addressId)
+    public function testDeleteDefaultAddressShouldFail(int $addressId): void
     {
         $this->expectException('RuntimeException');
         $this->expectExceptionMessage('The address is defined as default billing or shipping address and cannot be removed.');
@@ -226,15 +214,14 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
     }
 
     /**
-     * @param int $addressId
      * @depends testSetDefaultBilling
      * @depends testDeleteDefaultAddressShouldFail
      */
-    public function testDeleteNonDefaultAddress($addressId)
+    public function testDeleteNonDefaultAddress(int $addressId): void
     {
         $address = self::$modelManager->find(Address::class, $addressId);
 
-        $unusedAddressId = self::$connection->executeQuery('SELECT id FROM s_user_addresses WHERE user_id = ? AND id != ?', [$address->getCustomer()->getId(), $address->getId()])->fetch(\PDO::FETCH_COLUMN);
+        $unusedAddressId = self::$connection->executeQuery('SELECT id FROM s_user_addresses WHERE user_id = ? AND id != ?', [$address->getCustomer()->getId(), $address->getId()])->fetch(PDO::FETCH_COLUMN);
         static::assertGreaterThan(0, $unusedAddressId, 'No unused address found.');
 
         $unusedAddress = self::$modelManager->find(Address::class, $unusedAddressId);
@@ -249,14 +236,11 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
         static::assertNotNull($unusedAddress->getId());
     }
 
-    /**
-     * @return Country
-     */
-    private function createCountry()
+    private function createCountry(): Country
     {
         $country = new Country();
 
-        $country->setName('ShopwareLand' . uniqid(rand(1, 999)));
+        $country->setName('ShopwareLand' . uniqid((string) rand(1, 999)));
         $country->setActive(true);
         $country->setDisplayStateInRegistration(0);
         $country->setForceStateInRegistration(0);
@@ -269,17 +253,14 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
         return self::$modelManager->merge($country);
     }
 
-    /**
-     * @return Customer
-     */
-    private function createCustomer()
+    private function createCustomer(): Customer
     {
         $customer = new Customer();
 
-        $customer->setEmail(uniqid(rand()) . 'test@foo.bar');
+        $customer->setEmail(uniqid((string) rand()) . 'test@foo.bar');
         $customer->setActive(true);
         $customer->setLastLogin(date('Y-m-d', strtotime('-8 days')));
-        $customer->setPassword(uniqid(rand()) . uniqid(rand()));
+        $customer->setPassword(uniqid((string) rand()) . uniqid((string) rand()));
 
         $customer->setSalutation('mr');
         $customer->setFirstname('Max');
@@ -297,10 +278,7 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
         return $customer;
     }
 
-    /**
-     * @return Address
-     */
-    private function createBillingEntity()
+    private function createBillingEntity(): Address
     {
         $billing = new Address();
 
@@ -317,10 +295,7 @@ class AddressServiceTest extends \Enlight_Components_Test_TestCase
         return $billing;
     }
 
-    /**
-     * @return Address
-     */
-    private function createShippingEntity()
+    private function createShippingEntity(): Address
     {
         $shipping = new Address();
 

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    NewsletterManager
@@ -39,7 +38,7 @@ Ext.define('Shopware.apps.NewsletterManager.view.newsletter.Editor', {
     alias: 'widget.newsletter-manager-newsletter-editor',
     title: '{s name="title/Editor"}Newsletter Editor{/s}',
     layout: 'fit',
-    autoScroll:true,
+    autoScroll: true,
     defaults: {
         bodyBorder: 0
     },
@@ -104,7 +103,7 @@ Ext.define('Shopware.apps.NewsletterManager.view.newsletter.Editor', {
                     xtype: 'button',
                     id: 'sendMail',
                     name: 'sendMail',
-                    iconCls:'sprite-mail-send',
+                    iconCls: 'sprite-mail-send',
                     text: '{s name="sendTestMail"}Send testmail{/s}',
                     handler: function() {
                         me.fireEvent('sendTestMail', me.form);
@@ -135,7 +134,7 @@ Ext.define('Shopware.apps.NewsletterManager.view.newsletter.Editor', {
         var me = this;
 
         me.tinyMce = Ext.create('Shopware.form.field.TinyMCE', {
-            name : 'content',
+            name: 'content',
             // Workaround for the tinyMCE height bug
             margin: '0 0 27 0 ',
             height: 457,

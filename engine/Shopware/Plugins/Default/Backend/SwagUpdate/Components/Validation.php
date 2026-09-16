@@ -1,28 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace ShopwarePlugins\SwagUpdate\Components;
+
+use Exception;
 
 /**
  * Used for plugin and system requirement validation.
@@ -32,54 +34,53 @@ class Validation
     /**
      * Flag if a validation is valid.
      */
-    const REQUIREMENT_VALID = 0;
+    public const REQUIREMENT_VALID = 0;
 
     /**
      * Flag if a validation should be displayed as warning
      */
-    const REQUIREMENT_WARNING = 10;
+    public const REQUIREMENT_WARNING = 10;
 
     /**
      * Flag if a validation should be displayed as critical and
      * abort the update process.
      */
-    const REQUIREMENT_CRITICAL = 20;
+    public const REQUIREMENT_CRITICAL = 20;
 
     /**
-     * @var \Enlight_Components_Snippet_Namespace
-     */
-    private $namespace;
-
-    /**
-     * @var CheckInterface[]
+     * @var array<CheckInterface>
      */
     private $checks;
 
-    public function __construct(\Enlight_Components_Snippet_Namespace $namespace, array $checks)
+    /**
+     * @param array<CheckInterface> $checks
+     */
+    public function __construct(array $checks)
     {
-        $this->namespace = $namespace;
         $this->checks = $checks;
     }
 
     /**
-     * @param array $requirements {
+     * requirements {
+     *      string type => Type of the requirement check
+     *      array  directories [optional] => Array of directories which should be iterated
+     *      string errorLevel => Flag how critical the error is (1 => Warning, 2 => Exception)
+     *      string errorMessage => Error message which can be set for the validation, 1x %s will be replaced with all found files
+     *      string value => Only used for regular expressions, contains the regular expression
+     *      string fileRegex [optional] => Regular expression for file types.
+     * }
      *
-     * @var string     type => Type of the requirement check
-     * @var array      directories => Array of directories which should be iterated
-     * @var string     errorLevel => Flag how critical the error is (1 => Warning, 2 => Exception)
-     * @var string     errorMessage => Error message which can be set for the validation, 1x %s will be replaced with all found files
-     * @var [optional] string value => Only used for regular expressions, contains the regular expression
-     * @var [optional] string fileRegex => Regular expression for file types.
-     *                 }
+     * @param array<array{type: string, value: string|array|null, level: Validation::REQUIREMENT_VALID|Validation::REQUIREMENT_WARNING|Validation::REQUIREMENT_CRITICAL}> $requirements
      *
-     * @throws \Exception
+     * @throws Exception
      *
-     * @return array {
+     * return array {
+     *      string type       => Type of the requirement check
+     *      int    errorLevel => Flag how critical the error is (1 => Warning, 2 => Exception)
+     *      string message    => Passed error message for failed checks.
+     * }
      *
-     * @var string type       => Type of the requirement check
-     * @var int    errorLevel => Flag how critical the error is (1 => Warning, 2 => Exception)
-     * @var string message    => Passed error message for failed checks.
-     *             }
+     * @return array<array{type: string, errorLevel: Validation::REQUIREMENT_VALID|Validation::REQUIREMENT_WARNING|Validation::REQUIREMENT_CRITICAL, message: string}|null>
      */
     public function checkRequirements($requirements)
     {
@@ -95,9 +96,9 @@ class Validation
     }
 
     /**
-     * @param array $requirement
+     * @param array{type: string, value: string|array|null, level: Validation::REQUIREMENT_VALID|Validation::REQUIREMENT_WARNING|Validation::REQUIREMENT_CRITICAL} $requirement
      *
-     * @return array
+     * @return array{type: string, errorLevel: Validation::REQUIREMENT_VALID|Validation::REQUIREMENT_WARNING|Validation::REQUIREMENT_CRITICAL, message: string}|null
      */
     private function handleRequirement($requirement)
     {

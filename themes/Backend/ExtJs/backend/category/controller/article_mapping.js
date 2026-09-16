@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
- * The licensing of the program under the AGPLv3 does +not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * The licensing of the program under the AGPLv3 does not imply a
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Category
@@ -95,13 +94,13 @@ Ext.define('Shopware.apps.Category.controller.ArticleMapping', {
             activeBtn, inactiveBtn;
 
         // Prevent the grid to get a little sluggish
-        if(!selection.length) {
+        if (!selection.length) {
             return false;
         }
 
         inactiveGrid = (activeGrid.internalTitle === 'from') ? view.toGrid : view.fromGrid;
 
-        if(activeGrid.internalTitle === 'from') {
+        if (activeGrid.internalTitle === 'from') {
             activeBtn = me.getAddButton();
             inactiveBtn = me.getRemoveButton();
         } else {
@@ -154,7 +153,7 @@ Ext.define('Shopware.apps.Category.controller.ArticleMapping', {
             selection = activeGrid.getSelectionModel().getSelection(),
             ids = [], categoryId;
 
-        if(!selection.length) {
+        if (!selection.length) {
             return false;
         }
 
@@ -190,7 +189,7 @@ Ext.define('Shopware.apps.Category.controller.ArticleMapping', {
             selection = activeGrid.getSelectionModel().getSelection(),
             ids = [], categoryId;
 
-        if(!selection.length) {
+        if (!selection.length) {
             return false;
         }
 
@@ -251,7 +250,7 @@ Ext.define('Shopware.apps.Category.controller.ArticleMapping', {
         var message = '{s name="category/action/add/success"}[0]x articles assigned{/s}';
         var failure = '{s name="category/action/add/failure"}The following error occurred while adding the articles:{/s}';
 
-        if(action === 'remove') {
+        if (action === 'remove') {
             message = '{s name="category/action/remove/success"}[0]x articles assignments removed{/s}';
             failure = '{s name="category/action/remove/failure"}The following error occurred while removing the articles:{/s}';
 
@@ -266,11 +265,11 @@ Ext.define('Shopware.apps.Category.controller.ArticleMapping', {
 
                 var result = Ext.decode(response.responseText);
                 message = Ext.String.format(message, result.counter);
-                Shopware.Notification.createGrowlMessage('',message);
+                Shopware.Notification.createGrowlMessage('', message);
 
                 //reload the stores for the paging bar information
                 mapping.toGrid.getStore().load({
-                    callback:function () {
+                    callback: function () {
                         mapping.setLoading(false);
                     }
                 });
@@ -284,7 +283,7 @@ Ext.define('Shopware.apps.Category.controller.ArticleMapping', {
 
                 var result = Ext.decode(response.responseText);
                 failure = failure + '<br>' + result.error;
-                Shopware.Notification.createGrowlMessage('',message);
+                Shopware.Notification.createGrowlMessage('', message);
                 mapping.fireEvent('sendRequestFailure', result);
             }
         });

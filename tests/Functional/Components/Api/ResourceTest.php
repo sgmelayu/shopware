@@ -1,37 +1,38 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Api;
 
+use Enlight_Components_Test_TestCase;
+use Shopware\Components\Api\Exception\PrivilegeException;
 use Shopware\Components\Api\Resource\Resource;
+use Shopware_Components_Acl;
 
-class ResourceTest extends \Enlight_Components_Test_TestCase
+class ResourceTest extends Enlight_Components_Test_TestCase
 {
-    /**
-     * @var resource
-     */
-    private $resource;
+    private Resource $resource;
 
     /**
      * Sets up the fixture, for example, opens a network connection.
@@ -43,47 +44,43 @@ class ResourceTest extends \Enlight_Components_Test_TestCase
 
         Shopware()->Models()->clear();
 
-        $this->resource = $this->getMockForAbstractClass('\Shopware\Components\Api\Resource\Resource');
+        $this->resource = $this->getMockForAbstractClass(Resource::class);
 
         $this->resource->setManager(Shopware()->Models());
     }
 
-    public function testResultModeShouldDefaultToArray()
+    public function testResultModeShouldDefaultToArray(): void
     {
-        static::assertEquals($this->resource->getResultMode(), Resource::HYDRATE_ARRAY);
+        static::assertEquals(Resource::HYDRATE_ARRAY, $this->resource->getResultMode());
     }
 
-    public function testSetResultModeShouldShouldWork()
+    public function testSetResultModeShouldShouldWork(): void
     {
         $this->resource->setResultMode(Resource::HYDRATE_OBJECT);
 
-        static::assertEquals($this->resource->getResultMode(), Resource::HYDRATE_OBJECT);
+        static::assertEquals(Resource::HYDRATE_OBJECT, $this->resource->getResultMode());
     }
 
-    public function testAutoFlushShouldDefaultToTrue()
+    public function testAutoFlushShouldDefaultToTrue(): void
     {
-        static::assertEquals($this->resource->getAutoFlush(), true);
+        static::assertTrue($this->resource->getAutoFlush());
     }
 
-    public function testSetAutoFlushShouldWork()
+    public function testSetAutoFlushShouldWork(): void
     {
         $this->resource->setAutoFlush(false);
 
-        static::assertEquals($this->resource->getAutoFlush(), false);
+        static::assertFalse($this->resource->getAutoFlush());
     }
 
-    public function testCheckPrivilegeShouldThrowException()
+    public function testCheckPrivilegeShouldThrowException(): void
     {
-        $this->expectException('Shopware\Components\Api\Exception\PrivilegeException');
-        $aclMock = $this->createMock(\Shopware_Components_Acl::class);
+        $this->expectException(PrivilegeException::class);
+        $aclMock = $this->createMock(Shopware_Components_Acl::class);
 
-        $aclMock->expects(static::any())
-                ->method('has')
-                ->willReturn(true);
+        $aclMock->method('has')->willReturn(true);
 
-        $aclMock->expects(static::any())
-                ->method('isAllowed')
-                ->willReturn(false);
+        $aclMock->method('isAllowed')->willReturn(false);
 
         $this->resource->setRole('dummy');
         $this->resource->setAcl($aclMock);
@@ -91,16 +88,14 @@ class ResourceTest extends \Enlight_Components_Test_TestCase
         $this->resource->checkPrivilege('test');
     }
 
-    public function testFooFlushShouldWork()
+    public function testFooFlushShouldWork(): void
     {
-        $aclMock = $this->createMock(\Shopware_Components_Acl::class);
+        $aclMock = $this->createMock(Shopware_Components_Acl::class);
 
-        $aclMock->expects(static::any())
-                ->method('isAllowed')
-                ->willReturn(true);
+        $aclMock->expects(static::once())->method('isAllowed')->willReturn(true);
 
         $this->resource->setRole('dummy');
         $this->resource->setAcl($aclMock);
-        static::assertNull($this->resource->checkPrivilege('test'));
+        $this->resource->checkPrivilege('test');
     }
 }

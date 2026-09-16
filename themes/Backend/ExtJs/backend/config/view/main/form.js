@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -38,7 +37,7 @@ Ext.define('Shopware.apps.Config.view.main.Form', {
     /**
      *
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         Ext.applyIf(me, {
@@ -60,7 +59,7 @@ Ext.define('Shopware.apps.Config.view.main.Form', {
             text: '{s name="form/reset_text"}Reset{/s}',
             cls: 'secondary',
             action: 'reset'
-        },{
+        }, {
             text: '{s name="form/save_text"}Save{/s}',
             cls: 'primary',
             action: 'save'
@@ -77,15 +76,14 @@ Ext.define('Shopware.apps.Config.view.main.Form', {
             elementName,
             form = me.formRecord;
 
-
         var formDescription = form.get('description');
-        if(form.associations.containsKey('getTranslation')) {
-            if(form.getTranslation().getAt(0) && form.getTranslation().getAt(0).get('description')) {
+        if (form.associations.containsKey('getTranslation')) {
+            if (form.getTranslation().getAt(0) && form.getTranslation().getAt(0).get('description')) {
                 formDescription = form.getTranslation().getAt(0).get('description');
             }
         }
 
-        if(formDescription) {
+        if (formDescription) {
             items.push({
                 xtype: 'fieldset',
                 margin: 10,
@@ -100,14 +98,14 @@ Ext.define('Shopware.apps.Config.view.main.Form', {
                 value = element.getValues().find('shopId', shop.getId(), 0, false, true, true);
                 value = element.getValues().getAt(value);
                 var initialValue = value;
-                if(!value && shop.getId() !== 1) {
+                if (!value && shop.getId() !== 1) {
                     value = element.getValues().find('shopId', 1, 0, false, true, true);
                     value = element.getValues().getAt(value);
                 }
 
                 type = element.get('type').toLowerCase();
                 type = 'base-element-' + type;
-                name = 'values[' + shop.get('id') + ']['+ element.get('id') + ']';
+                name = 'values[' + shop.get('id') + '][' + element.get('id') + ']';
 
                 options = element.get('options');
                 options = Ext.isObject(options) ? options : {};
@@ -117,12 +115,12 @@ Ext.define('Shopware.apps.Config.view.main.Form', {
                 elementName = element.get('name');
                 elementLabel = element.get('label');
                 elementDescription = element.get('description');
-                if(element.associations.containsKey('getTranslation')) {
-                    if(element.getTranslation().getAt(0) && element.getTranslation().getAt(0).get('label')) {
+                if (element.associations.containsKey('getTranslation')) {
+                    if (element.getTranslation().getAt(0) && element.getTranslation().getAt(0).get('label')) {
                         elementLabel = element.getTranslation().getAt(0).get('label');
                     }
 
-                    if(element.getTranslation().getAt(0) && element.getTranslation().getAt(0).get('description')) {
+                    if (element.getTranslation().getAt(0) && element.getTranslation().getAt(0).get('description')) {
                         elementDescription = element.getTranslation().getAt(0).get('description');
                     }
                 }
@@ -152,7 +150,7 @@ Ext.define('Shopware.apps.Config.view.main.Form', {
 
                 fields.push(field);
             });
-            if(fields.length > 0) {
+            if (fields.length > 0) {
                 tabs.push({
                     xtype: 'config-fieldset',
                     title: shop.get('name'),
@@ -161,7 +159,7 @@ Ext.define('Shopware.apps.Config.view.main.Form', {
             }
         });
 
-        if(tabs.length > 1) {
+        if (tabs.length > 1) {
             items.push({
                 xtype: 'tabpanel',
                 bodyStyle: 'background-color: transparent !important',
@@ -172,7 +170,7 @@ Ext.define('Shopware.apps.Config.view.main.Form', {
                 items: tabs
             });
         } else {
-            if(tabs.length > 0) {
+            if (tabs.length > 0) {
                 delete tabs[0].title;
             }
             items.push({

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    NewsletterManager
@@ -42,8 +41,8 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
 
     border: false,
 
-    snippets : {
-        columns : {
+    snippets: {
+        columns: {
             date: '{s name="columns/date"}Date{/s}',
             subject: '{s name="columns/subject"}Subject{/s}',
             state: '{s name="columns/state"}State{/s}',
@@ -99,7 +98,6 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
              */
             'deleteNewsletter',
 
-
             /**
              * Fired when the honorable user chooses to duplicate a newsletter
              * @param record
@@ -115,7 +113,6 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
 
         me.callParent(arguments);
     },
-
 
     /**
      * Creates the grid columns
@@ -158,28 +155,28 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
                     var timedDelivery = Date.parse(record.get('timedDelivery'));
                     var currentDate = new Date();
 
-                    if(status == 1){
+                    if (status == 1){
                         if (currentDate < timedDelivery) {
                             return '{s name="state/willBeSent"}Will be send{/s}'
                         }
 
                         var done = addresses,
                             percentage = 0;
-                        if(done > 0) {
-                            if(!recipients || !recipients > 0) {
+                        if (done > 0) {
+                            if (!recipients || !recipients > 0) {
                                 percentage = 0;
-                            }else{
-                                percentage = done/recipients*100;
+                            } else {
+                                percentage = done / recipients * 100;
                             }
                             // sw-3197: Percentage might become > 100% if recipients are deleted after sending a mail
                             // as the recipient-count in the mail data is constant
-                            if(percentage > 100) {
+                            if (percentage > 100) {
                                 percentage = 100;
                             }
                         }
                         return Ext.String.format('{s name="state/percentage"}{literal}{0}{/literal}% mails sent{/s}', percentage.toFixed(0));
                     }
-                    if(status == 2){
+                    if (status == 2){
                         return '{s name="state/sendingDone"}All mails sent{/s}'
                     }
 
@@ -234,32 +231,31 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
                     },
                     handler: function(grid, rowIndex, colIndex, item, eOpts, record) {
                         /*{if {acl_is_allowed privilege=write}}*/
-                            if (record.get('status') == 2) {
-                                Shopware.Notification.createGrowlMessage(me.snippets.error.active_title, me.snippets.error.active_text);
-                                return false;
-                            }
+                        if (record.get('status') == 2) {
+                            Shopware.Notification.createGrowlMessage(me.snippets.error.active_title, me.snippets.error.active_text);
+                            return false;
+                        }
 
-                            if (record.get('status') == 1) {
-                                Ext.Msg.show({
-                                    title:'{s name="cancel_sending/title"}Cancel sending{/s}',
-                                    msg: '{s name="cancel_sending/msg"}Do you want to cancel the sending of the newsletter?{/s}',
-                                    buttons: Ext.Msg.YESNO,
-                                    icon: Ext.Msg.QUESTION,
-                                    fn: function(response) {
-                                        if(response == 'yes') {
-                                            me.fireEvent('releaseNewsletter', record, grid, rowIndex);
-                                        } else {
-                                            return false;
-                                        }
+                        if (record.get('status') == 1) {
+                            Ext.Msg.show({
+                                title: '{s name="cancel_sending/title"}Cancel sending{/s}',
+                                msg: '{s name="cancel_sending/msg"}Do you want to cancel the sending of the newsletter?{/s}',
+                                buttons: Ext.Msg.YESNO,
+                                icon: Ext.Msg.QUESTION,
+                                fn: function(response) {
+                                    if (response == 'yes') {
+                                        me.fireEvent('releaseNewsletter', record, grid, rowIndex);
+                                    } else {
+                                        return false;
                                     }
-                                });
-                            } else {
-                                me.fireEvent('releaseNewsletter', record, grid, rowIndex);
-                            }
+                                }
+                            });
+                        } else {
+                            me.fireEvent('releaseNewsletter', record, grid, rowIndex);
+                        }
                         /*{else}*/
-                            Shopware.Notification.createGrowlMessage(me.snippets.error.privilege_title, me.snippets.error.privilege_text);
+                        Shopware.Notification.createGrowlMessage(me.snippets.error.privilege_title, me.snippets.error.privilege_text);
                         /*{/if}*/
-
 
                     }
                 }]
@@ -279,9 +275,9 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
             },
             {
                 header: me.snippets.columns.actions,
-                xtype : 'actioncolumn',
-                width : 120,
-                items : me.getActionColumn()
+                xtype: 'actioncolumn',
+                width: 120,
+                items: me.getActionColumn()
             }
         ];
     },
@@ -291,15 +287,15 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
      *
      * @return Array of buttons
      */
-    getActionColumn : function() {
+    getActionColumn: function() {
         var me = this;
 
         return [
             /*{if {acl_is_allowed privilege=write}}*/
             {
-                iconCls:'sprite-mail--pencil',
-                action:'view',
-                tooltip:'{s name="action/edit"}Edit newsletter{/s}',
+                iconCls: 'sprite-mail--pencil',
+                action: 'view',
+                tooltip: '{s name="action/edit"}Edit newsletter{/s}',
                 handler: function (view, rowIndex, colIndex, item, opts, record) {
                     me.fireEvent('editNewsletter', record);
                 }
@@ -307,28 +303,28 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
             /*{/if}*/
             /*{if {acl_is_allowed privilege=delete}}*/
             {
-                iconCls:'sprite-minus-circle-frame',
-                action:'delete',
-                tooltip:'{s name="action/deleteNewsletter"}Delete newsletter{/s}',
+                iconCls: 'sprite-minus-circle-frame',
+                action: 'delete',
+                tooltip: '{s name="action/deleteNewsletter"}Delete newsletter{/s}',
                 handler: function (view, rowIndex, colIndex, item, opts, record) {
                     me.fireEvent('deleteNewsletter', record);
                 }
             },
             /*{/if}*/
 
-//            {
-//                iconCls:'sprite-documents',
-//                action:'duplicate',
-//                tooltip:'{s name="action/duplicateNewsletter"}Duplicate newsletter{/s}',
-//                handler: function (view, rowIndex, colIndex, item, opts, record) {
-//                    me.fireEvent('duplicateNewsletter', record);
-//                }
-//            },
+            //            {
+            //                iconCls:'sprite-documents',
+            //                action:'duplicate',
+            //                tooltip:'{s name="action/duplicateNewsletter"}Duplicate newsletter{/s}',
+            //                handler: function (view, rowIndex, colIndex, item, opts, record) {
+            //                    me.fireEvent('duplicateNewsletter', record);
+            //                }
+            //            },
             /*{if {acl_is_allowed privilege=write}}*/
             {
-                iconCls:'sprite-mail-send',
-                action:'view',
-                tooltip:'{s name="action/sendNewsletter"}Send the newsletter{/s}',
+                iconCls: 'sprite-mail-send',
+                action: 'view',
+                tooltip: '{s name="action/sendNewsletter"}Send the newsletter{/s}',
                 handler: function (view, rowIndex, colIndex, item, opts, record) {
                     me.fireEvent('startSendingNewsletter', record);
                 },
@@ -336,7 +332,7 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
                 getClass: function(value, metaData, record) {
                     //The user cannot send newsletter which are already send
                     var status = record.get('status');
-                    if(status > 0 && status != 3) {
+                    if (status > 0 && status != 3) {
                         return 'x-hide-display';
                     }
 
@@ -379,8 +375,8 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Overview', {
                 /*{/if}*/
                 '->',
                 {
-                    xtype    : 'textfield',
-                    name     : 'searchfield',
+                    xtype: 'textfield',
+                    name: 'searchfield',
                     emptyText: '{s name="searchfield"}Search{/s}',
                     cls: 'searchfield',
                     checkChangeBuffer: 700,

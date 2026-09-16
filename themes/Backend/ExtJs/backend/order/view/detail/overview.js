@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -364,7 +363,6 @@ Ext.define('Shopware.apps.Order.view.detail.Overview', {
         });
     },
 
-
     /**
      * Checks if the shipping and billing address is different by comparing all their fields, except for the ids.
      * If this is the case, the panel title is colored red and an icon will be displayed to its right.
@@ -422,49 +420,49 @@ Ext.define('Shopware.apps.Order.view.detail.Overview', {
     createAddressTemplate: function () {
         return new Ext.XTemplate(
             '{literal}<tpl for=".">',
-                '<div class="customer-info-pnl">',
-                    '<div class="base-info">',
-                        '<p>',
-                            '<span>{company}</span>',
-                        '</p>',
-                        '<p>',
-                            '<span>{department}</span>',
-                        '</p>',
-                        '<p>',
-                            '<tpl if="salutationSnippet"><span>{salutationSnippet}</span>&nbsp;</tpl>',
-                            '<tpl if="title"><span>{title}</span><br /></tpl>',
-                            '<span>{firstName}</span>&nbsp;',
-                            '<span>{lastName}</span>',
-                        '</p>',
-                        '<p>',
-                            '<span>{street}</span>&nbsp;',
-                        '</p>',
-                        '<tpl if="additionalAddressLine1">',
-                            '<p>',
-                                '<span>{additionalAddressLine1}</span>',
-                            '</p>',
-                        '</tpl>',
-                        '<tpl if="additionalAddressLine2">',
-                            '<p>',
-                                '<span>{additionalAddressLine2}</span>',
-                            '</p>',
-                        '</tpl>',
-                        '<p>',
-                            '<span>{zipCode}</span>&nbsp;',
-                            '<span>{city}</span>',
-                        '</p>',
-                        '<tpl for="state">',
-                            '<p>',
-                            '<span>{name}</span>',
-                            '</p>',
-                        '</tpl>',
-                        '<tpl for="country">',
-                            '<p>',
-                                '<span>{name}</span>',
-                            '</p>',
-                        '</tpl>',
-                    '</div>',
-                '</div>',
+            '<div class="customer-info-pnl">',
+            '<div class="base-info">',
+            '<p>',
+            '<span>{company}</span>',
+            '</p>',
+            '<p>',
+            '<span>{department}</span>',
+            '</p>',
+            '<p>',
+            '<tpl if="salutationSnippet"><span>{salutationSnippet}</span>&nbsp;</tpl>',
+            '<tpl if="title"><span>{title}</span><br /></tpl>',
+            '<span>{firstName}</span>&nbsp;',
+            '<span>{lastName}</span>',
+            '</p>',
+            '<p>',
+            '<span>{street}</span>&nbsp;',
+            '</p>',
+            '<tpl if="additionalAddressLine1">',
+            '<p>',
+            '<span>{additionalAddressLine1}</span>',
+            '</p>',
+            '</tpl>',
+            '<tpl if="additionalAddressLine2">',
+            '<p>',
+            '<span>{additionalAddressLine2}</span>',
+            '</p>',
+            '</tpl>',
+            '<p>',
+            '<span>{zipCode}</span>&nbsp;',
+            '<span>{city}</span>',
+            '</p>',
+            '<tpl for="state">',
+            '<p>',
+            '<span>{name}</span>',
+            '</p>',
+            '</tpl>',
+            '<tpl for="country">',
+            '<p>',
+            '<span>{name}</span>',
+            '</p>',
+            '</tpl>',
+            '</div>',
+            '</div>',
 
             '</tpl>{/literal}'
         );
@@ -505,13 +503,13 @@ Ext.define('Shopware.apps.Order.view.detail.Overview', {
     createPaymentTemplate: function () {
         return new Ext.XTemplate(
             '{literal}<tpl for=".">',
-                '<div class="customer-info-pnl">',
-                    '<div class="base-info">',
-                        '<p>',
-                            '<span>{description}</span>',
-                        '</p>',
-                    '</div>',
-                '</div>',
+            '<div class="customer-info-pnl">',
+            '<div class="base-info">',
+            '<p>',
+            '<span>{description}</span>',
+            '</p>',
+            '</div>',
+            '</div>',
             '</tpl>{/literal}'
         );
     },
@@ -583,15 +581,15 @@ Ext.define('Shopware.apps.Order.view.detail.Overview', {
     createLeftDetailElements: function () {
         var me = this, fields;
         fields = [
-            { name: 'shop[name]', fieldLabel: me.snippets.details.shop},
-            { name: 'locale[name]', fieldLabel: me.snippets.details.language},
-            { name: 'orderTime', fieldLabel: me.snippets.details.orderTime},
-            { name: 'number', fieldLabel: me.snippets.details.number},
-            { name: 'currency', fieldLabel: me.snippets.details.currency},
-            { name: 'invoiceAmount', fieldLabel: me.snippets.details.amount, renderer: me.renderInvoiceAmount},
-            { name: 'dispatch[name]', fieldLabel: me.snippets.details.dispatch},
-            { name: 'partnerId', fieldLabel: me.snippets.details.partnerId},
-            { name: 'customerEmail', fieldLabel: me.snippets.details.customerEmail, allowHtml: true, renderer: me.renderCustomerEmail}
+            { name: 'shop[name]', fieldLabel: me.snippets.details.shop },
+            { name: 'locale[name]', fieldLabel: me.snippets.details.language },
+            { name: 'orderTime', fieldLabel: me.snippets.details.orderTime },
+            { name: 'number', fieldLabel: me.snippets.details.number },
+            { name: 'currency', fieldLabel: me.snippets.details.currency },
+            { name: 'invoiceAmount', fieldLabel: me.snippets.details.amount, renderer: me.renderInvoiceAmount },
+            { name: 'dispatch[name]', fieldLabel: me.snippets.details.dispatch },
+            { name: 'partnerId', fieldLabel: me.snippets.details.partnerId },
+            { name: 'customerEmail', fieldLabel: me.snippets.details.customerEmail, allowHtml: true, renderer: me.renderCustomerEmail }
         ];
         if (me.record.get('currencyFactor') !== 1) {
             fields.push({
@@ -634,10 +632,10 @@ Ext.define('Shopware.apps.Order.view.detail.Overview', {
         var me = this;
 
         return [
-            { name: 'referer', fieldLabel: me.snippets.details.referer},
-            { name: 'remoteAddressConverted', fieldLabel: me.snippets.details.remoteAddress},
-            { name: 'deviceTypeHuman', fieldLabel: me.snippets.details.deviceType},
-            { name: 'changed', fieldLabel: me.snippets.details.changed},
+            { name: 'referer', fieldLabel: me.snippets.details.referer },
+            { name: 'remoteAddressConverted', fieldLabel: me.snippets.details.remoteAddress },
+            { name: 'deviceTypeHuman', fieldLabel: me.snippets.details.deviceType },
+            { name: 'changed', fieldLabel: me.snippets.details.changed },
             me.createCustomerButton()
         ];
     },
@@ -651,7 +649,7 @@ Ext.define('Shopware.apps.Order.view.detail.Overview', {
         var me = this;
         return {
             disabled: !me.record.getCustomer().first(),
-            action:'openCustomer',
+            action: 'openCustomer',
             xtype: 'button',
             cls: 'primary',
             text: me.snippets.openCustomer,

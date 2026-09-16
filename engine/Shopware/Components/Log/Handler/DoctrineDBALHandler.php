@@ -1,39 +1,45 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Log\Handler;
 
+use DateTime;
+use Doctrine\DBAL\Connection;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
+use Psr\Log\LogLevel;
 
 /**
- * @deprecated in 5.6, will be removed in 5.7 without replacement
+ * @deprecated in 5.6, will be removed in 5.8 without replacement
+ *
+ * @phpstan-import-type Level from \Monolog\Logger
+ * @phpstan-import-type LevelName from \Monolog\Logger
  */
 class DoctrineDBALHandler extends AbstractProcessingHandler
 {
     /**
-     * @var \Doctrine\DBAL\Connection
+     * @var Connection
      */
     protected $conn;
 
@@ -48,11 +54,11 @@ class DoctrineDBALHandler extends AbstractProcessingHandler
     protected $table;
 
     /**
-     * @param string $table
-     * @param int    $level
-     * @param bool   $bubble
+     * @param string                      $table
+     * @param Level|LevelName|LogLevel::* $level
+     * @param bool                        $bubble
      */
-    public function __construct(\Doctrine\DBAL\Connection $conn, $table, array $columnMap, $level = Logger::DEBUG, $bubble = true)
+    public function __construct(Connection $conn, $table, array $columnMap, $level = Logger::DEBUG, $bubble = true)
     {
         $this->conn = $conn;
         $this->table = $table;
@@ -79,8 +85,8 @@ class DoctrineDBALHandler extends AbstractProcessingHandler
 
         array_walk_recursive($dataToInsert, function (&$value) {
             // Convert DateTime instances to ISO-8601 Strings
-            if ($value instanceof \DateTime) {
-                $value = $value->format(\DateTime::ISO8601);
+            if ($value instanceof DateTime) {
+                $value = $value->format(DateTime::ISO8601);
             }
         });
 

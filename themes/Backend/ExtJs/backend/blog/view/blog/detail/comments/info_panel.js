@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Blog
@@ -35,20 +34,19 @@
  */
 //{block name="backend/blog/view/vote/info_panel"}
 Ext.define('Shopware.apps.Blog.view.blog.detail.comments.InfoPanel', {
-    extend : 'Ext.form.Panel',
-    alias : 'widget.blog-blog-detail-comments-info_panel',
-    autoShow : true,
-    name:  'infopanel',
+    extend: 'Ext.form.Panel',
+    alias: 'widget.blog-blog-detail-comments-info_panel',
+    autoShow: true,
+    name: 'infopanel',
     cls: 'detail-view',
     region: 'east',
-    style:'background: #FFFFFF !important',
+    style: 'background: #FFFFFF !important',
     split: true,
     bodyPadding: 10,
     title: '{s name="blog/detail/comments/info_panel/title"}More information{/s}',
     width: 300,
     collapsible: true,
     autoScroll: true,
-
 
     initComponent: function(){
         var me = this;
@@ -80,41 +78,41 @@ Ext.define('Shopware.apps.Blog.view.blog.detail.comments.InfoPanel', {
     createInfoPanelTemplate: function(){
         return new Ext.XTemplate(
             '<tpl for=".">',
-                '<div class="info-view">',
-                    '<div class="base-info">',
-                        '<p style="margin-top: 10px;">',
-                            '<b>{s name="blog/detail/comments/info_panel/headline"}Headline: {/s}</b>',
-                            '<span>{literal}{headline}{/literal}</span>',
-                        '</p>',
-                        '<p style="margin-top: 10px;">',
-                            '<b>{s name="blog/detail/comments/info_panel/author"}Author: {/s}</b>',
-                            '<span>{literal}{name}{/literal}</span>',
-                        '</p>',
-                        '<p style="margin-top: 10px;">',
-                            '<b>{s name="blog/detail/comments/info_panel/email"}Email: {/s}</b>',
-                            '<span>{literal}{eMail}{/literal}</span>',
-                        '</p>',
-                        '<p style="margin-top: 10px;">',
-                            '<b>{s name="blog/detail/comments/info_panel/creation_date"}Creation Date: {/s}</b>',
-                            '<span>{literal}{[this.formatDate(values.creationDate)]}{/literal}</span>',
-                        '</p>',
-                        '<p style="margin-top: 10px;">',
-                            '<b>{s name="blog/detail/comments/info_panel/status"}Status: {/s}</b>',
-                            '<tpl if="active==1"><span style="color: green"><b>{s name="blog/detail/comments/info_panel/statusAccepted"}Accepted{/s}</b></span></tpl>',
-                            '<tpl if="active==0"><span style="color: red"><b>{s name="blog/detail/comments/info_panel/statusNotAccepted"}Not accepted yet{/s}</b></span></tpl>',
-                        '</p>',
-                        '<p style="margin-top: 10px;">',
-                            '<b>{s name="blog/detail/comments/info_panel/points"}Points: {/s}</b>',
-                            //function to create a star-rating
-                            '<span>{literal}{[this.formatPoints(values.points)]}{/literal}</span>',
-                        '</p>',
-                        '<p style="margin-top: 10px;">',
-                            '<b>{s name="blog/detail/comments/info_panel/comment"}Comment: {/s}</b>',
-                            '<br />',
-                            '<span>{literal}{content}{/literal}</span>',
-                        '</p>',
-                    '</div>',
-                '</div>',
+            '<div class="info-view">',
+            '<div class="base-info">',
+            '<p style="margin-top: 10px;">',
+            '<b>{s name="blog/detail/comments/info_panel/headline"}Headline: {/s}</b>',
+            '<span>{literal}{headline}{/literal}</span>',
+            '</p>',
+            '<p style="margin-top: 10px;">',
+            '<b>{s name="blog/detail/comments/info_panel/author"}Author: {/s}</b>',
+            '<span>{literal}{name}{/literal}</span>',
+            '</p>',
+            '<p style="margin-top: 10px;">',
+            '<b>{s name="blog/detail/comments/info_panel/email"}Email: {/s}</b>',
+            '<span>{literal}{eMail}{/literal}</span>',
+            '</p>',
+            '<p style="margin-top: 10px;">',
+            '<b>{s name="blog/detail/comments/info_panel/creation_date"}Creation Date: {/s}</b>',
+            '<span>{literal}{[this.formatDate(values.creationDate)]}{/literal}</span>',
+            '</p>',
+            '<p style="margin-top: 10px;">',
+            '<b>{s name="blog/detail/comments/info_panel/status"}Status: {/s}</b>',
+            '<tpl if="active==1"><span style="color: green"><b>{s name="blog/detail/comments/info_panel/statusAccepted"}Accepted{/s}</b></span></tpl>',
+            '<tpl if="active==0"><span style="color: red"><b>{s name="blog/detail/comments/info_panel/statusNotAccepted"}Not accepted yet{/s}</b></span></tpl>',
+            '</p>',
+            '<p style="margin-top: 10px;">',
+            '<b>{s name="blog/detail/comments/info_panel/points"}Points: {/s}</b>',
+            //function to create a star-rating
+            '<span>{literal}{[this.formatPoints(values.points)]}{/literal}</span>',
+            '</p>',
+            '<p style="margin-top: 10px;">',
+            '<b>{s name="blog/detail/comments/info_panel/comment"}Comment: {/s}</b>',
+            '<br />',
+            '<span>{literal}{content}{/literal}</span>',
+            '</p>',
+            '</div>',
+            '</div>',
             '</tpl>',
             {
                 /**
@@ -134,12 +132,12 @@ Ext.define('Shopware.apps.Blog.view.blog.detail.comments.InfoPanel', {
                 formatPoints: function(points) {
                     var html = '';
                     var count = 0;
-                    points = points/2;
-                    for(var i=0; i<points; i++){
-                        if((i-points) == -0.5) {
+                    points = points / 2;
+                    for (var i = 0; i < points; i++){
+                        if ((i - points) == -0.5) {
                             //create half-star
                             html = html + '<div style="height: 16px; width: 16px; display: inline-block;" class="sprite-star-half"></div>';
-                        }else{
+                        } else {
                             //create full stars
                             html = html + '<div style="height: 16px; width: 16px; display: inline-block;" class="sprite-star"></div>';
                         }
@@ -147,7 +145,7 @@ Ext.define('Shopware.apps.Blog.view.blog.detail.comments.InfoPanel', {
                     }
 
                     //add empty stars, so 5 stars are displayed
-                    for(var i=0; i<(5-count); i++){
+                    for (var i = 0; i < (5 - count); i++){
                         html = html + '<div style="height: 16px; width: 16px; display: inline-block;" class="sprite-star-empty"></div>';
                     }
                     return html;

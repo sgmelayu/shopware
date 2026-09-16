@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Site
@@ -38,7 +37,7 @@
 //{block name="backend/site/view/site/tree"}
 Ext.define('Shopware.apps.Site.view.site.Tree', {
     extend: 'Ext.tree.Panel',
-    alias : 'widget.site-tree',
+    alias: 'widget.site-tree',
     rootVisible: false,
     animate: false,
 
@@ -51,7 +50,7 @@ Ext.define('Shopware.apps.Site.view.site.Tree', {
     getBottomToolbar: function() {
         var buttons = [];
         /*{if {acl_is_allowed privilege=createGroup}}*/
-        buttons.push(Ext.create("Ext.button.Button",{
+        buttons.push(Ext.create("Ext.button.Button", {
             text: '{s name="treeCreateGroupButton"}Add group{/s}',
             iconCls: 'sprite-blue-folder--plus',
             cls: 'small secondary',
@@ -60,7 +59,7 @@ Ext.define('Shopware.apps.Site.view.site.Tree', {
         /*{/if}*/
         /*{if {acl_is_allowed privilege=deleteGroup}}*/
         buttons.push('->');
-        buttons.push(Ext.create("Ext.button.Button",{
+        buttons.push(Ext.create("Ext.button.Button", {
             text: '{s name="treeDeleteGroupButton"}Delete group{/s}',
             action: 'onDeleteGroup',
             cls: 'small secondary',

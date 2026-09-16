@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\CustomerSearchBundleDBAL;
@@ -37,7 +37,7 @@ class CustomerNumberSearchTest extends TestCase
     private const COUNTRY_ID_GERMANY = 2;
     private const COUNTRY_ID_NETHERLANDS = 21;
     private const ADDRESS_COUNTRY_IDS = [self::COUNTRY_ID_GERMANY, self::COUNTRY_ID_GERMANY, self::COUNTRY_ID_NETHERLANDS];
-    private const CUSTOMERNUMBERS = ['lorem', 'ipsum', 'dolor', 'sit', 'amet'];
+    private const CUSTOMER_NUMBERS = ['lorem', 'ipsum', 'dolor', 'sit', 'amet'];
 
     /**
      * Assert, that a search using no condition returns exactly the expected customers
@@ -47,8 +47,8 @@ class CustomerNumberSearchTest extends TestCase
     {
         $result = $this->search(
             new Criteria(),
-            self::CUSTOMERNUMBERS,
-            array_map(['self', 'customerFromNumber'], self::CUSTOMERNUMBERS)
+            self::CUSTOMER_NUMBERS,
+            array_map([__CLASS__, 'customerFromNumber'], self::CUSTOMER_NUMBERS)
         );
 
         self::assertSearchResultEqualsInput($result);
@@ -67,17 +67,29 @@ class CustomerNumberSearchTest extends TestCase
 
         $result = $this->search(
             $criteria,
-            self::CUSTOMERNUMBERS,
-            array_map(['self', 'customerFromNumber'], self::CUSTOMERNUMBERS)
+            self::CUSTOMER_NUMBERS,
+            array_map([__CLASS__, 'customerFromNumber'], self::CUSTOMER_NUMBERS)
         );
 
         self::assertSearchResultEqualsInput($result);
     }
 
+    protected static function customerFromNumber(string $customerNumber = 'none'): array
+    {
+        return [
+            'number' => $customerNumber,
+            'email' => \sprintf('%s@example.com', $customerNumber),
+            'active' => true,
+            'addresses' => array_map(static function ($id) {
+                return ['country_id' => $id];
+            }, self::ADDRESS_COUNTRY_IDS),
+        ];
+    }
+
     private static function assertSearchResultEqualsInput(CustomerNumberSearchResult $result): void
     {
-        static::assertCount(count(self::CUSTOMERNUMBERS), $result->getCustomers());
-        static::assertCount(0, array_diff(self::CUSTOMERNUMBERS, self::getCustomerNumbers($result)));
+        static::assertCount(\count(self::CUSTOMER_NUMBERS), $result->getCustomers());
+        static::assertCount(0, array_diff(self::CUSTOMER_NUMBERS, self::getCustomerNumbers($result)));
     }
 
     private static function getCustomerNumbers(CustomerNumberSearchResult $searchResult): array
@@ -86,17 +98,5 @@ class CustomerNumberSearchTest extends TestCase
             /* @var BaseCustomer $customer */
             return $customer->getNumber();
         }, $searchResult->getCustomers());
-    }
-
-    private static function customerFromNumber(string $customerNumber = 'none'): array
-    {
-        return [
-            'number' => $customerNumber,
-            'email' => sprintf('%s@example.com', $customerNumber),
-            'active' => true,
-            'addresses' => array_map(static function ($id) {
-                return ['country_id' => $id];
-            }, self::ADDRESS_COUNTRY_IDS),
-        ];
     }
 }

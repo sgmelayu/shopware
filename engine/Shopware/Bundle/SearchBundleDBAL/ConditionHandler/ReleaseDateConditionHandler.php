@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\ConditionHandler;
 
+use DateInterval;
+use DateTime;
 use Shopware\Bundle\SearchBundle\Condition\ReleaseDateCondition;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 use Shopware\Bundle\SearchBundleDBAL\ConditionHandlerInterface;
@@ -48,16 +50,20 @@ class ReleaseDateConditionHandler implements ConditionHandlerInterface
         QueryBuilder $query,
         ShopContextInterface $context
     ) {
-        $date = new \DateTime();
-        /** @var ReleaseDateCondition $condition */
+        $this->addCondition($condition, $query);
+    }
+
+    private function addCondition(ReleaseDateCondition $condition, QueryBuilder $query): void
+    {
+        $date = new DateTime();
         $intervalSpec = 'P' . $condition->getDays() . 'D';
-        $interval = new \DateInterval($intervalSpec);
+        $interval = new DateInterval($intervalSpec);
 
-        $dateNow = new \DateTime();
+        $dateNow = new DateTime();
 
-        $min = ':releaseDateFrom' . md5(json_encode($condition));
-        $max = ':releaseDateTo' . md5(json_encode($condition));
-        $now = ':dateNow' . md5(json_encode($condition));
+        $min = ':releaseDateFrom' . md5(json_encode($condition, JSON_THROW_ON_ERROR));
+        $max = ':releaseDateTo' . md5(json_encode($condition, JSON_THROW_ON_ERROR));
+        $now = ':dateNow' . md5(json_encode($condition, JSON_THROW_ON_ERROR));
 
         switch ($condition->getDirection()) {
             case ReleaseDateCondition::DIRECTION_FUTURE:

@@ -1,43 +1,50 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-namespace Shopware\Tests\Components\Thumbnail;
+namespace Shopware\Tests\Functional\Components\Thumbnail;
 
+use Error;
 use PHPUnit\Framework\TestCase;
+use Shopware\Bundle\MediaBundle\MediaServiceInterface;
+use Shopware\Components\Thumbnail\Manager;
+use Shopware\Models\Media\Album;
+use Shopware\Models\Media\Media;
+use Symfony\Component\HttpFoundation\File\File;
 
 class ManagerTest extends TestCase
 {
-    public function testManagerInstance()
+    public function testManagerInstance(): void
     {
-        $manager = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
-        static::assertInstanceOf('\Shopware\Components\Thumbnail\Manager', $manager);
+        $manager = Shopware()->Container()->get(Manager::class);
+        static::assertInstanceOf(Manager::class, $manager);
     }
 
-    public function testThumbnailGeneration()
+    public function testThumbnailGeneration(): void
     {
-        $manager = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $manager = Shopware()->Container()->get(Manager::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
         $media = $this->getMediaModel();
 
@@ -64,9 +71,9 @@ class ManagerTest extends TestCase
         $mediaService->delete($media->getPath());
     }
 
-    public function testGenerationWithoutPassedSizes()
+    public function testGenerationWithoutPassedSizes(): void
     {
-        $manager = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
+        $manager = Shopware()->Container()->get(Manager::class);
 
         $media = $this->getMediaModel();
 
@@ -76,12 +83,13 @@ class ManagerTest extends TestCase
             '240x250',
         ];
 
+        static::assertNotNull($media->getAlbum()->getSettings());
         $media->getAlbum()->getSettings()->setThumbnailSize($sizes);
 
         $manager->createMediaThumbnail($media);
 
         $thumbnailDir = Shopware()->DocPath('media_' . strtolower($media->getType()) . '_thumbnail');
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
         $path = $thumbnailDir . $media->getName();
 
@@ -91,9 +99,9 @@ class ManagerTest extends TestCase
         }
     }
 
-    public function testGenerationWithoutPassedSizesButProportion()
+    public function testGenerationWithoutPassedSizesButProportion(): void
     {
-        $manager = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
+        $manager = Shopware()->Container()->get(Manager::class);
 
         $media = $this->getMediaModel();
 
@@ -109,12 +117,13 @@ class ManagerTest extends TestCase
             '340x337',
         ];
 
+        static::assertNotNull($media->getAlbum()->getSettings());
         $media->getAlbum()->getSettings()->setThumbnailSize($sizes);
 
         $manager->createMediaThumbnail($media, [], true);
 
         $thumbnailDir = Shopware()->DocPath('media_' . strtolower($media->getType()) . '_thumbnail');
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
         $path = $thumbnailDir . $media->getName();
 
@@ -122,7 +131,10 @@ class ManagerTest extends TestCase
             static::assertTrue($mediaService->has($path . '_' . $size . '.jpg'));
             static::assertTrue($mediaService->has($path . '_' . $size . '.png'));
 
-            $image = imagecreatefromstring($mediaService->read($path . '_' . $size . '.jpg'));
+            $imagePath = $mediaService->read($path . '_' . $size . '.jpg');
+            static::assertIsString($imagePath);
+            $image = imagecreatefromstring($imagePath);
+            static::assertNotFalse($image);
             $width = imagesx($image);
             $height = imagesy($image);
 
@@ -130,17 +142,18 @@ class ManagerTest extends TestCase
         }
     }
 
-    public function testGenerationWithoutAlbum()
+    public function testGenerationWithoutAlbum(): void
     {
-        $this->expectException('Exception');
-        $this->expectExceptionMessage('No album configured for the passed media object and no size passed!');
-        $media = new \Shopware\Models\Media\Media();
+        $this->expectException(Error::class);
+        $this->expectExceptionMessage('Call to a member function getSettings() on null');
+        $media = new Media();
 
         $sourcePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'sw_icon.png';
         $imagePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'sw_icon_copy.png';
         copy($sourcePath, $imagePath);
 
-        $file = new \Symfony\Component\HttpFoundation\File\File($imagePath);
+        $file = new File($imagePath);
+        /** @var string $projectDir */
         $projectDir = Shopware()->Container()->getParameter('shopware.app.rootDir');
 
         $media->setFile($file);
@@ -148,21 +161,21 @@ class ManagerTest extends TestCase
 
         @unlink($file->getRealPath());
 
-        $manager = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
+        $manager = Shopware()->Container()->get(Manager::class);
         $manager->createMediaThumbnail($media);
     }
 
-    public function testGenerationWithEmptyMedia()
+    public function testGenerationWithEmptyMedia(): void
     {
         $this->expectException('Exception');
         $this->expectExceptionMessageMatches('/File .* is not an image/');
-        $media = new \Shopware\Models\Media\Media();
+        $media = new Media();
 
-        $manager = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
+        $manager = Shopware()->Container()->get(Manager::class);
         $manager->createMediaThumbnail($media);
     }
 
-    public function testThumbnailCleanUp()
+    public function testThumbnailCleanUp(): void
     {
         $media = $this->getMediaModel();
 
@@ -170,11 +183,11 @@ class ManagerTest extends TestCase
         $defaultSize = $defaultSizes[0];
         $defaultSize = $defaultSize[0] . 'x' . $defaultSize[1];
 
-        $manager = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
+        $manager = Shopware()->Container()->get(Manager::class);
         $manager->createMediaThumbnail($media, [$defaultSize]);
 
         $thumbnailDir = Shopware()->DocPath('media_' . strtolower($media->getType()) . '_thumbnail');
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
         $path = $thumbnailDir . $media->getName();
 
         static::assertTrue($mediaService->has($path . '_' . $defaultSize . '.' . $media->getExtension()));
@@ -188,20 +201,24 @@ class ManagerTest extends TestCase
         static::assertFalse($mediaService->has($media->getPath()));
     }
 
-    private function getMediaModel()
+    private function getMediaModel(): Media
     {
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
-        $media = new \Shopware\Models\Media\Media();
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
+        $media = new Media();
 
         $sourcePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixtures' . DIRECTORY_SEPARATOR . 'sw_icon.png';
         $imagePath = 'media/unknown/sw_icon.png';
-        $mediaService->write($imagePath, file_get_contents($sourcePath));
+        $content = file_get_contents($sourcePath);
+        static::assertIsString($content);
+        $mediaService->write($imagePath, $content);
 
-        $file = new \Symfony\Component\HttpFoundation\File\File($sourcePath);
+        $file = new File($sourcePath);
 
         $media->setFile($file);
         $media->setAlbumId(-10);
-        $media->setAlbum(Shopware()->Models()->find(\Shopware\Models\Media\Album::class, -10));
+        $album = Shopware()->Models()->find(Album::class, -10);
+        static::assertNotNull($album);
+        $media->setAlbum($album);
         $media->setPath(str_replace(Shopware()->DocPath(), '', $imagePath));
         $media->setDescription('');
         $media->setUserId(0);

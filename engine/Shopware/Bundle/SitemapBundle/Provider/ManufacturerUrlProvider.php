@@ -1,55 +1,48 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SitemapBundle\Provider;
 
-use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
-use Doctrine\DBAL\Query\QueryBuilder;
+use DateTime;
+use Doctrine\DBAL\Connection;
+use PDO;
 use Shopware\Bundle\SitemapBundle\Struct\Url;
 use Shopware\Bundle\SitemapBundle\UrlProviderInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
-use Shopware\Components\Routing;
+use Shopware\Components\Routing\Context;
+use Shopware\Components\Routing\RouterInterface;
 use Shopware\Models\Article\Supplier;
 
 class ManufacturerUrlProvider implements UrlProviderInterface
 {
-    /**
-     * @var Routing\RouterInterface
-     */
-    private $router;
+    private RouterInterface $router;
 
-    /**
-     * @var ConnectionInterface
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var bool
-     */
-    private $allExported;
+    private bool $allExported = false;
 
-    public function __construct(ConnectionInterface $connection, Routing\RouterInterface $router)
+    public function __construct(Connection $connection, RouterInterface $router)
     {
         $this->router = $router;
         $this->connection = $connection;
@@ -58,7 +51,7 @@ class ManufacturerUrlProvider implements UrlProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function getUrls(Routing\Context $routingContext, ShopContextInterface $shopContext)
+    public function getUrls(Context $routingContext, ShopContextInterface $shopContext)
     {
         if ($this->allExported) {
             return [];
@@ -71,7 +64,7 @@ class ManufacturerUrlProvider implements UrlProviderInterface
         }
 
         foreach ($manufacturers as &$manufacturer) {
-            $manufacturer['changed'] = new \DateTime($manufacturer['changed']);
+            $manufacturer['changed'] = new DateTime($manufacturer['changed']);
             $manufacturer['urlParams'] = [
                 'sViewport' => 'listing',
                 'sAction' => 'manufacturer',
@@ -84,7 +77,7 @@ class ManufacturerUrlProvider implements UrlProviderInterface
         $routes = $this->router->generateList(array_column($manufacturers, 'urlParams'), $routingContext);
         $urls = [];
 
-        for ($i = 0, $routeCount = count($routes); $i < $routeCount; ++$i) {
+        for ($i = 0, $routeCount = \count($routes); $i < $routeCount; ++$i) {
             $urls[] = new Url($routes[$i], $manufacturers[$i]['changed'], 'weekly', Supplier::class, $manufacturers[$i]['id']);
         }
 
@@ -104,26 +97,20 @@ class ManufacturerUrlProvider implements UrlProviderInterface
     /**
      * Gets all suppliers that have products for the current shop
      *
-     * @return array
+     * @return array<array<string, mixed>>
      */
-    private function getManufacturersForSitemap(ShopContextInterface $shopContext)
+    private function getManufacturersForSitemap(ShopContextInterface $shopContext): array
     {
         $categoryId = $shopContext->getShop()->getCategory()->getId();
 
-        /** @var QueryBuilder $query */
-        $query = $this->connection->createQueryBuilder();
-        $query->select(['manufacturer.id', 'manufacturer.name', 'manufacturer.changed']);
-
-        $query->from('s_articles_supplier', 'manufacturer');
-        $query->innerJoin('manufacturer', 's_articles', 'product', 'product.supplierID = manufacturer.id')
+        return $this->connection->createQueryBuilder()
+            ->select(['manufacturer.id', 'manufacturer.name', 'manufacturer.changed'])
+            ->from('s_articles_supplier', 'manufacturer')
+            ->innerJoin('manufacturer', 's_articles', 'product', 'product.supplierID = manufacturer.id')
             ->innerJoin('product', 's_articles_categories_ro', 'categories', 'categories.articleID = product.id AND categories.categoryID = :categoryId')
-            ->setParameter(':categoryId', $categoryId);
-
-        $query->groupBy('manufacturer.id');
-
-        /** @var \PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+            ->setParameter(':categoryId', $categoryId)
+            ->groupBy('manufacturer.id')
+            ->execute()
+            ->fetchAll(PDO::FETCH_ASSOC);
     }
 }

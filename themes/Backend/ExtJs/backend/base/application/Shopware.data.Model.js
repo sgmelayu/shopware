@@ -1,5 +1,4 @@
 
-
 //{namespace name="backend/application/main"}
 
 //{block name="backend/application/Shopware.data.Model"}
@@ -86,7 +85,7 @@ Ext.define('Shopware.data.Model', {
              *
              * @type { String }
              */
-            detail:  'Shopware.model.Container',
+            detail: 'Shopware.model.Container',
 
             /**
              * Related component of this model.
@@ -110,7 +109,7 @@ Ext.define('Shopware.data.Model', {
              *
              * @type { String }
              */
-            field:   'Shopware.form.field.Search',
+            field: 'Shopware.form.field.Search',
 
             /**
              * Model proxy which defines
@@ -119,9 +118,9 @@ Ext.define('Shopware.data.Model', {
             proxy: {
                 type: 'ajax',
                 api: {
-                    detail:  '{url controller="base" action="detail"}',
-                    create:  '{url controller="base" action="create"}',
-                    update:  '{url controller="base" action="update"}',
+                    detail: '{url controller="base" action="detail"}',
+                    create: '{url controller="base" action="create"}',
+                    update: '{url controller="base" action="update"}',
                     destroy: '{url controller="base" action="delete"}'
                 },
                 reader: {
@@ -230,7 +229,6 @@ Ext.define('Shopware.data.Model', {
             me.proxy.api[key] = value;
         });
     },
-
 
     /**
      * Helper function to load the model detail data.

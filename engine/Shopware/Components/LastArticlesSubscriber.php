@@ -1,30 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
 
 use Enlight\Event\SubscriberInterface;
+use Enlight_Controller_ActionEventArgs;
+use Enlight_Event_EventArgs;
+use Shopware_Components_Config;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class LastArticlesSubscriber implements SubscriberInterface
@@ -51,7 +54,7 @@ class LastArticlesSubscriber implements SubscriberInterface
         ];
     }
 
-    public function refreshSessionId(\Enlight_Event_EventArgs $args)
+    public function refreshSessionId(Enlight_Event_EventArgs $args)
     {
         $this->container->get(\Doctrine\DBAL\Connection::class)->executeUpdate(
             'UPDATE s_emarketing_lastarticles SET sessionID = :newId WHERE sessionID = :oldId',
@@ -59,7 +62,7 @@ class LastArticlesSubscriber implements SubscriberInterface
         );
     }
 
-    public function onRefreshStatistics(\Enlight_Controller_ActionEventArgs $args)
+    public function onRefreshStatistics(Enlight_Controller_ActionEventArgs $args)
     {
         $request = $args->getRequest();
 
@@ -76,10 +79,10 @@ class LastArticlesSubscriber implements SubscriberInterface
         $this->setLastProductById($productId);
     }
 
-    public function onPostDispatch(\Enlight_Controller_ActionEventArgs $args)
+    public function onPostDispatch(Enlight_Controller_ActionEventArgs $args)
     {
         $this->cleanupLastProducts();
-        $config = $this->container->get(\Shopware_Components_Config::class);
+        $config = $this->container->get(Shopware_Components_Config::class);
 
         if (empty($config->offsetGet('lastarticles_show'))) {
             return;
@@ -101,7 +104,7 @@ class LastArticlesSubscriber implements SubscriberInterface
     private function cleanupLastProducts()
     {
         if (Random::getInteger(0, 100) === 0) {
-            $time = (int) $this->container->get(\Shopware_Components_Config::class)->get('lastarticles_time', 15);
+            $time = (int) $this->container->get(Shopware_Components_Config::class)->get('lastarticles_time', 15);
 
             $sql = 'DELETE FROM s_emarketing_lastarticles WHERE `time` < DATE_SUB(CONCAT_WS(" ", CURDATE(), ?), INTERVAL ? DAY)';
             $this->container->get(\Doctrine\DBAL\Connection::class)->executeQuery($sql, ['00:00:00', $time]);

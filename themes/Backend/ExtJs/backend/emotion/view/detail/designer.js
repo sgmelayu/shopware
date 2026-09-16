@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category    Shopware
  * @package     Emotion
@@ -331,41 +330,41 @@ Ext.define('Shopware.apps.Emotion.view.detail.Designer', {
         return new Ext.XTemplate(
             '{literal}',
 
-                '<div class="x-designer-actions-toolbar">',
-                    '<button data-qtip="{[this.getPreviewBtnTooltip()]}" class="{[this.getPreviewBtnCls()]}">',
-                        '<span class="preview-btn-toggle"></span>' + me.snippets.preview + '',
-                    '</button>',
+            '<div class="x-designer-actions-toolbar">',
+            '<button data-qtip="{[this.getPreviewBtnTooltip()]}" class="{[this.getPreviewBtnCls()]}">',
+            '<span class="preview-btn-toggle"></span>' + me.snippets.preview + '',
+            '</button>',
 
-                    '<button class="{[this.getDisconnectBtnCls()]}">',
-                        '<span class="disconnect-btn-icon"></span>' + me.snippets.disconnectLabel,
-                    '</button>',
-                '</div>',
+            '<button class="{[this.getDisconnectBtnCls()]}">',
+            '<span class="disconnect-btn-icon"></span>' + me.snippets.disconnectLabel,
+            '</button>',
+            '</div>',
 
-                '<div class="x-designer-viewports-toolbar">',
-                    '<div class="x-designer-viewports">',
-                        '<tpl for=".">',
-                            '<div class="x-designer-viewport">',
-                                '<div class="{[this.getViewportBtnCls(values.alias)]}">',
-                                    '<div class="{[this.getLabelCls(values.deviceId)]}" data-viewport="{alias}" data-qtip="{[this.getLabelTooltip(values.deviceId)]}">{label}</div>',
-                                    '<div class="{[this.getCounterCls(values.alias, values.hiddenCounter, values)]}" data-viewport="{alias}" data-qtip="{[this.getHiddenElTooltip()]}">',
-                                        '<span class="counter--value">{hiddenCounter}</span>',
-                                    '</div>',
-                                    '<div class="{[this.getConnectCls(values.alias)]}" data-viewport="{alias}" data-qtip="{[this.getConnectTooltip(values.alias)]}"></div>',
-                                '</div>',
-                            '</div>',
-                        '</tpl>',
-                    '</div>',
-                '</div>',
+            '<div class="x-designer-viewports-toolbar">',
+            '<div class="x-designer-viewports">',
+            '<tpl for=".">',
+            '<div class="x-designer-viewport">',
+            '<div class="{[this.getViewportBtnCls(values.alias)]}">',
+            '<div class="{[this.getLabelCls(values.deviceId)]}" data-viewport="{alias}" data-qtip="{[this.getLabelTooltip(values.deviceId)]}">{label}</div>',
+            '<div class="{[this.getCounterCls(values.alias, values.hiddenCounter, values)]}" data-viewport="{alias}" data-qtip="{[this.getHiddenElTooltip()]}">',
+            '<span class="counter--value">{hiddenCounter}</span>',
+            '</div>',
+            '<div class="{[this.getConnectCls(values.alias)]}" data-viewport="{alias}" data-qtip="{[this.getConnectTooltip(values.alias)]}"></div>',
+            '</div>',
+            '</div>',
+            '</tpl>',
+            '</div>',
+            '</div>',
 
-                '<div class="x-designer-viewport-lines">',
-                    '<div class="x-designer-viewport-base-line">',
-                        '<tpl for=".">',
-                            '<div class="{[this.getLineCls(values.alias)]}" style="width: {[values.maxWidth - values.minWidth]}px; left: {minWidth}px;">',
-                                '<div class="x-designer-viewport-line-inner"></div>',
-                            '</div>',
-                        '</tpl>',
-                    '</div>',
-                '</div>',
+            '<div class="x-designer-viewport-lines">',
+            '<div class="x-designer-viewport-base-line">',
+            '<tpl for=".">',
+            '<div class="{[this.getLineCls(values.alias)]}" style="width: {[values.maxWidth - values.minWidth]}px; left: {minWidth}px;">',
+            '<div class="x-designer-viewport-line-inner"></div>',
+            '</div>',
+            '</tpl>',
+            '</div>',
+            '</div>',
             '{/literal}',
             {
                 getPreviewBtnTooltip: function() {
@@ -478,7 +477,7 @@ Ext.define('Shopware.apps.Emotion.view.detail.Designer', {
                     if (alias === me.grid.state) {
                         cls += ' is--active';
 
-                    } else if(me.grid.stateConnections.indexOf(alias) !== -1) {
+                    } else if (me.grid.stateConnections.indexOf(alias) !== -1) {
                         cls += ' is--connected';
                     }
 

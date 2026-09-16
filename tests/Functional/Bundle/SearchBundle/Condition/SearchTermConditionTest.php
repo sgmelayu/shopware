@@ -1,40 +1,43 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\SearchBundle\Condition;
 
 use Shopware\Bundle\SearchBundle\Condition\SearchTermCondition;
+use Shopware\Bundle\SearchBundleDBAL\SearchTerm\SearchIndexer;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Models\Category\Category;
 use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestCase;
+use Zend_Cache_Core;
 
 /**
  * @group elasticSearch
  */
 class SearchTermConditionTest extends TestCase
 {
-    public function testSingleMatch()
+    public function testSingleMatch(): void
     {
         $condition = new SearchTermCondition('Unit');
 
@@ -50,7 +53,7 @@ class SearchTermConditionTest extends TestCase
         );
     }
 
-    public function testMultipleMatch()
+    public function testMultipleMatch(): void
     {
         $condition = new SearchTermCondition('unit');
 
@@ -67,30 +70,28 @@ class SearchTermConditionTest extends TestCase
         );
     }
 
-    public function createProducts($products, ShopContext $context, Category $category)
+    public function createProducts(array $products, ShopContext $context, Category $category): array
     {
         $articles = parent::createProducts($products, $context, $category);
 
-        Shopware()->Container()->get(\Shopware\Bundle\SearchBundleDBAL\SearchTerm\SearchIndexer::class)->build();
+        $this->getContainer()->get(SearchIndexer::class)->build();
 
-        Shopware()->Container()->get(\Zend_Cache_Core::class)->clean('all', ['Shopware_Modules_Search']);
+        $this->getContainer()->get(Zend_Cache_Core::class)->clean('all', ['Shopware_Modules_Search']);
 
         return $articles;
     }
 
     /**
-     * @param string   $number
-     * @param Category $category
-     * @param string   $name
+     * @param string $name
      *
-     * @return array
+     * @return array<string, mixed>
      */
     protected function getProduct(
-        $number,
+        string $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $name = null
-    ) {
+    ): array {
         $product = parent::getProduct($number, $context, $category);
         $product['name'] = $name;
 

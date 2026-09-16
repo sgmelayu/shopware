@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -35,10 +34,10 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
     extend: 'Ext.app.Controller',
 
     refs: [
-        { ref:'navigationGrid', selector:'multi-edit-navigation-grid' },
-        { ref:'mainGrid', selector:'multi-edit-main-grid' },
-        { ref:'batchWindow', selector:'multi-edit-batch-process-window' },
-        { ref:'batchGrid', selector:'multi-edit-batch-process-grid' }
+        { ref: 'navigationGrid', selector: 'multi-edit-navigation-grid' },
+        { ref: 'mainGrid', selector: 'multi-edit-main-grid' },
+        { ref: 'batchWindow', selector: 'multi-edit-batch-process-window' },
+        { ref: 'batchGrid', selector: 'multi-edit-batch-process-grid' }
     ],
 
     /**
@@ -150,7 +149,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
 
         me.createQueueWindow();
 
-        return { operations: operations, filterArray: filterArray}
+        return { operations: operations, filterArray: filterArray }
     },
 
     /**
@@ -160,13 +159,13 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
         var me = this;
 
         me.progressWindow = Ext.MessageBox.show({
-            title        : '{s name="creatingQueue"}Creating queue for bulk changes{/s}',
-            msg          : '{s name="importPendingMessageQueue"}In this step the filtered products are calculated. Additionally a backup will be created, if configured. Depending one the amount of products and the server speed, this might take a while.{/s}',
-            width        : 500,
-            progress     : true,
-            closable     : false,
-            buttons      : Ext.MessageBox.CANCEL,
-            fn           : function(buttonId, text, opt) {
+            title: '{s name="creatingQueue"}Creating queue for bulk changes{/s}',
+            msg: '{s name="importPendingMessageQueue"}In this step the filtered products are calculated. Additionally a backup will be created, if configured. Depending one the amount of products and the server speed, this might take a while.{/s}',
+            width: 500,
+            progress: true,
+            closable: false,
+            buttons: Ext.MessageBox.CANCEL,
+            fn: function(buttonId, text, opt) {
 
                 if (buttonId !== 'cancel') {
                     return;
@@ -194,13 +193,13 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
         var me = this;
 
         me.progressWindow = Ext.MessageBox.show({
-            title        : '{s name="creatingBatchWindow"}Batch-changing products{/s}',
-            msg          : '{s name="importPendingMessageBatch"}In this step your changes will be applied to the filtered products. This is quite fast in most cases. If not, try to disable cache invalidation in the ArticleList plugin configuration.{/s}',
-            width        : 500,
-            progress     : true,
-            closable     : false,
-            buttons      : Ext.MessageBox.CANCEL,
-            fn           : function(buttonId, text, opt) {
+            title: '{s name="creatingBatchWindow"}Batch-changing products{/s}',
+            msg: '{s name="importPendingMessageBatch"}In this step your changes will be applied to the filtered products. This is quite fast in most cases. If not, try to disable cache invalidation in the ArticleList plugin configuration.{/s}',
+            width: 500,
+            progress: true,
+            closable: false,
+            buttons: Ext.MessageBox.CANCEL,
+            fn: function(buttonId, text, opt) {
 
                 if (buttonId !== 'cancel') {
                     return;
@@ -245,7 +244,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
             type: 'POST',
             url: '{url controller="ArticleList" action = "createQueue"}',
             timeout: 4000000,
-            params : {
+            params: {
                 resource: 'product',
                 operations: Ext.JSON.encode(config.operations),
                 filterArray: config.filterArray,
@@ -261,29 +260,29 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
 
                 var result = Ext.JSON.decode(response.responseText);
 
-                if(!result) {
+                if (!result) {
                     me.progressWindow.close();
                     me.showError(response.responseText);
-                }else if(!result.success) {
+                } else if (!result.success) {
                     me.progressWindow.close();
                     me.showError(result.message);
-                }else{
+                } else {
                     if (result.data.offset < result.data.totalCount) {
                         var eta = me.getETA(startTime, result.data.offset, result.data.totalCount);
                         var progressText =  Ext.String.format(
                             '{s name="processedItems"}[0] / [1] processed. [2]:[3]:[4] remaining{/s}',
                             result.data.offset, result.data.totalCount, eta.hours, eta.minutes, eta.seconds
                         );
-                        me.progressWindow.progressBar.updateProgress(result.data.offset/result.data.totalCount, progressText);
+                        me.progressWindow.progressBar.updateProgress(result.data.offset / result.data.totalCount, progressText);
 
                         me.addToQueue(config, result.data.offset, result.data.queueId, startTime);
-                    }else{
+                    } else {
                         Shopware.Notification.createStickyGrowlMessage({
-                                title: '{s name="createdQueueTitle"}Created queue{/s}',
-                                text: Ext.String.format('{s name="createdQueueMessage"}Created queue for [0] items for this filter: [1]{/s}', result.data.totalCount, me.filterArrayToString(Ext.JSON.decode(config.filterArray))),
-                                log: true
-                            },
-                            'ArticleList'
+                            title: '{s name="createdQueueTitle"}Created queue{/s}',
+                            text: Ext.String.format('{s name="createdQueueMessage"}Created queue for [0] items for this filter: [1]{/s}', result.data.totalCount, me.filterArrayToString(Ext.JSON.decode(config.filterArray))),
+                            log: true
+                        },
+                        'ArticleList'
                         );
 
                         me.progressWindow.progressBar.updateProgress(1, "Done");
@@ -302,7 +301,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
 
             },
             failure: function (response, request) {
-                if(response.responseText) {
+                if (response.responseText) {
                     me.showError(response.responseText);
                 } else {
                     me.showError('{s name="unknownError"}An unknown error occurred, please check your server logs{/s}');
@@ -321,7 +320,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
         var filterLength = filterArray.length,
             result = [];
 
-        for (var i=0;i<filterLength;i++) {
+        for (var i = 0;i < filterLength;i++) {
             result.push(filterArray[i]['token']);
         }
         return result.join(' ');
@@ -340,7 +339,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
 
         me.createBatchWindow();
 
-        me.runBatchProcess(queueId, config,0 )
+        me.runBatchProcess(queueId, config, 0 )
     },
 
     /**
@@ -365,7 +364,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
         Ext.Ajax.request({
             url: '{url controller="ArticleList" action = "batch"}',
             timeout: 4000000,
-            params : {
+            params: {
                 resource: 'product',
                 limit: 200,
                 queueId: queueId
@@ -378,43 +377,43 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
 
                 var result = Ext.JSON.decode(response.responseText);
 
-                if(!result) {
+                if (!result) {
                     me.progressWindow.close();
                     me.showError(response.responseText);
-                }else if(!result.success) {
+                } else if (!result.success) {
                     me.progressWindow.close();
                     me.showError(result.message);
-                }else{
+                } else {
                     if (!result.data.done) {
                         var eta = me.getETA(startTime, result.data.processed, result.data.totalCount);
                         var progressText =  Ext.String.format(
                             '{s name="processedItems"}[0] / [1] processed. [2]:[3]:[4] remaining{/s}',
                             result.data.processed, result.data.totalCount, eta.hours, eta.minutes, eta.seconds
                         );
-                        me.progressWindow.progressBar.updateProgress(result.data.processed/result.data.totalCount, progressText);
+                        me.progressWindow.progressBar.updateProgress(result.data.processed / result.data.totalCount, progressText);
 
                         me.runBatchProcess(queueId, config, startTime);
-                    }else{
+                    } else {
                         me.progressWindow.close();
                         me.getMainGrid().store.reload();
                         operationString = Ext.JSON.encode(config.operations);
                         Shopware.Notification.createStickyGrowlMessage({
-                                title: '{s name="batchDoneTitle"}Done{/s}',
-                                text: Ext.String.format(
-                                        '{s name="batchDoneMessage"}Processed [0] items with following rules: [1]{/s}\n',
-                                        result.data.totalCount,
-                                        me.operationsToString(config.operations)
-                                ),
-                                log: true
-                            },
-                            'ArticleList'
+                            title: '{s name="batchDoneTitle"}Done{/s}',
+                            text: Ext.String.format(
+                                '{s name="batchDoneMessage"}Processed [0] items with following rules: [1]{/s}\n',
+                                result.data.totalCount,
+                                me.operationsToString(config.operations)
+                            ),
+                            log: true
+                        },
+                        'ArticleList'
                         );
                     }
                 }
 
             },
             failure: function (response, request) {
-                if(response.responseText) {
+                if (response.responseText) {
                     me.showError(response.responseText);
                 } else {
                     me.showError('{s name="unknownError"}An unknown error occurred, please check your server logs{/s}');
@@ -433,7 +432,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
         var operationsLength = operations.length,
             result = [];
 
-        for (var i=0;i<operationsLength;i++) {
+        for (var i = 0;i < operationsLength;i++) {
             if (operations[i]['column'] != '' && operations[i]['operation'] != '') {
                 result.push(Ext.String.format('[0] [1] [2]', operations[i]['column'], operations[i]['operator'], operations[i]['value']));
             }
@@ -452,12 +451,12 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
      */
     getETA: function(startTime, processedItems, totalItems) {
         var remainingItems = totalItems - processedItems,
-            passedSeconds = new Date().getTime()/1000 - startTime,
+            passedSeconds = new Date().getTime() / 1000 - startTime,
             perSecond = passedSeconds  / processedItems,
             remainingSeconds = remainingItems * perSecond,
             hours = ~~(remainingSeconds / 3600),
-            minutes = ~~((remainingSeconds - hours*3600)/60),
-            seconds = ~~(remainingSeconds - -hours*3600 - minutes*60);
+            minutes = ~~((remainingSeconds - hours * 3600) / 60),
+            seconds = ~~(remainingSeconds - -hours * 3600 - minutes * 60);
 
         return {
             hours: hours < 10 ? '0' + hours : hours,
@@ -546,7 +545,6 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
         });
     },
 
-
     /**
      * Helper method which returns a rowEditing.editor for a given column.
      *
@@ -591,13 +589,13 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
 
                     case 'date':
                         return new Ext.form.DateField({
-                            disabled : false,
+                            disabled: false,
                             format: 'Y-m-d'
                         });
 
                     case 'datetime':
                         return new Ext.form.DateField({
-                            disabled : false,
+                            disabled: false,
                             format: 'Y-m-d H:i:s'
                         });
 
@@ -610,7 +608,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
                         console.log('Unknown column: ', column.type);
                         break;
                 }
-            break;
+                break;
         }
     },
 
@@ -626,7 +624,7 @@ Ext.define('Shopware.apps.ArticleList.controller.BatchProcess', {
             return me.subApplication.batchProcessWindow;
         } else {
             me.subApplication.batchProcessWindow = me.getView('BatchProcess.Window').create({
-                editableColumnsStore: Ext.create('Shopware.apps.ArticleList.store.EditableColumns').load({ params: { resource: 'product' }})
+                editableColumnsStore: Ext.create('Shopware.apps.ArticleList.store.EditableColumns').load({ params: { resource: 'product' } })
             });
             me.subApplication.batchProcessWindow.title = me.setWindowTitle();
         }

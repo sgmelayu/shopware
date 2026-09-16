@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -115,7 +114,7 @@ Ext.define('Shopware.apps.Theme.view.list.Theme', {
                             'shopware5': '{s name="designed_for_shopware5"}Designed for Shopware 5{/s}'
                         };
 
-                    if(values.length <= 0) {
+                    if (values.length <= 0) {
                         return '';
                     }
 
@@ -137,10 +136,10 @@ Ext.define('Shopware.apps.Theme.view.list.Theme', {
                     Ext.each(values, function(theme) {
                         var itemTpl = '';
 
-                        if(theme.enabled) {
+                        if (theme.enabled) {
                             itemTpl += '<div class="thumbnail enabled">';
                             itemTpl += '<div class="hint enabled"><span>{s name="enabled"}Enabled{/s}</span></div>';
-                        } else if(theme.preview) {
+                        } else if (theme.preview) {
                             itemTpl += '<div class="thumbnail previewed">';
                             itemTpl += '<div class="hint preview"><span>{s name="preview_hint"}Preview{/s}</span></div>';
                         } else {
@@ -149,11 +148,11 @@ Ext.define('Shopware.apps.Theme.view.list.Theme', {
 
                         itemTpl += '<div class="thumb"><div class="inner-thumb">';
 
-                        if(theme.screen) {
+                        if (theme.screen) {
                             itemTpl += Ext.String.format('<img src="[0]" alt="[1]" />', theme.screen, theme.name);
                         }
 
-                        if(theme.hasConfig) {
+                        if (theme.hasConfig) {
                             itemTpl += '<div class="mapping-config">&nbsp;</div>';
                         }
 
@@ -177,13 +176,13 @@ Ext.define('Shopware.apps.Theme.view.list.Theme', {
         viewEl.on('click', function(evt, target) {
             var el = Ext.get(target), parent, themeContainer;
 
-            if(!el.hasCls('x-grid-group-title')) {
+            if (!el.hasCls('x-grid-group-title')) {
                 return;
             }
             parent = el.parent('.theme--outer-container');
             themeContainer = parent.down('.theme--container');
 
-            if(parent.hasCls('x-grid-group-hd-collapsed')) {
+            if (parent.hasCls('x-grid-group-hd-collapsed')) {
                 parent.removeCls('x-grid-group-hd-collapsed');
                 themeContainer.setStyle('display', 'block');
             } else {

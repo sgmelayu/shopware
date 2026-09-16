@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -41,12 +40,12 @@ Ext.define('Shopware.apps.Article.view.image.Info', {
      * Define that the category drop zone is an extension of the Ext.panel.Panel
      * @string
      */
-    extend:'Ext.form.Panel',
+    extend: 'Ext.form.Panel',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.article-image-info',
+    alias: 'widget.article-image-info',
     /**
      * Set css class for this component
      * @string
@@ -61,7 +60,7 @@ Ext.define('Shopware.apps.Article.view.image.Info', {
         align: 'stretch'
     },
 
-    autoScroll:true,
+    autoScroll: true,
     /**
      * Defaults for the panel items
      * @object
@@ -74,7 +73,7 @@ Ext.define('Shopware.apps.Article.view.image.Info', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         title: '{s name="image/info/title"}Image options{/s}',
         imageTitle: '{s name="image/info/image_title"}Title{/s}',
     },
@@ -103,7 +102,7 @@ Ext.define('Shopware.apps.Article.view.image.Info', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.title = me.snippets.title;
         me.thumbnail = me.createThumbnail();
@@ -161,7 +160,7 @@ Ext.define('Shopware.apps.Article.view.image.Info', {
             tpl: me.createInfoPanelTemplate(),
             margin: '0 0 10',
             itemSelector: '.copy-image-path',
-            autoScroll:true,
+            autoScroll: true,
             height: 300,
             renderData: []
         });
@@ -178,16 +177,16 @@ Ext.define('Shopware.apps.Article.view.image.Info', {
     createInfoPanelTemplate: function() {
         return new Ext.XTemplate(
             '<tpl for=".">',
-                '<div class="article-thumb-wrap">',
-                    // If the type is image, then show the image
-                    '<div class="thumb">',
-                        '<div class="inner-thumb"><img src="',
-                            '<tpl if="original">',
-                                '{literal}{original}{/literal}',
-                            '</tpl>',
-                        '" /></div>',
-                    '</div>',
-                '</div>',
+            '<div class="article-thumb-wrap">',
+            // If the type is image, then show the image
+            '<div class="thumb">',
+            '<div class="inner-thumb"><img src="',
+            '<tpl if="original">',
+            '{literal}{original}{/literal}',
+            '</tpl>',
+            '" /></div>',
+            '</div>',
+            '</div>',
             '</tpl>',
             '<div class="x-clear"></div>'
         );
@@ -230,7 +229,7 @@ Ext.define('Shopware.apps.Article.view.image.Info', {
             bodyStyle: {
                 background: 'transparent'
             },
-            autoScroll:true,
+            autoScroll: true,
             defaults: {
                 labelWidth: 90,
                 anchor: '100%',
@@ -258,15 +257,15 @@ Ext.define('Shopware.apps.Article.view.image.Info', {
         return new Ext.XTemplate(
             // Check if any data was applied at all, but show only once as title
             '<tpl if="hasItems">',
-                '<div class="image-variant-info-title">',
-                    '{s name="image/variant_info/title"}Assigned variant configurations{/s}',
-                '</div>',
+            '<div class="image-variant-info-title">',
+            '{s name="image/variant_info/title"}Assigned variant configurations{/s}',
+            '</div>',
             '</tpl>',
             '<tpl for="items">',
-                '<div class="image-variant-info-row">',
-                    '<span class="sprite-tick-small image-variant-info-icon"></span>',
-                    '{ assignedVariants }',
-                '</div>',
+            '<div class="image-variant-info-row">',
+            '<span class="sprite-tick-small image-variant-info-icon"></span>',
+            '{ assignedVariants }',
+            '</div>',
             '</tpl>'
         );
     }

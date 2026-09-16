@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Form
@@ -36,7 +35,7 @@
 Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
     extend: 'Ext.grid.Panel',
     alias: 'widget.form-main-fieldgrid',
-    title : '{s name="title_fields"}Fields{/s}',
+    title: '{s name="title_fields"}Fields{/s}',
     autoScroll: true,
     selType: 'rowmodel',
     sortableColumns: false,
@@ -46,13 +45,13 @@ Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
      * @object
      */
     messages: {
-         tooltipValue: '{s name="tooltip_value"}For selections, checkboxes or radios use a semicolon to separate the values{/s}',
-         tooltipName: '{s name="tooltip_name"}To enter two inputs, use a semicolon to separate the names{/s}',
-         tooltipSmartyEnabled: '{s name="tooltip_smarty"}Smarty code is allowed{/s}',
-         tooltipDragDrop: '{s name="tooltip_dragdrop"}You can move rows via Drag & Drop{/s}',
-         hintDragDrop: '{s name="hint_dragdrop"}You can move rows via Drag & Drop{/s}',
-         saveBtnText: '{s name="rowedit_save"}Save{/s}',
-         cancelBtnText: '{s name="rowedit_cancel"}Cancel{/s}'
+        tooltipValue: '{s name="tooltip_value"}For selections, checkboxes or radios use a semicolon to separate the values{/s}',
+        tooltipName: '{s name="tooltip_name"}To enter two inputs, use a semicolon to separate the names{/s}',
+        tooltipSmartyEnabled: '{s name="tooltip_smarty"}Smarty code is allowed{/s}',
+        tooltipDragDrop: '{s name="tooltip_dragdrop"}You can move rows via Drag & Drop{/s}',
+        hintDragDrop: '{s name="hint_dragdrop"}You can move rows via Drag & Drop{/s}',
+        saveBtnText: '{s name="rowedit_save"}Save{/s}',
+        cancelBtnText: '{s name="rowedit_cancel"}Cancel{/s}'
     },
 
     /**
@@ -124,170 +123,170 @@ Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
 
         var columns = [
         /*{if {acl_is_allowed privilege=createupdate}}*/
-        {
-            header: '&#009868;',
-            width: 24,
-            hideable: false,
-            renderer : me.renderSorthandleColumn,
-        },
-        /*{/if}*/
-        {
-            header: '{s name="column_name"}Name{/s}',
-            dataIndex: 'name',
-            tooltip: me.messages.tooltipName,
-            flex: 1,
-            hideable: false,
-            editor: {
-                xtype: 'textfield',
-                allowBlank: false
+            {
+                header: '&#009868;',
+                width: 24,
+                hideable: false,
+                renderer: me.renderSorthandleColumn,
             },
-            translationEditor: {
-                fieldLabel: '{s name="column_name"}Name{/s}',
-                name: 'name',
-                xtype: 'textfield'
+            /*{/if}*/
+            {
+                header: '{s name="column_name"}Name{/s}',
+                dataIndex: 'name',
+                tooltip: me.messages.tooltipName,
+                flex: 1,
+                hideable: false,
+                editor: {
+                    xtype: 'textfield',
+                    allowBlank: false
+                },
+                translationEditor: {
+                    fieldLabel: '{s name="column_name"}Name{/s}',
+                    name: 'name',
+                    xtype: 'textfield'
+                }
+            }, {
+                header: '{s name="column_label"}Label{/s}',
+                dataIndex: 'label',
+                flex: 1,
+                hideable: false,
+                editor: {
+                    xtype: 'textfield',
+                    allowBlank: false
+                },
+                translationEditor: {
+                    fieldLabel: '{s name="column_label"}Label{/s}',
+                    name: 'label',
+                    xtype: 'textfield'
+                }
+            }, {
+                header: '{s name="column_typ"}Typ{/s}',
+                dataIndex: 'typ',
+                flex: 1,
+                hideable: false,
+                editor: {
+                    xtype: 'combo',
+                    allowBlank: false,
+                    editable: false,
+                    mode: 'local',
+                    triggerAction: 'all',
+                    displayField: 'label',
+                    valueField: 'id',
+                    store: me.getTypComboStore()
+                },
+                translationEditor: {
+                    fieldLabel: '{s name="column_typ"}Typ{/s}',
+                    name: 'typ',
+                    xtype: 'combo',
+                    mode: 'local',
+                    triggerAction: 'all',
+                    displayField: 'label',
+                    valueField: 'id',
+                    store: me.getTypComboStore()
+                }
+            }, {
+                header: '{s name="column_class"}Class{/s}',
+                dataIndex: 'class',
+                flex: 1,
+                hideable: false,
+                editor: {
+                    xtype: 'combo',
+                    allowBlank: false,
+                    editable: false,
+                    mode: 'local',
+                    triggerAction: 'all',
+                    displayField: 'label',
+                    valueField: 'id',
+                    store: me.getClassComboStore()
+                },
+                translationEditor: {
+                    fieldLabel: '{s name="column_class"}Class{/s}',
+                    name: 'class',
+                    xtype: 'combo',
+                    mode: 'local',
+                    triggerAction: 'all',
+                    displayField: 'label',
+                    valueField: 'id',
+                    store: me.getClassComboStore()
+                }
+            }, {
+                header: '{s name="column_value"}Value{/s}',
+                dataIndex: 'value',
+                tooltip: me.messages.tooltipValue,
+                flex: 1,
+                hideable: false,
+                editor: {
+                    xtype: 'textfield'
+                },
+                translationEditor: {
+                    name: 'value',
+                    fieldLabel: '{s name="column_value"}Value{/s}',
+                    xtype: 'textfield'
+                }
+            }, {
+                header: '{s name="column_note"}Note{/s}',
+                dataIndex: 'note',
+                tooltip: me.messages.tooltipSmartyEnabled,
+                flex: 1,
+                hideable: false,
+                editor: {
+                    xtype: 'textfield'
+                },
+                translationEditor: {
+                    name: 'note',
+                    fieldLabel: '{s name="column_note"}Note{/s}',
+                    xtype: 'textfield'
+                }
+            }, {
+                header: '{s name="column_errormsg"}Error Message{/s}',
+                tooltip: me.messages.tooltipSmartyEnabled,
+                dataIndex: 'errorMsg',
+                flex: 1,
+                hideable: false,
+                editor: {
+                    xtype: 'textfield'
+                },
+                translationEditor: {
+                    fieldLabel: '{s name="column_errormsg"}Error Message{/s}',
+                    name: 'error_msg',
+                    xtype: 'textfield',
+                }
+            }, {
+                xtype: 'booleancolumn',
+                header: '{s name="column_required"}Required{/s}',
+                dataIndex: 'required',
+                flex: 1,
+                hideable: false,
+                editor: {
+                    xtype: 'checkbox',
+                    inputValue: true,
+                    uncheckedValue: false
+                },
+                translationEditor: {
+                    fieldLabel: '{s name="column_required"}Required{/s}',
+                    name: 'required',
+                    xtype: 'checkbox',
+                    inputValue: true,
+                    uncheckedValue: false
+                }
             }
-        }, {
-            header: '{s name="column_label"}Label{/s}',
-            dataIndex: 'label',
-            flex: 1,
-            hideable: false,
-            editor: {
-                xtype: 'textfield',
-                allowBlank: false
-            },
-            translationEditor: {
-                fieldLabel: '{s name="column_label"}Label{/s}',
-                name: 'label',
-                xtype: 'textfield'
-            }
-        }, {
-            header: '{s name="column_typ"}Typ{/s}',
-            dataIndex: 'typ',
-            flex: 1,
-            hideable: false,
-            editor: {
-                xtype: 'combo',
-                allowBlank: false,
-                editable: false,
-                mode: 'local',
-                triggerAction: 'all',
-                displayField: 'label',
-                valueField: 'id',
-                store: me.getTypComboStore()
-            },
-            translationEditor: {
-                fieldLabel: '{s name="column_typ"}Typ{/s}',
-                name: 'typ',
-                xtype: 'combo',
-                mode: 'local',
-                triggerAction: 'all',
-                displayField: 'label',
-                valueField: 'id',
-                store: me.getTypComboStore()
-            }
-        }, {
-            header: '{s name="column_class"}Class{/s}',
-            dataIndex: 'class',
-            flex: 1,
-            hideable: false,
-            editor: {
-                xtype: 'combo',
-                allowBlank: false,
-                editable: false,
-                mode: 'local',
-                triggerAction: 'all',
-                displayField: 'label',
-                valueField: 'id',
-                store: me.getClassComboStore()
-            },
-            translationEditor: {
-                fieldLabel: '{s name="column_class"}Class{/s}',
-                name: 'class',
-                xtype: 'combo',
-                mode: 'local',
-                triggerAction: 'all',
-                displayField: 'label',
-                valueField: 'id',
-                store: me.getClassComboStore()
-            }
-        }, {
-            header: '{s name="column_value"}Value{/s}',
-            dataIndex: 'value',
-            tooltip: me.messages.tooltipValue,
-            flex: 1,
-            hideable: false,
-            editor: {
-                xtype:'textfield'
-            },
-            translationEditor: {
-                name: 'value',
-                fieldLabel: '{s name="column_value"}Value{/s}',
-                xtype:'textfield'
-            }
-        }, {
-            header: '{s name="column_note"}Note{/s}',
-            dataIndex: 'note',
-            tooltip: me.messages.tooltipSmartyEnabled,
-            flex: 1,
-            hideable: false,
-            editor: {
-                xtype:'textfield'
-            },
-            translationEditor: {
-                name: 'note',
-                fieldLabel: '{s name="column_note"}Note{/s}',
-                xtype:'textfield'
-            }
-        }, {
-            header: '{s name="column_errormsg"}Error Message{/s}',
-            tooltip: me.messages.tooltipSmartyEnabled,
-            dataIndex: 'errorMsg',
-            flex: 1,
-            hideable: false,
-            editor: {
-                xtype:'textfield'
-            },
-            translationEditor: {
-                fieldLabel: '{s name="column_errormsg"}Error Message{/s}',
-                name: 'error_msg',
-                xtype:'textfield',
-            }
-        }, {
-            xtype: 'booleancolumn',
-            header: '{s name="column_required"}Required{/s}',
-            dataIndex: 'required',
-            flex: 1,
-            hideable: false,
-            editor: {
-                xtype: 'checkbox',
-                inputValue: true,
-                uncheckedValue: false
-            },
-            translationEditor: {
-                fieldLabel: '{s name="column_required"}Required{/s}',
-                name: 'required',
-                xtype: 'checkbox',
-                inputValue: true,
-                uncheckedValue: false
-            }
-        }
 
-        /*{if {acl_is_allowed privilege=createupdate}}*/
-        ,{
+            /*{if {acl_is_allowed privilege=createupdate}}*/
+            , {
             /**
              * Special column type which provides
              * clickable icons in each row
              */
-            xtype: 'actioncolumn',
-            width: 25,
-            hideable: false,
-            items: [{
-                iconCls: 'sprite-minus-circle-frame',
-                action: 'delete',
-                cls: 'delete',
-                tooltip: '{s name="tooltip_delete_field"}Delete this field{/s}'
-            }]
-        }
+                xtype: 'actioncolumn',
+                width: 25,
+                hideable: false,
+                items: [{
+                    iconCls: 'sprite-minus-circle-frame',
+                    action: 'delete',
+                    cls: 'delete',
+                    tooltip: '{s name="tooltip_delete_field"}Delete this field{/s}'
+                }]
+            }
         /*{/if}*/
         ];
 
@@ -301,7 +300,7 @@ Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
      */
     getTypComboStore: function() {
         return new Ext.data.SimpleStore({
-            fields:['id', 'label'],
+            fields: ['id', 'label'],
             data: [
                 ['text', 'Text'],
                 ['text2', 'Text2'],
@@ -309,7 +308,8 @@ Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
                 ['email', 'Email'],
                 ['select', 'select'],
                 ['textarea', 'textarea'],
-                ['hidden', 'hidden']
+                ['hidden', 'hidden'],
+                ['nourl', 'nourl']
             ]
         });
     },
@@ -321,7 +321,7 @@ Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
      */
     getClassComboStore: function() {
         return new Ext.data.SimpleStore({
-            fields:['id', 'label'],
+            fields: ['id', 'label'],
             data: [
                 ['normal', 'normal'],
                 ['strasse;nr', 'strasse;nr'],
@@ -342,21 +342,21 @@ Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
             cls: 'shopware-toolbar',
             items: [
 
-            /*{if {acl_is_allowed privilege=createupdate}}*/
-            {
-                iconCls: 'sprite-plus-circle-frame',
-                text: '{s name="toolbar_add_field"}Add Field{/s}',
-                action: 'add'
-            },
-            /*{/if}*/
+                /*{if {acl_is_allowed privilege=createupdate}}*/
+                {
+                    iconCls: 'sprite-plus-circle-frame',
+                    text: '{s name="toolbar_add_field"}Add Field{/s}',
+                    action: 'add'
+                },
+                /*{/if}*/
 
-            /*{if {acl_is_allowed privilege=createupdate}}*/
-            {
-                xtype: 'tbfill'
-            }, {
-                xtype: 'container',
-                html: '<p style="padding: 5px">' + this.messages.hintDragDrop + '</p>'
-            }
+                /*{if {acl_is_allowed privilege=createupdate}}*/
+                {
+                    xtype: 'tbfill'
+                }, {
+                    xtype: 'container',
+                    html: '<p style="padding: 5px">' + this.messages.hintDragDrop + '</p>'
+                }
             /*{/if}*/
             ]
         });
@@ -370,7 +370,7 @@ Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
     getPagingbar: function () {
         return Ext.create('Ext.toolbar.Paging', {
             store: this.store,
-            dock:'bottom',
+            dock: 'bottom',
             displayInfo: true
         });
     },
@@ -384,7 +384,7 @@ Ext.define('Shopware.apps.Form.view.main.Fieldgrid', {
      * @return string
      */
     renderSorthandleColumn: function (value,  metadata) {
-        metadata.tdAttr = 'data-qtip="' + this.messages.hintDragDrop +'"';
+        metadata.tdAttr = 'data-qtip="' + this.messages.hintDragDrop + '"';
 
         return '<div style="cursor: n-resize;">&#009868;</div>';
     },

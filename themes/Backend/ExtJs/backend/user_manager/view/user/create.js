@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    UserManager
@@ -37,12 +36,12 @@
 //{block name="backend/user_manager/view/user/create"}
 Ext.define('Shopware.apps.UserManager.view.user.Create', {
     extend: 'Enlight.app.Window',
-    alias : 'widget.usermanager-user-create',
-    title : '{s name="create_user/title"}Add/edit user{/s}',
+    alias: 'widget.usermanager-user-create',
+    title: '{s name="create_user/title"}Add/edit user{/s}',
     layout: 'fit',
     autoShow: true,
-    autoScroll:true,
-    width       : 700,
+    autoScroll: true,
+    width: 700,
     height: '90%',
     modal: true,
     apiKeyField: null,
@@ -81,8 +80,8 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
                 scope: me,
                 handler: me.close
             }
-        /* {if {acl_is_allowed privilege=create}} */
-            ,{
+            /* {if {acl_is_allowed privilege=create}} */
+            , {
                 text: '{s name="create_user/save"}Save{/s}',
                 action: 'save',
                 cls: 'primary',
@@ -90,7 +89,7 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
                     me.fireEvent('saveUser', me.record, me.formPanel);
                 }
             }
-        /* {/if} */]
+                /* {/if} */]
         }];
 
         // Add own vtypes to validate password fields
@@ -129,15 +128,15 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
         });
 
         this.formPanel = Ext.create('Ext.form.Panel', {
-            border      : false,
-            layout      : 'anchor',
-            autoScroll:true,
+            border: false,
+            layout: 'anchor',
+            autoScroll: true,
             name: 'main-form',
-            bodyPadding : 10,
-            defaults    : {
+            bodyPadding: 10,
+            defaults: {
                 labelWidth: 155
             },
-            items : [
+            items: [
                 this.getLoginFieldset(),
                 this.getApiFieldset(),
                 this.getUserBaseFieldset(),
@@ -152,69 +151,66 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
      * @return
      */
     getLoginFieldset: function() {
-        return Ext.create('Ext.form.FieldSet',
-        {
+        return Ext.create('Ext.form.FieldSet', {
             title: 'Login',
-            bodyPadding : 10,
-            defaults    : {
+            bodyPadding: 10,
+            defaults: {
                 labelWidth: 155
             },
             items: [{
-                  // Implementiert das Column Layout
-                  xtype: 'container',
-                  unstyled: true,
-                  layout: 'column',
-                  items: [
-                  {
-                       // Linke Spalte im Column Layout
-                       xtype: 'container',
-                       unstyled: true,
-                       columnWidth: 0.5,
-                       items: [
-                           {
+                // Implementiert das Column Layout
+                xtype: 'container',
+                unstyled: true,
+                layout: 'column',
+                items: [
+                    {
+                        // Linke Spalte im Column Layout
+                        xtype: 'container',
+                        unstyled: true,
+                        columnWidth: 0.5,
+                        items: [
+                            {
                                 xtype: 'textfield',
                                 fieldLabel: '{s name="create_user/username"}Username{/s}',
                                 anchor: '100%',
                                 name: 'username',
                                 allowBlank: false
-                           },
-                           {
-                               xtype: 'checkbox',
-                               name: 'active',
-                               boxLabel: '{s name="create_user/enabled"}Enabled{/s}',
-                               anchor: '100%',
-                               uncheckedValue: 0,
+                            },
+                            {
+                                xtype: 'checkbox',
+                                name: 'active',
+                                boxLabel: '{s name="create_user/enabled"}Enabled{/s}',
+                                anchor: '100%',
+                                uncheckedValue: 0,
 
-                               inputValue:1,
-                               supportText: '{s name="create_user/enabled_info"}Enable or disable this account{/s}'
-                           }
-                       ]
-                  },
-                  {
-                       // Rechte Spalte im Column Layout
-                       xtype: 'container',
-                       unstyled: true,
-                       columnWidth: 0.5,
-                       items: [
-                           {
-                               xtype: 'passwordmeter',
-                               fieldLabel: '{s name="create_user/password"}Password{/s}',
-                               name: 'password',
-                               anchor: '100%',
-                               margin: '0 0 20 0',
-                               labelAlign: 'left',
-                               allowBlank: this.edit,
-                               vtype: 'password'
-                           },
-                           this.getUserPasswordFieldRepeat(),
-                           this.createUnlockField()
-                       ]
-                  }
-                  ]
-                 }]
-        }
-        );
-
+                                inputValue: 1,
+                                supportText: '{s name="create_user/enabled_info"}Enable or disable this account{/s}'
+                            }
+                        ]
+                    },
+                    {
+                        // Rechte Spalte im Column Layout
+                        xtype: 'container',
+                        unstyled: true,
+                        columnWidth: 0.5,
+                        items: [
+                            {
+                                xtype: 'passwordmeter',
+                                fieldLabel: '{s name="create_user/password"}Password{/s}',
+                                name: 'password',
+                                anchor: '100%',
+                                margin: '0 0 20 0',
+                                labelAlign: 'left',
+                                allowBlank: this.edit,
+                                vtype: 'password'
+                            },
+                            this.getUserPasswordFieldRepeat(),
+                            this.createUnlockField()
+                        ]
+                    }
+                ]
+            }]
+        });
     },
 
     /**
@@ -222,7 +218,7 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
      * @return
      */
     getUserPasswordFieldRepeat: function () {
-        return Ext.create('Ext.form.field.Text',{
+        return Ext.create('Ext.form.field.Text', {
             inputType: 'password',
             fieldLabel: '{s name="create_user/repeat_password"}Repeat password{/s}',
             name: 'password2',
@@ -289,17 +285,16 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
         return randomstring;
     },
 
-
     /**
      * Creates the container for the password field and the generateApiKey button.
      * @return [Ext.container.Container] - Contains the text field and the button
      */
-    getApiKeyContainer:function () {
+    getApiKeyContainer: function () {
         var me = this;
 
         //create the password generation button
         me.apiKeyButton = Ext.create('Ext.button.Button', {
-            iconCls:'sprite-license-key',
+            iconCls: 'sprite-license-key',
             tooltip: '{s name="create_user/generate_api_key"}Generate API-Key{/s}',
             width: 24,
             /**
@@ -313,7 +308,7 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
         });
 
         me.apiKeyField = Ext.create('Ext.form.field.Text', {
-            name:'apiKey',
+            name: 'apiKey',
             labelWidth: 75,
             flex: 1,
             allowBlank: false,
@@ -327,11 +322,9 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
                 type: 'hbox',
                 pack: 'start'
             },
-            items:[ me.apiKeyField, me.apiKeyButton ]
+            items: [ me.apiKeyField, me.apiKeyButton ]
         });
     },
-
-
 
     /**
      * @return
@@ -402,149 +395,145 @@ Ext.define('Shopware.apps.UserManager.view.user.Create', {
      * @return
      */
     getUserBaseFieldset: function() {
-        return Ext.create('Ext.form.FieldSet',
-        {
+        return Ext.create('Ext.form.FieldSet', {
             title: '{s name="create_user/main_data"}Main data{/s}',
-            bodyPadding : 10,
-            defaults    : {
+            bodyPadding: 10,
+            defaults: {
                 labelWidth: 155
             },
             items: [{
-                  // Implementiert das Column Layout
-                  xtype: 'container',
-                  unstyled: true,
-                  layout: 'column',
-                  items: [
-                  {
-                       // Linke Spalte im Column Layout
-                       xtype: 'container',
-                       unstyled: true,
-                       columnWidth: 0.5,
-                       items: [
-                           {
-                              xtype: 'textfield',
-                              fieldLabel: '{s name="create_user/realname"}Real name{/s}',
-                              anchor: '100%',
-                              name: 'name',
-                              allowBlank: false
-                           },
-                           {
-                               xtype: 'textfield',
-                               fieldLabel: '{s name="create_user/email"}Email address{/s}',
-                               anchor: '100%',
-                               vtype: 'remote',
-                               checkChangeBuffer: 500,
-                               validationUrl: '{url controller="base" action="validateEmail"}',
-                               validationErrorMsg: '{s name=invalid_email namespace=backend/base/vtype}The email address entered is not valid{/s}',
-                               name: 'email',
-                               allowBlank: false
+                // Implementiert das Column Layout
+                xtype: 'container',
+                unstyled: true,
+                layout: 'column',
+                items: [
+                    {
+                        // Linke Spalte im Column Layout
+                        xtype: 'container',
+                        unstyled: true,
+                        columnWidth: 0.5,
+                        items: [
+                            {
+                                xtype: 'textfield',
+                                fieldLabel: '{s name="create_user/realname"}Real name{/s}',
+                                anchor: '100%',
+                                name: 'name',
+                                allowBlank: false
+                            },
+                            {
+                                xtype: 'textfield',
+                                fieldLabel: '{s name="create_user/email"}Email address{/s}',
+                                anchor: '100%',
+                                vtype: 'remote',
+                                checkChangeBuffer: 500,
+                                validationUrl: '{url controller="base" action="validateEmail"}',
+                                validationErrorMsg: '{s name=invalid_email namespace=backend/base/vtype}The email address entered is not valid{/s}',
+                                name: 'email',
+                                allowBlank: false
 
-                           }
-                       ]
-                  },
-                  {
-                       // Rechte Spalte im Column Layout
-                       xtype: 'container',
-                       unstyled: true,
-                       columnWidth: 0.5,
-                       items: [
-                           {
-                               xtype:'combobox',
-                               triggerAction:'all',
-                               name:'localeId',
-                               fieldLabel: '{s name="create_user/language"}Default language{/s}',
-                               store:this.localeStore,
-                               valueField:'id',
-                               displayField:'name',
-                               queryMode: 'local',
-                               mode: 'local',
-                               required:true,
-                               editable:false,
-                               forceSelection:true,
-                               listConfig: {
-                                 action: 'locale'
-                               }
+                            }
+                        ]
+                    },
+                    {
+                        // Rechte Spalte im Column Layout
+                        xtype: 'container',
+                        unstyled: true,
+                        columnWidth: 0.5,
+                        items: [
+                            {
+                                xtype: 'combobox',
+                                triggerAction: 'all',
+                                name: 'localeId',
+                                fieldLabel: '{s name="create_user/language"}Default language{/s}',
+                                store: this.localeStore,
+                                valueField: 'id',
+                                displayField: 'name',
+                                queryMode: 'local',
+                                mode: 'local',
+                                required: true,
+                                editable: false,
+                                forceSelection: true,
+                                listConfig: {
+                                    action: 'locale'
+                                }
 
-                           },
-                           {
-                              xtype:'combobox',
-                              triggerAction:'all',
-                              name:'roleId',
-                              fieldLabel: '{s name="create_user/role"}Member of role{/s}',
-                              store: this.roleStore,
-                              valueField:'id',
-                              displayField:'name',
-                              mode: 'local',
-                              queryMode: 'local',
-                              required:true,
-                              editable:false,
-                              allowBlank:false,
-                              listConfig: {
-                               action: 'role'
-                              }
-                          }
-                       ]
-                  }
-                  ]
-                 }]
-        }
-        );
+                            },
+                            {
+                                xtype: 'combobox',
+                                triggerAction: 'all',
+                                name: 'roleId',
+                                fieldLabel: '{s name="create_user/role"}Member of role{/s}',
+                                store: this.roleStore,
+                                valueField: 'id',
+                                displayField: 'name',
+                                mode: 'local',
+                                queryMode: 'local',
+                                required: true,
+                                editable: false,
+                                allowBlank: false,
+                                listConfig: {
+                                    action: 'role'
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }]
+        });
     },
 
     /**
      * @return
      */
     getUserOptionsFieldset: function() {
-        return Ext.create('Ext.form.FieldSet',
-                {
-                    title: '{s name="create_user/individual_user_options"}Individual user options{/s}',
-                    bodyPadding : 10,
-                    defaults    : {
-                        labelWidth: 155
-                    },
-                    items: [{
-                        // Implementiert das Column Layout
+        return Ext.create('Ext.form.FieldSet', {
+            title: '{s name="create_user/individual_user_options"}Individual user options{/s}',
+            bodyPadding: 10,
+            defaults: {
+                labelWidth: 155
+            },
+            items: [{
+                // Implementiert das Column Layout
+                xtype: 'container',
+                unstyled: true,
+                layout: 'column',
+                items: [
+                    {
+                        // Linke Spalte im Column Layout
                         xtype: 'container',
                         unstyled: true,
-                        layout: 'column',
+                        columnWidth: 0.5,
                         items: [
                             {
-                                // Linke Spalte im Column Layout
-                                xtype: 'container',
-                                unstyled: true,
-                                columnWidth: 0.5,
-                                items: [
-                                    {
-                                        xtype: 'checkbox',
-                                        name: 'extendedEditor',
-                                        boxLabel: '{s name="create_user/checkbox_extended_editor"}Extended Editor{/s}',
-                                        anchor: '100%',
-                                        uncheckedValue: 0,
-                                        inputValue: 1,
-                                        supportText: '{s name="create_user/checkbox_extended_editor_info"}Enable or disable extended editor{/s}'
-                                    },
-                                    {
-                                        xtype: 'checkbox',
-                                        name: 'disabledCache',
-                                        boxLabel: '{s name="create_user/checkbox_disabled_cache"}Disabled cache{/s}',
-                                        anchor: '100%',
-                                        uncheckedValue: 0,
-                                        inputValue: 1,
-                                        supportText: '{s name="create_user/checkbox_disabled_cache_info"}Enable or disable backend-cache{/s}'
-                                    }
-                                 ]
+                                xtype: 'checkbox',
+                                name: 'extendedEditor',
+                                boxLabel: '{s name="create_user/checkbox_extended_editor"}Extended Editor{/s}',
+                                anchor: '100%',
+                                uncheckedValue: 0,
+                                inputValue: 1,
+                                supportText: '{s name="create_user/checkbox_extended_editor_info"}Enable or disable extended editor{/s}'
                             },
                             {
-                                // Rechte Spalte im Column Layout
-                                xtype: 'container',
-                                unstyled: true,
-                                columnWidth: 0.5,
-                                items: []
+                                xtype: 'checkbox',
+                                name: 'disabledCache',
+                                boxLabel: '{s name="create_user/checkbox_disabled_cache"}Disabled cache{/s}',
+                                anchor: '100%',
+                                uncheckedValue: 0,
+                                inputValue: 1,
+                                supportText: '{s name="create_user/checkbox_disabled_cache_info"}Enable or disable backend-cache{/s}'
                             }
                         ]
-                    }]
-                }
-        );
+                    },
+                    {
+                        // Rechte Spalte im Column Layout
+                        xtype: 'container',
+                        unstyled: true,
+                        columnWidth: 0.5,
+                        items: []
+                    }
+                ]
+            }]
+        });
     }
 });
 //{/block}

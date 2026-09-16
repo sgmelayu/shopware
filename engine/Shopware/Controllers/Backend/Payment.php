@@ -1,28 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\ORM\ORMException;
 use Shopware\Models\Country\Country;
+use Shopware\Models\Country\Repository;
 use Shopware\Models\Payment\Payment;
 use Shopware\Models\Shop\Shop;
 
@@ -34,7 +37,7 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
     protected $repository;
 
     /**
-     * @var \Shopware\Models\Country\Repository
+     * @var Repository
      */
     protected $countryRepository;
 
@@ -43,7 +46,7 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
      */
     public function preDispatch()
     {
-        if (!in_array($this->Request()->getActionName(), ['index', 'load'])) {
+        if (!\in_array($this->Request()->getActionName(), ['index', 'load'])) {
             $this->Front()->Plugins()->Json()->setRenderer(true);
         }
     }
@@ -62,7 +65,7 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
      */
     public function getPaymentsAction()
     {
-        $this->repository = Shopware()->Models()->getRepository(Payment::class);
+        $this->repository = $this->get('models')->getRepository(Payment::class);
 
         $query = $this->repository->getListQuery(null, [
             ['property' => 'payment.active', 'direction' => 'DESC'],
@@ -74,7 +77,7 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
         // The standard $translationComponent->translatePayments can not be used here since the
         // description may not be overridden. The field is edible and if the translation is
         // shown in the edit field, there is a high chance of a user saving the translation as description.
-        $translator = $this->get(\Shopware_Components_Translation::class)->getObjectTranslator('config_payment');
+        $translator = $this->get(Shopware_Components_Translation::class)->getObjectTranslator('config_payment');
         $results = array_map(function ($payment) use ($translator) {
             return $translator->translateObjectProperty($payment, 'description', 'translatedDescription', $payment['description']);
         }, $results);
@@ -103,39 +106,38 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
         try {
             $params = $this->Request()->getParams();
             unset($params['action']);
-            $repository = Shopware()->Models()->getRepository(\Shopware\Models\Payment\Payment::class);
+            $repository = $this->get('models')->getRepository(Payment::class);
             $existingModel = $repository->findByName($params['name']);
-
             if ($existingModel) {
-                throw new \Doctrine\ORM\ORMException('The name is already in use.');
+                throw new ORMException('The name is already in use.');
             }
             if ($params['source'] == 0) {
                 $params['source'] = null;
             }
 
             $paymentModel = new Payment();
-            $countries = $params['countries'];
+            $countries = $params['countries'] ?? [];
             $countryArray = [];
             foreach ($countries as $country) {
-                $countryArray[] = Shopware()->Models()->find(\Shopware\Models\Country\Country::class, $country['id']);
+                $countryArray[] = $this->get('models')->find(Country::class, $country['id']);
             }
             $params['countries'] = $countryArray;
 
-            $shops = $params['shops'];
+            $shops = $params['shops'] ?? [];
             $shopArray = [];
             foreach ($shops as $shop) {
-                $shopArray[] = Shopware()->Models()->find(\Shopware\Models\Shop\Shop::class, $shop['id']);
+                $shopArray[] = $this->get('models')->find(Shop::class, $shop['id']);
             }
             $params['shops'] = $shopArray;
 
             $paymentModel->fromArray($params);
 
-            Shopware()->Models()->persist($paymentModel);
-            Shopware()->Models()->flush();
+            $this->get('models')->persist($paymentModel);
+            $this->get('models')->flush();
 
             $params['id'] = $paymentModel->getId();
             $this->View()->assign(['success' => true, 'data' => $params]);
-        } catch (\Doctrine\ORM\ORMException $e) {
+        } catch (ORMException $e) {
             $this->View()->assign(['success' => false, 'errorMsg' => $e->getMessage()]);
         }
     }
@@ -148,35 +150,34 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
     {
         try {
             $id = $this->Request()->getParam('id');
-            /** @var Payment $payment */
-            $payment = Shopware()->Models()->find(Payment::class, $id);
+            $payment = $this->get('models')->find(Payment::class, $id);
             $action = $payment->getAction();
             $data = $this->Request()->getParams();
-            $data['surcharge'] = str_replace(',', '.', $data['surcharge']);
-            $data['debitPercent'] = str_replace(',', '.', $data['debitPercent']);
+            $data['surcharge'] = str_replace(',', '.', $data['surcharge'] ?? '');
+            $data['debitPercent'] = str_replace(',', '.', $data['debitPercent'] ?? '');
 
-            $countries = new \Doctrine\Common\Collections\ArrayCollection();
+            $countries = new ArrayCollection();
             if (!empty($data['countries'])) {
                 // Clear all countries, to save the old and new ones then
                 $payment->getCountries()->clear();
                 foreach ($data['countries'] as $country) {
-                    $model = Shopware()->Models()->find(Country::class, $country['id']);
+                    $model = $this->get('models')->find(Country::class, $country['id']);
                     $countries->add($model);
                 }
                 $data['countries'] = $countries;
             }
 
-            $shops = new \Doctrine\Common\Collections\ArrayCollection();
+            $shops = new ArrayCollection();
             if (!empty($data['shops'])) {
                 // Clear all shops, to save the old and new ones then
                 $payment->getShops()->clear();
                 foreach ($data['shops'] as $shop) {
-                    $model = Shopware()->Models()->find(Shop::class, $shop['id']);
+                    $model = $this->get('models')->find(Shop::class, $shop['id']);
                     $shops->add($model);
                 }
                 $data['shops'] = $shops;
             }
-            $data['surchargeString'] = $this->filterSurchargeString($data['surchargeString'], $data['countries']);
+            $data['surchargeString'] = $this->filterSurchargeString($data['surchargeString'] ?? '', $data['countries'] ?? []);
 
             $payment->fromArray($data);
 
@@ -196,17 +197,17 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
                 $payment->setPluginId(null);
             }
 
-            Shopware()->Models()->persist($payment);
-            Shopware()->Models()->flush();
+            $this->get('models')->persist($payment);
+            $this->get('models')->flush();
 
-            if ($data['active']) {
+            if (!empty($data['active'])) {
                 $data['iconCls'] = 'sprite-tick';
             } else {
                 $data['iconCls'] = 'sprite-cross';
             }
 
             $this->View()->assign(['success' => true, 'data' => $data]);
-        } catch (\Doctrine\ORM\ORMException $e) {
+        } catch (ORMException $e) {
             $this->View()->assign(['success' => false, 'errorMsg' => $e->getMessage()]);
         }
     }
@@ -218,14 +219,13 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
 
             return;
         }
-        $repository = Shopware()->Models()->getRepository(Payment::class);
+        $repository = $this->get('models')->getRepository(Payment::class);
         $id = $this->Request()->get('id');
-        /** @var Payment $model */
         $model = $repository->find($id);
         if ($model->getSource() == 1) {
             try {
-                Shopware()->Models()->remove($model);
-                Shopware()->Models()->flush();
+                $this->get('models')->remove($model);
+                $this->get('models')->flush();
                 $this->View()->assign(['success' => true]);
             } catch (Exception $e) {
                 $this->View()->assign(['success' => false, 'errorMsg' => $e->getMessage()]);
@@ -238,12 +238,12 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
     /**
      * Internal helper function to get access to the country repository.
      *
-     * @return \Shopware\Models\Country\Repository
+     * @return Repository
      */
     private function getCountryRepository()
     {
         if ($this->countryRepository === null) {
-            $this->countryRepository = Shopware()->Models()->getRepository(Country::class);
+            $this->countryRepository = $this->get('models')->getRepository(Country::class);
         }
 
         return $this->countryRepository;
@@ -296,12 +296,9 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
     }
 
     /**
-     * @param string                             $surchargeString
-     * @param \Shopware\Models\Country\Country[] $countries
-     *
-     * @return string
+     * @param Country[] $countries
      */
-    private function filterSurchargeString($surchargeString, $countries)
+    private function filterSurchargeString(string $surchargeString, array $countries): string
     {
         $buffer = [];
         $surcharges = explode(';', $surchargeString);
@@ -313,7 +310,7 @@ class Shopware_Controllers_Backend_Payment extends Shopware_Controllers_Backend_
 
         foreach ($surcharges as $surcharge) {
             $keys = explode(':', $surcharge);
-            if (in_array($keys[0], $isoCodes)) {
+            if (\in_array($keys[0], $isoCodes)) {
                 $buffer[] = $surcharge;
             }
         }

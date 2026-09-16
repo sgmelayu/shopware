@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -45,14 +44,14 @@ Ext.define('Shopware.apps.Order.controller.Batch', {
      * All references to get the elements by the applicable selector
      */
     refs: [
-        { ref: 'orderListGrid', selector: 'order-list-main-window order-list'},
-        { ref: 'batchWindow', selector: 'order-batch-window'},
-        { ref: 'batchList', selector: 'order-batch-window batch-list'},
-        { ref: 'settingsPanel', selector: 'order-batch-window batch-settings-panel'},
-        { ref: 'progressBar', selector: 'order-progress-window progressbar'},
-        { ref: 'progressWindow', selector: 'order-progress-window'},
-        { ref: 'closeButton', selector: 'order-progress-window button[action=closeWindow]'},
-        { ref: 'cancelButton', selector: 'order-progress-window button[action=cancel]'}
+        { ref: 'orderListGrid', selector: 'order-list-main-window order-list' },
+        { ref: 'batchWindow', selector: 'order-batch-window' },
+        { ref: 'batchList', selector: 'order-batch-window batch-list' },
+        { ref: 'settingsPanel', selector: 'order-batch-window batch-settings-panel' },
+        { ref: 'progressBar', selector: 'order-progress-window progressbar' },
+        { ref: 'progressWindow', selector: 'order-progress-window' },
+        { ref: 'closeButton', selector: 'order-progress-window button[action=closeWindow]' },
+        { ref: 'cancelButton', selector: 'order-progress-window button[action=cancel]' }
     ],
 
     /**
@@ -521,7 +520,6 @@ Ext.define('Shopware.apps.Order.controller.Batch', {
                 'order'
             );
         }
-
 
         // Checks if the user clicks the cancel button on the detail window.
         if (me.currentStatus === me.processStatus.cancel) {

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Banner
@@ -36,14 +35,14 @@
  */
 //{block name="backend/banner/controller/main"}
 Ext.define('Shopware.apps.Banner.controller.Main', {
-    extend : 'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
     refs: [
-        { ref:'addBannerButton', selector:'banner-view-main-panel button[action=addBanner]' },
-        { ref:'deleteBannerButton', selector:'banner-view-main-panel button[action=deleteBanner]' },
-        { ref:'editBannerButton', selector:'banner-view-main-panel button[action=editBanner]' },
-        { ref:'imageViewItem', selector:'banner-view-main-panel panel dataview' },
-        { ref:'categoryTree', selector:'banner-view-main-panel treepanel' },
-        { ref:'mainPanel', selector:'bannermanager banner-view-main-panel' }
+        { ref: 'addBannerButton', selector: 'banner-view-main-panel button[action=addBanner]' },
+        { ref: 'deleteBannerButton', selector: 'banner-view-main-panel button[action=deleteBanner]' },
+        { ref: 'editBannerButton', selector: 'banner-view-main-panel button[action=editBanner]' },
+        { ref: 'imageViewItem', selector: 'banner-view-main-panel panel dataview' },
+        { ref: 'categoryTree', selector: 'banner-view-main-panel treepanel' },
+        { ref: 'mainPanel', selector: 'bannermanager banner-view-main-panel' }
     ],
 
     /**
@@ -70,22 +69,22 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
 
         // Set necessary event listeners
         me.control({
-            'banner-view-main-panel treepanel':{
+            'banner-view-main-panel treepanel': {
                 itemclick: me.onTreeClick
             },
-            'banner-view-main-panel panel dataview':{
-              /*{if {acl_is_allowed privilege=update}}*/
+            'banner-view-main-panel panel dataview': {
+                /*{if {acl_is_allowed privilege=update}}*/
                 itemdblclick: me.onBannerClick,
-              /* {/if} */
+                /* {/if} */
                 selectionchange: me.onBannerSelection
             },
-            'banner-view-main-panel button[action=addBanner]':{
+            'banner-view-main-panel button[action=addBanner]': {
                 click: me.onAddBanner
             },
-            'banner-view-main-panel button[action=editBanner]':{
+            'banner-view-main-panel button[action=editBanner]': {
                 click: me.onEditClick
             },
-            'banner-view-main-panel button[action=deleteBanner]':{
+            'banner-view-main-panel button[action=deleteBanner]': {
                 click: me.onDeleteBanner
             },
             //The save-button from the edit-window
@@ -120,7 +119,7 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
      *
      * @event click
      */
-    onEditClick : function() {
+    onEditClick: function() {
         var me = this,
             bannerStore = me.subApplication.bannerStore,
             categoryStore   = me.subApplication.categoryStore,
@@ -130,11 +129,11 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
             currentCategory = categoryStore.getNodeById(categoryId);
 
         me.getView('main.BannerForm').create({
-            bannerStore : bannerStore,
-            record      : selection,
-            scope       : me,
-            categoryId  : categoryId,
-            title       : currentCategory.get('text')
+            bannerStore: bannerStore,
+            record: selection,
+            scope: me,
+            categoryId: categoryId,
+            title: currentCategory.get('text')
         });
     },
 
@@ -148,7 +147,7 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
      * @param [object] btn - pressed Ext.button.Button
      * @return void
      */
-    onSaveEditBanner : function(btn) {
+    onSaveEditBanner: function(btn) {
         var win     = btn.up('window'),
             form    = win.down('form'),
             attributeForm = win.down('shopware-attribute-form'),
@@ -169,7 +168,7 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
                     Shopware.Msg.createGrowlMessage('', '{s name="saved_success"}Banner has been saved.{/s}', '{s name="main_title"}{/s}');
                     win.close();
                     store.load({
-                        params: { categoryId : record.get('categoryId') }
+                        params: { categoryId: record.get('categoryId') }
                     });
                 }
             });
@@ -187,7 +186,7 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
      * @param [object] btn - pressed Ext.button.Button
      * @return void
      */
-    onAddBanner : function() {
+    onAddBanner: function() {
         var me              = this,
             bannerStore     = me.subApplication.bannerStore,
             categoryStore   = me.subApplication.categoryStore,
@@ -214,7 +213,7 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
      * @event click
      * @return void
      */
-    onDeleteBanner : function() {
+    onDeleteBanner: function() {
         var me              = this,
             dataView        = me.getMainPanel().dataView,
             selection       = dataView.getSelectionModel().getSelection(),
@@ -237,7 +236,7 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
                         Shopware.Msg.createGrowlMessage('', '{s name="delete_error"}Not every banner could be deleted:{/s} ' + e.message, '{s name="main_title"}{/s}');
                     }
                 }
-        });
+            });
     },
 
     /**
@@ -251,7 +250,7 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
      * @param [object] record - Associated Ext.data.Model
      * @return void
      */
-    onBannerClick : function(node, record) {
+    onBannerClick: function(node, record) {
         var me              = this,
             bannerStore     = me.subApplication.bannerStore,
             categoryStore   = me.subApplication.categoryStore,
@@ -259,11 +258,11 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
             currentCategory = categoryStore.getNodeById(categoryId);
 
         me.getView('main.BannerForm').create({
-            bannerStore : bannerStore,
-            record      : record,
-            scope       : me,
-            categoryId  : categoryId,
-            title       : currentCategory.get('text')
+            bannerStore: bannerStore,
+            record: record,
+            scope: me,
+            categoryId: categoryId,
+            title: currentCategory.get('text')
         });
     },
 
@@ -279,7 +278,7 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
      * @param [object] record - Associated Ext.data.Model
      * @return void
      */
-    onTreeClick : function(node, record) {
+    onTreeClick: function(node, record) {
         var me          = this,
             bannerStore = me.subApplication.bannerStore,
             categoryId  = record.get('id'),
@@ -292,9 +291,9 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
             params: { categoryId: categoryId }
         });
 
-/*{if {acl_is_allowed privilege=create}}*/
+        /*{if {acl_is_allowed privilege=create}}*/
         bannerBtn.setDisabled(false);
-/* {/if} */
+        /* {/if} */
 
     },
 
@@ -313,13 +312,13 @@ Ext.define('Shopware.apps.Banner.controller.Main', {
         var me          = this,
             deleteBtn   = me.getDeleteBannerButton(),
             editButton = me.getEditBannerButton();
-/*{if {acl_is_allowed privilege=delete}}*/
+        /*{if {acl_is_allowed privilege=delete}}*/
         deleteBtn.setDisabled((selection.length > 0) ? false : true);
-/* {/if} */
-/*{if {acl_is_allowed privilege=update}}*/
+        /* {/if} */
+        /*{if {acl_is_allowed privilege=update}}*/
         // rule on when the edit button should be enabled.
         editButton.setDisabled((selection.length == 1) ? false : true);
-/* {/if} */
+        /* {/if} */
 
     }
 });

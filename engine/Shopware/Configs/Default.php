@@ -1,27 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Components\Api\Exception\BatchInterfaceNotImplementedException;
+use Shopware\Components\Api\Exception\CustomValidationException;
+use Shopware\Components\Api\Exception\NonUniqueIdentifierUsedException;
+use Shopware\Components\Api\Exception\NotFoundException;
+use Shopware\Components\Api\Exception\OrmException;
+use Shopware\Components\Api\Exception\ParameterMissingException;
+use Shopware\Components\Api\Exception\PrivilegeException;
+use Shopware\Components\Api\Exception\ValidationException;
 use Shopware\Components\Logger;
 
 if (file_exists($this->DocPath() . 'config_' . $this->Environment() . '.php')) {
@@ -32,7 +40,7 @@ if (file_exists($this->DocPath() . 'config_' . $this->Environment() . '.php')) {
     $customConfig = [];
 }
 
-if (!is_array($customConfig)) {
+if (!\is_array($customConfig)) {
     throw new Enlight_Exception('The custom configuration file must return an array.');
 }
 
@@ -131,15 +139,16 @@ return array_replace_recursive([
     'errorhandler' => [
         'throwOnRecoverableError' => false,
         'ignoredExceptionClasses' => [
-             // Disable logging for defined exceptions by class, eg. to disable any logging for CSRF exceptions add this:
-             // \Shopware\Components\CSRFTokenValidationException::class
-            \Shopware\Components\Api\Exception\BatchInterfaceNotImplementedException::class,
-            \Shopware\Components\Api\Exception\CustomValidationException::class,
-            \Shopware\Components\Api\Exception\NotFoundException::class,
-            \Shopware\Components\Api\Exception\OrmException::class,
-            \Shopware\Components\Api\Exception\ParameterMissingException::class,
-            \Shopware\Components\Api\Exception\PrivilegeException::class,
-            \Shopware\Components\Api\Exception\ValidationException::class,
+            // Disable logging for defined exceptions by class, eg. to disable any logging for CSRF exceptions add this:
+            // \Shopware\Components\CSRFTokenValidationException::class
+            BatchInterfaceNotImplementedException::class,
+            CustomValidationException::class,
+            NonUniqueIdentifierUsedException::class,
+            NotFoundException::class,
+            OrmException::class,
+            ParameterMissingException::class,
+            PrivilegeException::class,
+            ValidationException::class,
         ],
     ],
     'db' => [
@@ -237,6 +246,10 @@ return array_replace_recursive([
     'mail' => [
         'charset' => 'utf-8',
     ],
+    'update' => [
+        'url' => 'https://raw.githubusercontent.com/shopware5/shopware-release-cache/main/releases.json',
+        'prerelease' => false,
+    ],
     'httpcache' => [
         'enabled' => true,
         'lookup_optimization' => true,
@@ -254,39 +267,33 @@ return array_replace_recursive([
          * of the parameters listed here is matched. This allows the caching system to be more efficient.
          */
         'ignored_url_parameters' => [
-           'pk_campaign',    // Piwik
-           'piwik_campaign',
-           'pk_kwd',
-           'piwik_kwd',
-           'pk_keyword',
-           'pixelId',        // Yahoo
-           'kwid',
-           'kw',
-           'adid',
-           'chl',
-           'dv',
-           'nk',
-           'pa',
-           'camid',
-           'adgid',
-           'utm_term',       // Google
-           'utm_source',
-           'utm_medium',
-           'utm_campaign',
-           'utm_content',
-           'gclid',
-           'cx',
-           'ie',
-           'cof',
-           'siteurl',
-           '_ga',
-           'fbclid',         // Facebook
-        ],
-    ],
-    'bi' => [
-        'endpoint' => [
-            'benchmark' => 'https://bi.shopware.com/benchmark',
-            'statistics' => 'https://bi.shopware.com/statistics',
+            'pk_campaign',    // Piwik
+            'piwik_campaign',
+            'pk_kwd',
+            'piwik_kwd',
+            'pk_keyword',
+            'pixelId',        // Yahoo
+            'kwid',
+            'kw',
+            'adid',
+            'chl',
+            'dv',
+            'nk',
+            'pa',
+            'camid',
+            'adgid',
+            'utm_term',       // Google
+            'utm_source',
+            'utm_medium',
+            'utm_campaign',
+            'utm_content',
+            'gclid',
+            'cx',
+            'ie',
+            'cof',
+            'siteurl',
+            '_ga',
+            'fbclid',         // Facebook
         ],
     ],
     'session' => [
@@ -366,7 +373,6 @@ return array_replace_recursive([
         // Passed to \Mpdf\Mpdf::__construct:
         'defaultConfig' => [
             'tempDir' => $this->getCacheDir() . '/mpdf/',
-            'fontDir' => $this->DocPath('engine_Library_Mpdf_ttfonts_'),
             'fonttrans' => [
                 'helvetica' => 'arial',
                 'verdana' => 'arial',
@@ -382,38 +388,6 @@ return array_replace_recursive([
                 'ocr-b10bt' => 'ocrb',
                 'damase' => 'mph2bdamase',
             ],
-            'fontdata' => [
-                'arial' => [
-                    'R' => 'arial.ttf',
-                    'B' => 'arialbd.ttf',
-                    'I' => 'ariali.ttf',
-                    'BI' => 'arialbi.ttf',
-                ],
-                'couriernew' => [
-                    'R' => 'cour.ttf',
-                    'B' => 'courbd.ttf',
-                    'I' => 'couri.ttf',
-                    'BI' => 'courbi.ttf',
-                ],
-                'georgia' => [
-                    'R' => 'georgia.ttf',
-                    'B' => 'georgiab.ttf',
-                    'I' => 'georgiai.ttf',
-                    'BI' => 'georgiaz.ttf',
-                ],
-                'timesnewroman' => [
-                    'R' => 'times.ttf',
-                    'B' => 'timesbd.ttf',
-                    'I' => 'timesi.ttf',
-                    'BI' => 'timesbi.ttf',
-                ],
-                'verdana' => [
-                    'R' => 'verdana.ttf',
-                    'B' => 'verdanab.ttf',
-                    'I' => 'verdanai.ttf',
-                    'BI' => 'verdanaz.ttf',
-                ],
-            ],
             'format' => 'A4',
         ],
     ],
@@ -427,14 +401,10 @@ return array_replace_recursive([
          */
         'orderNumberRegex' => '/^[a-zA-Z0-9-_.]+$/',
     ],
-    'backward_compatibility' => [
-        /*
-         * @deprecated since Shopware 5.5
-         *
-         * Sorting of plugins is active by default in 5.6 and this parameter will be removed with Shopware 5.7
-         */
-        'predictable_plugin_order' => true,
+    'product_export' => [
+        'cache_dir' => $this->getCacheDir() . '/productexport/',
     ],
+    'backward_compatibility' => [],
     'logger' => [
         'level' => $this->Environment() !== 'production' ? Logger::DEBUG : Logger::ERROR,
     ],

@@ -1,47 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator;
 
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Category;
 
 class CategoryHydrator extends Hydrator
 {
-    /**
-     * @var AttributeHydrator
-     */
-    private $attributeHydrator;
+    private AttributeHydrator $attributeHydrator;
 
-    /**
-     * @var MediaHydrator
-     */
-    private $mediaHydrator;
+    private MediaHydrator $mediaHydrator;
 
-    /**
-     * @var ProductStreamHydrator
-     */
-    private $productStreamHydrator;
+    private ProductStreamHydrator $productStreamHydrator;
 
     public function __construct(
         AttributeHydrator $attributeHydrator,
@@ -54,11 +45,11 @@ class CategoryHydrator extends Hydrator
     }
 
     /**
-     * @return Struct\Category
+     * @return Category
      */
     public function hydrate(array $data)
     {
-        $category = new Struct\Category();
+        $category = new Category();
         $translation = $this->getTranslation($data, '__category');
         $data = array_merge($data, $translation);
 
@@ -87,7 +78,7 @@ class CategoryHydrator extends Hydrator
         return $category;
     }
 
-    private function assignCategoryData(Struct\Category $category, array $data)
+    private function assignCategoryData(Category $category, array $data)
     {
         if (isset($data['__category_id'])) {
             $category->setId((int) $data['__category_id']);
@@ -98,6 +89,7 @@ class CategoryHydrator extends Hydrator
             $path = rtrim($path, '|');
 
             $path = explode('|', $path);
+            $path = array_map('\intval', $path);
 
             $category->setPath(array_reverse($path));
         }
@@ -157,8 +149,7 @@ class CategoryHydrator extends Hydrator
         }
 
         if (isset($data['__category_customer_groups'])) {
-            /** @var int[] $categoryCustomerGroups */
-            $categoryCustomerGroups = explode(',', $data['__category_customer_groups']);
+            $categoryCustomerGroups = array_map('\intval', explode(',', $data['__category_customer_groups']));
             $category->setBlockedCustomerGroupIds($categoryCustomerGroups);
         }
 

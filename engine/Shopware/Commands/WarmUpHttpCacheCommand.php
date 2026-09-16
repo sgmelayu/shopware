@@ -1,34 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use Shopware\Components\CacheManager;
 use Shopware\Components\HttpCache\CacheWarmer;
-use Shopware\Components\HttpCache\UrlProvider\UrlProviderInterface;
 use Shopware\Components\HttpCache\UrlProviderFactoryInterface;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Routing\Context;
 use Shopware\Models\Shop\Shop;
+use Shopware_Components_Config;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
 use Symfony\Component\Console\Input\InputArgument;
@@ -77,7 +80,7 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
             ->addArgument('shopId', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, 'The Id of the shop (deprecated)')
             ->addOption('shopId', null, InputOption::VALUE_OPTIONAL | InputOption::VALUE_IS_ARRAY, 'The Id of the shop (multiple Ids -> shopId={1,2})')
             ->addOption('clear-cache', 'c', InputOption::VALUE_NONE, 'Clear complete httpcache before warmup')
-            ->addOption('concurrent-requests', 'b', InputOption::VALUE_OPTIONAL, 'Integer representing the maximum number of requests that are allowed to be sent concurrently. To many URLs at a time may cause script timeouts, memory issues or block your HTTP server', 1)
+            ->addOption('concurrent-requests', 'b', InputOption::VALUE_OPTIONAL, 'Integer representing the maximum number of requests that are allowed to be sent concurrently. To many URLs at a time may cause script timeouts, memory issues or block your HTTP server', '1')
             ->addOption('category', 'k', InputOption::VALUE_NONE, 'Warm up categories')
             ->addOption('emotion', 'o', InputOption::VALUE_NONE, 'Warm up emotions')
             ->addOption('blog', 'g', InputOption::VALUE_NONE, 'Warm up blogs')
@@ -114,8 +117,7 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
             $shopIds = $input->getOption('shopId');
         }
 
-        /** @var \Shopware\Models\Shop\Repository $shopRepository */
-        $shopRepository = $this->container->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Shop::class);
+        $shopRepository = $this->container->get(ModelManager::class)->getRepository(Shop::class);
         $shops = null;
 
         if (!empty($shopIds)) {
@@ -123,7 +125,7 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
                 $shop = $shopRepository->getById($shopId);
 
                 if (!$shop) {
-                    throw new \RuntimeException(sprintf('Shop with id %d not found', $shopId));
+                    throw new ModelNotFoundException(Shop::class, $shopId);
                 }
 
                 $shops[] = $shop;
@@ -138,7 +140,7 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
         // Clear cache?
         if ($input->getOption('clear-cache')) {
             $io->writeln('Clearing httpcache.');
-            $this->container->get(\Shopware\Components\CacheManager::class)->clearHttpCache();
+            $this->container->get(CacheManager::class)->clearHttpCache();
         }
 
         /*
@@ -147,10 +149,10 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
          */
         $concurrentRequests = (int) trim($input->getOption('concurrent-requests'), '=');
         $limit = $concurrentRequests > 10 ? $concurrentRequests : 10;
-        $io->writeln(sprintf('Calling URLs with %d concurrent requests', $concurrentRequests));
+        $io->writeln(\sprintf('Calling URLs with %d concurrent requests', $concurrentRequests));
 
         // Print warming information
-        if (!in_array(false, $options, true)) {
+        if (!\in_array(false, $options, true)) {
             $io->write('Standard warmup - Warming every url type');
         } else {
             $optionsKeys = array_keys($options, function ($setting) {
@@ -164,10 +166,9 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
 
         /** @var Shop $shop */
         foreach ($shops as $shop) {
-            /** @var Context $context */
             $context = Context::createFromShop(
                 $shop,
-                $this->container->get(\Shopware_Components_Config::class)
+                $this->container->get(Shopware_Components_Config::class)
             );
 
             // Gathering URLs
@@ -184,17 +185,17 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
 
             // Progressbar
             $progressBar = $io->createProgressBar($totalResultCount);
-            $io->writeln(sprintf("\nShop '%s' (ID: %s)", $shop->getName(), $shop->getId()));
+            $io->writeln(\sprintf("\nShop '%s' (ID: %s)", $shop->getName(), $shop->getId()));
             $progressBar->setBarWidth(100);
             $progressBar->setFormat('very_verbose');
             $progressBar->start();
 
             // Warm URL-List
             while ($offset < $totalResultCount) {
-                $sliceUrls = array_slice($urls, $offset, $limit, true);
+                $sliceUrls = \array_slice($urls, $offset, $limit, true);
                 $cacheWarmer->warmUpUrls($sliceUrls, $context, $concurrentRequests);
 
-                $sliceCount = count($sliceUrls);
+                $sliceCount = \count($sliceUrls);
                 if ($sliceCount === 0) {
                     break;
                 }
@@ -219,11 +220,10 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
     {
         $options = [];
         $extensions = [];
-        /** @var UrlProviderInterface $provider */
         foreach ($factory->getAllProviders() as $provider) {
             $providerName = $provider->getName();
 
-            if (in_array($providerName, $this->defaultProviderNames, true)) {
+            if (\in_array($providerName, $this->defaultProviderNames, true)) {
                 $options[$providerName] = $input[$providerName];
             } else {
                 $extensions[$providerName] = true;
@@ -234,7 +234,7 @@ class WarmUpHttpCacheCommand extends ShopwareCommand implements CompletionAwareI
             $options = array_merge($options, $extensions);
         }
 
-        return (in_array(true, $options, true) || $input['extensions'] === true) ? $options : array_map(function () {
+        return (\in_array(true, $options, true) || $input['extensions'] === true) ? $options : array_map(function () {
             return true;
         }, array_merge($options, $extensions));
     }

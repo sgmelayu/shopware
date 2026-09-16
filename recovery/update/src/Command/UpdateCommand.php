@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Update\Command;
 
+use Exception;
+use PDO;
 use Shopware\Components\Migrations\Manager as MigrationManager;
 use Shopware\Recovery\Common\DumpIterator;
 use Shopware\Recovery\Common\IOHelper;
@@ -90,13 +92,14 @@ class UpdateCommand extends Command
             $ioService->cls();
             $ioService->printBanner();
             $ioService->writeln('<info>Welcome to the Shopware updater </info>');
-            $ioService->writeln(sprintf('Shopware Version %s', $version));
+            $ioService->writeln(\sprintf('Shopware Version %s', $version));
             $ioService->writeln('');
             $ioService->ask('Press return to start the update.');
             $ioService->cls();
         }
 
         $this->unpackFiles();
+        $this->updateHtaccess();
         $this->migrateDatabase();
         $this->importSnippets();
         $this->cleanup();
@@ -108,7 +111,7 @@ class UpdateCommand extends Command
         $ioService->writeln('');
         $ioService->writeln('<info>The update has been finished succesfuly.</info>');
         $ioService->writeln('Your shop is currently in maintenance mode.');
-        $ioService->writeln(sprintf('Please delete <question>%s</question> to finish the update.', UPDATE_ASSET_PATH));
+        $ioService->writeln(\sprintf('Please delete <question>%s</question> to finish the update.', UPDATE_ASSET_PATH));
         $ioService->writeln('');
 
         return 0;
@@ -131,19 +134,23 @@ class UpdateCommand extends Command
         /** @var PathBuilder $pathBuilder */
         $pathBuilder = $this->container->get('path.builder');
 
-        $debug = false;
-        $step = new UnpackStep($localFilesytem, $remoteFilesystem, $pathBuilder, $debug);
+        $step = new UnpackStep($localFilesytem, $remoteFilesystem, $pathBuilder, false);
 
         $offset = 0;
         $total = 0;
         do {
             $result = $step->run($offset, $total);
             if ($result instanceof ErrorResult) {
-                throw new \Exception($result->getMessage(), 0, $result->getException());
+                throw new Exception($result->getMessage(), 0, $result->getException());
             }
             $offset = $result->getOffset();
             $total = $result->getTotal();
         } while ($result instanceof ValidResult);
+    }
+
+    private function updateHtaccess()
+    {
+        $this->container->get('shopware.update.update_htaccess')->update();
     }
 
     private function migrateDatabase()
@@ -163,7 +170,7 @@ class UpdateCommand extends Command
 
         $versions = $manager->getMigrationsForVersion($currentVersion);
 
-        $progress = $this->IOHelper->createProgressBar(count($versions));
+        $progress = $this->IOHelper->createProgressBar(\count($versions));
         $progress->start();
 
         $step = new MigrationStep($manager);
@@ -172,7 +179,7 @@ class UpdateCommand extends Command
             $progress->setProgress($offset);
             $result = $step->run($offset);
             if ($result instanceof ErrorResult) {
-                throw new \Exception($result->getMessage(), 0, $result->getException());
+                throw new Exception($result->getMessage(), 0, $result->getException());
             }
 
             $offset = $result->getOffset();
@@ -195,7 +202,7 @@ class UpdateCommand extends Command
             return 1;
         }
 
-        /** @var \PDO $conn */
+        /** @var PDO $conn */
         $conn = $this->container->get('db');
         $snippetStep = new SnippetStep($conn, $dump);
 
@@ -207,7 +214,7 @@ class UpdateCommand extends Command
             $progress->setProgress($offset);
             $result = $snippetStep->run($offset);
             if ($result instanceof ErrorResult) {
-                throw new \Exception($result->getMessage(), 0, $result->getException());
+                throw new Exception($result->getMessage(), 0, $result->getException());
             }
             $offset = $result->getOffset();
             $progress->setProgress($offset);

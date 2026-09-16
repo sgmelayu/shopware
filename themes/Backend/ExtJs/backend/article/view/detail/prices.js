@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -41,7 +40,7 @@ Ext.define('Shopware.apps.Article.view.detail.Prices', {
      * Define that the billing field set is an extension of the Ext.form.FieldSet
      * @string
      */
-    extend:'Ext.form.FieldSet',
+    extend: 'Ext.form.FieldSet',
     /**
      * The Ext.container.Container.layout for the fieldset's immediate child items.
      * @object
@@ -51,7 +50,7 @@ Ext.define('Shopware.apps.Article.view.detail.Prices', {
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.article-prices-field-set',
+    alias: 'widget.article-prices-field-set',
     /**
      * Set css class for this component
      * @string
@@ -61,21 +60,25 @@ Ext.define('Shopware.apps.Article.view.detail.Prices', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
-        title:'{s name="detail/prices/title"}Prices{/s}',
-        any:'{s name="detail/prices/any"}Arbitrary{/s}',
+    snippets: {
+        title: '{s name="detail/prices/title"}Prices{/s}',
+        any: '{s name="detail/prices/any"}Arbitrary{/s}',
         grid: {
-            titleGross:'{s name="detail/price/title_gross"}[0] Gross{/s}',
-            titleNet:'{s name="detail/price/title_net"}[0] Net{/s}',
+            titleGross: '{s name="detail/price/title_gross"}[0] Gross{/s}',
+            titleNet: '{s name="detail/price/title_net"}[0] Net{/s}',
+            helpTexts: {
+                regulationPrice: '{s name="detail/price/regulation_price_help_text"}{/s}'
+            },
             columns: {
                 from: '{s name="detail/price/from"}From{/s}',
                 to: '{s name="detail/price/to"}To{/s}',
                 percent: '{s name="detail/price/percent"}Percent discount{/s}',
                 price: '{s name="detail/price/price"}Price{/s}',
                 pseudoPrice: '{s name="detail/price/pseudo_price"}Pseudo price{/s}',
-                percentPseudo: '{s name="detail/price/percent_pseudo_price"}Savings vs. pseudo price{/s}'
+                percentPseudo: '{s name="detail/price/percent_pseudo_price"}Savings vs. pseudo price{/s}',
+                regulationPrice: '{s name="detail/price/regulation_price"}{/s}'
             },
-            any:'{s name="detail/price/any"}Arbitrary{/s}'
+            any: '{s name="detail/price/any"}Arbitrary{/s}'
         }
     },
 
@@ -91,7 +94,7 @@ Ext.define('Shopware.apps.Article.view.detail.Prices', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this,
             mainWindow = me.subApp.articleWindow;
 
@@ -147,7 +150,7 @@ Ext.define('Shopware.apps.Article.view.detail.Prices', {
             height: 150,
             activeTab: 0,
             plain: true,
-            items : tabs,
+            items: tabs,
             listeners: {
                 beforetabchange: function(panel, newTab, oldTab) {
                     me.fireEvent('priceTabChanged', oldTab, newTab, me.priceStore, me.customerGroupStore)
@@ -213,7 +216,7 @@ Ext.define('Shopware.apps.Article.view.detail.Prices', {
         }
         title = Ext.String.format(title, customerGroup.get('name'));
         return Ext.create('Ext.grid.Panel', {
-            alias:'widget.article-price-grid',
+            alias: 'widget.article-price-grid',
             cls: Ext.baseCSSPrefix + 'article-price-grid',
             height: 100,
             sortableColumns: false,
@@ -320,6 +323,23 @@ Ext.define('Shopware.apps.Article.view.detail.Prices', {
                         return '';
                     }
                     return Ext.util.Format.number(v) + ' %';
+                }
+            }, {
+                xtype: 'numbercolumn',
+                text: '<span class="x-form-help-icon" style="display: inline-block; margin: 0">&nbsp</span>' + me.snippets.grid.columns.regulationPrice,
+                tooltip: me.snippets.grid.helpTexts.regulationPrice,
+                tooltipType: 'title',
+                dataIndex: 'regulationPrice',
+                editor: {
+                    xtype: 'numberfield',
+                    decimalPrecision: 2,
+                    minValue: 0
+                },
+                renderer: function(v) {
+                    if (!Ext.isNumeric(v) || v === 0) {
+                        return ''
+                    }
+                    return Ext.util.Format.number(v)
                 }
             }, {
                 xtype: 'actioncolumn',

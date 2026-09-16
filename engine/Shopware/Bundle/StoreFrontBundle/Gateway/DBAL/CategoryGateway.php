@@ -1,56 +1,51 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
-use Doctrine\DBAL\Driver\ResultStatement;
+use Assert\Assertion;
+use Doctrine\DBAL\Query\QueryBuilder;
 use PDO;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
+use Shopware\Bundle\StoreFrontBundle\Gateway\CategoryGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\CategoryQueryHelperInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\CategoryHydrator;
 use Shopware\Bundle\StoreFrontBundle\Service\MediaServiceInterface;
-use Shopware\Bundle\StoreFrontBundle\Struct;
-use Webmozart\Assert\Assert;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Category;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class CategoryGateway implements Gateway\CategoryGatewayInterface
+class CategoryGateway implements CategoryGatewayInterface
 {
-    /**
-     * @var Gateway\CategoryQueryHelperInterface
-     */
-    private $queryHelper;
+    private CategoryQueryHelperInterface $queryHelper;
 
-    /**
-     * @var Hydrator\CategoryHydrator
-     */
-    private $categoryHydrator;
+    private CategoryHydrator $categoryHydrator;
 
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
+    private MediaServiceInterface $mediaService;
 
     public function __construct(
-        Gateway\CategoryQueryHelperInterface $queryHelper,
-        Hydrator\CategoryHydrator $categoryHydrator,
+        CategoryQueryHelperInterface $queryHelper,
+        CategoryHydrator $categoryHydrator,
         MediaServiceInterface $mediaService
     ) {
         $this->queryHelper = $queryHelper;
@@ -59,11 +54,11 @@ class CategoryGateway implements Gateway\CategoryGatewayInterface
     }
 
     /**
-     * @return Struct\Category
+     * {@inheritdoc}
      */
-    public function get($id, Struct\ShopContextInterface $context)
+    public function get($id, ShopContextInterface $context)
     {
-        Assert::integer($id);
+        Assertion::integer($id);
         $categories = $this->getList([$id], $context);
 
         return array_shift($categories);
@@ -72,9 +67,9 @@ class CategoryGateway implements Gateway\CategoryGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getProductsCategories(array $products, Struct\ShopContextInterface $context)
+    public function getProductsCategories(array $products, ShopContextInterface $context)
     {
-        $productIds = array_map(function (Struct\BaseProduct $product) {
+        $productIds = array_map(function (BaseProduct $product) {
             return $product->getId();
         }, $products);
 
@@ -91,10 +86,9 @@ class CategoryGateway implements Gateway\CategoryGatewayInterface
                 continue;
             }
 
-            /** @var int[] $ids */
             $ids = explode(',', $mapping[$id]);
+            $ids = array_map('\intval', $ids);
 
-            /** @var int[] $productCategories */
             $productCategories = $this->getProductCategories(
                 $ids,
                 $categories
@@ -108,22 +102,17 @@ class CategoryGateway implements Gateway\CategoryGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getList(array $ids, Struct\ShopContextInterface $context)
+    public function getList(array $ids, ShopContextInterface $context)
     {
-        $query = $this->getQuery($ids, $context);
+        $data = $this->getQuery($ids, $context)->execute()->fetchAll(PDO::FETCH_ASSOC);
 
-        /** @var ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-        //use php usort instead of running mysql order by to prevent file-sort and temporary table statement
+        // use php usort instead of running mysql order by to prevent file-sort and temporary table statement
         usort($data, function ($a, $b) {
             if ($a['__category_position'] === $b['__category_position']) {
-                return $a['__category_id'] > $b['__category_id'] ? 1 : 0;
+                return $a['__category_id'] <=> $b['__category_id'];
             }
 
-            return $a['__category_position'] > $b['__category_position'] ? 1 : 0;
+            return $a['__category_position'] <=> $b['__category_position'];
         });
 
         $categories = [];
@@ -135,7 +124,12 @@ class CategoryGateway implements Gateway\CategoryGatewayInterface
         return $categories;
     }
 
-    protected function getQuery(array $numbers, Struct\ShopContextInterface $context)
+    /**
+     * @param array<int> $numbers Category IDs
+     *
+     * @return QueryBuilder
+     */
+    protected function getQuery(array $numbers, ShopContextInterface $context)
     {
         return $this->queryHelper->getQuery($numbers, $context);
     }
@@ -155,25 +149,24 @@ class CategoryGateway implements Gateway\CategoryGatewayInterface
      *
      * @return int[]
      */
-    private function getMappingIds(array $mapping)
+    private function getMappingIds(array $mapping): array
     {
         $ids = [];
         foreach ($mapping as $row) {
             $ids = array_merge($ids, explode(',', $row));
         }
-        /** @var array<int> $ids */
         $ids = array_unique($ids);
 
-        return $ids;
+        return array_map('\intval', $ids);
     }
 
     /**
-     * @param int[]             $mapping
-     * @param Struct\Category[] $categories
+     * @param int[]      $mapping
+     * @param Category[] $categories
      *
-     * @return Struct\Category[]
+     * @return Category[]
      */
-    private function getProductCategories(array $mapping, array $categories)
+    private function getProductCategories(array $mapping, array $categories): array
     {
         $productCategories = [];
         foreach ($mapping as $categoryId) {
@@ -189,15 +182,20 @@ class CategoryGateway implements Gateway\CategoryGatewayInterface
     /**
      * Resolves translated data for media and streamId
      *
-     * @return array
+     * @param array<string, mixed> $category
+     *
+     * @return array<string, mixed>
      */
-    private function translateCategoryData(array $category, Struct\ShopContextInterface $context)
+    private function translateCategoryData(array $category, ShopContextInterface $context): array
     {
         if (empty($category['__category_translation'])) {
             return $category;
         }
 
-        $translation = unserialize($category['__category_translation'], ['allowed_classes' => false]);
+        $translation = @unserialize($category['__category_translation'], ['allowed_classes' => false]);
+        if ($translation === false) {
+            $translation = [];
+        }
 
         if (!empty($translation['imagePath'])) {
             $category['mediaTranslation'] = $this->mediaService->get($translation['imagePath'], $context);

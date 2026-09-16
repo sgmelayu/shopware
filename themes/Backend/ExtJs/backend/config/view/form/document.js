@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -38,7 +37,7 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
             xtype: 'config-base-table',
             store: 'form.Document',
             columns: me.getColumns()
-        },{
+        }, {
             xtype: 'config-base-detail',
             items: me.getFormItems(),
             store: 'detail.Document',
@@ -93,16 +92,16 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
                 labelWidth: 250,
                 xtype: 'textfield'
             },
-            items:[{
+            items: [{
                 name: 'id',
                 fieldLabel: '{s name="document/detail/id_label"}ID{/s}',
                 hidden: true
-            },{
+            }, {
                 name: 'name',
                 fieldLabel: '{s name="document/detail/name_label"}Name{/s}',
                 allowBlank: false,
                 translatable: true
-            },{
+            }, {
                 name: 'key',
                 fieldLabel: '{s name="document/detail/key_label"}Technical name{/s}',
                 allowBlank: false,
@@ -127,44 +126,44 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
                         return '{s name="document/detail/key_exists"}The current key already exists. Please specify a unique technical name.{/s}';
                     }
                 }
-            },{
+            }, {
                 name: 'numbers',
                 xtype: 'config-element-select',
                 valueField: 'name',
                 displayField: 'description',
                 store: 'Shopware.apps.Config.store.form.Number',
                 fieldLabel: '{s name="document/detail/numbers_label"}Numbers{/s}'
-            },{
+            }, {
                 name: 'template',
                 fieldLabel: '{s name="document/detail/template_label"}Template{/s}'
-            },{
+            }, {
                 name: 'left',
                 xtype: 'config-element-number',
                 fieldLabel: '{s name="document/detail/left_label"}Spacing left (mm){/s}'
-            },{
+            }, {
                 name: 'right',
                 xtype: 'config-element-number',
                 fieldLabel: '{s name="document/detail/right_label"}Spacing right (mm){/s}'
-            },{
+            }, {
                 name: 'top',
                 xtype: 'config-element-number',
                 fieldLabel: '{s name="document/detail/top_label"}Spacing top (mm){/s}'
-            },{
+            }, {
                 name: 'bottom',
                 xtype: 'config-element-number',
                 fieldLabel: '{s name="document/detail/bottom_label"}Spacing bottom (mm){/s}'
-            },{
+            }, {
                 name: 'pageBreak',
                 xtype: 'config-element-number',
                 fieldLabel: '{s name="document/detail/pagebreak_label"}Articles per page{/s}'
-            },{
+            }, {
                 xtype: 'config-element-boolean',
                 name: 'booleanPageBreak',
                 fieldLabel: '{s name="document/detail/booleanpagebreak_label"}Pagination{/s}',
                 style: {
                     marginTop: '20px'
                 }
-            },{
+            }, {
                 xtype: 'container',
                 layout: 'hbox',
                 items: [{
@@ -178,7 +177,7 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
                         var previewPageBreak = values['booleanPageBreak'] ? '&pagebreak=on' : '';
                         window.open('{url controller=document}?typ=' + values.id + '&preview=1&sampleData=1' + previewPageBreak);
                     }
-                },{
+                }, {
                     xtype: 'config-element-button',
                     width: 150,
                     style: {
@@ -187,7 +186,7 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
                     iconCls: 'sprite-document-template',
                     text: '{s name="document/detail/preview_structure"}View structure{/s}',
                     handler: function(){
-                        Ext.create('Ext.window.Window',{
+                        Ext.create('Ext.window.Window', {
                             title: 'Structure',
                             width: '319px',
                             height: '471px',
@@ -201,7 +200,7 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
                 }]
 
             }]
-        },{
+        }, {
             xtype: 'fieldset',
             title: '{s name="document/detail/elements_label"}Elements{/s}',
             name: 'elementFieldSet',
@@ -210,11 +209,11 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
                 labelWidth: 250,
                 xtype: 'textfield'
             },
-            items:[{
+            items: [{
                 xtype: 'config-element-button',
                 text: '{s name="document/detail/applyconfig_label"}Use the element-config for all forms{/s}',
                 width: '100%',
-                style :{
+                style: {
                     'margin-bottom': '10px'
                 },
                 handler: function(){
@@ -239,14 +238,14 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
                         }
                     );
                 }
-            },{
+            }, {
                 xtype: 'combo',
-                queryMode:'local',
+                queryMode: 'local',
                 forceSelection: true,
                 valueField: 'id',
                 displayField: 'name',
                 name: 'elements'
-            },{
+            }, {
                 xtype: 'tinymce',
                 fieldLabel: '{s name="document/detail/content_label_body"}Body-Content{/s}',
                 labelWidth: 100,
@@ -358,7 +357,7 @@ Ext.define('Shopware.apps.Config.view.form.Document', {
                 name: 'Content_Info_Value',
                 hidden: true,
                 translatable: true
-            },{
+            }, {
                 xtype: 'textarea',
                 fieldLabel: '{s name="document/detail/style_body_label"}Body-Style{/s}',
                 labelWidth: 100,

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 Ext.define('Shopware.ModuleManager', {
 
@@ -157,7 +156,7 @@ Ext.define('Shopware.ModuleManager', {
         // Set up the window
         config = Ext.apply({ }, args);
         config.tools = [{
-            type:'refresh',
+            type: 'refresh',
             handler: function(event, tool, comp) {
                 var ownerCt = comp.ownerCt;
                 ownerCt.setLoading(true);
@@ -284,12 +283,12 @@ Ext.define('Shopware.ModuleManager', {
         }
 
         module = me.modules.get(instance);
-        if(!module) {
+        if (!module) {
             return false;
         }
 
         contentWindow = module.windows.get(payload.component);
-        if(contentWindow === null) {
+        if (contentWindow === null) {
             return false;
         }
 
@@ -334,7 +333,7 @@ Ext.define('Shopware.ModuleManager', {
 
         // Was the message sent using our api?
         subModule = me.modules.get(data.instance);
-        if (!data.instance || !subModule ||(subModule.instance !== data.instance)) {
+        if (!data.instance || !subModule || (subModule.instance !== data.instance)) {
             return;
         }
         component = subModule.windows.get(data.component);
@@ -349,7 +348,7 @@ Ext.define('Shopware.ModuleManager', {
             data.params.id = data.id;
         }
 
-        if(data.async === true) {
+        if (data.async === true) {
             data.params._component = data.component;
         }
 
@@ -363,7 +362,7 @@ Ext.define('Shopware.ModuleManager', {
                     (data.params !== null ? JSON.stringify(data.params) : '')
                 )
             );
-        } catch(err) {
+        } catch (err) {
             // We're using a -32000 error code which means custom error + the error message of the JavaScript parser
             // due to the fact that an error occurs most of the times when calling an undefined method.
             // See: http://www.jsonrpc.org/specification#error_object
@@ -384,7 +383,7 @@ Ext.define('Shopware.ModuleManager', {
             return false;
         }
 
-        me.sendMessageToFrame(result, error, data.id, data.instance,data.component);
+        me.sendMessageToFrame(result, error, data.id, data.instance, data.component);
     },
 
     /**
@@ -462,13 +461,13 @@ Ext.define('Shopware.ModuleManager', {
         var subModule, component;
 
         subModule = this.modules.get(instance);
-        if (!instance || !subModule ||(subModule.instance !== instance)) {
+        if (!instance || !subModule || (subModule.instance !== instance)) {
             return;
         }
         component = subModule.windows.get(comp);
 
         // Always sending back a response to the frame when it's available
-        if(!component.content.dom || !component.content.dom.contentWindow) {
+        if (!component.content.dom || !component.content.dom.contentWindow) {
             return;
         }
 

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Supplier
@@ -39,12 +38,12 @@ Ext.define('Shopware.apps.Supplier', {
      * sub-application behavior and the event bus
      * @string
      */
-    extend : 'Enlight.app.SubApplication',
+    extend: 'Enlight.app.SubApplication',
     /**
      * The name of the module. Used for internal purpose
      * @string
      */
-    name : 'Shopware.apps.Supplier',
+    name: 'Shopware.apps.Supplier',
     /**
      * Sets the loading path for the sub-application.
      *
@@ -52,7 +51,7 @@ Ext.define('Shopware.apps.Supplier', {
      * controller (server-side)
      * @string
      */
-    loadPath:'{url controller="supplier" action=load}',
+    loadPath: '{url controller="supplier" action=load}',
     /**
      * Enables the Shopware bulk loading system
      * @boolean
@@ -63,14 +62,14 @@ Ext.define('Shopware.apps.Supplier', {
      * Requires controllers for sub-application
      * @array
      */
-    controllers : [ 'Main' ],
+    controllers: [ 'Main' ],
 
     /**
      * Requires views for sub-application
      * @array
      */
     views: [
-        'Main', 'main.List','main.Edit',
+        'Main', 'main.List', 'main.Edit',
         'main.Create', 'main.Detail', 'main.Toolbar'
     ],
 
@@ -78,12 +77,12 @@ Ext.define('Shopware.apps.Supplier', {
     * Required stores for controller
     * @array
     */
-   stores : [ 'Supplier' ],
-   /**
+    stores: [ 'Supplier' ],
+    /**
     * Required models for controller
     * @array
     */
-   models : ['Supplier'],
+    models: ['Supplier'],
     /**
      * Returns the main application window for this is expected
      * by the Enlight.app.SubApplication class.

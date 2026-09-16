@@ -1,45 +1,56 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
+
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Newsletter\Address;
+use Shopware\Models\Newsletter\Group;
+use Shopware\Models\Newsletter\Newsletter;
+use Shopware\Models\Newsletter\Repository;
+use Shopware\Models\Newsletter\Sender;
 
 class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controllers_Backend_ExtJs
 {
     // Used to store a reference to the newsletter repository
-    protected $campaignsRepository = null;
+    protected $campaignsRepository;
 
     /**
      * @deprecated in 5.6, will be private in 5.8
      *
      * Helper Method to get access to the campaigns repository.
      *
-     * @return Shopware\Models\Newsletter\Repository
+     * @return Repository
      */
     public function getCampaignsRepository()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         if ($this->campaignsRepository === null) {
-            $this->campaignsRepository = Shopware()->Models()->getRepository(\Shopware\Models\Newsletter\Newsletter::class);
+            $this->campaignsRepository = $this->get('models')->getRepository(Newsletter::class);
         }
 
         return $this->campaignsRepository;
@@ -60,7 +71,7 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         $this->View()->assign([
             'success' => true,
             'data' => $groups,
-            'total' => count($groups),
+            'total' => \count($groups),
         ]);
     }
 
@@ -81,14 +92,14 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
             return;
         }
 
-        $model = new \Shopware\Models\Newsletter\Address();
+        $model = new Address();
         $model->setGroupId($groupId);
         $model->setEmail($email);
         $model->setIsCustomer(false);
-        Shopware()->Models()->persist($model);
-        Shopware()->Models()->flush();
+        $this->get('models')->persist($model);
+        $this->get('models')->flush();
 
-        $this->View()->assign(['success' => true, 'data' => Shopware()->Models()->toArray($model)]);
+        $this->View()->assign(['success' => true, 'data' => $this->get('models')->toArray($model)]);
     }
 
     /**
@@ -111,7 +122,7 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
             $direction = $sort[1]['direction'];
 
             // Whitelist for valid fields
-            if (!in_array($field, ['name', 'number', 'internalId'], true) || !in_array($direction, ['ASC', 'DESC'], true)) {
+            if (!\in_array($field, ['name', 'number', 'internalId'], true) || !\in_array($direction, ['ASC', 'DESC'], true)) {
                 $field = 'name';
                 $direction = 'DESC';
             }
@@ -142,23 +153,23 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
             GROUP BY campaignGroup.groupkey) as t
             ORDER BY :field :direction LIMIT :limit OFFSET :offset';
 
-        /** @var \Doctrine\DBAL\Connection $db */
-        $db = $this->get(\Doctrine\DBAL\Connection::class);
+        /** @var Connection $db */
+        $db = $this->get(Connection::class);
 
         try {
             $query = $db->prepare($sql);
-            $query->bindParam('field', $field, \PDO::PARAM_STR);
-            $query->bindParam('direction', $direction, \PDO::PARAM_STR);
-            $query->bindParam('limit', $limit, \PDO::PARAM_INT);
-            $query->bindParam('offset', $offset, \PDO::PARAM_INT);
+            $query->bindParam('field', $field, PDO::PARAM_STR);
+            $query->bindParam('direction', $direction, PDO::PARAM_STR);
+            $query->bindParam('limit', $limit, PDO::PARAM_INT);
+            $query->bindParam('offset', $offset, PDO::PARAM_INT);
             $query->execute();
 
             $this->View()->assign([
                 'success' => true,
-                'data' => $query->fetchAll(\PDO::FETCH_ASSOC),
+                'data' => $query->fetchAll(PDO::FETCH_ASSOC),
                 'total' => $db->fetchColumn('SELECT FOUND_ROWS()'),
             ]);
-        } catch (\Doctrine\DBAL\DBALException $exception) {
+        } catch (DBALException $exception) {
             $this->View()->assign([
                 'success' => false,
                 'message' => $exception->getMessage(),
@@ -184,8 +195,8 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
             return;
         }
 
-        /** @var \Shopware\Models\Newsletter\Newsletter|null $newsletter */
-        $newsletter = Shopware()->Models()->find(\Shopware\Models\Newsletter\Address::class, $id);
+        /** @var Newsletter|null $newsletter */
+        $newsletter = $this->get('models')->find(Address::class, $id);
         if ($newsletter === null) {
             $this->View()->assign([
                 'success' => false,
@@ -198,10 +209,10 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         $newsletter->setEmail($email);
         $newsletter->setGroupId($groupId);
 
-        Shopware()->Models()->persist($newsletter);
-        Shopware()->Models()->flush();
+        $this->get('models')->persist($newsletter);
+        $this->get('models')->flush();
 
-        $this->View()->assign(['success' => true, 'data' => Shopware()->Models()->toArray($newsletter)]);
+        $this->View()->assign(['success' => true, 'data' => $this->get('models')->toArray($newsletter)]);
     }
 
     /**
@@ -219,8 +230,8 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
             return;
         }
 
-        $model = Shopware()->Models()->find(\Shopware\Models\Newsletter\Newsletter::class, $id);
-        if (!$model instanceof \Shopware\Models\Newsletter\Newsletter) {
+        $model = $this->get('models')->find(Newsletter::class, $id);
+        if (!$model instanceof Newsletter) {
             $this->View()->assign([
                 'success' => false,
                 'message' => $this->translateMessage('error_msg/no_newsletter', 'Newsletter not found'),
@@ -229,8 +240,8 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
             return;
         }
 
-        Shopware()->Models()->remove($model);
-        Shopware()->Models()->flush();
+        $this->get('models')->remove($model);
+        $this->get('models')->flush();
 
         $this->View()->assign([
             'success' => true,
@@ -260,15 +271,15 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
                 continue;
             }
 
-            $model = Shopware()->Models()->find(\Shopware\Models\Newsletter\Group::class, $id);
+            $model = $this->get('models')->find(Group::class, $id);
 
-            if (!$model instanceof \Shopware\Models\Newsletter\Group) {
+            if (!$model instanceof Group) {
                 continue;
             }
-            Shopware()->Models()->remove($model);
+            $this->get('models')->remove($model);
         }
 
-        Shopware()->Models()->flush();
+        $this->get('models')->flush();
 
         $this->View()->assign(['success' => true]);
     }
@@ -297,15 +308,15 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
                 continue;
             }
 
-            $model = Shopware()->Models()->find(\Shopware\Models\Newsletter\Address::class, $id);
+            $model = $this->get('models')->find(Address::class, $id);
 
-            if (!$model instanceof \Shopware\Models\Newsletter\Address) {
+            if (!$model instanceof Address) {
                 continue;
             }
-            Shopware()->Models()->remove($model);
+            $this->get('models')->remove($model);
         }
 
-        Shopware()->Models()->flush();
+        $this->get('models')->flush();
 
         $this->View()->assign(['success' => true]);
     }
@@ -334,15 +345,15 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
                 continue;
             }
 
-            $model = Shopware()->Models()->find(\Shopware\Models\Newsletter\Sender::class, $id);
+            $model = $this->get('models')->find(Sender::class, $id);
 
-            if (!$model instanceof \Shopware\Models\Newsletter\Sender) {
+            if (!$model instanceof Sender) {
                 continue;
             }
-            Shopware()->Models()->remove($model);
+            $this->get('models')->remove($model);
         }
 
-        Shopware()->Models()->flush();
+        $this->get('models')->flush();
 
         $this->View()->assign(['success' => true]);
     }
@@ -363,18 +374,18 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         }
 
         $data['groups'] = $this->serializeGroup($data['groups']);
-        $data['date'] = new \DateTime();
+        $data['date'] = new DateTime();
 
         // Flatten the newsletter->containers->text field: Each container as only one text-field
         foreach ($data['containers'] as $key => $value) {
             $data['containers'][$key]['text'] = $data['containers'][$key]['text'][0];
         }
 
-        $model = new \Shopware\Models\Newsletter\Newsletter();
+        $model = new Newsletter();
         $model->fromArray($data);
 
-        Shopware()->Models()->persist($model);
-        Shopware()->Models()->flush();
+        $this->get('models')->persist($model);
+        $this->get('models')->flush();
 
         $data = [
             'id' => $model->getId(),
@@ -413,8 +424,8 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         }
 
         // First of all get rid of the old containers and text fields
-        $model = Shopware()->Models()->find(\Shopware\Models\Newsletter\Newsletter::class, $id);
-        if (!$model instanceof \Shopware\Models\Newsletter\Newsletter) {
+        $model = $this->get('models')->find(Newsletter::class, $id);
+        if (!$model instanceof Newsletter) {
             $this->View()->assign([
                 'success' => false,
                 'message' => $this->translateMessage('error_msg/no_newsletter', 'Newsletter not found'),
@@ -438,9 +449,9 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         unset($data['date'], $data['locked']);
         $data['groups'] = $this->serializeGroup($data['groups']);
 
-        $model = Shopware()->Models()->find(\Shopware\Models\Newsletter\Newsletter::class, $id);
+        $model = $this->get('models')->find(Newsletter::class, $id);
 
-        if (!$model instanceof \Shopware\Models\Newsletter\Newsletter) {
+        if (!$model instanceof Newsletter) {
             $this->View()->assign([
                 'success' => false,
                 'message' => $this->translateMessage('error_msg/no_newsletter', 'Newsletter not found'),
@@ -451,8 +462,8 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
 
         $model->fromArray($data);
 
-        Shopware()->Models()->persist($model);
-        Shopware()->Models()->flush();
+        $this->get('models')->persist($model);
+        $this->get('models')->flush();
 
         $this->View()->assign(['success' => true, 'data' => $model->toArray]);
     }
@@ -464,10 +475,10 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
     {
         $data = $this->Request()->getParams();
 
-        $groupModel = new Shopware\Models\Newsletter\Group();
+        $groupModel = new Group();
         $groupModel->fromArray($data);
-        Shopware()->Models()->persist($groupModel);
-        Shopware()->Models()->flush();
+        $this->get('models')->persist($groupModel);
+        $this->get('models')->flush();
 
         $this->View()->assign(['success' => true]);
     }
@@ -479,10 +490,10 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
     {
         $data = $this->Request()->getParams();
 
-        $senderModel = new Shopware\Models\Newsletter\Sender();
+        $senderModel = new Sender();
         $senderModel->fromArray($data);
-        Shopware()->Models()->persist($senderModel);
-        Shopware()->Models()->flush();
+        $this->get('models')->persist($senderModel);
+        $this->get('models')->flush();
 
         $this->View()->assign(['success' => true]);
     }
@@ -504,7 +515,7 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
             return;
         }
 
-        $model = Shopware()->Models()->find(\Shopware\Models\Newsletter\Sender::class, $id);
+        $model = $this->get('models')->find(Sender::class, $id);
         if ($model === null) {
             $this->View()->assign([
                 'success' => false,
@@ -515,8 +526,8 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         }
 
         $model->fromArray($data);
-        Shopware()->Models()->persist($model);
-        Shopware()->Models()->flush();
+        $this->get('models')->persist($model);
+        $this->get('models')->flush();
 
         $this->View()->assign(['success' => true]);
     }
@@ -532,13 +543,13 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         $offset = $this->Request()->getParam('start', 0);
 
         $query = $this->getCampaignsRepository()->getListAddressesQuery($filter, $sort, $limit, $offset);
-        $query->setHydrationMode(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+        $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
 
         $paginator = $this->getModelManager()->createPaginator($query);
         // Returns the total count of the query
         $totalResult = $paginator->count();
         // Returns the customer data
-        $result = $paginator->getIterator()->getArrayCopy();
+        $result = iterator_to_array($paginator);
 
         $this->View()->assign([
             'success' => true,
@@ -559,12 +570,12 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
 
         $query = $this->getCampaignsRepository()->getListSenderQuery($filter, $sort, $limit, $offset);
 
-        $query->setHydrationMode(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+        $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
         $paginator = $this->getModelManager()->createPaginator($query);
         // Returns the total count of the query
         $totalResult = $paginator->count();
         // Returns the customer data
-        $result = $paginator->getIterator()->getArrayCopy();
+        $result = iterator_to_array($paginator);
 
         $this->View()->assign([
             'success' => true,
@@ -580,16 +591,16 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
      */
     public function getPreviewNewslettersQuery()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
-        $builder = Shopware()->Models()->createQueryBuilder();
+        $builder = $this->get('models')->createQueryBuilder();
 
         $builder->select([
             'mailing',
             'container',
             'text',
         ]);
-        $builder->from(\Shopware\Models\Newsletter\Newsletter::class, 'mailing')
+        $builder->from(Newsletter::class, 'mailing')
             ->leftJoin('mailing.containers', 'container')
             ->leftJoin('container.text', 'text')
             ->where('mailing.status = -1');
@@ -610,9 +621,9 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         // Delete old previews
         $results = $this->getPreviewNewslettersQuery()->getResult();
         foreach ($results as $model) {
-            Shopware()->Models()->remove($model);
+            $this->get('models')->remove($model);
         }
-        Shopware()->Models()->flush();
+        $this->get('models')->flush();
 
         // Get the revenue for the newsletters
         $sql = "SELECT
@@ -629,16 +640,17 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
         $revenues = Shopware()->Db()->fetchAssoc($sql);
 
         // Get newsletters
+        /** @var Query<array<string, mixed>> $query */
         $query = $this->getCampaignsRepository()->getListNewslettersQuery($filter, $sort, $limit, $offset);
 
-        $query->setHydrationMode(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+        $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
         $paginator = $this->getModelManager()->createPaginator($query);
 
         // Returns the total count of the query
         $totalResult = $paginator->count();
 
         // Returns the customer data
-        $result = $paginator->getIterator()->getArrayCopy();
+        $result = iterator_to_array($paginator);
 
         // Get address count via plain sql in order to improve the speed
         $ids = [];
@@ -699,10 +711,10 @@ class Shopware_Controllers_Backend_NewsletterManager extends Shopware_Controller
             return;
         }
 
-        $modelManager = $this->get(\Shopware\Components\Model\ModelManager::class);
-        $model = $modelManager->find(\Shopware\Models\Newsletter\Newsletter::class, $id);
+        $modelManager = $this->get(ModelManager::class);
+        $model = $modelManager->find(Newsletter::class, $id);
 
-        if ($model instanceof Shopware\Models\Newsletter\Newsletter) {
+        if ($model instanceof Newsletter) {
             $model->setStatus($active);
         } else {
             $this->View()->assign([

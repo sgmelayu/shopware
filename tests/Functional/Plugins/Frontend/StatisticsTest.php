@@ -1,36 +1,39 @@
 <?php
 
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-namespace Shopware\Tests\Plugins\Frontend;
+namespace Shopware\Tests\Functional\Plugins\Frontend;
 
-class StatisticsTest extends \Enlight_Components_Test_Plugin_TestCase
+use Doctrine\DBAL\Connection;
+use Enlight_Components_Test_Plugin_TestCase;
+use Enlight_Controller_Response_Response;
+use Shopware\Tests\TestReflectionHelper;
+use Shopware_Plugins_Frontend_Statistics_Bootstrap;
+
+class StatisticsTest extends Enlight_Components_Test_Plugin_TestCase
 {
-    /**
-     * @var \Shopware_Plugins_Frontend_Statistics_Bootstrap
-     */
-    protected $plugin;
+    protected Shopware_Plugins_Frontend_Statistics_Bootstrap $plugin;
 
     /**
      * Test set up method
@@ -59,10 +62,8 @@ class StatisticsTest extends \Enlight_Components_Test_Plugin_TestCase
 
     /**
      * Retrieve plugin instance
-     *
-     * @return \Shopware_Plugins_Frontend_Statistics_Bootstrap
      */
-    public function Plugin()
+    public function Plugin(): Shopware_Plugins_Frontend_Statistics_Bootstrap
     {
         return $this->plugin;
     }
@@ -70,22 +71,21 @@ class StatisticsTest extends \Enlight_Components_Test_Plugin_TestCase
     /**
      * Test case method
      */
-    public function testRefreshCurrentUsers()
+    public function testRefreshCurrentUsers(): void
     {
-        /** @var \Enlight_Controller_Request_RequestTestCase $request */
-        $request = $this->Request()
-            ->setModuleName('frontend')
-            ->setDispatched(true)
-            ->setClientIp('192.168.33.10')
-            ->setRequestUri('/foobar');
+        $request = $this->Request();
+        $request->setModuleName('frontend');
+        $request->setDispatched(true);
+        $request->setClientIp('192.168.33.10');
+        $request->setRequestUri('/foobar');
 
-        /* @var \Enlight_Controller_Request_RequestTestCase $request */
         $request->setDeviceType('mobile');
 
         $this->Plugin()->refreshCurrentUsers($request);
 
         $sql = 'SELECT * FROM `s_statistics_currentusers` ORDER BY `id` DESC LIMIT 1';
-        $result = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->fetchAssoc($sql);
+        $result = Shopware()->Container()->get(Connection::class)->fetchAssociative($sql);
+        static::assertIsArray($result);
 
         static::assertSame('192.168.0.0', $result['remoteaddr']); // IP should have been anonymized
         static::assertSame('/foobar', $result['page']);
@@ -95,15 +95,15 @@ class StatisticsTest extends \Enlight_Components_Test_Plugin_TestCase
     /**
      * Referer provider
      *
-     * @return array
+     * @return array<array<mixed>>
      */
-    public function providerReferer()
+    public function providerReferer(): array
     {
         return [
-          ['http://google.de/', '123', 'http://google.de/$123', true],
-          ['http://google.de/', null, 'http://google.de/', true],
-          ['http://google.de/', null, 'www.google.de/', false],
-          ['http://google.de/', null, 'http://' . Shopware()->Config()->Host . '/', false],
+            ['http://google.de/', '123', 'http://google.de/$123', true],
+            ['http://google.de/', null, 'http://google.de/', true],
+            ['http://google.de/', null, 'www.google.de/', false],
+            ['http://google.de/', null, 'http://' . Shopware()->Config()->get('Host') . '/', false],
         ];
     }
 
@@ -112,41 +112,38 @@ class StatisticsTest extends \Enlight_Components_Test_Plugin_TestCase
      *
      * @dataProvider providerReferer
      */
-    public function testRefreshReferer($referer, $partner, $result, $assert)
+    public function testRefreshReferer(string $referer, ?string $partner, string $result, bool $assert): void
     {
         $request = $this->Request()->setQuery(['sPartner' => $partner, 'referer' => $referer]);
 
         $this->Plugin()->refreshReferer($request);
 
         $sql = 'SELECT `id` FROM `s_statistics_referer` WHERE `referer`=?';
-        $insertId = Shopware()->Db()->fetchOne($sql, [
-            $result,
-        ]);
+        $insertId = Shopware()->Db()->fetchOne($sql, [$result]);
 
-        static::assertEquals($assert, !empty($insertId));
+        static::assertSame($assert, !empty($insertId));
     }
 
     /**
      * Test case method
      */
-    public function testRefreshPartner()
+    public function testRefreshPartner(): void
     {
-        $request = $this->Request()
-            ->setParam('sPartner', 'test123');
+        $request = $this->Request()->setParam('sPartner', 'test123');
 
         $response = $this->Response();
 
         $this->Plugin()->refreshPartner($request, $response);
 
-        static::assertEquals('test123', Shopware()->Session()->sPartner);
+        static::assertSame('test123', Shopware()->Session()->get('sPartner'));
 
-        static::assertEquals('test123', $this->getCookie($response, 'partner'));
+        static::assertSame('test123', $this->getCookie($response));
     }
 
     /**
      * Test case method
      */
-    public function testRefreshCampaign()
+    public function testRefreshCampaign(): void
     {
         $request = $this->Request()
             ->setQuery('sPartner', 'sCampaign1');
@@ -155,14 +152,26 @@ class StatisticsTest extends \Enlight_Components_Test_Plugin_TestCase
 
         $this->Plugin()->refreshPartner($request, $response);
 
-        static::assertEquals('sCampaign1', Shopware()->Session()->sPartner);
+        static::assertSame('sCampaign1', Shopware()->Session()->get('sPartner'));
     }
 
-    private function getCookie(\Enlight_Controller_Response_Response $response, $name)
+    public function testRefreshBlogWorksWithoutVisits(): void
     {
-        $cookies = $response->getCookies();
-        foreach ($cookies as $cookie) {
-            if ($cookie['name'] === $name) {
+        $request = $this->Request()
+            ->setQuery('blogId', 1);
+
+        $plugin = $this->Plugin();
+
+        $methode = TestReflectionHelper::getMethod(Shopware_Plugins_Frontend_Statistics_Bootstrap::class, 'refreshBlog');
+        $methode->invoke($plugin, $request);
+
+        static::assertSame([1], Shopware()->Session()->get('visitedBlogItems'));
+    }
+
+    private function getCookie(Enlight_Controller_Response_Response $response): ?string
+    {
+        foreach ($response->getCookies() as $cookie) {
+            if ($cookie['name'] === 'partner') {
                 return $cookie['value'];
             }
         }

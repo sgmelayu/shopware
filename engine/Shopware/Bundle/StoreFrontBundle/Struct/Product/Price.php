@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Struct\Product;
@@ -48,7 +48,7 @@ class Price extends Extendable
      * The reference unit price is calculated over the price value
      * and the pack and reference unit of the product.
      *
-     * @var float
+     * @var float|null
      */
     protected $calculatedReferencePrice;
 
@@ -64,6 +64,8 @@ class Price extends Extendable
      * @var float
      */
     protected $calculatedPseudoPrice;
+
+    protected ?float $calculatedRegulationPrice = null;
 
     /**
      * @var PriceRule
@@ -117,7 +119,7 @@ class Price extends Extendable
     }
 
     /**
-     * @return float
+     * @return float|null
      */
     public function getCalculatedReferencePrice()
     {
@@ -125,20 +127,20 @@ class Price extends Extendable
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\PriceRule
+     * @return PriceRule
      */
     public function getRule()
     {
         return $this->rule;
     }
 
-    public function setRule(PriceRule $rule = null)
+    public function setRule(?PriceRule $rule = null)
     {
         $this->rule = $rule;
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Product\Unit|null
+     * @return Unit|null
      */
     public function getUnit()
     {
@@ -169,11 +171,13 @@ class Price extends Extendable
         return $this->rule->getTo();
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function jsonSerialize()
+    public function getCalculatedRegulationPrice(): ?float
     {
-        return get_object_vars($this);
+        return $this->calculatedRegulationPrice;
+    }
+
+    public function setCalculatedRegulationPrice(?float $calculatedRegulationPrice): void
+    {
+        $this->calculatedRegulationPrice = $calculatedRegulationPrice;
     }
 }

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Site
@@ -53,14 +52,14 @@ Ext.define('Shopware.apps.Site.controller.Main', {
      *
      * @object
      */
-    refs:[
-        { ref:'mainWindow', selector:'site-mainWindow' },
-        { ref:'confirmationBox', selector:'site-confirmationBox' },
-        { ref:'detailForm', selector:'site-form' },
-        { ref:'parentIdField', selector:'site-form hidden[name=parentId]' },
-        { ref:'navigationTree', selector:'site-tree' },
-        { ref:'deleteSiteButton', selector:'site-mainWindow button[action=onDeleteSite]' },
-        { ref:'saveSiteButton', selector:'site-form button[action=onSaveSite]' }
+    refs: [
+        { ref: 'mainWindow', selector: 'site-mainWindow' },
+        { ref: 'confirmationBox', selector: 'site-confirmationBox' },
+        { ref: 'detailForm', selector: 'site-form' },
+        { ref: 'parentIdField', selector: 'site-form hidden[name=parentId]' },
+        { ref: 'navigationTree', selector: 'site-tree' },
+        { ref: 'deleteSiteButton', selector: 'site-mainWindow button[action=onDeleteSite]' },
+        { ref: 'saveSiteButton', selector: 'site-form button[action=onSaveSite]' }
     ],
 
     /**
@@ -165,7 +164,7 @@ Ext.define('Shopware.apps.Site.controller.Main', {
         Ext.Msg.confirm('{s name="onDeleteSiteConfirmationBoxCaption"}Delete site?{/s}', Ext.String.format('{s name="onDeleteSiteConfirmationBoxText"}Are you sure you want to delete \'[0]\'?{/s}', siteName), function(btn){
             if (btn === 'yes'){
                 Ext.Ajax.request({
-                    url : '{url action=deleteSite}',
+                    url: '{url action=deleteSite}',
                     scope: me,
                     params: {
                         siteId: siteId
@@ -174,11 +173,11 @@ Ext.define('Shopware.apps.Site.controller.Main', {
                         me.getStore('Nodes').load();
                         tree.getSelectionModel().deselectAll();
                         me.getDetailForm().getForm().reset();
-                        Shopware.Notification.createGrowlMessage('','{s name="onDeleteSiteSuccess"}The Site has been deleted successfully.{/s}', '{s name="mainWindowTitle"}{/s}');
+                        Shopware.Notification.createGrowlMessage('', '{s name="onDeleteSiteSuccess"}The Site has been deleted successfully.{/s}', '{s name="mainWindowTitle"}{/s}');
                     },
                     failure: function(response) {
                         var errorMsg = response.proxy.reader.jsonData.message;
-                        Shopware.Notification.createGrowlMessage('','{s name="onDeleteSiteError"}An error has occurred while trying to delete the site: {/s}' + errorMsg, '{s name="mainWindowTitle"}{/s}');
+                        Shopware.Notification.createGrowlMessage('', '{s name="onDeleteSiteError"}An error has occurred while trying to delete the site: {/s}' + errorMsg, '{s name="mainWindowTitle"}{/s}');
                     }
                 });
             }

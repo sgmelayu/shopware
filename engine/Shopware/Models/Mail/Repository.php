@@ -1,32 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Mail;
 
+use Doctrine\ORM\Query;
 use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Model\QueryBuilder;
+use Shopware\Models\Attribute\Mail as MailAttribute;
 
+/**
+ * @extends ModelRepository<Mail>
+ */
 class Repository extends ModelRepository
 {
     /**
@@ -34,7 +39,7 @@ class Repository extends ModelRepository
      *
      * @param int $mailId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Mail>
      */
     public function getMailQuery($mailId)
     {
@@ -49,13 +54,13 @@ class Repository extends ModelRepository
      *
      * @param int $mailId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getMailQueryBuilder($mailId)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select(['mails', 'attribute'])
-                ->from(\Shopware\Models\Mail\Mail::class, 'mails')
+                ->from(Mail::class, 'mails')
                 ->leftJoin('mails.attribute', 'attribute')
                 ->where('mails.id = ?1')
                 ->setParameter(1, $mailId);
@@ -69,7 +74,7 @@ class Repository extends ModelRepository
      *
      * @param int $mailId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<MailAttribute>
      */
     public function getAttributesQuery($mailId)
     {
@@ -84,13 +89,13 @@ class Repository extends ModelRepository
      *
      * @param int $mailId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getAttributesQueryBuilder($mailId)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select(['attribute'])
-                      ->from(\Shopware\Models\Attribute\Mail::class, 'attribute')
+                      ->from(MailAttribute::class, 'attribute')
                       ->where('attribute.mailId = ?1')
                       ->setParameter(1, $mailId);
 
@@ -104,13 +109,11 @@ class Repository extends ModelRepository
      * @param string   $name
      * @param int|null $mailId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Mail>
      */
     public function getValidateNameQuery($name, $mailId = null)
     {
-        $builder = $this->getValidateNameQueryBuilder($name, $mailId);
-
-        return $builder->getQuery();
+        return $this->getValidateNameQueryBuilder($name, $mailId)->getQuery();
     }
 
     /**
@@ -120,14 +123,13 @@ class Repository extends ModelRepository
      * @param string   $name
      * @param int|null $mailId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getValidateNameQueryBuilder($name, $mailId = null)
     {
-        /** @var QueryBuilder $builder */
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select(['mail'])
-                ->from(\Shopware\Models\Mail\Mail::class, 'mail')
+                ->from(Mail::class, 'mail')
                 ->where('mail.name = :name')
                 ->setParameter('name', $name);
 
@@ -140,29 +142,28 @@ class Repository extends ModelRepository
     }
 
     /**
+     * @deprecated - Will be removed without replacement in 5.8
+     *
      * @param array[]      $filter
      * @param array[]|null $order
      * @param int|null     $offset
      * @param int|null     $limit
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Mail>
      */
-    public function getMailListQuery(array $filter = [], array $order = null, $offset = null, $limit = null)
+    public function getMailListQuery(array $filter = [], ?array $order = null, $offset = null, $limit = null)
     {
-        $builder = $this->getMailsListQueryBuilder($filter, $order, $offset, $limit)->getQuery();
-
-        return $builder->getQuery();
+        return $this->getMailsListQueryBuilder($filter, $order, $offset, $limit)->getQuery();
     }
 
     /**
      * @param int|null $offset
      * @param int|null $limit
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
-    public function getMailsListQueryBuilder(array $filter = [], array $order = null, $offset = null, $limit = null)
+    public function getMailsListQueryBuilder(array $filter = [], ?array $order = null, $offset = null, $limit = null)
     {
-        /** @var QueryBuilder $builder */
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder
             ->setAlias('mail')

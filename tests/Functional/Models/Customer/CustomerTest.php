@@ -1,31 +1,35 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Models\Customer;
 
+use Closure;
+use DateTime;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
+use Shopware\Bundle\AccountBundle\Service\AddressServiceInterface;
 use Shopware\Bundle\AccountBundle\Service\RegisterServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\Model\ModelManager;
@@ -36,7 +40,7 @@ use Shopware\Models\Customer\Customer;
 class CustomerTest extends TestCase
 {
     /**
-     * @var \Shopware\Bundle\AccountBundle\Service\AddressServiceInterface
+     * @var AddressServiceInterface
      */
     protected static $addressService;
 
@@ -61,7 +65,7 @@ class CustomerTest extends TestCase
     protected static $registerService;
 
     /**
-     * @var array
+     * @var array<class-string, int[]>
      */
     protected static $_cleanup = [];
 
@@ -70,11 +74,11 @@ class CustomerTest extends TestCase
      */
     public static function setUpBeforeClass(): void
     {
-        self::$addressService = Shopware()->Container()->get(\Shopware\Bundle\AccountBundle\Service\AddressServiceInterface::class);
-        self::$modelManager = Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class);
-        self::$connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
-        self::$contextService = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class);
-        self::$registerService = Shopware()->Container()->get(\Shopware\Bundle\AccountBundle\Service\RegisterServiceInterface::class);
+        self::$addressService = Shopware()->Container()->get(AddressServiceInterface::class);
+        self::$modelManager = Shopware()->Container()->get(ModelManager::class);
+        self::$connection = Shopware()->Container()->get(Connection::class);
+        self::$contextService = Shopware()->Container()->get(ContextServiceInterface::class);
+        self::$registerService = Shopware()->Container()->get(RegisterServiceInterface::class);
 
         self::$modelManager->clear();
     }
@@ -88,7 +92,9 @@ class CustomerTest extends TestCase
 
         foreach (self::$_cleanup as $entityName => $ids) {
             foreach ($ids as $id) {
-                self::$modelManager->remove(self::$modelManager->find($entityName, $id));
+                $customer = self::$modelManager->find($entityName, $id);
+                static::assertNotNull($customer);
+                self::$modelManager->remove($customer);
             }
         }
 
@@ -126,18 +132,18 @@ class CustomerTest extends TestCase
     {
         $customer = new Customer();
 
-        $customer->setEmail(uniqid(mt_rand(), true) . 'test@foo.bar');
+        $customer->setEmail(uniqid((string) mt_rand(), true) . 'test@foo.bar');
         $customer->setActive(true);
         $customer->setLastLogin(date('Y-m-d', strtotime('-8 days')));
-        $customer->setPassword(uniqid(mt_rand(), true) . uniqid(mt_rand(), true));
+        $customer->setPassword(uniqid((string) mt_rand(), true) . uniqid((string) mt_rand(), true));
 
         $customer->setSalutation('mr');
         $customer->setFirstname('Max');
         $customer->setLastname('Mustermann');
 
         // Set password change to past, otherwise the test will fail, cause the time is the same
-        $closure = \Closure::bind(static function (Customer $class) {
-            $class->passwordChangeDate = new \DateTime('2000-01-01 00:00:00');
+        $closure = Closure::bind(static function (Customer $class) {
+            $class->passwordChangeDate = new DateTime('2000-01-01 00:00:00');
         }, null, Customer::class);
         $closure($customer);
 
@@ -191,7 +197,7 @@ class CustomerTest extends TestCase
     {
         $country = new Country();
 
-        $country->setName('ShopwareLand' . uniqid(rand(1, 999), true));
+        $country->setName('ShopwareLand' . uniqid((string) rand(1, 999), true));
         $country->setActive(true);
         $country->setDisplayStateInRegistration(0);
         $country->setForceStateInRegistration(0);

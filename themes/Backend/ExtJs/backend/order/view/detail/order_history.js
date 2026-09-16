@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -42,31 +41,31 @@ Ext.define('Shopware.apps.Order.view.detail.OrderHistory', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.grid.Panel',
+    extend: 'Ext.grid.Panel',
 
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
     */
-    alias:'widget.order-history-list',
+    alias: 'widget.order-history-list',
 
     /**
      * Set css class
      * @string
      */
-    cls:Ext.baseCSSPrefix + 'order-history-grid',
+    cls: Ext.baseCSSPrefix + 'order-history-grid',
 
     /**
      * The view needs to be scrollable
      * @string
      */
-    autoScroll:true,
+    autoScroll: true,
 
     /**
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         columns: {
             user: '{s name="column/user"}User{/s}',
             changeDate: '{s name="column/change_date"}Change date{/s}',
@@ -76,7 +75,6 @@ Ext.define('Shopware.apps.Order.view.detail.OrderHistory', {
             paymentStatus: '{s name="column/payment_status"}Current payment status{/s}'
         }
     },
-
 
     /**
      * The initComponent template method is an important initialization step for a Component.
@@ -88,7 +86,7 @@ Ext.define('Shopware.apps.Order.view.detail.OrderHistory', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.columns =  {
             items: me.getColumns(),
@@ -106,13 +104,13 @@ Ext.define('Shopware.apps.Order.view.detail.OrderHistory', {
      *
      * @return Ext.toolbar.Paging The paging toolbar for the customer grid
      */
-    getPagingBar:function () {
+    getPagingBar: function () {
         var me = this;
 
         return Ext.create('Ext.toolbar.Paging', {
             store: me.historyStore,
-            dock:'bottom',
-            displayInfo:true
+            dock: 'bottom',
+            displayInfo: true
         });
 
     },
@@ -122,7 +120,7 @@ Ext.define('Shopware.apps.Order.view.detail.OrderHistory', {
      *
      * @return [array] grid columns
      */
-    getColumns:function () {
+    getColumns: function () {
         var me = this;
 
         var columns = [{

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -41,50 +40,50 @@ Ext.define('Shopware.apps.Order.view.list.List', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.grid.Panel',
+    extend: 'Ext.grid.Panel',
 
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
     */
-    alias:'widget.order-list',
+    alias: 'widget.order-list',
 
     /**
      * Set css class
      * @string
      */
-    cls:Ext.baseCSSPrefix + 'order-grid',
+    cls: Ext.baseCSSPrefix + 'order-grid',
 
     /**
      * The window uses a border layout, so we need to set
      * a region for the grid panel
      * @string
      */
-    region:'center',
+    region: 'center',
 
     /**
      * The view needs to be scrollable
      * @string
      */
-    autoScroll:true,
+    autoScroll: true,
 
     /**
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         columns: {
-            number:'{s name="column/number"}Order number{/s}',
-            invoiceAmount:'{s name="column/amount"}Amount{/s}',
-            orderTime:'{s name="column/order_time"}Order time{/s}',
-            transactionId:'{s name="column/transaction"}Transaction{/s}',
-            dispatchName:'{s name="column/dispatch_name"}Shipping{/s}',
-            shopName:'{s name="column/shop"}Shop{/s}',
-            customer:'{s name="column/customer"}Customer{/s}',
-            customerEmail:'{s name="column/customer_email"}E-Mail{/s}',
-            paymentName:'{s name="column/payment_name"}Payment{/s}',
-            orderStatus:'{s name="column/order_status"}Order Status{/s}',
-            paymentStatus:'{s name="column/payment_status"}Payment Status{/s}',
+            number: '{s name="column/number"}Order number{/s}',
+            invoiceAmount: '{s name="column/amount"}Amount{/s}',
+            orderTime: '{s name="column/order_time"}Order time{/s}',
+            transactionId: '{s name="column/transaction"}Transaction{/s}',
+            dispatchName: '{s name="column/dispatch_name"}Shipping{/s}',
+            shopName: '{s name="column/shop"}Shop{/s}',
+            customer: '{s name="column/customer"}Customer{/s}',
+            customerEmail: '{s name="column/customer_email"}E-Mail{/s}',
+            paymentName: '{s name="column/payment_name"}Payment{/s}',
+            orderStatus: '{s name="column/order_status"}Order Status{/s}',
+            paymentStatus: '{s name="column/payment_status"}Payment Status{/s}',
             openCustomer: '{s name="column/open_customer"}Open customer{/s}',
             deleteOrder: '{s name="column/delete_order"}Delete order{/s}',
             detail: '{s name="column/detail"}Show details{/s}'
@@ -117,7 +116,7 @@ Ext.define('Shopware.apps.Order.view.list.List', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         me.store = me.listStore;
@@ -133,15 +132,15 @@ Ext.define('Shopware.apps.Order.view.list.List', {
     createPlugins: function() {
         var me = this,
             rowEditor = Ext.create('Ext.grid.plugin.RowEditing', {
-            clicksToEdit: 2,
-            autoCancel: true,
-            listeners: {
-                scope: me,
-                edit: function(editor, e) {
-                    me.fireEvent('saveOrder', editor, e, me.listStore)
+                clicksToEdit: 2,
+                autoCancel: true,
+                listeners: {
+                    scope: me,
+                    edit: function(editor, e) {
+                        me.fireEvent('saveOrder', editor, e, me.listStore)
+                    }
                 }
-            }
-        });
+            });
 
         return [ rowEditor ];
     },
@@ -209,7 +208,7 @@ Ext.define('Shopware.apps.Order.view.list.List', {
      *
      * @return Ext.toolbar.Paging The paging toolbar for the customer grid
      */
-    getPagingBar:function () {
+    getPagingBar: function () {
         var me = this;
 
         var pageSize = Ext.create('Ext.form.field.ComboBox', {
@@ -242,8 +241,8 @@ Ext.define('Shopware.apps.Order.view.list.List', {
 
         var pagingBar = Ext.create('Ext.toolbar.Paging', {
             store: me.listStore,
-            dock:'bottom',
-            displayInfo:true
+            dock: 'bottom',
+            displayInfo: true
         });
 
         pagingBar.insert(pagingBar.items.length, [ { xtype: 'tbspacer', width: 6 }, pageSize ]);
@@ -274,48 +273,48 @@ Ext.define('Shopware.apps.Order.view.list.List', {
      *
      * @return [array] grid columns
      */
-    getColumns:function () {
+    getColumns: function () {
         var me = this;
 
         var columns = [
             {
                 header: me.snippets.columns.orderTime,
                 dataIndex: 'orderTime',
-                flex:1,
-                renderer:me.dateColumn
+                flex: 1,
+                renderer: me.dateColumn
             },
             {
                 header: me.snippets.columns.number,
                 dataIndex: 'number',
-                flex:1
+                flex: 1
             },
             {
                 header: me.snippets.columns.invoiceAmount,
                 dataIndex: 'invoiceAmount',
-                flex:1,
-                renderer:me.amountColumn
+                flex: 1,
+                renderer: me.amountColumn
             },
             {
                 header: me.snippets.columns.transactionId,
                 dataIndex: 'transactionId',
-                flex:1
+                flex: 1
             },
             {
                 header: me.snippets.columns.paymentName,
                 dataIndex: 'paymentId',
-                flex:1,
+                flex: 1,
                 renderer: me.paymentColumn
             },
             {
                 header: me.snippets.columns.dispatchName,
                 dataIndex: 'dispatchId',
-                flex:1,
+                flex: 1,
                 renderer: me.dispatchColumn
             },
             {
                 header: me.snippets.columns.shopName,
                 dataIndex: 'shopId',
-                flex:1,
+                flex: 1,
                 renderer: me.shopColumn
             },
             {
@@ -330,13 +329,13 @@ Ext.define('Shopware.apps.Order.view.list.List', {
             {
                 header: me.snippets.columns.customerEmail,
                 dataIndex: 'customerEmail',
-                flex:2,
+                flex: 2,
                 renderer: me.customerEmailColumn
             },
             {
                 header: me.snippets.columns.orderStatus,
                 dataIndex: 'status',
-                flex:2,
+                flex: 2,
                 renderer: me.orderStatusColumn,
                 editor: {
                     xtype: 'combobox',
@@ -344,7 +343,7 @@ Ext.define('Shopware.apps.Order.view.list.List', {
                     allowBlank: false,
                     valueField: 'id',
                     displayField: 'description',
-                    store : me.orderStatusStore,
+                    store: me.orderStatusStore,
                     editable: false
 
                 }
@@ -352,7 +351,7 @@ Ext.define('Shopware.apps.Order.view.list.List', {
             {
                 header: me.snippets.columns.paymentStatus,
                 dataIndex: 'cleared',
-                flex:2,
+                flex: 2,
                 renderer: me.paymentStatusColumn,
                 editor: {
                     xtype: 'combobox',
@@ -360,7 +359,7 @@ Ext.define('Shopware.apps.Order.view.list.List', {
                     allowBlank: false,
                     valueField: 'id',
                     displayField: 'description',
-                    store : me.paymentStatusStore,
+                    store: me.paymentStatusStore,
                     editable: false
                 }
             },
@@ -374,11 +373,11 @@ Ext.define('Shopware.apps.Order.view.list.List', {
         var me = this;
 
         return Ext.create('Ext.grid.column.Action', {
-            width:90,
-            items:[
+            width: 90,
+            items: [
                 me.createOpenCustomerColumn(),
                 /*{if {acl_is_allowed privilege=delete}}*/
-                    me.createDeleteOrderColumn(),
+                me.createDeleteOrderColumn(),
                 /*{/if}*/
                 me.createEditOrderColumn()
             ]
@@ -389,36 +388,35 @@ Ext.define('Shopware.apps.Order.view.list.List', {
         var me = this;
 
         return {
-            iconCls:'sprite-pencil',
-            action:'editOrder',
-            tooltip:me.snippets.columns.detail,
+            iconCls: 'sprite-pencil',
+            action: 'editOrder',
+            tooltip: me.snippets.columns.detail,
             /**
              * Add button handler to fire the showDetail event which is handled
              * in the list controller.
              */
-            handler:function (view, rowIndex, colIndex, item) {
+            handler: function (view, rowIndex, colIndex, item) {
                 var store = view.getStore(),
-                        record = store.getAt(rowIndex);
+                    record = store.getAt(rowIndex);
 
                 me.fireEvent('showDetail', record);
             }
         }
     },
 
-
     createDeleteOrderColumn: function() {
         var me = this;
         return {
-            iconCls:'sprite-minus-circle-frame',
-            action:'deleteOrder',
-            tooltip:me.snippets.columns.deleteOrder,
+            iconCls: 'sprite-minus-circle-frame',
+            action: 'deleteOrder',
+            tooltip: me.snippets.columns.deleteOrder,
             /**
              * Add button handler to fire the deleteOrder event which is handled
              * in the list controller.
              */
-            handler:function (view, rowIndex, colIndex, item) {
+            handler: function (view, rowIndex, colIndex, item) {
                 var store = view.getStore(),
-                        record = store.getAt(rowIndex);
+                    record = store.getAt(rowIndex);
 
                 me.fireEvent('deleteOrder', record);
             }
@@ -428,36 +426,35 @@ Ext.define('Shopware.apps.Order.view.list.List', {
     createOpenCustomerColumn: function() {
         var me = this;
         return {
-            iconCls:'sprite-user',
-            action:'openCustomer',
+            iconCls: 'sprite-user',
+            action: 'openCustomer',
             tooltip: me.snippets.columns.openCustomer,
             /**
             * Add button handler to fire the openCustomer event which is handled
             * in the list controller.
             */
-            handler:function (view, rowIndex, colIndex, item) {
+            handler: function (view, rowIndex, colIndex, item) {
                 var store = view.getStore(),
-                record = store.getAt(rowIndex);
+                    record = store.getAt(rowIndex);
 
-               me.fireEvent('openCustomer', record);
+                me.fireEvent('openCustomer', record);
             }
         };
     },
-
 
     /**
      * Creates the grid selection model for checkboxes
      *
      * @return [Ext.selection.CheckboxModel] grid selection model
      */
-    getGridSelModel:function () {
+    getGridSelModel: function () {
         var me = this;
 
         var selModel = Ext.create('Ext.selection.CheckboxModel', {
             checkOnly: true,
-            listeners:{
+            listeners: {
                 // Unlocks the save button if the user has checked at least one checkbox
-                selectionchange:function (sm, selections) {
+                selectionchange: function (sm, selections) {
                     if (me.createDocumentButton !== null) {
                         me.createDocumentButton.setDisabled(selections.length === 0);
                     }
@@ -472,42 +469,42 @@ Ext.define('Shopware.apps.Order.view.list.List', {
      *
      * @return [Ext.toolbar.Toolbar] grid toolbar
      */
-    getToolbar:function () {
+    getToolbar: function () {
         var me = this;
 
         me.createDocumentButton = Ext.create('Ext.button.Button', {
-            iconCls:'sprite-documents-stack',
-            text:me.snippets.toolbar.batch,
-            action:'batchProcessing',
-            disabled:true,
+            iconCls: 'sprite-documents-stack',
+            text: me.snippets.toolbar.batch,
+            action: 'batchProcessing',
+            disabled: true,
             handler: function() {
                 me.fireEvent('showBatch', me);
             }
         });
 
         return Ext.create('Ext.toolbar.Toolbar', {
-            dock:'top',
+            dock: 'top',
             ui: 'shopware-ui',
-            items:[
+            items: [
                 /*{if {acl_is_allowed privilege=update}}*/
                 me.createDocumentButton,
                 /*{/if}*/
                 '->',
                 {
-                    xtype:'textfield',
-                    name:'searchfield',
-                    cls:'searchfield',
-                    width:175,
+                    xtype: 'textfield',
+                    name: 'searchfield',
+                    cls: 'searchfield',
+                    width: 175,
                     emptyText: me.snippets.toolbar.search,
-                    enableKeyEvents:true,
-                    checkChangeBuffer:500,
+                    enableKeyEvents: true,
+                    checkChangeBuffer: 500,
                     listeners: {
                         change: function(field, value) {
                             me.fireEvent('searchOrders', value);
                         }
                     }
                 },
-                { xtype:'tbspacer', width:6 }
+                { xtype: 'tbspacer', width: 6 }
             ]
         });
     },
@@ -518,7 +515,7 @@ Ext.define('Shopware.apps.Order.view.list.List', {
      * @param [string] - The order time value
      * @return [string] - The passed value, formatted with Ext.util.Format.date()
      */
-    dateColumn:function (value, metaData, record) {
+    dateColumn: function (value, metaData, record) {
         if ( value === Ext.undefined ) {
             return value;
         }
@@ -531,7 +528,7 @@ Ext.define('Shopware.apps.Order.view.list.List', {
      * @param [string] - The amount value
      * @return [string] - The passed value, formatted with Ext.util.Format.currency()
      */
-    amountColumn:function (value, metaData, record) {
+    amountColumn: function (value, metaData, record) {
         if ( value === Ext.undefined ) {
             return value;
         }

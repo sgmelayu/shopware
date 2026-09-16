@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
@@ -30,16 +31,15 @@ use Shopware\Models\Category\Category;
 
 class GraduatedPricesTest extends TestCase
 {
-    public function testSimpleGraduation()
+    public function testSimpleGraduation(): void
     {
         $number = __FUNCTION__;
         $context = $this->getContext();
         $data = $this->getProduct($number, $context);
 
-        $this->helper->createArticle($data);
+        $this->helper->createProduct($data);
 
-        $listProduct = $this->helper->getListProduct($number, $context);
-        $graduation = $listProduct->getPrices();
+        $graduation = $this->helper->getListProduct($number, $context)->getPrices();
 
         static::assertCount(3, $graduation);
         foreach ($graduation as $price) {
@@ -48,43 +48,41 @@ class GraduatedPricesTest extends TestCase
         }
     }
 
-    public function testGraduationWithMinimumPurchase()
+    public function testGraduationWithMinimumPurchase(): void
     {
         $number = __FUNCTION__;
         $context = $this->getContext();
         $data = $this->getProduct($number, $context);
         $data['mainDetail']['minPurchase'] = 15;
 
-        $this->helper->createArticle($data);
+        $this->helper->createProduct($data);
 
-        $listProduct = $this->helper->getListProduct($number, $context);
-        $graduation = $listProduct->getPrices();
+        $graduation = $this->helper->getListProduct($number, $context)->getPrices();
 
         static::assertCount(2, $graduation);
 
-        /** @var Price $price */
         $price = array_shift($graduation);
+        static::assertInstanceOf(Price::class, $price);
         static::assertEquals(15, $price->getFrom());
         static::assertEquals(75, $price->getCalculatedPrice());
 
-        /** @var Price $price */
         $price = array_shift($graduation);
+        static::assertInstanceOf(Price::class, $price);
         static::assertEquals(21, $price->getFrom());
         static::assertEquals(50, $price->getCalculatedPrice());
     }
 
-    public function testFallbackGraduation()
+    public function testFallbackGraduation(): void
     {
         $number = __FUNCTION__;
         $context = $this->getContext();
         $data = $this->getProduct($number, $context);
 
-        $this->helper->createArticle($data);
+        $this->helper->createProduct($data);
 
         $context->getCurrentCustomerGroup()->setKey('NOT');
 
-        $listProduct = $this->helper->getListProduct($number, $context);
-        $graduation = $listProduct->getPrices();
+        $graduation = $this->helper->getListProduct($number, $context)->getPrices();
 
         static::assertCount(3, $graduation);
         foreach ($graduation as $price) {
@@ -93,7 +91,26 @@ class GraduatedPricesTest extends TestCase
         }
     }
 
-    public function testVariantGraduation()
+    public function testFallbackGraduationWithNumericNumber(): void
+    {
+        $number = '20003';
+        $context = $this->getContext();
+        $data = $this->getProduct($number, $context);
+
+        $this->helper->createProduct($data);
+
+        $context->getCurrentCustomerGroup()->setKey('NOT');
+
+        $graduation = $this->helper->getListProduct($number, $context)->getPrices();
+
+        static::assertCount(3, $graduation);
+        foreach ($graduation as $price) {
+            static::assertEquals('BACK', $price->getCustomerGroup()->getKey());
+            static::assertGreaterThan(0, $price->getCalculatedPrice());
+        }
+    }
+
+    public function testVariantGraduation(): void
     {
         $number = __FUNCTION__;
         $context = $this->getContext();
@@ -114,23 +131,25 @@ class GraduatedPricesTest extends TestCase
 
         $variantNumber = $data['variants'][1]['number'];
 
-        $this->helper->createArticle($data);
+        $this->helper->createProduct($data);
 
-        /** @var Price $first */
         $listProduct = $this->helper->getListProduct($number, $context);
         static::assertCount(3, $listProduct->getPrices());
-        $first = array_shift($listProduct->getPrices());
+        $prices = $listProduct->getPrices();
+        $first = array_shift($prices);
+        static::assertInstanceOf(Price::class, $first);
         static::assertEquals(100, $first->getCalculatedPrice());
 
-        /** @var Price $first */
         $listProduct = $this->helper->getListProduct($variantNumber, $context);
 
         static::assertCount(3, $listProduct->getPrices());
-        $first = array_shift($listProduct->getPrices());
+        $prices = $listProduct->getPrices();
+        $first = array_shift($prices);
+        static::assertInstanceOf(Price::class, $first);
         static::assertEquals(200, $first->getCalculatedPrice());
     }
 
-    public function testGraduationByPriceGroup()
+    public function testGraduationByPriceGroup(): void
     {
         $number = __FUNCTION__;
         $context = $this->getContext();
@@ -153,11 +172,9 @@ class GraduatedPricesTest extends TestCase
         $data['priceGroupId'] = $priceGroup->getId();
         $data['priceGroupActive'] = true;
 
-        $this->helper->createArticle($data);
+        $this->helper->createProduct($data);
 
-        $listProduct = $this->helper->getListProduct($number, $context);
-
-        $graduations = $listProduct->getPrices();
+        $graduations = $this->helper->getListProduct($number, $context)->getPrices();
         static::assertCount(3, $graduations);
 
         static::assertEquals(36, $graduations[0]->getCalculatedPrice());
@@ -170,10 +187,10 @@ class GraduatedPricesTest extends TestCase
 
         static::assertEquals(28, $graduations[2]->getCalculatedPrice());
         static::assertEquals(10, $graduations[2]->getFrom());
-        static::assertEquals(null, $graduations[2]->getTo());
+        static::assertNull($graduations[2]->getTo());
     }
 
-    protected function getContext($shopId = 1)
+    protected function getContext(int $shopId = 1): TestContext
     {
         $context = parent::getContext();
 
@@ -185,11 +202,11 @@ class GraduatedPricesTest extends TestCase
     }
 
     protected function getProduct(
-        $number,
+        string $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $additionally = null
-    ) {
+    ): array {
         $data = parent::getProduct($number, $context, $category);
 
         $data['mainDetail']['prices'] = array_merge(

@@ -1,30 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\MailBundle\Service\Filter\NewsletterMailFilter;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\CSRFWhitelistAware;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
+use Shopware\Components\Routing\RouterInterface;
+use Shopware\Components\ShopRegistrationServiceInterface;
 use Shopware\Components\Validator\EmailValidator;
+use Shopware\Models\Newsletter\Container;
+use Shopware\Models\Plugin\Plugin;
+use Shopware\Models\Shop\Shop;
 use Symfony\Component\HttpFoundation\Response;
 
 class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action implements CSRFWhitelistAware
@@ -37,7 +44,7 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
     public function init()
     {
         Shopware()->Plugins()->Backend()->Auth()->setNoAuth();
-        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+        Shopware()->Front()->Plugins()->ViewRenderer()->setNoRender();
     }
 
     /**
@@ -100,6 +107,10 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
         }
 
         $mailing = $this->initMailing($mailingID);
+        if (!\is_array($mailing)) {
+            return;
+        }
+
         $template = $this->initTemplate($mailing);
 
         if (!empty($mailaddressID)) {
@@ -210,10 +221,14 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
             );
 
             echo "Current mail: '" . $subjectCurrentMailing . "'\n";
-            echo count($emails) . " Recipients fetched\n";
+            echo \count($emails) . " Recipients fetched\n";
         } else {
             $mailing = $this->initMailing($mailingID);
             $emails = [$this->Request()->getParam('testmail')];
+        }
+
+        if (!\is_array($mailing)) {
+            return;
         }
 
         $template = $this->initTemplate($mailing);
@@ -221,7 +236,7 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
         $from = $template->fetch('string:' . $mailing['sendermail'], $template);
         $fromName = $template->fetch('string:' . $mailing['sendername'], $template);
 
-        /** @var \Enlight_Components_Mail $mail */
+        /** @var Enlight_Components_Mail $mail */
         $mail = clone Shopware()->Container()->get('mail');
         $mail->setFrom($from, $fromName);
 
@@ -265,9 +280,9 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
             if (!$validator->isValid($user['email'])) {
                 echo "Skipped invalid email\n";
             // SW-4526
-                // Don't `continue` with next iteration without setting user's lastmailing
-                // else the mailing.status will never be set to 2
-                // and sending the mail will block
+            // Don't `continue` with next iteration without setting user's lastmailing
+            // else the mailing.status will never be set to 2
+            // and sending the mail will block
             } else {
                 try {
                     $mail->send();
@@ -282,7 +297,7 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
                 Shopware()->Db()->query($sql, [$mailing['id'], $user['email']]);
             }
         }
-        echo $counter . ' out of ' . count($emails) . ' Mails sent successfully';
+        echo $counter . ' out of ' . \count($emails) . ' Mails sent successfully';
 
         // In cronmode: Once we are done, release the lock (by setting it 15 seconds to future)
         if (empty($mailingID)) {
@@ -354,11 +369,14 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
         }
 
         $this->Response()->headers->set('content-type', 'image/gif');
-        $bild = imagecreate(1, 1);
-        $white = imagecolorallocate($bild, 255, 255, 255);
-        imagefill($bild, 1, 1, $white);
-        imagegif($bild);
-        imagedestroy($bild);
+        $image = imagecreate(1, 1);
+        if ($image === false) {
+            return;
+        }
+        $white = (int) imagecolorallocate($image, 255, 255, 255);
+        imagefill($image, 1, 1, $white);
+        imagegif($image);
+        imagedestroy($image);
     }
 
     /**
@@ -374,29 +392,30 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function initMailing($mailingID = null)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $mailing = $this->getMailing($mailingID);
         if (empty($mailing)) {
             return null;
         }
-        $repository = Shopware()->Models()->getRepository('Shopware\Models\Shop\Shop');
+        $repository = $this->get('models')->getRepository(Shop::class);
         $shop = $repository->getActiveById($mailing['languageID']);
+        if ($shop === null) {
+            throw new ModelNotFoundException(Shop::class, $mailing['languageID']);
+        }
 
         $this->Request()
-            ->setHttpHost($shop->getHost())
+            ->setHttpHost((string) $shop->getHost())
             ->setBasePath($shop->getBasePath())
             ->setBaseUrl($shop->getBasePath());
 
-        $this->get(\Shopware\Components\ShopRegistrationServiceInterface::class)->registerShop($shop);
+        $this->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
 
-        Shopware()->Session()->sUserGroup = $mailing['customergroup'];
+        Shopware()->Session()->set('sUserGroup', $mailing['customergroup']);
         $sql = 'SELECT * FROM s_core_customergroups WHERE groupkey=?';
-        Shopware()->Session()->sUserGroupData = Shopware()->Db()->fetchRow($sql, [$mailing['customergroup']]);
+        Shopware()->Session()->set('sUserGroupData', Shopware()->Db()->fetchRow($sql, [$mailing['customergroup']]));
 
-        Shopware()->Container()->get(\Shopware\Components\Routing\RouterInterface::class)->setGlobalParam('module', 'frontend');
-        Shopware()->Config()->DontAttachSession = true;
-        Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->initializeShopContext();
+        Shopware()->Container()->get(RouterInterface::class)->setGlobalParam('module', 'frontend');
+        Shopware()->Config()->offsetSet('DontAttachSession', true);
+        Shopware()->Container()->get(ContextServiceInterface::class)->initializeShopContext();
 
         return $mailing;
     }
@@ -414,8 +433,6 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function initTemplate($mailing)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $template = clone Shopware()->Template();
         $shop = Shopware()->Shop();
         $inheritance = Shopware()->Container()->get('theme_inheritance');
@@ -426,15 +443,15 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
             false
         );
 
-        $user = $this->getMailingUserByEmail(Shopware()->Config()->Mail);
+        $user = $this->getMailingUserByEmail(Shopware()->Config()->get('Mail'));
         $template->assign('sUser', $user, true);
         $hash = $this->createHash((int) $user['mailaddressID'], (int) $mailing['id']);
         $template->assign('sCampaignHash', $hash, true);
-        $template->assign('sRecommendations', $this->getMailingSuggest($mailing['id'], $user['id']), true);
+        $template->assign('sRecommendations', $this->getMailingSuggest($mailing['id'], $user['userID']), true);
         $template->assign('sVoucher', $this->getMailingVoucher($mailing['id']), true);
         $template->assign('sCampaign', $this->getMailingDetails($mailing['id']), true);
         $template->assign('sConfig', Shopware()->Config());
-        $template->assign('sBasefile', Shopware()->Config()->BaseFile);
+        $template->assign('sBasefile', Shopware()->Config()->get('BaseFile'));
         $template->assign('theme', $config);
 
         $templatePath = 'newsletter/index/' . $mailing['template'];
@@ -465,8 +482,6 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function getMailing($id = null)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         if (!empty($id)) {
             $where = Shopware()->Db()->quoteInto('cm.id=?', $id);
         } else {
@@ -493,18 +508,19 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function getMailingDetails($id)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $details = Shopware()->Modules()->Marketing()->sMailCampaignsGetDetail((int) $id);
+        if (!\is_array($details)) {
+            return [];
+        }
 
         foreach ($details['containers'] as $key => $container) {
-            if ($container['type'] === 'ctVoucher') {
+            if ($container['type'] === Container::TYPE_VOUCHER) {
                 if (!empty($container['value'])) {
                     $details['voucher'] = $container['value'];
                 }
-                $details['containers'][$key]['type'] = 'ctText';
+                $details['containers'][$key]['type'] = Container::TYPE_TEXT;
             }
-            if ($container['type'] === 'ctSuggest') {
+            if ($container['type'] === Container::TYPE_SUGGEST) {
                 $details['suggest'] = true;
             }
         }
@@ -536,10 +552,8 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function getMailingVoucher($id)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $sql = 'SELECT value FROM s_campaigns_containers WHERE type=? AND promotionID=?';
-        $voucherID = Shopware()->Db()->fetchOne($sql, ['ctVoucher', $id]);
+        $voucherID = Shopware()->Db()->fetchOne($sql, [Container::TYPE_VOUCHER, $id]);
         if (empty($voucherID)) {
             return false;
         }
@@ -561,12 +575,10 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      *
      * @param int $id
      *
-     * @return array|bool
+     * @return array|false
      */
     public function getMailingEmails($id)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $sql = 'SELECT `groups`, languageID FROM s_campaigns_mailings WHERE id=?';
         $mailing = Shopware()->Db()->fetchRow($sql, [$id]);
 
@@ -574,18 +586,18 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
             return false;
         }
 
-        $customerGroups = null;
-        $recipientGroups = null;
-        $mailing['groups'] = unserialize($mailing['groups'], ['allowed_classes' => false]);
+        $customerGroups = [];
+        $recipientGroups = [];
+        $mailing['groups'] = unserialize($mailing['groups'], ['allowed_classes' => false]) ?: [];
 
         // The first element holds the selected customer groups for the current newsletter
-        foreach ($mailing['groups'][0] as $customerGroupKey => $customerGroupValue) {
+        foreach ($mailing['groups'][0] ?? [] as $customerGroupKey => $customerGroupValue) {
             $customerGroups[] = Shopware()->Db()->quoteInto('su.customergroup=?', $customerGroupKey);
         }
         $customerGroups = implode(' OR ', $customerGroups);
 
         // The second element holds the selected *newsletter* groups for the current newsletter
-        foreach ($mailing['groups'][1] as $customerGroupKey => $customerGroupValue) {
+        foreach ($mailing['groups'][1] ?? [] as $customerGroupKey => $customerGroupValue) {
             $recipientGroups[] = Shopware()->Db()->quoteInto('sc.groupID=?', $customerGroupKey);
         }
         $recipientGroups = implode(' OR ', $recipientGroups);
@@ -598,7 +610,7 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
             $customerGroups = '1=2';
         }
 
-        $limit = !empty(Shopware()->Config()->MailCampaignsPerCall) ? (int) Shopware()->Config()->MailCampaignsPerCall : 1000;
+        $limit = !empty(Shopware()->Config()->get('MailCampaignsPerCall')) ? (int) Shopware()->Config()->get('MailCampaignsPerCall') : 1000;
         $limit = max(1, $limit);
 
         $customerStreams = '1=2';
@@ -649,8 +661,6 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function getVoucherCode($voucherID)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $sql = '
             SELECT id, code
             FROM s_emarketing_voucher_codes evc
@@ -679,8 +689,6 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function getMailingUserByEmail($email)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $select = '
             cm.email, cm.email as newsletter, cg.name as `group`,
             IFNULL(u.salutation, nd.salutation) as salutation,
@@ -748,8 +756,6 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function preFilter($source)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $source = str_replace('<suggestions></suggestions>', '{include file="suggest`$sMailing.template`"}', $source);
         $source = str_replace('<weblog></weblog>', '<img src="{url module=backend controller=newsletter action=log mailing=$sMailing.id mailaddress=$sUser.mailaddressID fullPath}" style="width:1px;height:1px">', $source);
         $source = str_replace('@suggestions', '{include file="alt/suggest`$sMailing.template`"}', $source);
@@ -770,8 +776,6 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function outputFilter($source)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $source = preg_replace('#(src|background)="([^:"./][^:"]+)"#Umsi', '$1="../../campaigns/$2"', $source);
         $callback = [Shopware()->Plugins()->Core()->PostFilter(), 'rewriteSrc'];
 
@@ -789,11 +793,9 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function altFilter($source)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $source = preg_replace('#<a.+href="(.*)".*>#Umsi', '$1', $source);
         $source = str_replace(['<br />', '</p>', '&nbsp;'], ["\n", "\n", ' '], $source);
-        $source = trim(strip_tags(preg_replace('/<(head|title|style|script)[^>]*>.*?<\/\\1>/s', '', $source)));
+        $source = trim(strip_tags((string) preg_replace('/<(head|title|style|script)[^>]*>.*?<\/\\1>/s', '', $source)));
 
         return html_entity_decode($source);
     }
@@ -810,10 +812,8 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function trackFilter($source, $mailingID)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
         $track = 'sPartner=sCampaign' . (int) $mailingID;
-        $host = preg_quote(Shopware()->Config()->BasePath, '#');
+        $host = preg_quote(Shopware()->Config()->get('BasePath'), '#');
         $pattern = '#href="(https?://' . $host . '[^<]*[?][^<]+)"#Umsi';
         $source = preg_replace($pattern, 'href="$1&' . $track . '"', $source);
         $pattern = '#href="(https?://' . $host . '[^?<]*)"#Umsi';
@@ -830,11 +830,8 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
      */
     public function createHash()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
-
-        // todo@all Create new method to get same secret hashes for values
         $license = '';
-        $parts = func_get_args();
+        $parts = \func_get_args();
         $parts[] = $license;
 
         return md5(implode('|', $parts));
@@ -858,8 +855,8 @@ class Shopware_Controllers_Backend_Newsletter extends Enlight_Controller_Action 
             return null;
         }
 
-        /** @var \Shopware\Models\Plugin\Plugin|null $plugin */
-        $plugin = Shopware()->Models()->find(\Shopware\Models\Plugin\Plugin::class, $pluginBootstrap->getId());
+        /** @var Plugin|null $plugin */
+        $plugin = $this->get('models')->find(Plugin::class, $pluginBootstrap->getId());
         if (!$plugin) {
             return null;
         }

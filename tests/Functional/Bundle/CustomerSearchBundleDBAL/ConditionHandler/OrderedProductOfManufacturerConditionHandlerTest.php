@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\CustomerSearchBundleDBAL\ConditionHandler;
@@ -29,9 +29,12 @@ use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Models\Article\Article;
 use Shopware\Tests\Functional\Bundle\CustomerSearchBundleDBAL\TestCase;
 use Shopware\Tests\Functional\Bundle\StoreFrontBundle\Helper;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
 
 class OrderedProductOfManufacturerConditionHandlerTest extends TestCase
 {
+    use ContainerTrait;
+
     /**
      * @var int
      */
@@ -51,20 +54,20 @@ class OrderedProductOfManufacturerConditionHandlerTest extends TestCase
     {
         parent::setUp();
 
-        $helper = new Helper();
+        $helper = new Helper($this->getContainer());
 
         $manufacturer = $helper->createManufacturer($helper->getManufacturerData());
 
         $this->manufacturerId = $manufacturer->getId();
 
-        $this->sw1 = $helper->createArticle(
+        $this->sw1 = $helper->createProduct(
             array_merge(
                 $helper->getSimpleProduct('SW1'),
                 ['supplierId' => $manufacturer->getId(), 'categories' => [['id' => 3]]]
             )
         );
 
-        $this->sw2 = $helper->createArticle(
+        $this->sw2 = $helper->createProduct(
             array_merge(
                 $helper->getSimpleProduct('SW2'),
                 ['supplierId' => $manufacturer->getId(), 'categories' => [['id' => 3]]]

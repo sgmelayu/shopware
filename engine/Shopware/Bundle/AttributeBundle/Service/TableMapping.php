@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AttributeBundle\Service;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Column;
+use Exception;
 
 class TableMapping implements TableMappingInterface
 {
@@ -48,35 +49,35 @@ class TableMapping implements TableMappingInterface
     /**
      * {@inheritdoc}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function isIdentifierColumn($table, $name)
     {
-        if (!array_key_exists($table, $this->tables)) {
-            throw new \Exception(sprintf('Table %s is no attribute table', $table));
+        if (!\array_key_exists($table, $this->tables)) {
+            throw new Exception(\sprintf('Table %s is no attribute table', $table));
         }
         $config = $this->tables[$table];
         $identifiers = isset($config['identifiers']) ? $config['identifiers'] : [];
         $columns = array_map('strtolower', $identifiers);
 
-        return in_array(strtolower($name), $columns);
+        return \in_array(strtolower($name), $columns);
     }
 
     /**
      * {@inheritdoc}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function isCoreColumn($table, $name)
     {
-        if (!array_key_exists($table, $this->tables)) {
-            throw new \Exception(sprintf('Table %s is no attribute table', $table));
+        if (!\array_key_exists($table, $this->tables)) {
+            throw new Exception(\sprintf('Table %s is no attribute table', $table));
         }
         $config = $this->tables[$table];
         $coreAttributes = isset($config['coreAttributes']) ? $config['coreAttributes'] : [];
         $columns = array_map('strtolower', $coreAttributes);
 
-        return in_array(strtolower($name), $columns);
+        return \in_array(strtolower($name), $columns);
     }
 
     /**
@@ -84,7 +85,7 @@ class TableMapping implements TableMappingInterface
      */
     public function getTableModel($table)
     {
-        if (!array_key_exists($table, $this->tables)) {
+        if (!\array_key_exists($table, $this->tables)) {
             return null;
         }
 
@@ -114,7 +115,7 @@ class TableMapping implements TableMappingInterface
      */
     public function isAttributeTable($table)
     {
-        return array_key_exists($table, $this->tables);
+        return \array_key_exists($table, $this->tables);
     }
 
     /**
@@ -127,18 +128,18 @@ class TableMapping implements TableMappingInterface
             return strtolower($schemaColumn->getName());
         }, $columns);
 
-        return in_array(strtolower($column), $names);
+        return \in_array(strtolower($column), $names);
     }
 
     /**
      * {@inheritdoc}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function getDependingTables($table)
     {
         if (!$this->isAttributeTable($table)) {
-            throw new \Exception(sprintf('Table %s is no supported attribute table', $table));
+            throw new Exception(\sprintf('Table %s is no supported attribute table', $table));
         }
 
         return $this->tables[$table]['dependingTables'];

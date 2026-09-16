@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Privacy;
@@ -27,6 +27,7 @@ namespace Shopware\Tests\Functional\Components\Privacy;
 use Enlight_Components_Test_Controller_TestCase;
 use Shopware\Components\Privacy\ConfigDependentIpAnonymizer;
 use Shopware\Components\Privacy\IpAnonymizer;
+use Shopware_Components_Config;
 
 class ConfigDependentIpAnonymizerTest extends Enlight_Components_Test_Controller_TestCase
 {
@@ -48,16 +49,17 @@ class ConfigDependentIpAnonymizerTest extends Enlight_Components_Test_Controller
         Shopware()->Container()->reset(\Shopware\Components\Privacy\IpAnonymizerInterface::class);
         // Reset the controller as well, since it already has the service injected
         Shopware()->Container()->reset('shopware_controllers_backend_logger');
+        parent::tearDown();
     }
 
     public function testConfigActiveWorking()
     {
-        $configStub = $this->createMock(\Shopware_Components_Config::class);
+        $configStub = $this->createMock(Shopware_Components_Config::class);
         $configStub
             ->expects(static::exactly(1))
             ->method('get')
             ->with('anonymizeIp')
-            ->will(static::returnValue(true));
+            ->willReturn(true);
 
         $service = new ConfigDependentIpAnonymizer(new IpAnonymizer(), $configStub);
 
@@ -66,12 +68,12 @@ class ConfigDependentIpAnonymizerTest extends Enlight_Components_Test_Controller
 
     public function testConfigInactiveWorking()
     {
-        $configStub = $this->createMock(\Shopware_Components_Config::class);
+        $configStub = $this->createMock(Shopware_Components_Config::class);
         $configStub
             ->expects(static::exactly(1))
             ->method('get')
             ->with('anonymizeIp')
-            ->will(static::returnValue(false));
+            ->willReturn(false);
 
         $service = new ConfigDependentIpAnonymizer(new IpAnonymizer(), $configStub);
 
@@ -88,12 +90,12 @@ class ConfigDependentIpAnonymizerTest extends Enlight_Components_Test_Controller
             ->setClientIp('127.0.0.1')
             ->setMethod('POST')
             ->setPost([
-            'type' => 'backend',
-            'key' => 'Shopcache',
-            'text' => 'Shopcache wurde geleert',
-            'user' => 'Demo user',
-            'value4' => '',
-        ]);
+                'type' => 'backend',
+                'key' => 'Shopcache',
+                'text' => 'Shopcache wurde geleert',
+                'user' => 'Demo user',
+                'value4' => '',
+            ]);
         $this->dispatch('/backend/Logger/createLog');
         $data = $this->View()->getAssign('data');
 

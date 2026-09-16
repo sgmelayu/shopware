@@ -1,30 +1,39 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Update;
 
+use ErrorException;
+use Exception;
+use FilesystemIterator;
+use PDO;
+use PDOException;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
 use Slim\Http\Request;
+use SplFileInfo;
 
 class Utils
 {
@@ -43,7 +52,7 @@ class Utils
             return true;
         }
 
-        return self::check(dirname($file));
+        return self::check(\dirname($file));
     }
 
     /**
@@ -109,12 +118,12 @@ class Utils
         }
 
         try {
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::CHILD_FIRST
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::CHILD_FIRST
             );
 
-            /** @var \SplFileInfo $path */
+            /** @var SplFileInfo $path */
             foreach ($iterator as $path) {
                 if ($path->getFilename() === '.gitkeep') {
                     continue;
@@ -122,7 +131,7 @@ class Utils
 
                 $path->isFile() ? @unlink($path->getPathname()) : @rmdir($path->getPathname());
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // todo: add error handling
             // empty catch intendded.
         }
@@ -143,7 +152,7 @@ class Utils
         $allowed = explode("\n", $allowed);
         $allowed = array_map('trim', $allowed);
 
-        return in_array($clientIp, $allowed);
+        return \in_array($clientIp, $allowed);
     }
 
     /**
@@ -156,7 +165,7 @@ class Utils
         $allowedLanguages = ['de', 'en'];
         $selectedLanguage = 'de';
 
-        if ($lang && in_array($lang, $allowedLanguages)) {
+        if ($lang && \in_array($lang, $allowedLanguages)) {
             return $lang;
         }
 
@@ -165,14 +174,14 @@ class Utils
             $selectedLanguage = substr($selectedLanguage[0], 0, 2);
         }
 
-        if (empty($selectedLanguage) || !in_array($selectedLanguage, $allowedLanguages)) {
+        if (empty($selectedLanguage) || !\in_array($selectedLanguage, $allowedLanguages)) {
             $selectedLanguage = 'de';
         }
 
-        if (isset($_POST['language']) && in_array($_POST['language'], $allowedLanguages)) {
+        if (isset($_POST['language']) && \in_array($_POST['language'], $allowedLanguages)) {
             $selectedLanguage = $_POST['language'];
             $_SESSION['language'] = $selectedLanguage;
-        } elseif (isset($_SESSION['language']) && in_array($_SESSION['language'], $allowedLanguages)) {
+        } elseif (isset($_SESSION['language']) && \in_array($_SESSION['language'], $allowedLanguages)) {
             $selectedLanguage = $_SESSION['language'];
         } else {
             $_SESSION['language'] = $selectedLanguage;
@@ -184,14 +193,14 @@ class Utils
     /**
      * @param string $shopPath
      *
-     * @return \PDO
+     * @return PDO
      */
     public static function getConnection($shopPath)
     {
         if (file_exists($shopPath . '/config.php')) {
             $config = require $shopPath . '/config.php';
         } else {
-            die('Could not find shopware config');
+            exit('Could not find shopware config');
         }
 
         $dbConfig = $config['db'];
@@ -213,15 +222,15 @@ class Utils
         $dsn = 'mysql:' . implode(';', $dsn);
 
         try {
-            $conn = new \PDO(
+            $conn = new PDO(
                 $dsn,
                 $dbConfig['username'],
                 $dbConfig['password'],
-                [\PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'UTF8'"]
+                [PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES 'UTF8'"]
             );
-            $conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-            $conn->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
             echo 'ERROR: ' . $e->getMessage();
             exit(1);
         }
@@ -244,16 +253,16 @@ class Utils
         if (is_file($dir)) {
             try {
                 unlink($dir);
-            } catch (\ErrorException $e) {
+            } catch (ErrorException $e) {
                 $errorFiles[$dir] = true;
             }
         } else {
-            $iterator = new \RecursiveIteratorIterator(
-                new \RecursiveDirectoryIterator($dir, \RecursiveDirectoryIterator::SKIP_DOTS),
-                \RecursiveIteratorIterator::CHILD_FIRST
+            $iterator = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::CHILD_FIRST
             );
 
-            /** @var \SplFileInfo $path */
+            /** @var SplFileInfo $path */
             foreach ($iterator as $path) {
                 try {
                     if ($path->isDir()) {
@@ -261,14 +270,14 @@ class Utils
                     } else {
                         unlink($path->__toString());
                     }
-                } catch (\ErrorException $e) {
+                } catch (ErrorException $e) {
                     $errorFiles[$dir] = true;
                 }
             }
 
             try {
                 rmdir($dir);
-            } catch (\ErrorException $e) {
+            } catch (ErrorException $e) {
                 $errorFiles[$dir] = true;
             }
         }
@@ -276,21 +285,21 @@ class Utils
         return array_keys($errorFiles);
     }
 
-    protected static function setNonStrictSQLMode(\PDO $conn)
+    protected static function setNonStrictSQLMode(PDO $conn)
     {
         $conn->exec("SET @@session.sql_mode = ''");
     }
 
     /**
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
-    private static function checkSQLMode(\PDO $conn)
+    private static function checkSQLMode(PDO $conn)
     {
         $sql = 'SELECT @@SESSION.sql_mode;';
         $result = $conn->query($sql)->fetchColumn(0);
 
         if (strpos($result, 'STRICT_TRANS_TABLES') !== false || strpos($result, 'STRICT_ALL_TABLES') !== false) {
-            throw new \RuntimeException("Database error!: The MySQL strict mode is active ($result). Please consult your hosting provider to solve this problem.");
+            throw new RuntimeException("Database error!: The MySQL strict mode is active ($result). Please consult your hosting provider to solve this problem.");
         }
     }
 }

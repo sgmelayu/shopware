@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
-use Shopware\Bundle\PluginInstallerBundle\Service\AccountManagerService;
+use Exception;
+use RuntimeException;
 use Shopware\Bundle\PluginInstallerBundle\Struct\AccessTokenStruct;
 use Shopware\Components\HttpClient\HttpClientInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -85,7 +86,7 @@ abstract class StoreCommand extends ShopwareCommand
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     protected function handleError(array $input)
     {
@@ -93,7 +94,7 @@ abstract class StoreCommand extends ShopwareCommand
             $this->output->writeln(print_r($input, true));
         }
 
-        throw new \Exception($input['message']);
+        throw new Exception($input['message']);
     }
 
     /**
@@ -110,7 +111,7 @@ abstract class StoreCommand extends ShopwareCommand
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return AccessTokenStruct
      */
@@ -147,10 +148,10 @@ abstract class StoreCommand extends ShopwareCommand
         }
 
         if (empty($username) || empty($password)) {
-            throw new \Exception('Username and password are required');
+            throw new Exception('Username and password are required');
         }
 
-        $output->writeln(sprintf('Connect to Store with username: %s...', $username));
+        $output->writeln(\sprintf('Connect to Store with username: %s...', $username));
 
         return $this->container->get(\Shopware\Bundle\PluginInstallerBundle\StoreClient::class)->getAccessToken(
             $username,
@@ -159,7 +160,7 @@ abstract class StoreCommand extends ShopwareCommand
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return string
      */
@@ -174,7 +175,7 @@ abstract class StoreCommand extends ShopwareCommand
         }
 
         if (empty($hostname)) {
-            throw new \Exception('Hostname is required');
+            throw new Exception('Hostname is required');
         }
 
         return $hostname;
@@ -187,10 +188,9 @@ abstract class StoreCommand extends ShopwareCommand
      */
     protected function completeLicensedDomain($input)
     {
-        /* @var AccountManagerService $accountManagerService */
         try {
             $accountManagerService = $this->container->get('shopware_plugininstaller.account_manager_service');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [];
         }
 
@@ -211,7 +211,7 @@ abstract class StoreCommand extends ShopwareCommand
             /** @var HttpClientInterface $guzzle */
             $guzzle = $this->container->get('http_client');
             $response = $guzzle->get('https://api.shopware.com/pluginstatics/softwareVersions');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return [];
         }
 
@@ -222,11 +222,14 @@ abstract class StoreCommand extends ShopwareCommand
         }), 'name');
     }
 
-    /**
-     * @return string
-     */
-    protected function getInstalledShopwareVersion()
+    protected function getInstalledShopwareVersion(): string
     {
-        return $this->container->getParameter('shopware.release.version');
+        $shopwareVersion = $this->container->getParameter('shopware.release.version');
+
+        if (!\is_string($shopwareVersion)) {
+            throw new RuntimeException('Parameter shopware.release.version has to be an string');
+        }
+
+        return $shopwareVersion;
     }
 }

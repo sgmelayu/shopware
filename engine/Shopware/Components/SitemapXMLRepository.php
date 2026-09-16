@@ -1,83 +1,66 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\DBAL\Connection;
-use Doctrine\ORM\QueryBuilder;
+use Exception;
+use PDO;
 use Shopware\Bundle\SearchBundle\Condition\LastProductIdCondition;
 use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Bundle\SearchBundle\ProductNumberSearchInterface;
 use Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactoryInterface;
+use Shopware\Bundle\SitemapBundle\Service\LinkFilter;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Category\Category;
 
 /**
- * @deprecated Will be removed in Shopware 5.6
+ * @deprecated Will be removed in Shopware 5.8
  */
 class SitemapXMLRepository
 {
-    /**
-     * @var ModelManager
-     */
-    private $em;
+    private ModelManager $em;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var ContextServiceInterface
-     */
-    private $contextService;
+    private ContextServiceInterface $contextService;
 
-    /**
-     * @var ProductNumberSearchInterface
-     */
-    private $productNumberSearch;
+    private ProductNumberSearchInterface $productNumberSearch;
 
-    /**
-     * @var StoreFrontCriteriaFactoryInterface
-     */
-    private $storeFrontCriteriaFactory;
+    private StoreFrontCriteriaFactoryInterface $storeFrontCriteriaFactory;
 
-    /**
-     * @var int
-     */
-    private $batchSize;
+    private int $batchSize;
 
-    /**
-     * @param int $batchSize
-     */
     public function __construct(
         ProductNumberSearchInterface $productNumberSearch,
         StoreFrontCriteriaFactoryInterface $storeFrontCriteriaFactory,
         ModelManager $em,
         ContextServiceInterface $contextService,
-        $batchSize = 10000
+        int $batchSize = 10000
     ) {
         $this->em = $em;
         $this->connection = $this->em->getConnection();
@@ -164,7 +147,7 @@ class SitemapXMLRepository
 
         $products = [];
         while ($product = $statement->fetch()) {
-            $product['changed'] = new \DateTime($product['changetime']);
+            $product['changed'] = new DateTime($product['changetime']);
             $product['urlParams'] = [
                 'sViewport' => 'detail',
                 'sArticle' => $product['id'],
@@ -203,7 +186,7 @@ class SitemapXMLRepository
 
         sort($result, SORT_NUMERIC);
 
-        $lastProductId = $result[count($result) - 1];
+        $lastProductId = $result[\count($result) - 1];
 
         $criteria->removeBaseCondition('last_product_id');
         $criteria->addBaseCondition(new LastProductIdCondition($lastProductId));
@@ -222,7 +205,7 @@ class SitemapXMLRepository
     {
         $blogs = [];
 
-        $categoryRepository = $this->em->getRepository(\Shopware\Models\Category\Category::class);
+        $categoryRepository = $this->em->getRepository(Category::class);
         $query = $categoryRepository->getBlogCategoriesByParentQuery($parentId);
         $blogCategories = $query->getArrayResult();
 
@@ -247,7 +230,7 @@ class SitemapXMLRepository
         );
 
         while ($blog = $result->fetch()) {
-            $blog['changed'] = new \DateTime($blog['changed']);
+            $blog['changed'] = new DateTime($blog['changed']);
             $blog['urlParams'] = [
                 'sViewport' => 'blog',
                 'sAction' => 'detail',
@@ -283,7 +266,7 @@ class SitemapXMLRepository
                 'sCustom' => $site['id'],
             ];
 
-            $site['show'] = $this->filterLink($site['link'], $site['urlParams']);
+            $site['show'] = LinkFilter::filterLink($site['link'], $site['urlParams']);
         }
 
         return $sites;
@@ -308,7 +291,7 @@ class SitemapXMLRepository
 
         $statement = $this->connection->executeQuery($sql, [$shopId]);
 
-        $keys = $statement->fetchAll(\PDO::FETCH_COLUMN);
+        $keys = $statement->fetchAll(PDO::FETCH_COLUMN);
 
         $siteRepository = $this->em->getRepository('Shopware\Models\Site\Site');
 
@@ -325,33 +308,6 @@ class SitemapXMLRepository
         }
 
         return $sites;
-    }
-
-    /**
-     * Helper function to filter predefined links, which should not be in the sitemap (external links, sitemap links itself)
-     * Returns false, if the link is not allowed
-     *
-     * @param string $link
-     * @param array  $userParams
-     *
-     * @return bool
-     */
-    private function filterLink($link, &$userParams)
-    {
-        if (empty($link)) {
-            return true;
-        }
-
-        $userParams = parse_url($link, PHP_URL_QUERY);
-        parse_str($userParams, $userParams);
-
-        $blacklist = ['', 'sitemap', 'sitemapXml'];
-
-        if (in_array($userParams['sViewport'], $blacklist)) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -376,7 +332,7 @@ class SitemapXMLRepository
     /**
      * Gets all suppliers that have products for the current shop
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array
      */
@@ -385,7 +341,6 @@ class SitemapXMLRepository
         $context = $this->contextService->getShopContext();
         $categoryId = $context->getShop()->getCategory()->getId();
 
-        /** @var QueryBuilder $query */
         $query = $this->connection->createQueryBuilder();
         $query->select(['manufacturer.id', 'manufacturer.name']);
 
@@ -396,10 +351,7 @@ class SitemapXMLRepository
 
         $query->groupBy('manufacturer.id');
 
-        /** @var \PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_ASSOC);
+        return $query->execute()->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -431,14 +383,14 @@ class SitemapXMLRepository
      * Helper function to filter emotion campaigns
      * Returns false, if the campaign starts later or is outdated
      *
-     * @param \DateTimeInterface|null $from
-     * @param \DateTimeInterface|null $to
+     * @param DateTimeInterface|null $from
+     * @param DateTimeInterface|null $to
      *
      * @return bool
      */
     private function filterCampaign($from = null, $to = null)
     {
-        $now = new \DateTime();
+        $now = new DateTime();
 
         if (isset($from) && $now < $from) {
             return false;

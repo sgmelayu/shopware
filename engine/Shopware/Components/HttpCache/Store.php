@@ -1,29 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\HttpCache;
 
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
+use SplFileInfo;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\HttpCache\Store as BaseStore;
@@ -81,7 +85,7 @@ class Store extends BaseStore
             return false;
         }
 
-        /** @var \SplFileInfo $file */
+        /** @var SplFileInfo $file */
         foreach ($this->createRecursiveFileIterator($this->root) as $file) {
             if (!$file->isFile()) {
                 continue;
@@ -125,13 +129,16 @@ class Store extends BaseStore
 
         $result = false;
 
-        /** @var \SplFileInfo $headerFile */
+        /** @var SplFileInfo $headerFile */
         foreach ($this->createRecursiveFileIterator($headerDir) as $headerFile) {
             if (!$headerFile->isFile()) {
                 continue;
             }
 
             $headerData = file_get_contents($headerFile->getPathname());
+            if (!\is_string($headerData)) {
+                continue;
+            }
             $headerData = unserialize($headerData, ['allowed_classes' => false]);
 
             $changed = false;
@@ -185,7 +192,7 @@ class Store extends BaseStore
             return $headerKey;
         }
 
-        $cacheIds = array_filter(explode(';', $response->headers->get('x-shopware-cache-id')));
+        $cacheIds = array_filter(explode(';', (string) $response->headers->get('x-shopware-cache-id')));
         $cacheKey = $response->headers->get('x-content-digest');
 
         foreach ($cacheIds as $cacheId) {
@@ -199,7 +206,7 @@ class Store extends BaseStore
             $content[$cacheKey] = $headerKey;
 
             if (!$this->save($key, json_encode($content))) {
-                throw new \RuntimeException(sprintf('Could not write cacheKey "%s"', $key));
+                throw new RuntimeException(\sprintf('Could not write cacheKey "%s"', $key));
             }
         }
 
@@ -235,14 +242,14 @@ class Store extends BaseStore
     {
         $requestParams = $request->query->all();
 
-        if (count($requestParams) === 0) {
+        if (\count($requestParams) === 0) {
             return $request->getUri();
         }
 
-        $parsed = parse_url($request->getUri());
+        $parsed = (string) parse_url($request->getUri(), PHP_URL_QUERY);
         $query = [];
 
-        parse_str($parsed['query'], $query);
+        parse_str($parsed, $query);
 
         $params = array_diff_key(
             $query,
@@ -259,7 +266,7 @@ class Store extends BaseStore
         /**
          * Normalize URL to consistently return the same path even when variables are present
          */
-        $uri = sprintf(
+        $uri = \sprintf(
             '%s%s%s',
             $request->getSchemeAndHttpHost(),
             $path,
@@ -291,18 +298,18 @@ class Store extends BaseStore
     /**
      * @param string $path the path of the directory to be iterated over
      *
-     * @return \RecursiveIteratorIterator
+     * @return RecursiveIteratorIterator
      */
     private function createRecursiveFileIterator($path)
     {
-        $directoryIterator = new \RecursiveDirectoryIterator(
+        $directoryIterator = new RecursiveDirectoryIterator(
             $path,
-            \RecursiveDirectoryIterator::SKIP_DOTS
+            RecursiveDirectoryIterator::SKIP_DOTS
         );
 
-        return new \RecursiveIteratorIterator(
+        return new RecursiveIteratorIterator(
             $directoryIterator,
-            \RecursiveIteratorIterator::LEAVES_ONLY
+            RecursiveIteratorIterator::LEAVES_ONLY
         );
     }
 
@@ -359,24 +366,27 @@ class Store extends BaseStore
      *
      * @param string $key  The store key
      * @param string $data The data to store
-     *
-     * @return bool
      */
-    private function save($key, $data)
+    private function save(string $key, string $data): bool
     {
         $path = $this->getPath($key);
-        if (!is_dir(dirname($path)) && @mkdir(dirname($path), 0777, true) === false && !is_dir(dirname($path))) {
+        if (!is_dir(\dirname($path)) && @mkdir(\dirname($path), 0777, true) === false && !is_dir(\dirname($path))) {
             return false;
         }
 
-        $tmpFile = tempnam(dirname($path), basename($path));
-        if (false === $fp = @fopen($tmpFile, 'wb')) {
+        $tmpFile = tempnam(\dirname($path), basename($path));
+        if (!\is_string($tmpFile)) {
+            return false;
+        }
+
+        $fp = @fopen($tmpFile, 'wb');
+        if ($fp === false) {
             return false;
         }
         @fwrite($fp, $data);
         @fclose($fp);
 
-        if ($data != file_get_contents($tmpFile)) {
+        if ($data !== file_get_contents($tmpFile)) {
             return false;
         }
 

@@ -1,51 +1,45 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-namespace Shopware\Tests\Components;
+namespace Shopware\Tests\Functional\Components;
 
-class StringCompilerTest extends \Enlight_Components_Test_TestCase
+use Enlight_Components_Test_TestCase;
+use Shopware_Components_StringCompiler;
+
+class StringCompilerTest extends Enlight_Components_Test_TestCase
 {
-    /**
-     * @var \Shopware_Components_StringCompiler
-     */
-    private $compiler;
+    private Shopware_Components_StringCompiler $compiler;
 
-    /**
-     * Sets up the fixture, for example, opens a network connection.
-     * This method is called before a test is executed.
-     */
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->compiler = new \Shopware_Components_StringCompiler(Shopware()->Template());
+        $this->compiler = new Shopware_Components_StringCompiler(Shopware()->Template());
     }
 
-    /**
-     * Test case
-     */
-    public function testShouldCompileCompatibilityMode()
+    public function testShouldCompileCompatibilityMode(): void
     {
         $template = <<<'EOD'
 Hallo,
@@ -74,10 +68,7 @@ EOD;
         static::assertEquals($result, $expectedResult);
     }
 
-    /**
-     * Test case
-     */
-    public function testShouldCompileSmarty()
+    public function testShouldCompileSmarty(): void
     {
         $template = <<<'EOD'
 Email von {$sConfig.sSHOPNAME} ({$sConfig.sMAIL}) Hallo,
@@ -123,12 +114,10 @@ EOD;
     }
 
     /**
-     * Test case
-     *
      * @depends testShouldCompileSmarty
      * @depends testShouldCompileCompatibilityMode
      */
-    public function testShouldCompileMixedString()
+    public function testShouldCompileMixedString(): void
     {
         $template = <<<'EOD'
 Email von {$sConfig.sSHOPNAME} ({$sConfig.sMAIL})
@@ -157,10 +146,7 @@ EOD;
         static::assertEquals($result, $expectedResult);
     }
 
-    /**
-     * Test case
-     */
-    public function testInvalidSmartyShouldThrowExceptionAndCustomExceptionMessage()
+    public function testInvalidSmartyShouldThrowExceptionAndCustomExceptionMessage(): void
     {
         $this->expectException('Enlight_Exception');
         $this->expectExceptionMessage('Syntax Error 74&quot;  on line 1 &quot;Hallo {$user|invalidmodifier}&quot; unknown modifier &quot;invalidmodifier&quot');

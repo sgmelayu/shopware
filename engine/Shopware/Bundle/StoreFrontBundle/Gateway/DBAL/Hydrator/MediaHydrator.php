@@ -1,71 +1,65 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator;
 
 use Doctrine\DBAL\Connection;
+use RuntimeException;
 use Shopware\Bundle\MediaBundle\MediaServiceInterface;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Media;
+use Shopware\Bundle\StoreFrontBundle\Struct\Thumbnail;
 use Shopware\Components\Thumbnail\Manager;
-use Shopware\Models\Media\Media;
+use Shopware\Models\Media\Media as MediaModel;
 
 class MediaHydrator extends Hydrator
 {
-    /**
-     * @var AttributeHydrator
-     */
-    private $attributeHydrator;
+    private AttributeHydrator $attributeHydrator;
 
-    /**
-     * @var Manager
-     */
-    private $thumbnailManager;
+    private Manager $thumbnailManager;
 
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
+    private MediaServiceInterface $mediaService;
 
-    /**
-     * @var Connection
-     */
-    private $database;
+    private Connection $connection;
 
-    public function __construct(AttributeHydrator $attributeHydrator, Manager $thumbnailManager, MediaServiceInterface $mediaService, Connection $database)
-    {
+    public function __construct(
+        AttributeHydrator $attributeHydrator,
+        Manager $thumbnailManager,
+        MediaServiceInterface $mediaService,
+        Connection $connection
+    ) {
         $this->attributeHydrator = $attributeHydrator;
         $this->thumbnailManager = $thumbnailManager;
         $this->mediaService = $mediaService;
-        $this->database = $database;
+        $this->connection = $connection;
     }
 
     /**
-     * @return Struct\Media
+     * @return Media
      */
     public function hydrate(array $data)
     {
-        $media = new Struct\Media();
+        $media = new Media();
 
         $translation = $this->getTranslation($data, '__media');
         $data = array_merge($data, $translation);
@@ -124,7 +118,7 @@ class MediaHydrator extends Hydrator
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Media
+     * @return Media
      */
     public function hydrateProductImage(array $data)
     {
@@ -143,15 +137,15 @@ class MediaHydrator extends Hydrator
         return $media;
     }
 
-    private function isUpdateRequired(Struct\Media $media, array $data): bool
+    private function isUpdateRequired(Media $media, array $data): bool
     {
-        if ($media->getType() !== Struct\Media::TYPE_IMAGE) {
+        if ($media->getType() !== Media::TYPE_IMAGE) {
             return false;
         }
-        if (!array_key_exists('__media_width', $data)) {
+        if (!\array_key_exists('__media_width', $data)) {
             return false;
         }
-        if (!array_key_exists('__media_height', $data)) {
+        if (!\array_key_exists('__media_height', $data)) {
             return false;
         }
         if ($data['__media_width'] !== null && $data['__media_height'] !== null) {
@@ -181,11 +175,11 @@ class MediaHydrator extends Hydrator
                 $retina = null;
             }
 
-            if (!empty($retina)) {
+            if (\is_string($retina) && $retina !== '') {
                 $retina = $this->mediaService->getUrl($retina);
             }
 
-            $thumbnails[] = new Struct\Thumbnail(
+            $thumbnails[] = new Thumbnail(
                 $this->mediaService->getUrl($row['source']),
                 $retina,
                 $row['maxWidth'],
@@ -198,8 +192,12 @@ class MediaHydrator extends Hydrator
 
     private function updateMedia(array $data): array
     {
-        list($width, $height) = getimagesizefromstring($this->mediaService->read($data['__media_path']));
-        $this->database->executeUpdate(
+        $imageSize = getimagesizefromstring((string) $this->mediaService->read($data['__media_path']));
+        if (!\is_array($imageSize)) {
+            throw new RuntimeException(\sprintf('Could not get image size from "%s"', $data['__media_path']));
+        }
+        [$width, $height] = $imageSize;
+        $this->connection->executeUpdate(
             'UPDATE s_media SET width = :width, height = :height WHERE id = :id',
             [
                 ':width' => $width,
@@ -220,7 +218,7 @@ class MediaHydrator extends Hydrator
             return false;
         }
 
-        if ($type !== Media::TYPE_VECTOR && $type !== Media::TYPE_IMAGE) {
+        if ($type !== MediaModel::TYPE_VECTOR && $type !== MediaModel::TYPE_IMAGE) {
             return false;
         }
 

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Cart;
@@ -40,6 +40,8 @@ class ProportionalTaxCalculator implements ProportionalTaxCalculatorInterface
         $taxes = [];
 
         foreach ($sumByTaxes as $taxRate => $price) {
+            $taxRate = (float) $taxRate;
+
             if ((float) $price === 0.0) {
                 $taxes[] = new Price(0.0, 0.0, $taxRate, 0.0);
                 continue;
@@ -69,7 +71,7 @@ class ProportionalTaxCalculator implements ProportionalTaxCalculatorInterface
         foreach ($prices as $price) {
             $key = md5((string) $price->getTaxRate());
 
-            if (!array_key_exists($key, $discounts)) {
+            if (!\array_key_exists($key, $discounts)) {
                 $discounts[$key] = [
                     'price' => 0,
                     'netPrice' => 0,
@@ -99,13 +101,13 @@ class ProportionalTaxCalculator implements ProportionalTaxCalculatorInterface
             return $price->getTaxRate();
         }, $prices);
 
-        return count(array_unique($taxes)) > 1;
+        return \count(array_unique($taxes)) > 1;
     }
 
     /**
      * @param Price[] $prices
      *
-     * @return array
+     * @return array<string|int, float>
      */
     protected function sumByTax(array $prices)
     {
@@ -113,7 +115,7 @@ class ProportionalTaxCalculator implements ProportionalTaxCalculatorInterface
         foreach ($prices as $price) {
             $key = (string) $price->getTaxRate();
             $taxPrice = 0;
-            if (array_key_exists($key, $sum)) {
+            if (\array_key_exists($key, $sum)) {
                 $taxPrice = $sum[$key];
             }
 

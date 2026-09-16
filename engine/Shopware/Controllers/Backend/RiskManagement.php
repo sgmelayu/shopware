@@ -1,26 +1,28 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
+
+use Shopware\Models\Payment\RuleSet;
 
 /**
  * This controller handles all actions made by the user in the premium module.
@@ -42,7 +44,7 @@ class Shopware_Controllers_Backend_RiskManagement extends Shopware_Controllers_B
      */
     public function preDispatch()
     {
-        if (!in_array($this->Request()->getActionName(), ['index', 'load'])) {
+        if (!\in_array($this->Request()->getActionName(), ['index', 'load'])) {
             $this->Front()->Plugins()->Json()->setRenderer(true);
         }
     }
@@ -53,7 +55,7 @@ class Shopware_Controllers_Backend_RiskManagement extends Shopware_Controllers_B
     public function getPaymentsAction()
     {
         try {
-            $builder = Shopware()->Models()->createQueryBuilder();
+            $builder = $this->get('models')->createQueryBuilder();
             $builder->select(['payment', 'ruleSets'])
                     ->from('Shopware\Models\Payment\Payment', 'payment');
             $builder->leftJoin('payment.ruleSets', 'ruleSets');
@@ -61,10 +63,10 @@ class Shopware_Controllers_Backend_RiskManagement extends Shopware_Controllers_B
             $builder->addOrderBy('payment.id');
 
             $result = $builder->getQuery()->getArrayResult();
-            $total = Shopware()->Models()->getQueryCount($builder->getQuery());
+            $total = $this->get('models')->getQueryCount($builder->getQuery());
 
             // Translate the payment methods
-            $translationComponent = $this->get(\Shopware_Components_Translation::class);
+            $translationComponent = $this->get(Shopware_Components_Translation::class);
             $result = $translationComponent->translatePaymentMethods($result);
 
             $this->View()->assign(['success' => true, 'data' => $result, 'total' => $total]);
@@ -82,10 +84,10 @@ class Shopware_Controllers_Backend_RiskManagement extends Shopware_Controllers_B
         try {
             $params = $this->Request()->getParams();
 
-            $ruleModel = Shopware()->Models()->find('\Shopware\Models\Payment\RuleSet', $params['id']);
+            $ruleModel = $this->get('models')->find(RuleSet::class, $params['id']);
 
-            Shopware()->Models()->remove($ruleModel);
-            Shopware()->Models()->flush();
+            $this->get('models')->remove($ruleModel);
+            $this->get('models')->flush();
 
             $this->View()->assign(['success' => true, 'data' => $params]);
         } catch (Exception $e) {
@@ -108,34 +110,28 @@ class Shopware_Controllers_Backend_RiskManagement extends Shopware_Controllers_B
             unset($params['action']);
             unset($params['_dc']);
 
-            //2-dimensional array
-            if ($params[0]) {
+            // 2-dimensional array
+            if (!empty($params[0])) {
                 $data = [];
                 foreach ($params as $values) {
-                    /**
-                     * @var Shopware\Models\Payment\RuleSet
-                     */
-                    $ruleModel = Shopware()->Models()->find('\Shopware\Models\Payment\RuleSet', $values['id']);
+                    $ruleModel = $this->get('models')->find(RuleSet::class, $values['id']);
 
                     $ruleModel->fromArray($values);
 
-                    Shopware()->Models()->persist($ruleModel);
-                    Shopware()->Models()->flush();
-                    $data[] = Shopware()->Models()->toArray($ruleModel);
+                    $this->get('models')->persist($ruleModel);
+                    $this->get('models')->flush();
+                    $data[] = $this->get('models')->toArray($ruleModel);
                 }
                 $this->View()->assign(['success' => true, 'data' => $data]);
             } else {
-                /**
-                 * @var Shopware\Models\Payment\RuleSet
-                 */
-                $ruleModel = Shopware()->Models()->find('\Shopware\Models\Payment\RuleSet', $params['id']);
+                $ruleModel = $this->get('models')->find(RuleSet::class, $params['id']);
 
                 $ruleModel->fromArray($params);
 
-                Shopware()->Models()->persist($ruleModel);
-                Shopware()->Models()->flush();
+                $this->get('models')->persist($ruleModel);
+                $this->get('models')->flush();
 
-                $data = Shopware()->Models()->toArray($ruleModel);
+                $data = $this->get('models')->toArray($ruleModel);
 
                 $this->View()->assign(['success' => true, 'data' => $data]);
             }
@@ -153,13 +149,13 @@ class Shopware_Controllers_Backend_RiskManagement extends Shopware_Controllers_B
         try {
             $params = $this->Request()->getParams();
 
-            $ruleModel = new Shopware\Models\Payment\RuleSet();
+            $ruleModel = new RuleSet();
             $ruleModel->fromArray($params);
 
-            Shopware()->Models()->persist($ruleModel);
-            Shopware()->Models()->flush();
+            $this->get('models')->persist($ruleModel);
+            $this->get('models')->flush();
 
-            $this->View()->assign(['success' => true, 'data' => Shopware()->Models()->toArray($ruleModel)]);
+            $this->View()->assign(['success' => true, 'data' => $this->get('models')->toArray($ruleModel)]);
         } catch (Exception $e) {
             $this->View()->assign(['success' => false, 'errorMsg' => $e->getMessage()]);
         }

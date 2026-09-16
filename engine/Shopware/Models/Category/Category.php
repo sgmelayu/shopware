@@ -1,35 +1,36 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Category;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
 use Shopware\Models\ProductStream\ProductStream;
-use Shopware\Models\Shop\Shop;
 
 /**
  * Shopware Categories
@@ -251,7 +252,7 @@ class Category extends ModelEntity
      *
      * @ORM\Column(name="product_box_layout", type="string", length=50, nullable=true)
      */
-    private $productBoxLayout = null;
+    private $productBoxLayout;
 
     /**
      * @var bool
@@ -344,14 +345,14 @@ class Category extends ModelEntity
     private $allArticles;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="changed", type="datetime", nullable=false)
      */
     private $changed;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="added", type="datetime", nullable=false)
      */
@@ -381,8 +382,8 @@ class Category extends ModelEntity
         $this->allArticles = new ArrayCollection();
         $this->emotions = new ArrayCollection();
         $this->manualSorting = new ArrayCollection();
-        $this->changed = new \DateTime();
-        $this->added = new \DateTime();
+        $this->changed = new DateTime();
+        $this->added = new DateTime();
     }
 
     /**
@@ -396,7 +397,7 @@ class Category extends ModelEntity
     }
 
     /**
-     * @return int|null
+     * @return int
      */
     public function getId()
     {
@@ -430,7 +431,7 @@ class Category extends ModelEntity
      *
      * @return Category
      */
-    public function setParent(Category $parent = null)
+    public function setParent(?Category $parent = null)
     {
         $this->parent = $parent;
 
@@ -546,14 +547,14 @@ class Category extends ModelEntity
     }
 
     /**
-     * @param \DateTimeInterface|string $changed
+     * @param DateTimeInterface|string $changed
      *
      * @return Category
      */
     public function setChanged($changed = 'now')
     {
-        if (!$changed instanceof \DateTimeInterface) {
-            $this->changed = new \DateTime($changed);
+        if (!$changed instanceof DateTimeInterface) {
+            $this->changed = new DateTime($changed);
         } else {
             $this->changed = $changed;
         }
@@ -562,7 +563,7 @@ class Category extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getChanged()
     {
@@ -570,7 +571,7 @@ class Category extends ModelEntity
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getAdded()
     {
@@ -980,7 +981,7 @@ class Category extends ModelEntity
      *
      * @return bool
      */
-    public function isChildOf(\Shopware\Models\Category\Category $parent)
+    public function isChildOf(Category $parent)
     {
         return $this->isChildOfInternal($this, $parent);
     }
@@ -1029,7 +1030,7 @@ class Category extends ModelEntity
         return $this->stream;
     }
 
-    public function setStream(ProductStream $stream = null)
+    public function setStream(?ProductStream $stream = null)
     {
         $this->stream = $stream;
     }
@@ -1101,7 +1102,7 @@ class Category extends ModelEntity
     /**
      * @param string $shops
      *
-     * @return $this
+     * @return Category
      */
     public function setShops($shops)
     {
@@ -1120,8 +1121,6 @@ class Category extends ModelEntity
 
     /**
      * @param ManualSorting[]|null $manualSorting
-     *
-     * @return $this
      */
     public function setManualSorting(?array $manualSorting): Category
     {

@@ -23,7 +23,6 @@
  * The Enlight_Components_Mail is a component for sending an email. It extends the zend form
  * with php mailer functions.
  *
- *
  * @license    http://enlight.de/license     New BSD License
  */
 class Enlight_Components_Mail extends Zend_Mail
@@ -38,37 +37,37 @@ class Enlight_Components_Mail extends Zend_Mail
     /**
      * Mail address from the mail sender
      *
-     * @var array|string|null
+     * @var string|null
      */
-    protected $_fromName = null;
+    protected $_fromName;
 
     /**
      * Property for the plain body
      *
      * @var null
      */
-    protected $_plainBody = null;
+    protected $_plainBody;
 
     /**
      * Property for the plain body text. Can be filled by setBodyText function.
      *
-     * @var null
+     * @var string|null
      */
-    protected $_plainBodyText = null;
+    protected $_plainBodyText;
 
     /**
      * Property for the plain subject. Can be filled by setSubject function.
      *
-     * @var null
+     * @var string|null
      */
-    protected $_plainSubject = null;
+    protected $_plainSubject;
 
     /**
      * Property for the template name. Can be filled by setTemplateName function.
      *
-     * @var null
+     * @var string|null
      */
-    protected $templateName = null;
+    protected $templateName;
 
     /**
      * @var array
@@ -117,32 +116,28 @@ class Enlight_Components_Mail extends Zend_Mail
      *
      * @param string $name
      *
-     * @return string|\unknown|null
+     * @return string|null
      */
     public function __get($name)
     {
         switch ($name) {
             case 'From':
                 return $this->getFrom();
-                break;
             case 'FromName':
                 return $this->getFromName();
-                break;
             case 'Subject':
                 return $this->getSubject();
-                break;
             case 'Body':
                 if ($this->_isHtml) {
                     return $this->_plainBody;
                 }
 
-                    return $this->_plainBodyText;
-
-                break;
+                return $this->_plainBodyText;
             case 'AltBody':
                 return $this->_plainBodyText;
-                break;
         }
+
+        throw new RuntimeException(\sprintf('Could not read value for given name: "%s"', $name));
     }
 
     /**
@@ -187,8 +182,8 @@ class Enlight_Components_Mail extends Zend_Mail
     /**
      * Sets From-header and sender of the message
      *
-     * @param string $email
-     * @param string $name
+     * @param string      $email
+     * @param string|null $name
      *
      * @throws Zend_Mail_Exception if called subsequent times
      *
@@ -199,7 +194,7 @@ class Enlight_Components_Mail extends Zend_Mail
         // mitigate "pwnscriptum" attack
         // see https://framework.zend.com/security/advisory/ZF2016-04 for ZF2+ fix
         if (preg_match('/\\\"/', $email)) {
-            throw new \RuntimeException('Potential code injection in From header');
+            throw new RuntimeException('Potential code injection in From header');
         }
 
         $this->_fromName = $name;
@@ -222,7 +217,7 @@ class Enlight_Components_Mail extends Zend_Mail
     /**
      * Returns from name
      *
-     * @return unknown
+     * @return string|null
      */
     public function getFromName()
     {
@@ -336,7 +331,7 @@ class Enlight_Components_Mail extends Zend_Mail
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getTemplateName()
     {
@@ -386,6 +381,7 @@ class Enlight_Components_Mail extends Zend_Mail
      * @param Zend_Mail_Transport_Abstract $transport
      *
      * @return Zend_Mail Provides fluent interface
+     *
      * @events  Enlight_Components_Mail_Send
      */
     public function send($transport = null)
@@ -397,6 +393,10 @@ class Enlight_Components_Mail extends Zend_Mail
                 'transport' => $transport,
             ]
         );
+
+        if (!$this->getMessageId()) {
+            $this->setMessageId();
+        }
 
         return parent::send($transport);
     }

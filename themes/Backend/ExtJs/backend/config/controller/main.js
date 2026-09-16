@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Shopware_Config
@@ -52,14 +51,14 @@ Ext.define('Shopware.apps.Config.controller.Main', {
         'element.CustomFacetGrid'
     ],
 
-    stores:[
+    stores: [
         'main.Navigation',
         'main.Form'
     ],
 
-    models:[
+    models: [
         'main.Form', 'main.Navigation',
-        'main.Element' , 'main.Value',
+        'main.Element', 'main.Value',
         'main.ElementTranslation', 'main.FormTranslation'
     ],
 
@@ -69,6 +68,10 @@ Ext.define('Shopware.apps.Config.controller.Main', {
         { ref: 'panel', selector: 'config-main-panel' },
         { ref: 'form', selector: 'config-main-form' }
     ],
+
+    messages: {
+        configCouldNotBeSavedMassage: '{s name="form/message/config_could_not_be_saved"}{/s}',
+    },
 
     /**
      * The main window instance
@@ -108,9 +111,9 @@ Ext.define('Shopware.apps.Config.controller.Main', {
         });
         me.formStore.on('load', me.onLoadForm, me);
 
-        if(me.action) {
+        if (me.action) {
             me.formStore.load({
-                filters : [{
+                filters: [{
                     property: Ext.isNumeric(me.action) ? 'id' : 'name',
                     value: me.action
                 }]
@@ -135,13 +138,13 @@ Ext.define('Shopware.apps.Config.controller.Main', {
         }
         form = records[0];
 
-        if(form.associations.containsKey('getTranslation')) {
-            if(form.getTranslation().getAt(0) && form.getTranslation().getAt(0).get('label')) {
+        if (form.associations.containsKey('getTranslation')) {
+            if (form.getTranslation().getAt(0) && form.getTranslation().getAt(0).get('label')) {
                 form.data.label = form.getTranslation().getAt(0).get('label');
             }
         }
 
-        if(form.get('name') == 'Document') {
+        if (form.get('name') == 'Document') {
             controller = 'Document';
             me.getController('Form');
         } else {
@@ -154,10 +157,10 @@ Ext.define('Shopware.apps.Config.controller.Main', {
 
     onSelectForm: function(tree, record) {
         var me = this;
-        if(!record.data.id) {
+        if (!record.data.id) {
             return;
         }
-        if(!record.get('leaf')) {
+        if (!record.get('leaf')) {
             record.expand();
             return;
         }
@@ -166,7 +169,7 @@ Ext.define('Shopware.apps.Config.controller.Main', {
         panel.setLoading('Loading ' + record.get('label') + '...');
 
         me.formStore.load({
-            filters : [{
+            filters: [{
                 property: 'id',
                 value: record.data.id
             }]
@@ -180,7 +183,7 @@ Ext.define('Shopware.apps.Config.controller.Main', {
             store.load();
         } else {
             store.load({
-                filters : [{
+                filters: [{
                     property: 'search',
                     value: '%' + value + '%'
                 }]
@@ -196,13 +199,19 @@ Ext.define('Shopware.apps.Config.controller.Main', {
             values = basicForm.getFieldValues(),
             fieldName, fieldValue, valueStore;
 
+        if (!basicForm.isValid()) {
+            var messageTitle = '{s name="form/message/save_form_title"}Save form{/s}';
+            Shopware.Notification.createGrowlMessage(messageTitle, this.messages.configCouldNotBeSavedMassage);
+            return;
+        }
+
         form.getElements().each(function(element) {
             valueStore = element.getValues();
             valueStore.removeAll();
             me.shopStore.each(function(shop) {
-                fieldName = 'values[' + shop.get('id') + ']['+ element.get('id') + ']';
+                fieldName = 'values[' + shop.get('id') + '][' + element.get('id') + ']';
                 fieldValue = values[fieldName];
-                if(fieldValue !== null) {
+                if (fieldValue !== null) {
                     valueStore.add({
                         shopId: shop.get('id'),
                         value: fieldValue
@@ -218,19 +227,19 @@ Ext.define('Shopware.apps.Config.controller.Main', {
 
         form.store.add(form);
         form.store.sync({
-            success :function (records, operation) {
+            success: function (records, operation) {
                 var template = new Ext.Template('{s name="form/message/save_form_success"}Form „[name]“ has been saved.{/s}'),
                     message = template.applyTemplate({
                         name: form.data.label || form.data.name
                     });
                 Shopware.Notification.createGrowlMessage(title, message, win.title);
             },
-            failure:function (batch) {
+            failure: function (batch) {
                 var template = new Ext.Template('{s name="form/message/save_form_error"}Form „[name]“ could not be saved.{/s}'),
                     message = template.applyTemplate({
                         name: form.data.label || form.data.name
                     });
-                if(batch.proxy.reader.rawData.message) {
+                if (batch.proxy.reader.rawData.message) {
                     message += '<br />' + batch.proxy.reader.rawData.message;
                 }
                 Shopware.Notification.createGrowlMessage(title, message, win.title);
@@ -247,7 +256,7 @@ Ext.define('Shopware.apps.Config.controller.Main', {
             win = me.mainWindow,
             panel = win.contentPanel;
 
-        if(me.shopStore.isLoading()) {
+        if (me.shopStore.isLoading()) {
             Ext.defer(me.initForm, 100, me, [ form ]);
             return false;
         }

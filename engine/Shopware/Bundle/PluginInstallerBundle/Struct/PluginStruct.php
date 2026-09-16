@@ -1,35 +1,42 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle\Struct;
 
-class PluginStruct implements \JsonSerializable
+use DateTimeInterface;
+use JsonSerializable;
+use Shopware\Components\ObjectJsonSerializeTraitDeprecated;
+
+class PluginStruct implements JsonSerializable
 {
+    use ObjectJsonSerializeTraitDeprecated;
+
     /**
      * @var int
      *
      * @unique
+     *
      * @optional
      */
     private $id;
@@ -38,6 +45,7 @@ class PluginStruct implements \JsonSerializable
      * @var string
      *
      * @unique
+     *
      * @required
      */
     private $technicalName;
@@ -78,12 +86,12 @@ class PluginStruct implements \JsonSerializable
     private $exampleUrl;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      */
     private $installationDate;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      */
     private $updateDate;
 
@@ -160,7 +168,7 @@ class PluginStruct implements \JsonSerializable
     private $installationManual;
 
     /**
-     * @var string
+     * @var array<array<string, string>>
      */
     private $changelog;
 
@@ -301,7 +309,7 @@ class PluginStruct implements \JsonSerializable
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getInstallationDate()
     {
@@ -309,7 +317,7 @@ class PluginStruct implements \JsonSerializable
     }
 
     /**
-     * @param \DateTimeInterface $installationDate
+     * @param DateTimeInterface $installationDate
      */
     public function setInstallationDate($installationDate)
     {
@@ -378,14 +386,6 @@ class PluginStruct implements \JsonSerializable
     public function setInstallationManual($installationManual)
     {
         $this->installationManual = $installationManual;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function jsonSerialize()
-    {
-        return get_object_vars($this);
     }
 
     /**
@@ -629,7 +629,7 @@ class PluginStruct implements \JsonSerializable
     }
 
     /**
-     * @return string
+     * @return array<array<string, string>>
      */
     public function getChangelog()
     {
@@ -637,7 +637,7 @@ class PluginStruct implements \JsonSerializable
     }
 
     /**
-     * @param string $changelog
+     * @param array<array<string, string>> $changelog
      */
     public function setChangelog($changelog)
     {
@@ -709,7 +709,7 @@ class PluginStruct implements \JsonSerializable
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getUpdateDate()
     {
@@ -717,7 +717,7 @@ class PluginStruct implements \JsonSerializable
     }
 
     /**
-     * @param \DateTimeInterface $updateDate
+     * @param DateTimeInterface $updateDate
      */
     public function setUpdateDate($updateDate)
     {

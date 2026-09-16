@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Shop\TemplateConfig;
@@ -39,12 +39,12 @@ class Element extends ModelEntity
      * @var Template
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Shop\Template", inversedBy="elements")
-     * @ORM\JoinColumn(name="template_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="template_id", referencedColumnName="id", nullable=false)
      */
     protected $template;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Shop\TemplateConfig\Value>
+     * @var ArrayCollection<Value>
      *
      * @ORM\OneToMany(
      *     targetEntity="Shopware\Models\Shop\TemplateConfig\Value",
@@ -77,9 +77,9 @@ class Element extends ModelEntity
     protected $position = 0;
 
     /**
-     * @var array
+     * @var array|null
      *
-     * @ORM\Column(name="default_value", type="array", nullable=false)
+     * @ORM\Column(name="default_value", type="array", nullable=true)
      */
     protected $defaultValue;
 
@@ -88,21 +88,21 @@ class Element extends ModelEntity
      *
      * @ORM\Column(name="selection", type="array", nullable=true)
      */
-    protected $selection = null;
+    protected $selection;
 
     /**
      * @var string|null
      *
      * @ORM\Column(name="field_label", type="string", nullable=true)
      */
-    protected $fieldLabel = null;
+    protected $fieldLabel;
 
     /**
      * @var string|null
      *
      * @ORM\Column(name="support_text", type="string", nullable=true)
      */
-    protected $supportText = null;
+    protected $supportText;
 
     /**
      * @var bool
@@ -119,9 +119,9 @@ class Element extends ModelEntity
     protected $lessCompatible = true;
 
     /**
-     * @var string
+     * @var string|null
      *
-     * @ORM\Column(name="attributes", type="array", nullable=false)
+     * @ORM\Column(name="attributes", type="array", nullable=true)
      */
     protected $attributes;
 
@@ -129,7 +129,7 @@ class Element extends ModelEntity
      * @var Layout
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Shop\TemplateConfig\Layout", inversedBy="elements")
-     * @ORM\JoinColumn(name="container_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="container_id", referencedColumnName="id", nullable=false)
      */
     protected $container;
 
@@ -210,7 +210,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Shop\Template $template
+     * @param Template $template
      */
     public function setTemplate($template)
     {
@@ -218,7 +218,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Shop\Template
+     * @return Template
      */
     public function getTemplate()
     {
@@ -242,7 +242,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @param array $defaultValue
+     * @param array|null $defaultValue
      */
     public function setDefaultValue($defaultValue)
     {
@@ -250,7 +250,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @return array
+     * @return array|null
      */
     public function getDefaultValue()
     {
@@ -274,22 +274,22 @@ class Element extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Shop\TemplateConfig\Value[]|null $values
+     * @param Value[]|null $values
      *
-     * @return \Shopware\Components\Model\ModelEntity
+     * @return ModelEntity
      */
     public function setValues($values)
     {
         return $this->setOneToMany(
             $values,
-            \Shopware\Models\Shop\TemplateConfig\Value::class,
+            Value::class,
             'values',
             'element'
         );
     }
 
     /**
-     * @return \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Shop\TemplateConfig\Value>
+     * @return ArrayCollection<Value>
      */
     public function getValues()
     {
@@ -358,7 +358,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Shop\TemplateConfig\Layout $container
+     * @param Layout $container
      */
     public function setContainer($container)
     {
@@ -366,7 +366,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Shop\TemplateConfig\Layout
+     * @return Layout
      */
     public function getContainer()
     {
@@ -374,7 +374,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getAttributes()
     {
@@ -382,7 +382,7 @@ class Element extends ModelEntity
     }
 
     /**
-     * @param string $attributes
+     * @param string|null $attributes
      */
     public function setAttributes($attributes)
     {

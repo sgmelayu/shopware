@@ -1,30 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Install\Command;
 
+use Exception;
+use PDO;
+use PDOException;
 use Pimple\Container;
+use RuntimeException;
 use Shopware\Recovery\Common\DumpIterator;
 use Shopware\Recovery\Common\IOHelper;
 use Shopware\Recovery\Install\DatabaseFactory;
@@ -204,7 +208,7 @@ class InstallCommand extends Command
         try {
             $this->IOHelper->writeln('Checking ping to: ' . $pingUrl);
             $webserverCheck->checkPing($shop);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->IOHelper->writeln('Could not verify web server' . $e->getMessage());
 
             return false;
@@ -216,7 +220,7 @@ class InstallCommand extends Command
     /**
      * @param string[] $locales
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      *
      * @return string
      */
@@ -256,8 +260,8 @@ class InstallCommand extends Command
         $adminUser->locale = $input->getOption('admin-locale');
         $adminUser->name = $input->getOption('admin-name');
 
-        if ($adminUser->locale && !in_array($adminUser->locale, Locale::getValidLocales())) {
-            throw new \RuntimeException('Invalid admin-locale provided');
+        if ($adminUser->locale && !\in_array($adminUser->locale, Locale::getValidLocales())) {
+            throw new RuntimeException('Invalid admin-locale provided');
         }
 
         return $adminUser;
@@ -310,13 +314,13 @@ class InstallCommand extends Command
         $this->IOHelper->writeln('<info>=== Shop Information ===</info>');
 
         $shop->locale = $this->askForShopShopLocale(Locale::getValidLocales(), $shop->locale);
-        $shop->host = $this->IOHelper->ask(sprintf('Shop host (%s): ', $shop->host), $shop->host);
-        $shop->basePath = $this->IOHelper->ask(sprintf('Shop base path (%s): ', $shop->basePath), $shop->basePath);
-        $shop->name = $this->IOHelper->ask(sprintf('Shop name (%s): ', $shop->name), $shop->name);
-        $shop->email = $this->IOHelper->ask(sprintf('Shop email (%s): ', $shop->email), $shop->email);
+        $shop->host = $this->IOHelper->ask(\sprintf('Shop host (%s): ', $shop->host), $shop->host);
+        $shop->basePath = $this->IOHelper->ask(\sprintf('Shop base path (%s): ', $shop->basePath), $shop->basePath);
+        $shop->name = $this->IOHelper->ask(\sprintf('Shop name (%s): ', $shop->name), $shop->name);
+        $shop->email = $this->IOHelper->ask(\sprintf('Shop email (%s): ', $shop->email), $shop->email);
 
         $question = new ChoiceQuestion(
-            sprintf('Shop currency (%s): ', $shop->currency),
+            \sprintf('Shop currency (%s): ', $shop->currency),
             Currency::getValidCurrencies(),
             $shop->currency
         );
@@ -338,15 +342,15 @@ class InstallCommand extends Command
         $shop->locale = $input->getOption('shop-locale');
         $shop->currency = $input->getOption('shop-currency');
 
-        if ($shop->locale && !in_array($shop->locale, Locale::getValidLocales())) {
-            throw new \RuntimeException('Invalid shop-locale provided');
+        if ($shop->locale && !\in_array($shop->locale, Locale::getValidLocales())) {
+            throw new RuntimeException('Invalid shop-locale provided');
         }
 
         return $shop;
     }
 
     /**
-     * @return \PDO
+     * @return PDO
      */
     protected function initDatabaseConnection(DatabaseConnectionInformation $connectionInfo, Container $container)
     {
@@ -399,9 +403,9 @@ class InstallCommand extends Command
             $pdo = null;
             try {
                 $pdo = $databaseFactory->createPDOConnection($databaseConnectionInformation);
-            } catch (\PDOException $e) {
+            } catch (PDOException $e) {
                 $IOHelper->writeln('');
-                $IOHelper->writeln(sprintf('Got database error: %s', $e->getMessage()));
+                $IOHelper->writeln(\sprintf('Got database error: %s', $e->getMessage()));
                 $IOHelper->writeln('');
 
                 $databaseConnectionInformation = $databaseInteractor->askDatabaseConnectionInformation(
@@ -417,7 +421,7 @@ class InstallCommand extends Command
 
         $defaultChoice = null;
         if ($connectionInfo->databaseName) {
-            if (in_array($connectionInfo->databaseName, $databaseNames)) {
+            if (\in_array($connectionInfo->databaseName, $databaseNames)) {
                 $defaultChoice = array_search($connectionInfo->databaseName, $databaseNames);
             }
         }
@@ -650,7 +654,7 @@ class InstallCommand extends Command
      */
     private function importDatabase()
     {
-        /** @var \PDO $conn */
+        /** @var PDO $conn */
         $conn = $this->getContainer()->offsetGet('db');
 
         $this->IOHelper->cls();
@@ -673,7 +677,7 @@ EOT;
     {
         $this->IOHelper->writeln('<info>=== Import Snippets ===</info>');
 
-        /** @var \PDO $conn */
+        /** @var PDO $conn */
         $conn = $this->getContainer()->offsetGet('db');
 
         $preSql = '
@@ -691,7 +695,7 @@ EOT;
         $this->dumpProgress($conn, $dump);
     }
 
-    private function dumpProgress(\PDO $conn, DumpIterator $dump)
+    private function dumpProgress(PDO $conn, DumpIterator $dump)
     {
         $totalCount = $dump->count();
 
@@ -727,7 +731,7 @@ EOT;
         try {
             $licenseInformation = $licenseService->evaluateLicense($licenseUnpackRequest);
             $licenseInstaller->installLicense($licenseInformation);
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $this->IOHelper->writeln('<error>Could not validate license</error>');
             $this->askShopwareEdition($shop, $licenseService, $licenseInstaller);
         }
@@ -776,9 +780,9 @@ EOT;
 
         $this->IOHelper->cls();
         $this->IOHelper->printBanner();
-        $this->IOHelper->writeln(sprintf('<info>Welcome to the Shopware %s installer</info>', $version));
+        $this->IOHelper->writeln(\sprintf('<info>Welcome to the Shopware %s installer</info>', $version));
         $this->IOHelper->writeln('');
-        $this->IOHelper->ask(new Question('Press return to start installation.'));
+        $this->IOHelper->ask(new Question('Press return to start installation.', \PHP_EOL));
         $this->IOHelper->cls();
     }
 

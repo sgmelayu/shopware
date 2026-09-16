@@ -1,53 +1,48 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Cart;
 
 use Doctrine\DBAL\Connection;
 use Enlight_Components_Session_Namespace as Session;
+use PDO;
 
 class CartPersistService implements CartPersistServiceInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
+
+    private Session $session;
 
     /**
-     * @var Session
+     * @var array<int, array<string, mixed>>
      */
-    private $session;
+    private array $cart = [];
 
     /**
-     * @var array
+     * @var array<int, array<string, mixed>>
      */
-    private $cart;
-
-    /**
-     * @var array
-     */
-    private $cartAttributes;
+    private array $cartAttributes = [];
 
     public function __construct(Connection $connection, Session $session)
     {
@@ -64,7 +59,7 @@ class CartPersistService implements CartPersistServiceInterface
             ->andWhere('cart.sessionId = :sessionId')
             ->setParameter('sessionId', $this->session->get('sessionId'))
             ->execute()
-            ->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_UNIQUE | \PDO::FETCH_ASSOC);
+            ->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
 
         if (empty($this->cart)) {
             return;
@@ -80,7 +75,7 @@ class CartPersistService implements CartPersistServiceInterface
                 $qb->expr()->in('cartAttributes.basketID', $ids)
             )
             ->execute()
-            ->fetchAll(\PDO::FETCH_GROUP | \PDO::FETCH_UNIQUE | \PDO::FETCH_ASSOC);
+            ->fetchAll(PDO::FETCH_GROUP | PDO::FETCH_UNIQUE | PDO::FETCH_ASSOC);
     }
 
     public function persist(): void

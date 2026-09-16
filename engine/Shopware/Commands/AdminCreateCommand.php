@@ -1,29 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use DateTime;
+use Exception;
+use InvalidArgumentException;
+use RuntimeException;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\User\Role;
 use Shopware\Models\User\User;
@@ -105,21 +110,17 @@ class AdminCreateCommand extends ShopwareCommand
         $user->setEmail($input->getOption('email'));
         $user->setUsername($input->getOption('username'));
         $user->setName($input->getOption('name'));
-        $user->setLockedUntil(new \DateTime('2010-01-01 00:00:00'));
+        $user->setLockedUntil(new DateTime('2010-01-01 00:00:00'));
         $this->setPassword($user, $input->getOption('password'));
 
         $this->persistUser($user);
 
-        $io->success(sprintf('Adminuser "%s" was successfully created.', $user->getUsername()));
+        $io->success(\sprintf('Adminuser "%s" was successfully created.', $user->getUsername()));
 
         return 0;
     }
 
-    /**
-     * @param string $field
-     * @param string $label
-     */
-    private function fillOption($field, $label, InputInterface $input, OutputInterface $output)
+    private function fillOption(string $field, string $label, InputInterface $input, OutputInterface $output): void
     {
         $io = new SymfonyStyle($input, $output);
 
@@ -129,27 +130,17 @@ class AdminCreateCommand extends ShopwareCommand
         );
     }
 
-    /**
-     * @return Role
-     */
-    private function getAdminRole()
+    private function getAdminRole(): Role
     {
-        /** @var ModelManager $em */
-        $em = $this->container->get(\Shopware\Components\Model\ModelManager::class);
+        $role = $this->container->get(ModelManager::class)->getRepository(Role::class)->findOneBy(['name' => 'local_admins']);
+        if (!$role instanceof Role) {
+            throw new ModelNotFoundException(Role::class, 'local_admins', 'name');
+        }
 
-        /** @var Role $return */
-        $return = $em->getRepository(\Shopware\Models\User\Role::class)
-            ->findOneBy(['name' => 'local_admins']);
-
-        return $return;
+        return $role;
     }
 
-    /**
-     * @param string $locale
-     *
-     * @return int
-     */
-    private function getLocaleIdFromLocale($locale)
+    private function getLocaleIdFromLocale(string $locale): int
     {
         $locales = [
             'de_de' => 1,
@@ -162,38 +153,30 @@ class AdminCreateCommand extends ShopwareCommand
             return $locales[$locale];
         }
 
-        throw new \RuntimeException(sprintf('Backend Locale "%s" not supported', $locale));
+        throw new RuntimeException(\sprintf('Backend Locale "%s" not supported', $locale));
     }
 
-    /**
-     * @param string $plainPassword
-     */
-    private function setPassword(User $user, $plainPassword)
+    private function setPassword(User $user, string $plainPassword): void
     {
-        /** @var \Shopware\Components\Password\Manager $passworEncoderRegistry */
-        $passworEncoderRegistry = $this->getContainer()->get('passwordencoder');
-        $defaultEncoderName = $passworEncoderRegistry->getDefaultPasswordEncoderName();
-        $encoder = $passworEncoderRegistry->getEncoderByName($defaultEncoderName);
+        $passwordEncoderRegistry = $this->getContainer()->get('passwordencoder');
+        $defaultEncoderName = $passwordEncoderRegistry->getDefaultPasswordEncoderName();
+        $encoder = $passwordEncoderRegistry->getEncoderByName($defaultEncoderName);
 
         $user->setPassword($encoder->encodePassword($plainPassword));
         $user->setEncoder($encoder->getName());
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
-    private function persistUser(User $user)
+    private function persistUser(User $user): void
     {
-        /** @var ModelManager $em */
-        $em = $this->container->get(\Shopware\Components\Model\ModelManager::class);
+        $em = $this->container->get(ModelManager::class);
         $em->persist($user);
         $em->flush($user);
     }
 
-    /**
-     * @return User
-     */
-    private function createAdminUser()
+    private function createAdminUser(): User
     {
         $adminRole = $this->getAdminRole();
 
@@ -204,31 +187,31 @@ class AdminCreateCommand extends ShopwareCommand
         return $user;
     }
 
-    private function validateInput(InputInterface $input)
+    private function validateInput(InputInterface $input): void
     {
         $option = $input->getOption('email');
         if (empty($option)) {
-            throw new \InvalidArgumentException('Email is required');
+            throw new InvalidArgumentException('Email is required');
         }
 
         $option = $input->getOption('name');
         if (empty($option)) {
-            throw new \InvalidArgumentException('Name is required');
+            throw new InvalidArgumentException('Name is required');
         }
 
         $option = $input->getOption('username');
         if (empty($option)) {
-            throw new \InvalidArgumentException('Username is required');
+            throw new InvalidArgumentException('Username is required');
         }
 
         $option = $input->getOption('locale');
         if (empty($option)) {
-            throw new \InvalidArgumentException('Locale is required');
+            throw new InvalidArgumentException('Locale is required');
         }
 
         $option = $input->getOption('password');
         if (empty($option)) {
-            throw new \InvalidArgumentException('Password is required');
+            throw new InvalidArgumentException('Password is required');
         }
     }
 }

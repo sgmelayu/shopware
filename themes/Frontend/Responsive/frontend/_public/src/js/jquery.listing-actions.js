@@ -745,8 +745,8 @@
             var tempParams = {};
 
             $.each(formData, function (index, item) {
-                if (item['value']) {
-                    tempParams[item['name']] = item['value'];
+                if (item.value !== null) {
+                    tempParams[item.name] = item.value;
                 }
             });
 
@@ -770,7 +770,7 @@
             var urlParams = window.location.search.substr(1),
                 categoryParams = this.setCategoryParamsFromUrlParams(urlParams);
 
-            $.publish('plugin/swListingActions/onSetCategoryParamsFromData', [this, categoryParams]);
+            $.publish('plugin/swListingActions/onSetCategoryParamsFromTopLocation', [this, categoryParams]);
 
             return categoryParams;
         },
@@ -974,7 +974,7 @@
             var formData = this.$filterForm.serializeArray();
 
             $.each(formData, function (index, item) {
-                if (!params.hasOwnProperty(item.name)) {
+                if (!Object.prototype.hasOwnProperty.call(params, item.name)) {
                     if (!item.value || (typeof item.value === 'string' && item.value.length <= 0)) {
                         return;
                     }
@@ -1006,12 +1006,24 @@
                 url: this.buildListingUrl(params, loadFacets, loadProducts),
                 success: function (textResponse, status, ajaxResponse) {
                     var $textResponse = $($.parseHTML(textResponse, document, true)),
+                        facets = $textResponse.find('#facets').html(),
+                        listing = $textResponse.find('#listing').html(),
+                        pagination = $textResponse.find('#pagination').html(),
                         response = {
-                        totalCount: parseInt(ajaxResponse.getResponseHeader('Shopware-Listing-Total')),
-                        facets: $textResponse.find('#facets').html(),
-                        listing: $textResponse.find('#listing').html(),
-                        pagination: $textResponse.find('#pagination').html(),
-                    };
+                            totalCount: parseInt(ajaxResponse.getResponseHeader('Shopware-Listing-Total'))
+                        };
+
+                    if (facets) {
+                        response.facets = JSON.parse(facets);
+                    }
+
+                    if (listing) {
+                        response.listing = listing;
+                    }
+
+                    if (pagination) {
+                        response.pagination = pagination;
+                    }
 
                     callback.apply(me, [response, status, ajaxResponse]);
                 }
@@ -1140,7 +1152,7 @@
                 listing = this.$listing,
                 pages;
 
-            if (!response.hasOwnProperty('listing')) {
+            if (!Object.prototype.hasOwnProperty.call(response, 'listing')) {
                 listing.removeClass(this.opts.isLoadingCls);
                 return;
             }
@@ -1362,8 +1374,8 @@
          */
         createActiveFilterElement: function (param, label) {
             this.activeFilterElements[param] = $('<span>', {
-                'class': this.opts.activeFilterCls,
-                'html': this.getLabelIcon() + label,
+                class: this.opts.activeFilterCls,
+                html: this.getLabelIcon() + label,
                 'data-filter-param': param
             }).appendTo(this.$activeFilterCont);
 
@@ -1502,7 +1514,7 @@
         getLabelIcon: function () {
             var icon = '<span class="' + this.opts.activeFilterIconCls + '"></span>';
 
-            $.publish('plugin/swListingActions/onCreateStarLabel', [this, icon]);
+            $.publish('plugin/swListingActions/onGetLabelIcon', [this, icon]);
 
             return icon;
         },

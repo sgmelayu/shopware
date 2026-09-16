@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Blog;
 
+use DateTime;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
@@ -36,6 +37,8 @@ use Shopware\Components\Model\QueryBuilder;
  * The Blog model repository is responsible to load all Blog data.
  * It supports the standard functions like findAll or findBy and extends the standard repository for
  * some specific functions to return the model data as array.
+ *
+ * @extends ModelRepository<Blog>
  */
 class Repository extends ModelRepository
 {
@@ -47,11 +50,11 @@ class Repository extends ModelRepository
      * @param int|null $limit
      * @param int|null $shopId
      *
-     * @internal param $blogCategory
+     * @return Query<Blog>
      *
-     * @return \Doctrine\ORM\Query
+     *@internal param $blogCategory
      */
-    public function getListQuery($blogCategoryIds, $offset = null, $limit = null, array $filter = null, $shopId = null)
+    public function getListQuery($blogCategoryIds, $offset = null, $limit = null, ?array $filter = null, $shopId = null)
     {
         $builder = $this->getListQueryBuilder($blogCategoryIds, $filter, $shopId);
         if (!empty($offset)) {
@@ -72,7 +75,7 @@ class Repository extends ModelRepository
      * @param array    $filter
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getListQueryBuilder($blogCategoryIds, $filter, $shopId = null)
     {
@@ -93,7 +96,7 @@ class Repository extends ModelRepository
         ->leftJoin('blog.attribute', 'attribute')
         ->where('blog.active = 1')
         ->andWhere('blog.displayDate < :now')
-        ->setParameter('now', new \DateTime())
+        ->setParameter('now', new DateTime())
         ->orderBy('blog.displayDate', 'DESC');
 
         if ($shopId !== null) {
@@ -108,8 +111,8 @@ class Repository extends ModelRepository
 
         if ($shopId && Shopware()->Config()->get('displayOnlySubShopBlogComments')) {
             $builder
-                ->leftJoin('blog.comments', 'comments', Join::WITH, 'comments.active = 1 AND (comments.shopId IS NULL OR comments.shopId = :shopId)')
-                ->setParameter('shopId', $shopId);
+                ->leftJoin('blog.comments', 'comments', Join::WITH, 'comments.active = 1 AND (comments.shopId IS NULL OR comments.shopId = :commentShopId)')
+                ->setParameter('commentShopId', $shopId);
         } else {
             $builder->leftJoin('blog.comments', 'comments', Join::WITH, 'comments.active = 1');
         }
@@ -127,7 +130,7 @@ class Repository extends ModelRepository
      * @param int      $blogId
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Comment>
      */
     public function getAverageVoteQuery($blogId, $shopId = null)
     {
@@ -141,7 +144,7 @@ class Repository extends ModelRepository
      * @param int      $blogId
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getAverageVoteQueryBuilder($blogId, $shopId = null)
     {
@@ -168,7 +171,7 @@ class Repository extends ModelRepository
      *
      * @param int $blogId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Tag>
      */
     public function getTagsByBlogId($blogId)
     {
@@ -183,7 +186,7 @@ class Repository extends ModelRepository
      *
      * @param int $blogId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getTagsByBlogIdBuilder($blogId)
     {
@@ -205,7 +208,7 @@ class Repository extends ModelRepository
      * @param array    $filter
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Blog>
      */
     public function getDisplayDateFilterQuery($categoryIds, $filter, $shopId = null)
     {
@@ -222,7 +225,7 @@ class Repository extends ModelRepository
      * @param array    $filter
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getDisplayDateFilterQueryBuilder($categoryIds, $filter, $shopId = null)
     {
@@ -243,7 +246,7 @@ class Repository extends ModelRepository
      * @param array    $filter
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Blog>
      */
     public function getAuthorFilterQuery($categoryIds, $filter, $shopId = null)
     {
@@ -260,7 +263,7 @@ class Repository extends ModelRepository
      * @param array    $filter
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getAuthorFilterQueryBuilder($categoryIds, $filter, $shopId = null)
     {
@@ -282,7 +285,7 @@ class Repository extends ModelRepository
      * @param array    $filter
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Blog>
      */
     public function getTagsFilterQuery($categoryIds, $filter, $shopId = null)
     {
@@ -299,7 +302,7 @@ class Repository extends ModelRepository
      * @param array    $filter
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getTagsFilterQueryBuilder($categoryIds, $filter, $shopId = null)
     {
@@ -322,7 +325,7 @@ class Repository extends ModelRepository
      * @param array    $filter
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getFilterQueryBuilder($categoryIds, $filter, $shopId = null)
     {
@@ -331,7 +334,7 @@ class Repository extends ModelRepository
             ->leftJoin('blog.author', 'author')
             ->where('blog.active = 1')
             ->andWhere('blog.displayDate < :now')
-            ->setParameter('now', new \DateTime())
+            ->setParameter('now', new DateTime())
             ->orderBy('blog.displayDate', 'DESC');
 
         if ($shopId !== null) {
@@ -354,14 +357,14 @@ class Repository extends ModelRepository
     /**
      * Returns an instance of the \Doctrine\ORM\Query object which select the blog author filter
      *
-     * @param int[]      $blogCategoryIds
-     * @param array|null $order
-     * @param int|null   $offset
-     * @param int|null   $limit
+     * @param int[]                                                  $blogCategoryIds
+     * @param array<array{property: string, direction: string}>|null $order
+     * @param int|null                                               $offset
+     * @param int|null                                               $limit
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Blog>
      */
-    public function getBackendListQuery($blogCategoryIds, array $filter = null, $order = null, $offset = null, $limit = null)
+    public function getBackendListQuery($blogCategoryIds, ?array $filter = null, $order = null, $offset = null, $limit = null)
     {
         $builder = $this->getBackendListQueryBuilder($blogCategoryIds, $filter, $order);
         if ($offset !== null) {
@@ -378,10 +381,10 @@ class Repository extends ModelRepository
      * Helper function to create the query builder for the "getBackendListQuery" function.
      * This function can be hooked to modify the query builder of the query object.
      *
-     * @param int[] $blogCategoryIds
-     * @param array $order
+     * @param int[]                                                  $blogCategoryIds
+     * @param array<array{property: string, direction: string}>|null $order
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getBackendListQueryBuilder($blogCategoryIds, array $filter, $order)
     {
@@ -425,7 +428,7 @@ class Repository extends ModelRepository
      * @param int      $blogArticleId
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Blog>
      */
     public function getDetailQuery($blogArticleId, $shopId = null)
     {
@@ -441,7 +444,7 @@ class Repository extends ModelRepository
      * @param int      $blogArticleId
      * @param int|null $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getDetailQueryBuilder($blogArticleId, $shopId = null)
     {
@@ -465,8 +468,8 @@ class Repository extends ModelRepository
 
         if ($shopId && Shopware()->Config()->get('displayOnlySubShopBlogComments')) {
             $builder
-                ->leftJoin('blog.comments', 'comments', Join::WITH, 'comments.active = 1 AND (comments.shopId IS NULL OR comments.shopId = :shopId)')
-                ->setParameter('shopId', $shopId);
+                ->leftJoin('blog.comments', 'comments', Join::WITH, 'comments.active = 1 AND (comments.shopId IS NULL OR comments.shopId = :commentShopId)')
+                ->setParameter('commentShopId', $shopId);
         } else {
             $builder->leftJoin('blog.comments', 'comments', Join::WITH, 'comments.active = 1');
         }
@@ -479,7 +482,7 @@ class Repository extends ModelRepository
      *
      * @param array $filter
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Blog>
      */
     public function getBackendDetailQuery($filter)
     {
@@ -494,7 +497,7 @@ class Repository extends ModelRepository
      *
      * @param array $filter
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getBackedDetailQueryBuilder($filter)
     {
@@ -519,7 +522,7 @@ class Repository extends ModelRepository
      * @param int   $offset
      * @param int   $limit
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Comment>
      */
     public function getBlogCommentsById($blogId, $filter, $order, $offset, $limit)
     {
@@ -538,11 +541,11 @@ class Repository extends ModelRepository
      * Helper function to create the query builder for the "getBlogCommentsById" function.
      * This function can be hooked to modify the query builder of the query object.
      *
-     * @param int   $blogId
-     * @param array $filter
-     * @param array $order
+     * @param int                                               $blogId
+     * @param array                                             $filter
+     * @param array<array{property: string, direction: string}> $order
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getBlogCommentsByIdBuilder($blogId, $filter, $order)
     {
@@ -583,7 +586,7 @@ class Repository extends ModelRepository
      *
      * @param int $blogId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Tag>
      */
     public function getBlogTagsById($blogId)
     {
@@ -598,7 +601,7 @@ class Repository extends ModelRepository
      *
      * @param int $blogId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getBlogTagsByIdBuilder($blogId)
     {

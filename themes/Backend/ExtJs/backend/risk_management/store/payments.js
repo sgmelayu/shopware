@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    RiskManagement
@@ -56,31 +55,31 @@ Ext.define('Shopware.apps.RiskManagement.store.Payments', {
     * Define the used model for this store
     * @string
     */
-    model : 'Shopware.apps.RiskManagement.model.Payment',
+    model: 'Shopware.apps.RiskManagement.model.Payment',
 
     /**
      * Configure the data communication
      * @object
      */
-    proxy:{
-        type:'ajax',
+    proxy: {
+        type: 'ajax',
         /**
          * Configure the url mapping for the different
          * @object
          */
-        api:{
+        api: {
             //read out all articles
-            read:'{url controller="risk_management" action="getPayments"}'
+            read: '{url controller="risk_management" action="getPayments"}'
         },
         /**
          * Configure the data reader
          * @object
          */
-        reader:{
-            type:'json',
-            root:'data',
+        reader: {
+            type: 'json',
+            root: 'data',
             //total values, used for paging
-            totalProperty:'total'
+            totalProperty: 'total'
         }
     }
 

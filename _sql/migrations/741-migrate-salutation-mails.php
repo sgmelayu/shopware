@@ -1,5 +1,27 @@
 <?php
 
+/**
+ * Shopware 5
+ * Copyright (c) shopware AG
+ *
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
+ *
+ * The texts of the GNU Affero General Public License with an additional
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
+ *
+ * "Shopware" is a registered trademark of shopware AG.
+ * The licensing of the program under the AGPLv3 does not imply a
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
+ */
+
 class Migrations_Migration741 extends Shopware\Components\Migrations\AbstractMigration
 {
     public function up($modus)
@@ -23,12 +45,12 @@ class Migrations_Migration741 extends Shopware\Components\Migrations\AbstractMig
 
         $statement->execute([
             ':newName' => 'mr',
-            ':name' => 'AccountSalutationMr'
+            ':name' => 'AccountSalutationMr',
         ]);
 
         $statement->execute([
             ':newName' => 'ms',
-            ':name' => 'AccountSalutationMs'
+            ':name' => 'AccountSalutationMs',
         ]);
 
         $sql = <<<'EOD'
@@ -39,14 +61,11 @@ INSERT INTO `s_core_config_elements` (`id`, `form_id`, `name`, `value`, `label`,
 EOD;
         $this->addSql($sql);
 
-
         $sql = <<<'EOD'
         SET @elementId = (SELECT id FROM s_core_config_elements WHERE name = 'shopsalutations' LIMIT 1);
         INSERT INTO `s_core_config_element_translations` (`element_id`, `locale_id`, `label`, `description`) VALUES (@elementId, 2, 'Available salutations', 'Allows to configure the available shop salutations in frontend registration and account. Inserted keys are generated automatically as snippet inside the frontend/salutation namespace.');
 EOD;
         $this->addSql($sql);
-
-
 
         $sql = <<<'EOD'
         SET @formId = (SELECT id FROM s_core_config_forms WHERE name = 'Frontend33' LIMIT 1);
@@ -55,14 +74,6 @@ INSERT INTO `s_core_config_elements` (`id`, `form_id`, `name`, `value`, `label`,
 (NULL, @formId, 'displayprofiletitle', 'b:0;', 'Titel Feld anzeigen', NULL, 'boolean', '0', '0', '1', NULL, NULL, NULL);
 EOD;
         $this->addSql($sql);
-
-
-        $sql = <<<'EOD'
-        SET @elementId = (SELECT id FROM s_core_config_elements WHERE name = 'displayprofiletitle' LIMIT 1);
-        INSERT INTO `s_core_config_element_translations` (`element_id`, `locale_id`, `label`) VALUES (@elementId, 2, 'Display title field', NULL);
-EOD;
-        $this->addSql($sql);
-
 
         $sql = <<<'EOD'
 DELETE FROM `s_core_config_mails` WHERE dirty = 0 AND `name` IN (
@@ -94,7 +105,6 @@ INSERT IGNORE INTO `s_core_config_mails` (`id`, `stateId`, `name`, `frommail`, `
 (NULL, 7, 'sORDERSTATEMAIL7', '{config name=mail}', '{config name=shopName}', 'Statusänderung zur Bestellung bei {config name=shopName}', '{include file="string:{config name=emailheaderplain}"}\r\n\r\nHallo {$sUser.billing_salutation|salutation} {$sUser.billing_firstname} {$sUser.billing_lastname},\n\nder Bestellstatus für Ihre Bestellung {$sOrder.ordernumber} hat sich geändert!\nDie Bestellung hat jetzt den Status: {$sOrder.status_description}.\n\nDen aktuellen Status Ihrer Bestellung  können Sie  auch jederzeit auf unserer Webseite im  Bereich "Mein Konto" - "Meine Bestellungen" abrufen. Sollten Sie allerdings den Kauf ohne Registrierung, also ohne Anlage eines Kundenkontos, gewählt haben, steht Ihnen diese Möglichkeit nicht zur Verfügung.\r\n\r\n{include file="string:{config name=emailfooterplain}"}', '', 0, '', 3, 'a:3:{s:5:"sShop";s:13:"Shopware Demo";s:8:"sShopURL";s:20:"http://localhost/5.1";s:7:"sConfig";a:0:{}}', 0),
 (NULL, NULL, 'sBIRTHDAY', '{config name=mail}', '{config name=shopName}', 'Herzlichen Glückwunsch zum Geburtstag von {config name=shopName}', '{include file="string:{config name=emailheaderplain}"}\r\n\r\nHallo {$sUser.salutation|salutation} {$sUser.firstname} {$sUser.lastname},\n\nwir wünschen Ihnen alles Gute zum Geburtstag.\r\n\r\n{include file="string:{config name=emailfooterplain}"}', '', 0, '', 2, NULL, 0),
 (NULL, NULL, 'sARTICLECOMMENT', '{config name=mail}', '{config name=shopName}', 'Artikel bewerten', '{include file="string:{config name=emailheaderplain}"}\r\n\r\nHallo {$sUser.billing_salutation|salutation} {$sUser.billing_firstname} {$sUser.billing_lastname},\n\nSie haben bei uns vor einigen Tagen Artikel gekauft. Wir würden uns freuen, wenn Sie diese Artikel bewerten würden.<br/>\nSo helfen Sie uns, unseren Service weiter zu steigern und Sie können auf diesem Weg anderen Interessenten direkt Ihre Meinung mitteilen.\n\n\nHier finden Sie die Links zum Bewerten der von Ihnen gekauften Produkte.\n\n{foreach from=$sArticles item=sArticle key=key}\n{if !$sArticle.modus}\n{$sArticle.articleordernumber} {$sArticle.name} {$sArticle.link}\n{/if}\n{/foreach}\r\n\r\n{include file="string:{config name=emailfooterplain}"}', '{include file="string:{config name=emailheaderhtml}"}\r\n<br/><br/>\r\nHallo {if $sUser.salutation eq "mr"}Herr{elseif $sUser.billing_salutation eq "ms"}Frau{/if} {$sUser.billing_firstname} {$sUser.billing_lastname},\n<br/>\nSie haben bei uns vor einigen Tagen Artikel gekauft. Wir würden uns freuen, wenn Sie diese Artikel bewerten würden.<br/>\nSo helfen Sie uns, unseren Service weiter zu steigern und Sie können auf diesem Weg anderen Interessenten direkt Ihre Meinung mitteilen.\n<br/><br/>\n\nHier finden Sie die Links zum Bewerten der von Ihnen gekauften Produkte.\n\n<table>\n {foreach from=$sArticles item=sArticle key=key}\n{if !$sArticle.modus}\n <tr>\n  <td>{$sArticle.articleordernumber}</td>\n  <td>{$sArticle.name}</td>\n  <td>\n  <a href="{$sArticle.link}">link</a>\n  </td>\n </tr>\n{/if}\n {/foreach}\n</table>\r\n<br/><br/>\r\n{include file="string:{config name=emailfooterhtml}"}', 1, '', 2, NULL, 0);
-
 EOD;
 
         $this->addSql($sql);

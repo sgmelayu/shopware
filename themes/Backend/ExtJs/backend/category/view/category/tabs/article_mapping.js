@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Category
@@ -37,17 +36,17 @@
 //{block name="backend/category/view/tabs/article_mapping"}
 Ext.define('Shopware.apps.Category.view.category.tabs.ArticleMapping', {
 
-   /**
-    * Parent Element Ext.container.Container
-    * @string
-    */
-    extend:'Ext.form.Panel',
+    /**
+     * Parent Element Ext.container.Container
+     * @string
+     */
+    extend: 'Ext.form.Panel',
 
     /**
      * Register the alias for this class.
      * @string
      */
-    alias:'widget.category-category-tabs-article_mapping',
+    alias: 'widget.category-category-tabs-article_mapping',
 
     /**
      * Base class of the component
@@ -69,7 +68,7 @@ Ext.define('Shopware.apps.Category.view.category.tabs.ArticleMapping', {
      * Display the the contents of this tab immediately
      * @boolean
      */
-    autoShow : true,
+    autoShow: true,
 
     /**
      * Layout configuration
@@ -102,14 +101,13 @@ Ext.define('Shopware.apps.Category.view.category.tabs.ArticleMapping', {
         remove: '{s name="tabs/article_mapping/button_remove"}Remove{/s}'
     },
 
-
     /**
      * Initialize the Shopware.apps.Category.view.category.tabs.ArticleMapping and defines the necessary
      * default configuration
      *
      * @returns { Void }
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.fromGrid = me.createFromGrid();
         me.buttonContainer = me.createActionButtons();
@@ -203,10 +201,9 @@ Ext.define('Shopware.apps.Category.view.category.tabs.ArticleMapping', {
             me.actionButtons.push(button);
         });
 
-
         return Ext.create('Ext.container.Container', {
             margins: '0 4',
-            items:  me.actionButtons,
+            items: me.actionButtons,
             width: 22,
             layout: {
                 type: 'vbox',

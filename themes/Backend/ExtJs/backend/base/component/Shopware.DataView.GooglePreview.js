@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -46,12 +45,11 @@
      refreshButtonText: 'Generate Preview'
  }
  */
-Ext.define('Shopware.DataView.GooglePreview',
-{
+Ext.define('Shopware.DataView.GooglePreview', {
     /**
      * Based on Ext.panel.Panel
      */
-    extend:'Ext.container.Container',
+    extend: 'Ext.container.Container',
 
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets
@@ -64,7 +62,6 @@ Ext.define('Shopware.DataView.GooglePreview',
      * @string
      */
     cls: Ext.baseCSSPrefix + 'dataview-google-preview',
-
 
     /**
      * the fieldSet in which the preview will be shown
@@ -89,7 +86,7 @@ Ext.define('Shopware.DataView.GooglePreview',
     /**
      * support text under the preview
      */
-    supportText:'',
+    supportText: '',
 
     /**
      * The button text
@@ -99,18 +96,18 @@ Ext.define('Shopware.DataView.GooglePreview',
     /**
      * standard layout
      */
-    layout:{
-        type:'vbox'
+    layout: {
+        type: 'vbox'
     },
 
     /**
      * Init the component
      */
-    initComponent : function() {
+    initComponent: function() {
         var me = this;
         me.fieldSet = Ext.create('Ext.form.FieldSet', {
-            layout:'anchor',
-            padding:10,
+            layout: 'anchor',
+            padding: 10,
             width: '100%',
             title: me.fieldSetTitle,
             items: [ me.createPreviewView() ]
@@ -119,8 +116,8 @@ Ext.define('Shopware.DataView.GooglePreview',
         me.refreshButton = Ext.create('Ext.Button', {
             text: me.refreshButtonText,
             cls: 'primary',
-            scope:me,
-            handler:function () {
+            scope: me,
+            handler: function () {
                 me.refreshView();
             }
         });
@@ -141,7 +138,6 @@ Ext.define('Shopware.DataView.GooglePreview',
         me.callParent(arguments);
     },
 
-
     createPreviewView: function() {
         var me = this;
 
@@ -150,7 +146,6 @@ Ext.define('Shopware.DataView.GooglePreview',
             name: 'google-preview-view',
             tpl: me.createPreviewTemplate()
         });
-
 
         return me.previewView;
     },
@@ -165,14 +160,14 @@ Ext.define('Shopware.DataView.GooglePreview',
         return new Ext.XTemplate(
             '{literal}' +
             '<tpl for=".">',
-                '<div class="preview">',
-                    '<strong class="title">{title}</strong>',
-                    '<span class="url">{url}</span>',
-                    '<div class="desc">',
-                        '<span class="date">{date}</span>',
-                        '{metaDescription}',
-                    '</div>',
-                '</div>',
+            '<div class="preview">',
+            '<strong class="title">{title}</strong>',
+            '<span class="url">{url}</span>',
+            '<div class="desc">',
+            '<span class="date">{date}</span>',
+            '{metaDescription}',
+            '</div>',
+            '</div>',
             '</tpl>',
             '{/literal}'
         );
@@ -189,20 +184,20 @@ Ext.define('Shopware.DataView.GooglePreview',
             metaDescription = me.descriptionField.getValue(),
             date = '';
 
-            if(title != '') {
-                title = title.substr(0,50)+'...';
-                date = new Date().toLocaleDateString();
-                date = date+" - ";
-            }
-            if(url != '') {
-                url = "www.example.com/"+url;
-                url = url.substr(0,35)+'...';
-                url = url.toLowerCase();
-                url = url.replace(/\s/g, '-');
-            }
-            if(metaDescription != '') {
-                metaDescription = metaDescription.substr(0,70)+'...';
-            }
+        if (title != '') {
+            title = title.substr(0, 50) + '...';
+            date = new Date().toLocaleDateString();
+            date = date + " - ";
+        }
+        if (url != '') {
+            url = "www.example.com/" + url;
+            url = url.substr(0, 35) + '...';
+            url = url.toLowerCase();
+            url = url.replace(/\s/g, '-');
+        }
+        if (metaDescription != '') {
+            metaDescription = metaDescription.substr(0, 70) + '...';
+        }
 
         return {
             title: title,

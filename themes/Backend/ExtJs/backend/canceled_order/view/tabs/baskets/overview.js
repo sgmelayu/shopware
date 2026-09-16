@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    CanceledOrder
@@ -40,8 +39,8 @@ Ext.define('Shopware.apps.CanceledOrder.view.tabs.baskets.Overview', {
     alias: 'widget.canceled-order-tabs-baskets-overview',
     title: '{s name="baskets/Overview"}Overview{/s}',
 
-    snippets : {
-        columns : {
+    snippets: {
+        columns: {
             time: '{s name="columns/date"}Date{/s}',
             price: '{s name="columns/amount"}Total amount{/s}',
             average: '{s name="columns/averageItemValue"}Ø Price per unit{/s}',
@@ -118,9 +117,9 @@ Ext.define('Shopware.apps.CanceledOrder.view.tabs.baskets.Overview', {
                 // This way the proper record is extracted
                 summaryType: function(records){
                     var i = 0,
-                            length = records.length,
-                            total = 0,
-                            record;
+                        length = records.length,
+                        total = 0,
+                        record;
                     for (; i < length; i++){
                         record = records[i];
                         total += record.get('price');
@@ -128,8 +127,8 @@ Ext.define('Shopware.apps.CanceledOrder.view.tabs.baskets.Overview', {
                     return total;
                 },
                 summaryRenderer: function(value, summaryData, dataIndex) {
-                    if(Ext.isNumber(value) || Ext.isString(value)) {
-                        return '<b>' + Ext.util.Format.currency(value)+ '</b>';
+                    if (Ext.isNumber(value) || Ext.isString(value)) {
+                        return '<b>' + Ext.util.Format.currency(value) + '</b>';
                     }
 
                     return value
@@ -173,7 +172,7 @@ Ext.define('Shopware.apps.CanceledOrder.view.tabs.baskets.Overview', {
         }
         value = record.get('price');
 
-        if(Ext.isNumber(value) || Ext.isString(value)) {
+        if (Ext.isNumber(value) || Ext.isString(value)) {
             return Ext.util.Format.currency(value);
         }
 

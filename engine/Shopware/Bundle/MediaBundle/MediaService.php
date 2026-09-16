@@ -1,32 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\MediaBundle;
 
+use Exception;
 use League\Flysystem\FilesystemInterface;
 use League\Flysystem\Util;
 use Shopware\Bundle\MediaBundle\Strategy\StrategyInterface;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Shop\Shop;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -58,7 +60,7 @@ class MediaService implements MediaServiceInterface
     private $config;
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function __construct(FilesystemInterface $filesystem, StrategyInterface $strategy, ContainerInterface $container, array $config)
     {
@@ -68,7 +70,7 @@ class MediaService implements MediaServiceInterface
         $this->config = $config;
 
         if (!isset($config['mediaUrl'])) {
-            throw new \Exception(sprintf('Please provide a "mediaUrl" in your %s adapter.', $config['type']));
+            throw new Exception(\sprintf('Please provide a "mediaUrl" in your %s adapter.', $config['type']));
         }
 
         $mediaUrl = $config['mediaUrl'] ?: $this->createFallbackMediaUrl();
@@ -286,7 +288,7 @@ class MediaService implements MediaServiceInterface
     /**
      * Generates a mediaUrl based on the request or router
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return string
      */
@@ -298,12 +300,10 @@ class MediaService implements MediaServiceInterface
             return ($request->isSecure() ? 'https' : 'http') . '://' . $request->getHttpHost() . $request->getBasePath() . '/';
         }
 
-        if ($this->container->has('shop')) {
-            /** @var Shop $shop */
+        if ($this->container->initialized('shop')) {
             $shop = $this->container->get('shop');
         } else {
-            /** @var Shop $shop */
-            $shop = $this->container->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Shop::class)->getActiveDefault();
+            $shop = $this->container->get(ModelManager::class)->getRepository(Shop::class)->getActiveDefault();
         }
 
         if ($shop->getMain()) {

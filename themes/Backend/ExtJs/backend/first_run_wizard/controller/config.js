@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -34,7 +33,7 @@
 
 Ext.define('Shopware.apps.FirstRunWizard.controller.Config', {
 
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
 
     refs: [
         { ref: 'configPanel', selector: 'first-run-wizard-config' }
@@ -50,7 +49,7 @@ Ext.define('Shopware.apps.FirstRunWizard.controller.Config', {
         },
         waitTitle: '{s name="config/waitTitle"}Saving configuration settings{/s}',
         waitMessage: '{s name="config/waitMessage"}This process might take a few seconds{/s}',
-        growlMessage:'{s name="config/growlMessage"}First run wizard{/s}'
+        growlMessage: '{s name="config/growlMessage"}First run wizard{/s}'
     },
 
     init: function () {
@@ -109,7 +108,7 @@ Ext.define('Shopware.apps.FirstRunWizard.controller.Config', {
             success: function(response) {
                 var result = Ext.JSON.decode(response.responseText);
 
-                if(result.success) {
+                if (result.success) {
                     var formData = result.data;
 
                     configPanel.themeDesktopLogo.setValue(formData.desktopLogo);
@@ -147,7 +146,7 @@ Ext.define('Shopware.apps.FirstRunWizard.controller.Config', {
                         Ext.String.format(me.snippets.configFormValidation.errorServerMessage, result.message),
                         me.snippets.growlMessage
                     );
-                } else if(result.success) {
+                } else if (result.success) {
                     Shopware.Notification.createGrowlMessage(
                         me.snippets.configFormValidation.successTitle,
                         me.snippets.configFormValidation.successMessage,

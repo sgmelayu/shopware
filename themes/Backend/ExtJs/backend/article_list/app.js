@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{block name="backend/article_list/app"}
@@ -29,13 +28,13 @@ Ext.define('Shopware.apps.ArticleList', {
      * The name of the module. Used for internal purpose
      * @string
      */
-    name:'Shopware.apps.ArticleList',
+    name: 'Shopware.apps.ArticleList',
 
     /**
      * Extends from our special controller, which handles the sub-application behavior and the event bus
      * @string
      */
-    extend:'Enlight.app.SubApplication',
+    extend: 'Enlight.app.SubApplication',
 
     /**
      * Enable bulk loading
@@ -76,7 +75,6 @@ Ext.define('Shopware.apps.ArticleList', {
 
     ],
 
-
     /**
      * Array of models to require from AppName.model namespace.
      * @array
@@ -103,7 +101,7 @@ Ext.define('Shopware.apps.ArticleList', {
      * Requires controllers for sub-application
      * @array
      */
-    controllers: [ 'Main', 'List', 'Filter', 'Suggest', 'BatchProcess' , 'Backup', 'CategoryFilter', 'SplitView', 'ArticleCrud' ],
+    controllers: [ 'Main', 'List', 'Filter', 'Suggest', 'BatchProcess', 'Backup', 'CategoryFilter', 'SplitView', 'ArticleCrud' ],
 
     /**
      * Returns the main application window for this is expected

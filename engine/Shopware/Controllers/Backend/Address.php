@@ -1,32 +1,39 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query;
 use Shopware\Bundle\AccountBundle\Form\Account\AddressFormType;
 use Shopware\Bundle\AccountBundle\Service\AddressServiceInterface;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Components\Model\QueryBuilder;
 use Shopware\Models\Customer\Address as AddressModel;
 use Shopware\Models\Customer\Customer;
 
+/**
+ * @extends Shopware_Controllers_Backend_Application<AddressModel>
+ */
 class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_Application
 {
     protected $model = AddressModel::class;
@@ -44,13 +51,15 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
     public function preDispatch()
     {
         parent::preDispatch();
-        $this->addressService = $this->get(\Shopware\Bundle\AccountBundle\Service\AddressServiceInterface::class);
+        $this->addressService = $this->get(AddressServiceInterface::class);
     }
 
     /**
      * Transfers the address attributes to the according legacy tables.
      *
      * Intended to be called from shopware backend via ajax with request parameter `id`.
+     *
+     * @return void
      */
     public function syncAttributeAction()
     {
@@ -58,21 +67,21 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
         if (!$customerAddressId) {
             return;
         }
+
         $address = $this->getManager()->getRepository(AddressModel::class)->find($customerAddressId);
-        Shopware()->Container()->get(\Shopware\Bundle\AccountBundle\Service\AddressServiceInterface::class)->update($address);
+        if (!$address instanceof AddressModel) {
+            return;
+        }
+
+        Shopware()->Container()->get(AddressServiceInterface::class)->update($address);
     }
 
     /**
      * Override save method to make use of symfony form and custom data mapping
      * If isDefaultBillingAddress or isDefaultShippingAddress, the appropriate action will be made
-     *
-     * @param array $data
-     *
-     * @return array
      */
     public function save($data)
     {
-        /* @var AddressModel $model */
         if (!empty($data['id'])) {
             $model = $this->getRepository()->find($data['id']);
         } else {
@@ -81,9 +90,8 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
         }
 
         $data['country'] = $data['countryId'];
-        $data['state'] = $data['stateId'];
+        $data['state'] = $data['stateId'] ?? null;
 
-        /** @var \Symfony\Component\Form\FormInterface $form */
         $form = $this->get('shopware.form.factory')->create(AddressFormType::class, $model);
         $form->submit($data);
 
@@ -104,8 +112,7 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
         if ($model->getId()) {
             $this->addressService->update($model);
         } else {
-            /** @var Customer $customer */
-            $customer = $this->get(\Shopware\Components\Model\ModelManager::class)->find(Customer::class, $data['user_id']);
+            $customer = $this->get(ModelManager::class)->find(Customer::class, $data['user_id']);
             $this->addressService->create($model, $customer);
         }
 
@@ -124,10 +131,6 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
 
     /**
      * Use address service for deletion
-     *
-     * @param int $id
-     *
-     * @return array
      */
     public function delete($id)
     {
@@ -135,7 +138,6 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
             return ['success' => false, 'error' => 'The id parameter contains no value.'];
         }
 
-        /** @var AddressModel $model */
         $model = $this->getManager()->find($this->model, $id);
 
         if (!($model instanceof $this->model)) {
@@ -144,7 +146,7 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
 
         try {
             $this->addressService->delete($model);
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             return ['success' => false, 'error' => $ex->getMessage()];
         }
 
@@ -159,7 +161,7 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
         $customerId = (int) $this->Request()->get('customerId');
 
         if (!$customerId) {
-            throw new \RuntimeException('You have to provide a valid customerId.');
+            throw new RuntimeException('You have to provide a valid customerId.');
         }
 
         $query = parent::getListQuery();
@@ -173,13 +175,12 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
     /**
      * {@inheritdoc}
      */
-    protected function getQueryPaginator(
-        \Doctrine\ORM\QueryBuilder $builder,
-        $hydrationMode = \Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY
-    ) {
+    protected function getQueryPaginator(QueryBuilder $builder, $hydrationMode = AbstractQuery::HYDRATE_ARRAY)
+    {
+        /** @var Query<AddressModel|array<string, mixed>> $query */
         $query = $builder->getQuery();
         $query->setHydrationMode($hydrationMode);
-        $query->setHint(\Doctrine\ORM\Query::HINT_INCLUDE_META_COLUMNS, true);
+        $query->setHint(Query::HINT_INCLUDE_META_COLUMNS, true);
 
         return $this->getManager()->createPaginator($query);
     }
@@ -190,18 +191,13 @@ class Shopware_Controllers_Backend_Address extends Shopware_Controllers_Backend_
     protected function getDetailQuery($id)
     {
         $query = parent::getDetailQuery($id);
-        $query = $this->addAssociations($query);
 
-        return $query;
+        return $this->addAssociations($query);
     }
 
-    /**
-     * @return \Shopware\Components\Model\QueryBuilder
-     */
-    private function addAssociations(\Shopware\Components\Model\QueryBuilder $query)
+    private function addAssociations(QueryBuilder $query): QueryBuilder
     {
-        $query
-            ->addSelect(['country', 'state', 'PARTIAL customer.{id,email}'])
+        $query->addSelect(['country', 'state', 'PARTIAL customer.{id,email}'])
             ->join('address.customer', 'customer')
             ->join('address.country', 'country')
             ->leftJoin('address.state', 'state');

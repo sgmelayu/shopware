@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleES\FacetHandler;
 
 use ONGR\ElasticsearchDSL\Aggregation\Bucketing\TermsAggregation;
 use ONGR\ElasticsearchDSL\Search;
+use Shopware\Bundle\SearchBundle\Condition\ManufacturerCondition;
 use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Bundle\SearchBundle\CriteriaPartInterface;
 use Shopware\Bundle\SearchBundle\Facet\ManufacturerFacet;
@@ -42,22 +43,13 @@ use Shopware_Components_Snippet_Manager;
 
 class ManufacturerFacetHandler implements HandlerInterface, ResultHydratorInterface
 {
-    const AGGREGATION_SIZE = 1000;
+    public const AGGREGATION_SIZE = 1000;
 
-    /**
-     * @var ManufacturerServiceInterface
-     */
-    private $manufacturerService;
+    private ManufacturerServiceInterface $manufacturerService;
 
-    /**
-     * @var Shopware_Components_Snippet_Manager
-     */
-    private $snippetManager;
+    private Shopware_Components_Snippet_Manager $snippetManager;
 
-    /**
-     * @var QueryAliasMapper
-     */
-    private $queryAliasMapper;
+    private QueryAliasMapper $queryAliasMapper;
 
     public function __construct(
         ManufacturerServiceInterface $manufacturerService,
@@ -123,22 +115,22 @@ class ManufacturerFacetHandler implements HandlerInterface, ResultHydratorInterf
     /**
      * @param Manufacturer[] $manufacturers
      *
-     * @return array
+     * @return array<ValueListItem>
      */
-    private function createListItems(Criteria $criteria, $manufacturers)
+    private function createListItems(Criteria $criteria, array $manufacturers): array
     {
         $actives = [];
-        if ($condition = $criteria->getCondition('manufacturer')) {
+        $condition = $criteria->getCondition('manufacturer');
+        if ($condition instanceof ManufacturerCondition) {
             $actives = $condition->getManufacturerIds();
         }
 
         $items = [];
-        /** @var Manufacturer $manufacturer */
         foreach ($manufacturers as $manufacturer) {
             $items[] = new ValueListItem(
                 $manufacturer->getId(),
                 $manufacturer->getName(),
-                in_array($manufacturer->getId(), $actives),
+                \in_array($manufacturer->getId(), $actives),
                 $manufacturer->getAttributes()
             );
         }
@@ -152,18 +144,13 @@ class ManufacturerFacetHandler implements HandlerInterface, ResultHydratorInterf
 
     /**
      * @param ValueListItem[] $items
-     *
-     * @return ValueListFacetResult
      */
-    private function createFacet(Criteria $criteria, $items)
+    private function createFacet(Criteria $criteria, array $items): ValueListFacetResult
     {
-        if (!$fieldName = $this->queryAliasMapper->getShortAlias('sSupplier')) {
-            $fieldName = 'sSupplier';
-        }
+        $fieldName = $this->queryAliasMapper->getShortAlias('sSupplier') ?? 'sSupplier';
 
-        /** @var ManufacturerFacet|null $facet */
         $facet = $criteria->getFacet('manufacturer');
-        if ($facet && !empty($facet->getLabel())) {
+        if ($facet instanceof ManufacturerFacet && !empty($facet->getLabel())) {
             $label = $facet->getLabel();
         } else {
             $label = $this->snippetManager->getNamespace('frontend/listing/facet_labels')

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -48,12 +47,11 @@
  * }
  * });
  */
-Ext.define('Shopware.DragAndDropSelector',
-{
+Ext.define('Shopware.DragAndDropSelector', {
     /**
      * Based on Ext.panel.Panel
      */
-    extend:'Ext.container.Container',
+    extend: 'Ext.container.Container',
 
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets
@@ -131,11 +129,10 @@ Ext.define('Shopware.DragAndDropSelector',
      */
     toTitle: '',
 
-
     /**
      * default columns for the from grid
      */
-    fromColumns :[{
+    fromColumns: [{
         text: 'name',
         flex: 1,
         dataIndex: 'name'
@@ -144,7 +141,7 @@ Ext.define('Shopware.DragAndDropSelector',
     /**
      * default columns for the to grid
      */
-    toColumns :[{
+    toColumns: [{
         text: 'name',
         flex: 1,
         dataIndex: 'name'
@@ -169,8 +166,8 @@ Ext.define('Shopware.DragAndDropSelector',
     /**
      * standard layout
      */
-    layout:{
-        type:'hbox',
+    layout: {
+        type: 'hbox',
         align: 'stretch'
     },
 
@@ -198,7 +195,7 @@ Ext.define('Shopware.DragAndDropSelector',
     /**
      * Init the component
      */
-    initComponent : function() {
+    initComponent: function() {
         var me = this;
         me.toStore = me.selectedItems;
 
@@ -209,7 +206,7 @@ Ext.define('Shopware.DragAndDropSelector',
         var config = {
             title: me.fromTitle,
             store: me.fromStore,
-            columns :me.fromColumns,
+            columns: me.fromColumns,
             dockedItems: me.fromFieldDockedItems,
             border: false,
             viewConfig: {
@@ -236,9 +233,9 @@ Ext.define('Shopware.DragAndDropSelector',
         me.fromField = me.createGrid(config);
 
         me.toField = me.createGrid({
-            title : me.toTitle,
-            store : me.toStore,
-            columns : me.toColumns,
+            title: me.toTitle,
+            store: me.toStore,
+            columns: me.toColumns,
             dockedItems: me.toFieldDockedItems,
             border: false,
             viewConfig: {
@@ -269,9 +266,9 @@ Ext.define('Shopware.DragAndDropSelector',
      *
      * @return Ext.container.Container
      */
-    getMiddleButtons : function() {
+    getMiddleButtons: function() {
         var me = this;
-        return Ext.create('Ext.container.Container',{
+        return Ext.create('Ext.container.Container', {
             margins: '0 4',
             width: 22,
             layout: {
@@ -311,7 +308,7 @@ Ext.define('Shopware.DragAndDropSelector',
     createGrid: function(config) {
         var me = this;
         var defaultConfig = {
-            stripeRows : true,
+            stripeRows: true,
             multiSelect: true,
             hideHeaders: me.hideHeaders,
             height: me.gridHeight,
@@ -352,7 +349,7 @@ Ext.define('Shopware.DragAndDropSelector',
      * Event listener on add button click
      * Moves the selected Items from grid to grid
      */
-    onAddBtnClick : function() {
+    onAddBtnClick: function() {
         var me = this,
             fromList = me.fromField,
             selected = this.getSelections(fromList);
@@ -371,7 +368,7 @@ Ext.define('Shopware.DragAndDropSelector',
      * Event listener on Remove button click
      * Moves the selected Items from grid to grid
      */
-    onRemoveBtnClick : function() {
+    onRemoveBtnClick: function() {
         var me = this,
             toList = me.toField,
             selected = me.getSelections(toList);
@@ -414,10 +411,10 @@ Ext.define('Shopware.DragAndDropSelector',
     refreshStore: function() {
         var me = this,
             ids = [];
-        if(me.toStore != null) {
+        if (me.toStore != null) {
             me.selectedItems = me.toStore;
         }
-        if(me.selectedItems != null){
+        if (me.selectedItems != null){
             me.selectedItems.each(function(element) {
                 ids.push(element.get('id'));
             });
@@ -434,10 +431,10 @@ Ext.define('Shopware.DragAndDropSelector',
         var toRemove = [];
 
         //performance fix because ext js is slow in removing single things
-        for(var i in storeItems) {
+        for (var i in storeItems) {
             var select = storeItems[i];
             Ext.each(selected, function(item) {
-                if(select.get('id') === item.get('id')) {
+                if (select.get('id') === item.get('id')) {
                     toRemove.unshift(i);
                 }
             });

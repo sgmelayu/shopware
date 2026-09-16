@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -37,63 +36,63 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.PriceVariation', {
      * Define that the order main window is an extension of the enlight application window
      * @string
      */
-    extend:'Enlight.app.Window',
+    extend: 'Enlight.app.Window',
     /**
      * Set base css class prefix and module individual css class for css styling
      * @string
      */
-    cls:Ext.baseCSSPrefix + 'article-price-variation-mapping-window',
+    cls: Ext.baseCSSPrefix + 'article-price-variation-mapping-window',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.article-price-variation-mapping-window',
+    alias: 'widget.article-price-variation-mapping-window',
     /**
      * Set no border for the window
      * @boolean
      */
-    border:false,
+    border: false,
     /**
      * True to automatically show the component upon creation.
      * @boolean
      */
-    autoShow:true,
+    autoShow: true,
     /**
      * Set border layout for the window
      * @string
      */
-    layout:'fit',
+    layout: 'fit',
     /**
      * Define window width
      * @integer
      */
-    width:600,
+    width: 600,
     /**
      * Define window height
      * @integer
      */
-    height:380,
+    height: 380,
     /**
      * True to display the 'maximize' tool button and allow the user to maximize the window, false to hide the button and disallow maximizing the window.
      * @boolean
      */
-    maximizable:true,
+    maximizable: true,
 
     /**
      * True to display the 'minimize' tool button and allow the user to minimize the window, false to hide the button and disallow minimizing the window.
      * @boolean
      */
-    minimizable:true,
+    minimizable: true,
 
     /**
      * A flag which causes the object to attempt to restore the state of internal properties from a saved state on startup.
      */
-    stateful:true,
+    stateful: true,
 
     /**
      * The unique id for this object to use for state management purposes.
      */
-    stateId:'shopware-article-article-article-price-variation-window',
+    stateId: 'shopware-article-article-article-price-variation-window',
 
     /**
      * Contains all snippets for this component
@@ -180,7 +179,6 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.PriceVariation', {
             store: me.modeStore
         });
 
-
         me.mappingGridEditor = Ext.create('Ext.grid.plugin.RowEditing', {
             clicksToEdit: 2,
             listeners: {
@@ -241,13 +239,13 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.PriceVariation', {
      *
      * @return [Ext.selection.CheckboxModel] grid selection model
      */
-    getGridSelModel:function () {
+    getGridSelModel: function () {
         var me = this;
 
         return Ext.create('Ext.selection.CheckboxModel', {
-            listeners:{
+            listeners: {
                 // Unlocks the save button if the user has checked at least one checkbox
-                selectionchange:function (sm, selections) {
+                selectionchange: function (sm, selections) {
                     if (me.deleteButton === null) {
                         return;
                     }
@@ -278,7 +276,7 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.PriceVariation', {
         var me = this;
 
         return {
-            iconCls:'sprite-minus-circle-frame',
+            iconCls: 'sprite-minus-circle-frame',
             handler: function (view, rowIndex, colIndex, item, opts, record) {
                 me.removeRecords(record);
             }
@@ -312,7 +310,7 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.PriceVariation', {
         var me = this;
 
         me.addButton = Ext.create('Ext.button.Button', {
-            iconCls:'sprite-plus-circle-frame',
+            iconCls: 'sprite-plus-circle-frame',
             text: '{s name="price/variation/add_button"}Add variation{/s}',
             handler: function() {
                 me.fireEvent('displayNewPriceVariationWindow', me);
@@ -320,7 +318,7 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.PriceVariation', {
         });
 
         me.deleteButton = Ext.create('Ext.button.Button', {
-            iconCls:'sprite-minus-circle-frame',
+            iconCls: 'sprite-minus-circle-frame',
             text: '{s name="price/variation/delete_button"}Delete all selected{/s}',
             disabled: true,
             handler: function() {

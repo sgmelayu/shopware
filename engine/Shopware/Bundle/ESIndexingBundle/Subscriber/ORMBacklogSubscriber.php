@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ESIndexingBundle\Subscriber;
@@ -29,7 +29,6 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PostFlushEventArgs;
 use Doctrine\ORM\Events;
 use Shopware\Bundle\ESIndexingBundle\Struct\Backlog;
-use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Article\Article as ProductModel;
 use Shopware\Models\Article\Detail as VariantModel;
 use Shopware\Models\Article\Price as PriceModel;
@@ -43,33 +42,33 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class ORMBacklogSubscriber implements EventSubscriber
 {
-    const EVENT_ARTICLE_DELETED = 'article_deleted';
-    const EVENT_ARTICLE_INSERTED = 'article_inserted';
-    const EVENT_ARTICLE_UPDATED = 'article_updated';
-    const EVENT_VARIANT_DELETED = 'variant_deleted';
-    const EVENT_VARIANT_INSERTED = 'variant_inserted';
-    const EVENT_VARIANT_UPDATED = 'variant_updated';
-    const EVENT_PRICE_DELETED = 'variant_price_deleted';
-    const EVENT_PRICE_INSERTED = 'variant_price_inserted';
-    const EVENT_PRICE_UPDATED = 'variant_price_updated';
-    const EVENT_VOTE_DELETED = 'vote_deleted';
-    const EVENT_VOTE_INSERTED = 'vote_inserted';
-    const EVENT_VOTE_UPDATED = 'vote_updated';
-    const EVENT_SUPPLIER_DELETED = 'supplier_deleted';
-    const EVENT_SUPPLIER_INSERTED = 'supplier_inserted';
-    const EVENT_SUPPLIER_UPDATED = 'supplier_updated';
-    const EVENT_TAX_DELETED = 'tax_deleted';
-    const EVENT_TAX_INSERTED = 'tax_inserted';
-    const EVENT_TAX_UPDATED = 'tax_updated';
-    const EVENT_UNIT_DELETED = 'article_unit_deleted';
-    const EVENT_UNIT_INSERTED = 'article_unit_inserted';
-    const EVENT_UNIT_UPDATED = 'article_unit_updated';
-    const EVENT_PROPERTY_GROUP_DELETED = 'property_group_deleted';
-    const EVENT_PROPERTY_GROUP_INSERTED = 'property_group_inserted';
-    const EVENT_PROPERTY_GROUP_UPDATED = 'property_group_updated';
-    const EVENT_PROPERTY_OPTION_DELETED = 'property_option_deleted';
-    const EVENT_PROPERTY_OPTION_INSERTED = 'property_option_inserted';
-    const EVENT_PROPERTY_OPTION_UPDATED = 'property_option_updated';
+    public const EVENT_ARTICLE_DELETED = 'article_deleted';
+    public const EVENT_ARTICLE_INSERTED = 'article_inserted';
+    public const EVENT_ARTICLE_UPDATED = 'article_updated';
+    public const EVENT_VARIANT_DELETED = 'variant_deleted';
+    public const EVENT_VARIANT_INSERTED = 'variant_inserted';
+    public const EVENT_VARIANT_UPDATED = 'variant_updated';
+    public const EVENT_PRICE_DELETED = 'variant_price_deleted';
+    public const EVENT_PRICE_INSERTED = 'variant_price_inserted';
+    public const EVENT_PRICE_UPDATED = 'variant_price_updated';
+    public const EVENT_VOTE_DELETED = 'vote_deleted';
+    public const EVENT_VOTE_INSERTED = 'vote_inserted';
+    public const EVENT_VOTE_UPDATED = 'vote_updated';
+    public const EVENT_SUPPLIER_DELETED = 'supplier_deleted';
+    public const EVENT_SUPPLIER_INSERTED = 'supplier_inserted';
+    public const EVENT_SUPPLIER_UPDATED = 'supplier_updated';
+    public const EVENT_TAX_DELETED = 'tax_deleted';
+    public const EVENT_TAX_INSERTED = 'tax_inserted';
+    public const EVENT_TAX_UPDATED = 'tax_updated';
+    public const EVENT_UNIT_DELETED = 'article_unit_deleted';
+    public const EVENT_UNIT_INSERTED = 'article_unit_inserted';
+    public const EVENT_UNIT_UPDATED = 'article_unit_updated';
+    public const EVENT_PROPERTY_GROUP_DELETED = 'property_group_deleted';
+    public const EVENT_PROPERTY_GROUP_INSERTED = 'property_group_inserted';
+    public const EVENT_PROPERTY_GROUP_UPDATED = 'property_group_updated';
+    public const EVENT_PROPERTY_OPTION_DELETED = 'property_option_deleted';
+    public const EVENT_PROPERTY_OPTION_INSERTED = 'property_option_inserted';
+    public const EVENT_PROPERTY_OPTION_UPDATED = 'property_option_updated';
 
     /**
      * @var Backlog[]
@@ -108,7 +107,6 @@ class ORMBacklogSubscriber implements EventSubscriber
 
     public function onFlush(OnFlushEventArgs $eventArgs)
     {
-        /** @var ModelManager $em */
         $em = $eventArgs->getEntityManager();
         $uow = $em->getUnitOfWork();
 

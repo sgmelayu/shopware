@@ -1,42 +1,46 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Routing;
 
 use Enlight_Controller_Request_Request as EnlightRequest;
+use JsonSerializable;
+use Shopware\Components\ObjectJsonSerializeTraitDeprecated;
 use Shopware\Models\Shop\Shop as ShopwareShop;
 use Shopware_Components_Config as ShopwareConfig;
 
 /**
  * @see http://php.net/manual/en/reflectionclass.iscloneable.php
  * @see http://api.symfony.com/2.0/Symfony/Component/Routing/RequestContext.html
- * @see \Enlight_Controller_Request_Request
+ * @see EnlightRequest
  */
-class Context implements \JsonSerializable
+class Context implements JsonSerializable
 {
+    use ObjectJsonSerializeTraitDeprecated;
+
     /**
-     * @var array
+     * @var array<string, mixed>
      */
     public $params = [];
 
@@ -48,7 +52,7 @@ class Context implements \JsonSerializable
     protected $baseFile = 'shopware.php';
 
     /**
-     * @see \Enlight_Controller_Request_Request::getHttpHost
+     * @see EnlightRequest::getHttpHost
      *
      * @var string
      */
@@ -80,14 +84,14 @@ class Context implements \JsonSerializable
     protected $shopId;
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
     protected $globalParams = [];
 
     /**
      * Module keys for retrieving module from params
      *
-     * @see \Enlight_Controller_Request_Request::$_moduleKey
+     * @see EnlightRequest::$_moduleKey
      *
      * @var string
      */
@@ -108,9 +112,10 @@ class Context implements \JsonSerializable
     protected $actionKey = 'action';
 
     /**
-     * @param string $host
-     * @param string $baseUrl
-     * @param bool   $secure
+     * @param string               $host
+     * @param string               $baseUrl
+     * @param bool                 $secure
+     * @param array<string, mixed> $globalParams
      */
     public function __construct($host = 'localhost', $baseUrl = '', $secure = false, array $globalParams = [])
     {
@@ -130,6 +135,8 @@ class Context implements \JsonSerializable
 
     /**
      * @param string $baseFile
+     *
+     * @return void
      */
     public function setBaseFile($baseFile)
     {
@@ -146,6 +153,8 @@ class Context implements \JsonSerializable
 
     /**
      * @param string|null $host
+     *
+     * @return void
      */
     public function setHost($host)
     {
@@ -164,6 +173,8 @@ class Context implements \JsonSerializable
 
     /**
      * @param string $baseUrl
+     *
+     * @return void
      */
     public function setBaseUrl($baseUrl)
     {
@@ -180,6 +191,8 @@ class Context implements \JsonSerializable
 
     /**
      * @param bool $secure
+     *
+     * @return void
      */
     public function setSecure($secure)
     {
@@ -196,6 +209,8 @@ class Context implements \JsonSerializable
 
     /**
      * @param bool $removeCategory
+     *
+     * @return void
      */
     public function setRemoveCategory($removeCategory)
     {
@@ -212,6 +227,8 @@ class Context implements \JsonSerializable
 
     /**
      * @param bool $urlToLower
+     *
+     * @return void
      */
     public function setUrlToLower($urlToLower)
     {
@@ -228,6 +245,8 @@ class Context implements \JsonSerializable
 
     /**
      * @param int $shopId
+     *
+     * @return void
      */
     public function setShopId($shopId)
     {
@@ -242,11 +261,11 @@ class Context implements \JsonSerializable
      */
     public function getParam($name, $default = null)
     {
-        return isset($this->params[$name]) ? $this->params[$name] : $default;
+        return $this->params[$name] ?? $default;
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function getParams()
     {
@@ -254,31 +273,39 @@ class Context implements \JsonSerializable
     }
 
     /**
-     * @param string $name
+     * @param string     $name
+     * @param mixed|null $param
+     *
+     * @return void
      */
     public function setParam($name, $param)
     {
         $this->params[$name] = $param;
     }
 
+    /**
+     * @param array<string, mixed> $params
+     *
+     * @return void
+     */
     public function setParams(array $params)
     {
         $this->params = $params;
     }
 
     /**
-     * @param string $name
-     * @param string $default
+     * @param string      $name
+     * @param string|null $default
      *
      * @return string
      */
     public function getGlobalParam($name, $default = null)
     {
-        return isset($this->globalParams[$name]) ? $this->globalParams[$name] : $default;
+        return $this->globalParams[$name] ?? $default;
     }
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public function getGlobalParams()
     {
@@ -286,7 +313,10 @@ class Context implements \JsonSerializable
     }
 
     /**
-     * @param string $name
+     * @param string     $name
+     * @param mixed|null $globalParam
+     *
+     * @return void
      */
     public function setGlobalParam($name, $globalParam)
     {
@@ -296,7 +326,9 @@ class Context implements \JsonSerializable
     /**
      * @see Enlight_Controller_Router::setGlobalParam
      *
-     * @param array $globalParams
+     * @param array<string, mixed> $globalParams
+     *
+     * @return void
      */
     public function setGlobalParams($globalParams)
     {
@@ -344,14 +376,14 @@ class Context implements \JsonSerializable
             $request->getHttpHost(),
             $request->getBaseUrl(),
             $request->isSecure(),
-            [self::getGlobalParamsFromRequest($request)]
+            self::getGlobalParamsFromRequest($request)
         );
     }
 
     /**
      * @see \Enlight_Controller_Router::setGlobalParam
      *
-     * @return array
+     * @return array{module?: string, controller?: string, action?: string}
      */
     public static function getGlobalParamsFromRequest(EnlightRequest $request)
     {
@@ -369,6 +401,9 @@ class Context implements \JsonSerializable
         return $globalParams;
     }
 
+    /**
+     * @return void
+     */
     public function updateFromEnlightRequest(EnlightRequest $request)
     {
         $this->setHost($request->getHttpHost());
@@ -384,8 +419,8 @@ class Context implements \JsonSerializable
     public static function createFromShop(ShopwareShop $shop, ShopwareConfig $config)
     {
         $self = new self(
-            $shop->getHost(),
-            $shop->getBaseUrl(),
+            $shop->getHost() ?? 'localhost',
+            $shop->getBaseUrl() ?? '',
             $shop->getSecure(),
             []
         );
@@ -395,13 +430,5 @@ class Context implements \JsonSerializable
         $self->setRemoveCategory((bool) $config->get('routerRemoveCategory'));
 
         return $self;
-    }
-
-    /**
-     * @return array
-     */
-    public function jsonSerialize()
-    {
-        return get_object_vars($this);
     }
 }

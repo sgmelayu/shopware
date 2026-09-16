@@ -1,29 +1,31 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\CookieBundle\Services;
 
+use DateTime;
 use Shopware\Bundle\CookieBundle\CookieCollection;
 use Shopware\Bundle\CookieBundle\Structs\CookieStruct;
 use Symfony\Component\HttpFoundation\Cookie;
@@ -59,7 +61,7 @@ class CookieRemoveHandler extends CookieHandler implements CookieRemoveHandlerIn
         $technicallyRequiredCookies = $this->getTechnicallyRequiredCookies();
 
         $this->removeCookies($request, $response, static function (string $cookieKey) use ($technicallyRequiredCookies) {
-            return $technicallyRequiredCookies->hasCookieWithName($cookieKey);
+            return $technicallyRequiredCookies->hasCookieWithName($cookieKey) || $cookieKey === self::XDEBUG_COOKIE_NAME;
         });
     }
 
@@ -75,7 +77,7 @@ class CookieRemoveHandler extends CookieHandler implements CookieRemoveHandlerIn
             $cookieName = $responseCookie->getName();
 
             if (!$validationFunction($cookieName)) {
-                if (array_key_exists($cookieName, $requestCookies)) {
+                if (\array_key_exists($cookieName, $requestCookies)) {
                     continue;
                 }
 
@@ -91,13 +93,16 @@ class CookieRemoveHandler extends CookieHandler implements CookieRemoveHandlerIn
 
         foreach ($requestCookies as $cookieKey => $cookieName) {
             if (!$validationFunction($cookieKey)) {
-                $response->headers->setCookie(new Cookie($cookieKey, null, 0));
-                $response->headers->setCookie(new Cookie($cookieKey, null, 0, $cookieBasePath));
-                $response->headers->setCookie(new Cookie($cookieKey, null, 0, $cookiePath));
-                $response->headers->setCookie(new Cookie($cookieKey, null, 0, $currentPath));
-                $response->headers->setCookie(new Cookie($cookieKey, null, 0, $currentPathWithoutSlash));
-                $response->headers->setCookie(new Cookie($cookieKey, null, 0, $request->getBaseUrl()));
-                $response->headers->setCookie(new Cookie($cookieKey, null, 0, $cookieBasePath . $request->getBaseUrl()));
+                $host = preg_replace('/^www./', '', $request->getHost());
+                foreach ([$host, null] as $cookieHost) {
+                    $response->headers->setCookie(new Cookie($cookieKey, null, 0, '/', $cookieHost));
+                    $response->headers->setCookie(new Cookie($cookieKey, null, 0, $cookieBasePath, $cookieHost));
+                    $response->headers->setCookie(new Cookie($cookieKey, null, 0, $cookiePath, $cookieHost));
+                    $response->headers->setCookie(new Cookie($cookieKey, null, 0, $currentPath, $cookieHost));
+                    $response->headers->setCookie(new Cookie($cookieKey, null, 0, $currentPathWithoutSlash, $cookieHost));
+                    $response->headers->setCookie(new Cookie($cookieKey, null, 0, $request->getBaseUrl(), $cookieHost));
+                    $response->headers->setCookie(new Cookie($cookieKey, null, 0, $cookieBasePath . $request->getBaseUrl(), $cookieHost));
+                }
             }
         }
     }
@@ -131,7 +136,7 @@ class CookieRemoveHandler extends CookieHandler implements CookieRemoveHandlerIn
 
     protected function setNewPreferencesCookie(Request $request, Response $response, array $preferences): void
     {
-        $expire = new \DateTime();
+        $expire = new DateTime();
         $expire->modify('+180 day');
 
         $response->headers->setCookie(

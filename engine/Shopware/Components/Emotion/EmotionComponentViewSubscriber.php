@@ -1,30 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Emotion;
 
+use DirectoryIterator;
 use Enlight\Event\SubscriberInterface;
+use Enlight_Event_EventArgs;
+use Enlight_View_Default;
+use RecursiveRegexIterator;
+use RegexIterator;
 
 class EmotionComponentViewSubscriber implements SubscriberInterface
 {
@@ -41,6 +46,9 @@ class EmotionComponentViewSubscriber implements SubscriberInterface
         $this->path = $path;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public static function getSubscribedEvents()
     {
         return [
@@ -49,9 +57,9 @@ class EmotionComponentViewSubscriber implements SubscriberInterface
         ];
     }
 
-    public function registerBackendTemplates(\Enlight_Event_EventArgs $args)
+    public function registerBackendTemplates(Enlight_Event_EventArgs $args)
     {
-        /** @var \Enlight_View_Default $view */
+        /** @var Enlight_View_Default $view */
         $view = $args->get('subject')->View();
 
         $templateDir = $this->path . '/Resources/views/emotion_components/';
@@ -66,8 +74,8 @@ class EmotionComponentViewSubscriber implements SubscriberInterface
             return;
         }
 
-        $directoryIterator = new \DirectoryIterator($backendPath);
-        $regex = new \RegexIterator($directoryIterator, '/^.+\.js$/i', \RecursiveRegexIterator::GET_MATCH);
+        $directoryIterator = new DirectoryIterator($backendPath);
+        $regex = new RegexIterator($directoryIterator, '/^.+\.js$/i', RecursiveRegexIterator::GET_MATCH);
         foreach ($regex as $file) {
             $path = 'backend/' . $file[0];
             $view->extendsBlock(
@@ -78,9 +86,9 @@ class EmotionComponentViewSubscriber implements SubscriberInterface
         }
     }
 
-    public function registerWidgetTemplates(\Enlight_Event_EventArgs $args)
+    public function registerWidgetTemplates(Enlight_Event_EventArgs $args)
     {
-        /** @var \Enlight_View_Default $view */
+        /** @var Enlight_View_Default $view */
         $view = $args->get('subject')->View();
 
         if (file_exists($this->path . '/Resources/views/emotion_components/')) {

@@ -16,14 +16,14 @@
         groupKeys = Object.keys(cookiePreferences.groups);
 
         $.each(groupKeys, function (groupIndex, groupKey) {
-            if (!cookiePreferences.groups.hasOwnProperty(groupKey)) {
+            if (!Object.prototype.hasOwnProperty.call(cookiePreferences.groups, groupKey)) {
                 return;
             }
 
             cookieKeys = Object.keys(cookiePreferences.groups[groupKey].cookies);
 
             $.each(cookieKeys, function (cookieIndex, cookieKey) {
-                if (!cookiePreferences.groups[groupKey].cookies.hasOwnProperty(cookieKey)) {
+                if (!Object.prototype.hasOwnProperty.call(cookiePreferences.groups[groupKey].cookies, cookieKey)) {
                     return;
                 }
 
@@ -151,7 +151,15 @@
              * @property offCanvasCategoryMenuSelector
              * @type {string}
              */
-            offCanvasCategoryMenuSelector: '.entry--menu-left .entry--link[data-offcanvas="true"]'
+            offCanvasCategoryMenuSelector: '.entry--menu-left .entry--link[data-offcanvas="true"]',
+
+            /**
+             * The Selector for the Cookie Timeout
+             *
+             * @property cookieTimeout
+             * @type {number}
+             */
+            cookieTimeout: 60
         },
 
         /**
@@ -223,7 +231,7 @@
 
         parsePreferences: function () {
             var me = this,
-                groupNames = Object.keys(me.preferences['groups']),
+                groupNames = Object.keys(me.preferences.groups),
                 group,
                 groupRequired,
                 cookieNames,
@@ -232,15 +240,15 @@
             $.each(groupNames, function (groupIndex, groupName) {
                 group = me.findGroupByName(groupName);
                 groupRequired = group.find(me.opts.cookieActiveInputLabelSelector).hasClass(me.opts.requiredClass);
-                me.toggleGroup(group, groupRequired || me.preferences['groups'][groupName].active);
+                me.toggleGroup(group, groupRequired || me.preferences.groups[groupName].active);
 
-                cookieNames = Object.keys(me.preferences['groups'][groupName].cookies);
+                cookieNames = Object.keys(me.preferences.groups[groupName].cookies);
 
                 $.each(cookieNames, function (cookieIndex, cookieName) {
                     cookie = me.findCookieByName(cookieName);
-                    me.toggleCookie(cookie, groupRequired || me.preferences['groups'][groupName].cookies[cookieName].active);
+                    me.toggleCookie(cookie, groupRequired || me.preferences.groups[groupName].cookies[cookieName].active);
 
-                    me.checkActiveStateForAllCookiesOfGroup(group, groupRequired || me.preferences['groups'][groupName].cookies[cookieName].active);
+                    me.checkActiveStateForAllCookiesOfGroup(group, groupRequired || me.preferences.groups[groupName].cookies[cookieName].active);
                 });
             });
         },
@@ -281,14 +289,14 @@
 
                 uniqueNames.push(groupName);
 
-                if (!preferences['groups'].hasOwnProperty(groupName)) {
-                    preferences['groups'][groupName] = {
+                if (!Object.prototype.hasOwnProperty.call(preferences.groups, groupName)) {
+                    preferences.groups[groupName] = {
                         name: groupName,
                         cookies: {}
                     };
                 }
 
-                preferences['groups'][groupName].active = isActive;
+                preferences.groups[groupName].active = isActive;
 
                 cookies.each(function (cookieIndex, cookie) {
                     var cookieName = $(cookie).find(opts.cookieNameSelector).val(),
@@ -296,20 +304,19 @@
 
                     uniqueNames.push(cookieName);
 
-                    if (!preferences['groups'][groupName].cookies.hasOwnProperty(cookieName)) {
-                        preferences['groups'][groupName].cookies[cookieName] = {
+                    if (!Object.prototype.hasOwnProperty.call(preferences.groups[groupName].cookies, cookieName)) {
+                        preferences.groups[groupName].cookies[cookieName] = {
                             name: cookieName
                         };
                     }
 
-                    preferences['groups'][groupName].cookies[cookieName].active = isCookieActive;
+                    preferences.groups[groupName].cookies[cookieName].active = isCookieActive;
                 });
             });
 
             uniqueNames.sort();
             preferences.hash = window.btoa(JSON.stringify(uniqueNames));
-
-            date.setTime(date.getTime() + (180 * 24 * 60 * 60 * 1000));
+            date.setTime(date.getTime() + (this.opts.cookieTimeout * 24 * 60 * 60 * 1000));
 
             document.cookie = this.preferenceCookieName + '=' + JSON.stringify(preferences) + ';path=' + this.getBasePath() + ';expires=' + date.toGMTString() + ';' + ($.isSecure() ? ' secure;' : '');
 
@@ -455,6 +462,8 @@
     });
 })(jQuery, window, location);
 
+// Removing this function call, would probably be a breaking change
+// eslint-disable-next-line no-unused-vars
 function openCookieConsentManager () {
     var plugin = $('*[data-cookie-consent-manager="true"]').data('plugin_swCookieConsentManager');
     plugin.openConsentManager();

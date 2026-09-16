@@ -1,32 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Article\Configurator;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use Shopware\Bundle\StoreFrontBundle\Service\Core\ConfiguratorService;
 use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\Article\Article;
 
 /**
  * @ORM\Entity()
@@ -35,7 +37,7 @@ use Shopware\Components\Model\ModelEntity;
 class Set extends ModelEntity
 {
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Configurator\Group>
+     * @var ArrayCollection<Group>
      *
      * @ORM\ManyToMany(targetEntity="Shopware\Models\Article\Configurator\Group", inversedBy="sets", cascade={"persist"})
      * @ORM\JoinTable(name="s_article_configurator_set_group_relations",
@@ -50,7 +52,7 @@ class Set extends ModelEntity
     protected $groups;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Configurator\Option>
+     * @var ArrayCollection<array-key, Option>
      *
      * @ORM\ManyToMany(targetEntity="Shopware\Models\Article\Configurator\Option", inversedBy="sets", cascade={"persist"})
      * @ORM\JoinTable(name="s_article_configurator_set_option_relations",
@@ -65,21 +67,21 @@ class Set extends ModelEntity
     protected $options;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Article>
+     * @var ArrayCollection<Article>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Article\Article", mappedBy="configuratorSet")
      */
     protected $articles;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Configurator\Dependency>
+     * @var ArrayCollection<Dependency>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Article\Configurator\Dependency", mappedBy="configuratorSet", orphanRemoval=true, cascade={"persist"})
      */
     protected $dependencies;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Configurator\PriceVariation>
+     * @var ArrayCollection<PriceVariation>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Article\Configurator\PriceVariation", mappedBy="configuratorSet", orphanRemoval=true, cascade={"persist"})
      */
@@ -165,7 +167,7 @@ class Set extends ModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Article\Configurator\Group>|null
+     * @return ArrayCollection<Group>
      */
     public function getGroups()
     {
@@ -175,7 +177,7 @@ class Set extends ModelEntity
     /**
      * @param Group[] $groups
      *
-     * @return \Shopware\Models\Article\Configurator\Set
+     * @return Set
      */
     public function setGroups($groups)
     {
@@ -185,7 +187,7 @@ class Set extends ModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Article\Article>
+     * @return ArrayCollection<Article>
      */
     public function getArticles()
     {
@@ -193,7 +195,7 @@ class Set extends ModelEntity
     }
 
     /**
-     * @param ArrayCollection<\Shopware\Models\Article\Article> $articles
+     * @param ArrayCollection<Article> $articles
      */
     public function setArticles($articles)
     {
@@ -201,7 +203,7 @@ class Set extends ModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Article\Configurator\Dependency>
+     * @return ArrayCollection<Dependency>
      */
     public function getDependencies()
     {
@@ -209,7 +211,7 @@ class Set extends ModelEntity
     }
 
     /**
-     * @param ArrayCollection<\Shopware\Models\Article\Configurator\Dependency> $dependencies
+     * @param ArrayCollection<Dependency> $dependencies
      */
     public function setDependencies($dependencies)
     {
@@ -217,7 +219,7 @@ class Set extends ModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Article\Configurator\Option>|null
+     * @return ArrayCollection<array-key, Option>
      */
     public function getOptions()
     {
@@ -225,9 +227,9 @@ class Set extends ModelEntity
     }
 
     /**
-     * @param Option[] $options
+     * @param ArrayCollection<array-key, Option>|array<Option> $options
      *
-     * @return \Shopware\Models\Article\Configurator\Set
+     * @return Set
      */
     public function setOptions($options)
     {
@@ -245,7 +247,7 @@ class Set extends ModelEntity
     }
 
     /**
-     * @param int $type
+     * @param ConfiguratorService::CONFIGURATOR_* $type
      */
     public function setType($type)
     {

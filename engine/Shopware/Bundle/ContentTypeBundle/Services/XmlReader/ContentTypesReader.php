@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ContentTypeBundle\Services\XmlReader;
@@ -29,6 +29,7 @@ use DOMElement;
 use DOMNode;
 use DOMNodeList;
 use DOMXPath;
+use InvalidArgumentException;
 use Shopware\Components\Plugin\XmlReader\XmlReaderBase;
 use Symfony\Component\Config\Util\XmlUtils;
 
@@ -54,6 +55,9 @@ class ContentTypesReader extends XmlReaderBase
     protected function parseFile(DOMDocument $xml): array
     {
         $nodeList = (new DOMXPath($xml))->query('//types/type');
+        if (!$nodeList instanceof DOMNodeList) {
+            return [];
+        }
 
         return self::parseList($nodeList);
     }
@@ -127,7 +131,7 @@ class ContentTypesReader extends XmlReaderBase
         }
 
         if ($showInFrontend && (empty($viewDescriptionFieldName) || empty($viewImageFieldName) || empty($viewTitleFieldName) || empty($viewMetaTitleFieldName) || empty($viewMetaDescriptionFieldName))) {
-            throw new \InvalidArgumentException('Content-Type with enabled showInFrontend requires a viewTitleFieldName, viewDescriptionFieldName, viewImageFieldName, viewMetaTitleFieldName, viewMetaDescriptionFieldName');
+            throw new InvalidArgumentException('Content-Type with enabled showInFrontend requires a viewTitleFieldName, viewDescriptionFieldName, viewImageFieldName, viewMetaTitleFieldName, viewMetaDescriptionFieldName');
         }
 
         $item['menuParent'] = 'Content';
@@ -154,7 +158,7 @@ class ContentTypesReader extends XmlReaderBase
 
         foreach ($fields as $field) {
             if ($value = self::getElementChildValueByName($element, $field)) {
-                if (in_array($field, $boolFields, true)) {
+                if (\in_array($field, $boolFields, true)) {
                     $value = (bool) XmlUtils::phpize($value);
                 }
 
@@ -229,7 +233,7 @@ class ContentTypesReader extends XmlReaderBase
                 if ($child->nodeType == XML_TEXT_NODE) {
                     $result['_value'] = $child->nodeValue;
 
-                    return count($result) == 1
+                    return \count($result) == 1
                         ? $result['_value']
                         : $result;
                 }
@@ -254,7 +258,7 @@ class ContentTypesReader extends XmlReaderBase
     private static function cleanArray(array $haystack): array
     {
         foreach ($haystack as $key => $value) {
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 $haystack[$key] = self::cleanArray($haystack[$key]);
             }
 

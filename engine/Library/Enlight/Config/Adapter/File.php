@@ -22,11 +22,6 @@
  *
  * The Enlight_Config_Adapter_File is an adapter to write the enlight configuration to a file and read this.
  * The adapter use the zend config writer.
- *
- * @category   Enlight
- *
- * @copyright  Copyright (c) 2011, shopware AG (http://www.shopware.de)
- * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
 class Enlight_Config_Adapter_File extends Enlight_Config_Adapter
 {
@@ -68,8 +63,6 @@ class Enlight_Config_Adapter_File extends Enlight_Config_Adapter
     /**
      * Sets the options from an array.
      *
-     * @param array $options
-     *
      * @return Enlight_Config_Adapter
      */
     public function setOptions(array $options)
@@ -107,8 +100,6 @@ class Enlight_Config_Adapter_File extends Enlight_Config_Adapter
     /**
      * Reads a section from the data store.
      *
-     * @param Enlight_Config $config
-     *
      * @return Enlight_Config_Adapter_File
      */
     public function read(Enlight_Config $config)
@@ -121,19 +112,14 @@ class Enlight_Config_Adapter_File extends Enlight_Config_Adapter
                 try {
                     /** @var Enlight_Config_Format_Ini $reader */
                     $reader = new $reader($name, $section, [
-                            'skipExtends' => $this->_skipExtends, ]
+                        'skipExtends' => $this->_skipExtends, ]
                     );
                     $config->setData($reader->toArray());
                     break;
                     // Section is defect
                 } catch (Exception $e) {
-                    if (!empty($section) && is_array($section)) {
-                        // Try next section
-                        array_shift($section);
-                    } else {
-                        $config->setData([]);
-                        break;
-                    }
+                    $config->setData([]);
+                    break;
                 }
             }
         } else {
@@ -146,8 +132,7 @@ class Enlight_Config_Adapter_File extends Enlight_Config_Adapter
     /**
      * Saves the data changes to the data store.
      *
-     * @param Enlight_Config $config
-     * @param bool           $forceWrite
+     * @param bool $forceWrite
      *
      * @return Enlight_Config_Adapter_File
      */
@@ -165,34 +150,21 @@ class Enlight_Config_Adapter_File extends Enlight_Config_Adapter
 
         if (!empty($section)) {
             $base = $this->readBase($filename);
-            if (is_array($section)) {
-                foreach (array_reverse($section) as $sectionName) {
-                    if (!isset($base->$sectionName)) {
-                        $base->$sectionName = [];
-                    }
-                }
-                $sectionName = $extendingSection = array_shift($section);
-                foreach ($section as $extendedSection) {
-                    $base->setExtend($extendingSection, $extendedSection);
-                    $extendingSection = $extendedSection;
-                }
-            } else {
-                $sectionName = (string) $section;
-            }
+            $sectionName = $section;
             $base->$sectionName = $config;
         } else {
             $base = $config;
         }
 
-        $dir = dirname($filename);
-        if (!file_exists($dir) || !is_writeable($dir)) {
+        $dir = \dirname($filename);
+        if (!file_exists($dir) || !is_writable($dir)) {
             $old = umask(0);
             mkdir($dir, 0777, true);
             chmod($dir, 0777);
             umask($old);
         }
 
-        if (!is_writeable($dir)) {
+        if (!is_writable($dir)) {
             return $this;
         }
 
@@ -220,9 +192,9 @@ class Enlight_Config_Adapter_File extends Enlight_Config_Adapter
         $indexed = false;
 
         foreach ($this->_configDir as $key => $dir) {
-            if (is_string($key) && strpos($name, $key) === 0) {
+            if (\is_string($key) && strpos($name, $key) === 0) {
                 $indexed = true;
-                $name = substr_replace($name, '', 0, strlen($key));
+                $name = substr_replace($name, '', 0, \strlen($key));
 
                 $result = $dir . $this->_namePrefix . $name . $suffix;
                 if (file_exists($result)) {
@@ -257,11 +229,12 @@ class Enlight_Config_Adapter_File extends Enlight_Config_Adapter
     protected function readBase($filename)
     {
         if (file_exists($filename)) {
+            /** @var class-string<Enlight_Config> $reader */
             $reader = 'Enlight_Config_Format_' . ucfirst($this->_configType);
             $base = new $reader($filename, null, [
-                    'skipExtends' => true,
-                    'allowModifications' => true, ]
-            );
+                'skipExtends' => true,
+                'allowModifications' => true,
+            ]);
         } else {
             $base = new Enlight_Config([], true);
         }

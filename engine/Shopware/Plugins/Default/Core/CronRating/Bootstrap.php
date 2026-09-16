@@ -1,27 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\MediaServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Components\Compatibility\LegacyStructConverter;
+use Shopware\Components\Routing\RouterInterface;
+use Shopware\Components\ShopRegistrationServiceInterface;
 use Shopware\Models\Shop\Currency;
 use Shopware\Models\Shop\Shop;
 
@@ -46,13 +52,13 @@ class Shopware_Plugins_Core_CronRating_Bootstrap extends Shopware_Components_Plu
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return void|string
      */
     public function onRun(Enlight_Components_Cron_EventArgs $job)
     {
-        if (empty(Shopware()->Config()->voteSendCalling)) {
+        if (empty(Shopware()->Config()->get('voteSendCalling'))) {
             return;
         }
 
@@ -76,24 +82,25 @@ class Shopware_Plugins_Core_CronRating_Bootstrap extends Shopware_Components_Plu
                 continue;
             }
 
-            /** @var Shopware\Models\Shop\Repository $repository */
             $repository = Shopware()->Models()->getRepository(Shop::class);
 
             $shopId = is_numeric($order['language']) ? $order['language'] : $order['subshopID'];
             $shop = $repository->getActiveById($shopId);
+            if ($shop === null) {
+                continue;
+            }
 
-            /** @var Shopware\Models\Shop\Currency $repository */
             $repository = Shopware()->Models()->getRepository(Currency::class);
             $shop->setCurrency($repository->find($order['currencyID']));
-            $this->get(\Shopware\Components\ShopRegistrationServiceInterface::class)->registerShop($shop);
+            $this->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
 
             foreach ($orderPositions[$orderId] as &$position) {
-                $position['link'] = $this->get(\Shopware\Components\Routing\RouterInterface::class)->assemble([
+                $position['link'] = $this->get(RouterInterface::class)->assemble([
                     'module' => 'frontend', 'sViewport' => 'detail',
                     'sArticle' => $position['articleID'],
                 ]);
 
-                $position['link_rating_tab'] = $this->get(\Shopware\Components\Routing\RouterInterface::class)->assemble([
+                $position['link_rating_tab'] = $this->get(RouterInterface::class)->assemble([
                     'module' => 'frontend', 'sViewport' => 'detail',
                     'sArticle' => $position['articleID'],
                     'jumpTab' => 'rating',
@@ -149,16 +156,16 @@ class Shopware_Plugins_Core_CronRating_Bootstrap extends Shopware_Components_Plu
         $shopPositionImages = [];
 
         foreach ($shopPositions as $shopId => $positions) {
-            $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->createShopContext($shopId);
+            $context = $this->get(ContextServiceInterface::class)->createShopContext($shopId);
 
-            $shopPositionImages[$shopId] = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\MediaServiceInterface::class)->getCovers(
+            $shopPositionImages[$shopId] = $this->get(MediaServiceInterface::class)->getCovers(
                 $positions,
                 $context
             );
 
             $shopPositionImages[$shopId] = array_map(
                 function ($mediaStruct) {
-                    return $this->get(\Shopware\Components\Compatibility\LegacyStructConverter::class)->convertMediaStruct($mediaStruct);
+                    return $this->get(LegacyStructConverter::class)->convertMediaStruct($mediaStruct);
                 },
                 $shopPositionImages[$shopId]
             );
@@ -352,7 +359,7 @@ class Shopware_Plugins_Core_CronRating_Bootstrap extends Shopware_Components_Plu
                 o.language as language
             FROM s_order_details as d
             LEFT JOIN s_core_tax as t
-            ON t.id = d.taxID                        
+            ON t.id = d.taxID
             LEFT JOIN s_articles_details ad
             ON d.articleordernumber = ad.ordernumber
             LEFT JOIN s_order o
@@ -405,25 +412,19 @@ class Shopware_Plugins_Core_CronRating_Bootstrap extends Shopware_Components_Plu
      *
      * by using the corresponding shopId for every order's positions.
      *
-     * @param array $orderPositions
-     *
-     * @return array
+     * @return array<int, array<string, BaseProduct>>
      */
-    private function structurePositionsArray($orderPositions)
+    private function structurePositionsArray(array $orderPositions): array
     {
         $shopPositionNumbers = [];
 
-        foreach ($orderPositions as $order_id => $positions) {
-            $firstPosition = $positions[array_keys($positions)[0]];
-            $shopId = is_numeric($firstPosition['language']) ? $firstPosition['language'] : $firstPosition['subshopID'];
-
-            if (!is_array($shopPositionNumbers[$shopId])) {
-                $shopPositionNumbers[$shopId] = [];
-            }
+        foreach ($orderPositions as $positions) {
+            $firstPosition = $positions[array_key_first($positions)];
+            $shopId = is_numeric($firstPosition['language']) ? (int) $firstPosition['language'] : (int) $firstPosition['subshopID'];
 
             $shopPositionNumbers[$shopId] = array_merge(
                 array_column($positions, 'articleordernumber'),
-                $shopPositionNumbers[$shopId]
+                $shopPositionNumbers[$shopId] ?? []
             );
         }
 

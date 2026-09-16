@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category    Shopware
  * @package     Emotion
@@ -177,7 +176,7 @@ Ext.define('Shopware.apps.Emotion.controller.Detail', {
             grid = me.getListing(),
             store = grid.getStore();
 
-        Ext.MessageBox.confirm(me.snippets.growlMessage, me.snippets.confirmMessage , function (response) {
+        Ext.MessageBox.confirm(me.snippets.growlMessage, me.snippets.confirmMessage, function (response) {
             if ( response !== 'yes' ) {
                 return;
             }
@@ -418,11 +417,11 @@ Ext.define('Shopware.apps.Emotion.controller.Detail', {
             formPanel = win.down('form'),
             form = formPanel.getForm(),
             formFields = form.getFields(),
-            data= [],
+            data = [],
             cssField,
             xtype, compField;
 
-        if(!formPanel.getForm().isValid()) {
+        if (!formPanel.getForm().isValid()) {
             Shopware.Notification.createGrowlMessage(
                 win.title,
                 me.snippets.saveComponentAlert
@@ -809,14 +808,14 @@ Ext.define('Shopware.apps.Emotion.controller.Detail', {
         }
 
         return Ext.Msg.confirm(
-           '{s name="preset/required_plugins_title"}{/s}',
+            '{s name="preset/required_plugins_title"}{/s}',
             Ext.String.format('{s name="preset/required_plugins_confirmation"}{/s}', pluginInfo.join('<br>')),
             function(btn) {
-               if (btn === 'yes') {
-                   Shopware.app.Application.addSubApplication({
-                       name: 'Shopware.apps.PluginManager'
-                   });
-               }
+                if (btn === 'yes') {
+                    Shopware.app.Application.addSubApplication({
+                        name: 'Shopware.apps.PluginManager'
+                    });
+                }
             }
         );
     },
@@ -1429,7 +1428,7 @@ Ext.define('Shopware.apps.Emotion.controller.Detail', {
             callback: function(operation, success, response) {
                 var response = Ext.decode(response.responseText);
 
-                if(!response.success) {
+                if (!response.success) {
                     Shopware.Notification.createGrowlMessage(
                         me.snippets.growlMessage,
                         me.snippets.duplicateErrorMsg

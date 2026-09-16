@@ -1,39 +1,43 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
+
+use Shopware\Bundle\MediaBundle\MediaServiceInterface;
+use Shopware\Models\Article\Article;
+use Shopware\Models\Article\Repository;
+use Shopware\Models\Article\Supplier;
 
 class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend_ExtJs
 {
-    /**
-     * @var \Shopware\Models\Article\Repository
-     */
-    private $repository;
+    private ?Repository $repository = null;
 
     /**
      * Deletes a Supplier from the database
      * Feeds the view with an json encoded array containing
      * - success : boolean Set to true if everything went well otherwise it is set to false
      * - data    : int  Id of the deleted supplier
+     *
+     * @return void
      */
     public function deleteSupplierAction()
     {
@@ -44,10 +48,10 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
         }
 
         $id = (int) $this->Request()->get('id');
-        $supplierModel = Shopware()->Models()->find('Shopware\Models\Article\Supplier', $id);
+        $supplierModel = $this->get('models')->find(Supplier::class, $id);
 
-        Shopware()->Models()->remove($supplierModel);
-        Shopware()->Models()->flush();
+        $this->get('models')->remove($supplierModel);
+        $this->get('models')->flush();
 
         $this->View()->assign(['success' => true, 'data' => $id]);
     }
@@ -63,6 +67,8 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
      *          - link : String
      *          - articleCounter : Int
      *          - description : String
+     *
+     * @return void
      */
     public function getSuppliersAction()
     {
@@ -88,19 +94,19 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
         }
 
         $query = $this->getRepository()->getSupplierListQuery($filter, $sort, $limit, $offset);
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         $suppliers = $query->getArrayResult();
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
         foreach ($suppliers as &$supplier) {
-            $supplier['description'] = strip_tags($supplier['description']);
+            $supplier['description'] = strip_tags((string) $supplier['description']);
             $supplier['image'] = $mediaService->getUrl($supplier['image']);
         }
         unset($supplier);
 
         $this->View()->assign([
-            'success' => !empty($suppliers),
+            'success' => true,
             'data' => $suppliers,
             'total' => $total,
         ]);
@@ -110,6 +116,8 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
      * This method is called if a new supplier should be written to the database.
      * It works as a wrapper around the saveSupplier method to use ACL
      * ACL configuration is done in initAcl()
+     *
+     * @return void
      */
     public function createSupplierAction()
     {
@@ -120,6 +128,8 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
      * This method is called if a supplier should be updated.
      * It works as a wrapper around the saveSupplier method to use ACL
      * ACL configuration is done in initAcl()
+     *
+     * @return void
      */
     public function updateSupplierAction()
     {
@@ -139,6 +149,8 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
      *          - articleCounter : Int
      *          - description : String
      * [-errorMsg] : String containing the error message
+     *
+     * @return void
      */
     public function saveSuppliers()
     {
@@ -147,13 +159,11 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
 
             return;
         }
-        /** @var \Shopware\Models\Article\Supplier $supplierModel */
-        $supplierModel = null;
         $id = (int) $this->Request()->get('id');
         if ($id > 0) {
-            $supplierModel = Shopware()->Models()->find('Shopware\Models\Article\Supplier', $id);
+            $supplierModel = $this->get('models')->find(Supplier::class, $id);
         } else {
-            $supplierModel = new \Shopware\Models\Article\Supplier();
+            $supplierModel = new Supplier();
         }
 
         $params = $this->Request()->getParams();
@@ -163,12 +173,12 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
         $supplierModel->setChanged();
 
         $mediaData = $this->Request()->get('media-manager-selection');
-        if (!empty($mediaData) && $mediaData !== null) {
+        if (!empty($mediaData)) {
             $supplierModel->setImage($this->Request()->get('media-manager-selection'));
         }
 
         // strip full qualified url
-        $mediaService = $this->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = $this->get(MediaServiceInterface::class);
         $supplierModel->setImage($mediaService->normalize($supplierModel->getImage()));
 
         // backend checks
@@ -182,7 +192,7 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
             return;
         }
 
-        $manager = Shopware()->Models();
+        $manager = $this->get('models');
         $manager->persist($supplierModel);
         $manager->flush();
         $params['id'] = $supplierModel->getId();
@@ -198,7 +208,7 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
      */
     public function getAllSupplier()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $filter = $this->Request()->getParam('filter');
         $sort = $this->Request()->getParam('sort', [['property' => 'name']]);
@@ -206,7 +216,7 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
         $offset = $this->Request()->getParam('start', 0);
 
         $query = $this->getRepository()->getSupplierListQuery($filter, $sort, $limit, $offset);
-        $count = Shopware()->Models()->getQueryCount($query);
+        $count = $this->get('models')->getQueryCount($query);
 
         return [
             'result' => $query->getArrayResult(),
@@ -218,18 +228,19 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
      * Gets a single supplier
      *
      * @param int $id
+     *
+     * @return void
      */
     protected function getSingleSupplier($id)
     {
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
         $data = $this->getRepository()->getSupplierQuery($id)->getArrayResult();
-        $data[0]['image'] = $data[0]['image'] ? $mediaService->getUrl($data[0]['image']) : null;
-
         if (empty($data)) {
             $this->View()->assign(['success' => false, 'message' => 'Supplier not found']);
 
             return;
         }
+        $data[0]['image'] = $data[0]['image'] ? $mediaService->getUrl($data[0]['image']) : null;
 
         $this->View()->assign(['success' => true, 'data' => $data, 'total' => 1]);
     }
@@ -252,13 +263,11 @@ class Shopware_Controllers_Backend_Supplier extends Shopware_Controllers_Backend
 
     /**
      * Internal helper function to get access to the form repository.
-     *
-     * @return \Shopware\Models\Article\Repository
      */
-    private function getRepository()
+    private function getRepository(): Repository
     {
         if ($this->repository === null) {
-            $this->repository = Shopware()->Models()->getRepository('Shopware\Models\Article\Article');
+            $this->repository = $this->get('models')->getRepository(Article::class);
         }
 
         return $this->repository;

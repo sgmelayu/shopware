@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/performance/main"}
@@ -193,7 +192,7 @@ Ext.define('Shopware.apps.Performance.view.main.MultiRequestTasks', {
     /**
      * Disable border of the window
      */
-    border:false,
+    border: false,
 
     /**
      * The initComponent template method is an important initialization step for a Component.
@@ -348,11 +347,11 @@ Ext.define('Shopware.apps.Performance.view.main.MultiRequestTasks', {
         me.settingsForm = Ext.create('Ext.form.Panel', {
             layout: {
                 type: 'vbox',
-                align : 'stretch',
-                pack  : 'start',
+                align: 'stretch',
+                pack: 'start',
             },
             padding: 10,
-            bodyStyle : 'background:none',
+            bodyStyle: 'background:none',
             border: 0,
             items: [
                 me.createSettingsInfoText(),
@@ -616,7 +615,7 @@ Ext.define('Shopware.apps.Performance.view.main.MultiRequestTasks', {
                     Ext.Msg.confirm('{s name="progress/confirmCacheClearTitle"}{/s}', '{s name="progress/confirmCacheClearText"}{/s}', function (response) {
                         if (response === 'yes') { // Clear cache and start
                             me.clearHttpCacheAndStart();
-                        } else if(response === 'no') { // Just start
+                        } else if (response === 'no') { // Just start
                             me.fireEvent('startHttpCacheWarmUp', me);
                         } else { // Cancel
                             me.startButton.show();
@@ -779,8 +778,8 @@ Ext.define('Shopware.apps.Performance.view.main.MultiRequestTasks', {
 
         Ext.Ajax.request({
             url: '{url controller=Cache action=clearCache cache=Config}',
-            params:{
-                'cache[http]'   : 'on',
+            params: {
+                'cache[http]': 'on',
             },
             success: function () {
                 me.fireEvent('startHttpCacheWarmUp', me);

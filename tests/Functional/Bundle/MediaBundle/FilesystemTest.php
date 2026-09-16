@@ -1,33 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\MediaBundle;
 
+use Enlight_Components_Test_TestCase;
 use Shopware\Bundle\MediaBundle\MediaServiceInterface;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Shop\Shop;
 
-class FilesystemTest extends \Enlight_Components_Test_TestCase
+class FilesystemTest extends Enlight_Components_Test_TestCase
 {
     /**
      * @var MediaServiceInterface
@@ -56,7 +58,7 @@ class FilesystemTest extends \Enlight_Components_Test_TestCase
     {
         parent::setUp();
 
-        $this->mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $this->mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
         $this->testData = [
             'key' => 'myKey',
             'name' => 'name',
@@ -66,7 +68,7 @@ class FilesystemTest extends \Enlight_Components_Test_TestCase
                 'grumpy guy',
             ],
         ];
-        $this->testFileSize = strlen(json_encode($this->testData));
+        $this->testFileSize = mb_strlen(json_encode($this->testData, JSON_THROW_ON_ERROR));
     }
 
     protected function tearDown(): void
@@ -76,6 +78,7 @@ class FilesystemTest extends \Enlight_Components_Test_TestCase
                 $this->mediaService->delete($file);
             }
         }
+        parent::tearDown();
     }
 
     public function testFiles()
@@ -94,7 +97,7 @@ class FilesystemTest extends \Enlight_Components_Test_TestCase
         $file = current($this->testPaths);
 
         /** @var Shop $shop */
-        $shop = Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Shop::class)->getActiveDefault();
+        $shop = Shopware()->Container()->get(ModelManager::class)->getRepository(Shop::class)->getActiveDefault();
         if ($shop->getMain()) {
             $shop = $shop->getMain();
         }

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -35,8 +34,8 @@ Ext.define('Shopware.apps.ArticleList.controller.Backup', {
     extend: 'Ext.app.Controller',
 
     refs: [
-        { ref:'mainGrid', selector:'multi-edit-main-grid' },
-        { ref:'backupGrid', selector:'multi-edit-backup-grid' }
+        { ref: 'mainGrid', selector: 'multi-edit-main-grid' },
+        { ref: 'backupGrid', selector: 'multi-edit-backup-grid' }
     ],
 
     /**
@@ -131,7 +130,6 @@ Ext.define('Shopware.apps.ArticleList.controller.Backup', {
         'ArticleList');
     },
 
-
     /**
      * Callback method triggered, after the user presses the 'reset' action button.
      */
@@ -174,13 +172,13 @@ Ext.define('Shopware.apps.ArticleList.controller.Backup', {
         var me = this;
 
         me.progressWindow = Ext.MessageBox.show({
-            title        : '{s name="restoringTitle"}Restoring the backup{/s}',
-            msg          : '{s name="restoringMessage"}Currently restoring the selected backup.{/s}',
-            width        : 500,
-            progress     : true,
-            closable     : false,
-            buttons      : Ext.MessageBox.CANCEL,
-            fn           : function(buttonId, text, opt) {
+            title: '{s name="restoringTitle"}Restoring the backup{/s}',
+            msg: '{s name="restoringMessage"}Currently restoring the selected backup.{/s}',
+            width: 500,
+            progress: true,
+            closable: false,
+            buttons: Ext.MessageBox.CANCEL,
+            fn: function(buttonId, text, opt) {
 
                 if (buttonId !== 'cancel') {
                     return;
@@ -195,7 +193,6 @@ Ext.define('Shopware.apps.ArticleList.controller.Backup', {
         // workaround to set the height of the MessageBox
         me.progressWindow.setSize(500, 150);
         me.progressWindow.doLayout();
-
 
         me.progressWindow.progressBar.reset();
         me.progressWindow.progressBar.animate = true;
@@ -219,7 +216,7 @@ Ext.define('Shopware.apps.ArticleList.controller.Backup', {
         Ext.Ajax.request({
             url: '{url controller="ArticleList" action = "restore"}',
             timeout: 4000000,
-            params : {
+            params: {
                 resource: 'product',
                 id: config.id,
                 offset: offset
@@ -232,25 +229,25 @@ Ext.define('Shopware.apps.ArticleList.controller.Backup', {
 
                 var result = Ext.JSON.decode(response.responseText);
 
-                if(!result) {
+                if (!result) {
                     me.progressWindow.close();
                     me.showError(response.responseText);
-                }else if(!result.success) {
+                } else if (!result.success) {
                     me.progressWindow.close();
                     me.showError(result.message);
-                }else{
+                } else {
                     if (result.data.offset < result.data.totalCount) {
                         progressText =  Ext.String.format('{s name="backup/alreadyRestored"}[0] out of [1] deltas restored{/s}', result.data.offset, result.data.totalCount);
-                        me.progressWindow.progressBar.updateProgress(result.data.offset/result.data.totalCount, progressText);
+                        me.progressWindow.progressBar.updateProgress(result.data.offset / result.data.totalCount, progressText);
 
                         me.runRestore(config, result.data.offset);
-                    }else{
+                    } else {
                         Shopware.Notification.createStickyGrowlMessage({
-                                title: '{s name="restoredBackup"}Backup restored{/s}',
-                                text: Ext.String.format('{s name="createdRestoreMessage"}The following changes have been undone:<br>[0]{/s}', config.operationString),
-                                log: true
-                            },
-                            'ArticleList'
+                            title: '{s name="restoredBackup"}Backup restored{/s}',
+                            text: Ext.String.format('{s name="createdRestoreMessage"}The following changes have been undone:<br>[0]{/s}', config.operationString),
+                            log: true
+                        },
+                        'ArticleList'
                         );
 
                         me.progressWindow.progressBar.updateProgress(1, "Done");
@@ -264,7 +261,7 @@ Ext.define('Shopware.apps.ArticleList.controller.Backup', {
                 }
             },
             failure: function (response, request) {
-                if(response.responseText) {
+                if (response.responseText) {
                     me.showError(response.responseText);
                 } else {
                     me.showError('{s name="unknownError"}An unknown error occurred, please check your server logs{/s}');

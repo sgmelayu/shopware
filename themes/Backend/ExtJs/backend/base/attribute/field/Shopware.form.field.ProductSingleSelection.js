@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category    Shopware
  * @package     Base
@@ -40,7 +39,7 @@ Ext.define('Shopware.form.field.ProductSingleSelection', {
 
         config.tpl = Ext.create('Ext.XTemplate',
             '<tpl for=".">',
-                '<div class="x-boundlist-item">' +
+            '<div class="x-boundlist-item">' +
                     //active renderer
                     '<tpl if="articleActive && variantActive">' +
                         '[{s name="active_single_selection"}{/s}]' +
@@ -55,13 +54,13 @@ Ext.define('Shopware.form.field.ProductSingleSelection', {
                     '<tpl if="additionalText">' +
                         '<i>{literal} ({additionalText})</i>{/literal}' +
                     '</tpl>',
-                '</div>',
+            '</div>',
             '</tpl>'
         );
         config.displayTpl = Ext.create('Ext.XTemplate',
             '<tpl for=".">',
-                //active renderer
-                '<tpl if="articleActive && variantActive">' +
+            //active renderer
+            '<tpl if="articleActive && variantActive">' +
                     '[{s name="active_single_selection"}{/s}]' +
                 '<tpl else>' +
                     '[{s name="inactive_single_selection"}{/s}]' +

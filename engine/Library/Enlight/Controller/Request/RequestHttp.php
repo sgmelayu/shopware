@@ -17,6 +17,7 @@
  * @license    http://enlight.de/license     New BSD License
  */
 
+use Shopware\Components\DispatchFormatHelper;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -100,7 +101,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
     protected $_params = [];
 
     /**
-     * @var \Shopware\Components\DispatchFormatHelper
+     * @var DispatchFormatHelper
      */
     private $nameFormatter;
 
@@ -129,7 +130,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
     }
 
     /**
-     * @return \Shopware\Components\DispatchFormatHelper
+     * @return DispatchFormatHelper
      */
     public function getNameFormatter()
     {
@@ -211,9 +212,10 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function setHeader($header, $value)
     {
+        $this->headers->set($header, $value);
         $temp = strtoupper(str_replace('-', '_', $header));
         $_SERVER['HTTP_' . $temp] = $value;
-        $this->headers->set('HTTP_' . $temp, $value);
+        $this->server->set('HTTP_' . $temp, $value);
 
         return $this;
     }
@@ -240,7 +242,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
     {
         $deviceType = strtolower($this->cookies->get('x-ua-device', 'desktop'));
 
-        return in_array($deviceType, $this->validDeviceTypes) ? $deviceType : 'desktop';
+        return \in_array($deviceType, $this->validDeviceTypes) ? $deviceType : 'desktop';
     }
 
     /**
@@ -484,34 +486,36 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function setQuery($spec, $value = null)
     {
-        if (!is_array($spec) && $value === null) {
+        if (!\is_array($spec) && $value === null) {
             unset($_GET[$spec]);
             $this->query->remove($spec);
 
             return $this;
         }
 
-        if (is_array($spec) && empty($spec)) {
+        if (\is_array($spec) && empty($spec)) {
             $_GET = [];
             $this->query->replace([]);
 
             return $this;
         }
 
-        if (($value === null) && !is_array($spec)) {
+        if (($value === null) && !\is_array($spec)) {
             throw new RuntimeException('Invalid value passed to setQuery(); must be either array of values or key/value pair');
         }
-        if (($value === null) && is_array($spec)) {
-            /** @var array $spec */
-            foreach ($spec as $key => $value) {
-                $this->setQuery($key, $value);
+
+        if (($value === null) && \is_array($spec)) {
+            foreach ($spec as $key => $specValue) {
+                $this->setQuery($key, $specValue);
             }
 
             return $this;
         }
 
-        $_GET[(string) $spec] = $value;
-        $this->query->set((string) $spec, $value);
+        if (!\is_array($spec)) {
+            $_GET[(string) $spec] = $value;
+            $this->query->set((string) $spec, $value);
+        }
 
         return $this;
     }
@@ -542,32 +546,36 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function setPost($spec, $value = null)
     {
-        if (!is_array($spec) && $value === null) {
+        if (!\is_array($spec) && $value === null) {
             unset($_POST[$spec]);
             $this->request->remove($spec);
 
             return $this;
         }
 
-        if (is_array($spec) && empty($spec)) {
+        if (\is_array($spec) && empty($spec)) {
             $_POST = [];
             $this->request->replace([]);
 
             return $this;
         }
 
-        if (($value === null) && !is_array($spec)) {
+        if (($value === null) && !\is_array($spec)) {
             throw new RuntimeException('Invalid value passed to setPost(); must be either array of values or key/value pair');
         }
-        if (($value === null) && is_array($spec)) {
-            foreach ($spec as $key => $value) {
-                $this->setPost($key, $value);
+
+        if (($value === null) && \is_array($spec)) {
+            foreach ($spec as $key => $specValue) {
+                $this->setPost($key, $specValue);
             }
 
             return $this;
         }
-        $_POST[(string) $spec] = $value;
-        $this->request->set((string) $spec, $value);
+
+        if (!\is_array($spec)) {
+            $_POST[(string) $spec] = $value;
+            $this->request->set((string) $spec, $value);
+        }
 
         return $this;
     }
@@ -636,7 +644,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
                 parse_str($query, $result);
 
                 foreach ($result as $key => $value) {
-                    $this->setQuery($key, $value);
+                    $this->setQuery((string) $key, $value);
                 }
             }
 
@@ -653,7 +661,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function setBaseUrl($baseUrl = null)
     {
-        if (($baseUrl !== null) && !is_string($baseUrl)) {
+        if (($baseUrl !== null) && !\is_string($baseUrl)) {
             return $this;
         }
 
@@ -717,7 +725,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function setParamSources(array $paramSources = [])
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return $this;
     }
@@ -727,7 +735,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function getParamSources()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         return ['_GET', '_POST'];
     }
@@ -833,11 +841,15 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
      */
     public function isFlashRequest()
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.8', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
-        $header = strtolower($this->getHeader('USER_AGENT'));
+        $userAgent = $this->getHeader('USER_AGENT');
+        if (empty($userAgent)) {
+            return false;
+        }
+        $header = strtolower($userAgent);
 
-        return strstr($header, ' flash') ? true : false;
+        return strpos($header, ' flash') !== false;
     }
 
     /**
@@ -858,7 +870,7 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
             return $this->server->get('HTTP_' . $temp);
         }
 
-        if (strpos($temp, 'CONTENT_') === 0 && $this->server->has($temp)) {
+        if (str_starts_with($temp, 'CONTENT_') && $this->server->has($temp)) {
             return $this->server->get($temp);
         }
 
@@ -905,8 +917,6 @@ class Enlight_Controller_Request_RequestHttp extends Request implements Enlight_
 
     /**
      * Sets files. Removes empty values from files array.
-     *
-     * @param array $files
      */
     public function setFiles(array $files): void
     {

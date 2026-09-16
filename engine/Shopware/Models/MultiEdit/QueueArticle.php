@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\MultiEdit;
 
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\Article\Detail;
 
 /**
  * Shopware SwagMultiEdit Plugin - QueueArticle Model
@@ -38,20 +39,20 @@ class QueueArticle extends ModelEntity
     /**
      * OWNING SIDE
      *
-     * @var \Shopware\Models\Article\Detail
+     * @var Detail
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Article\Detail")
-     * @ORM\JoinColumn(name="detail_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="detail_id", referencedColumnName="id", nullable=false)
      */
     protected $detail;
 
     /**
      * OWNING SIDE
      *
-     * @var \Shopware\Models\MultiEdit\Queue
+     * @var Queue
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\MultiEdit\Queue", inversedBy="articleDetails")
-     * @ORM\JoinColumn(name="queue_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="queue_id", referencedColumnName="id", nullable=false)
      */
     protected $queue;
 
@@ -81,7 +82,7 @@ class QueueArticle extends ModelEntity
     private $queueId;
 
     /**
-     * @param \Shopware\Models\Article\Detail $detail
+     * @param Detail $detail
      */
     public function setDetail($detail)
     {
@@ -89,7 +90,7 @@ class QueueArticle extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Article\Detail
+     * @return Detail
      */
     public function getDetail()
     {
@@ -97,7 +98,7 @@ class QueueArticle extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\MultiEdit\Queue $queue
+     * @param Queue $queue
      */
     public function setQueue($queue)
     {
@@ -105,7 +106,7 @@ class QueueArticle extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\MultiEdit\Queue
+     * @return Queue
      */
     public function getQueue()
     {

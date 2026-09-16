@@ -1,34 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use Exception;
 use Shopware\Bundle\PluginInstallerBundle\Service\InstallerService;
 use Shopware\Components\Model\ModelManager;
-use Shopware\Components\Model\ModelRepository;
 use Shopware\Models\Plugin\Plugin;
-use Shopware\Models\Shop\Repository;
 use Shopware\Models\Shop\Shop;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
@@ -58,8 +57,7 @@ class PluginConfigSetCommand extends ShopwareCommand implements CompletionAwareI
     public function completeArgumentValues($argumentName, CompletionContext $context)
     {
         if ($argumentName === 'plugin') {
-            /** @var ModelRepository $repository */
-            $repository = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Plugin::class);
+            $repository = $this->getContainer()->get(ModelManager::class)->getRepository(Plugin::class);
             $queryBuilder = $repository->createQueryBuilder('plugin');
             $result = $queryBuilder->andWhere($queryBuilder->expr()->eq('plugin.capabilityEnable', 'true'))
                 ->select(['plugin.name'])
@@ -67,22 +65,21 @@ class PluginConfigSetCommand extends ShopwareCommand implements CompletionAwareI
                 ->getArrayResult();
 
             return array_column($result, 'name');
-        } elseif ($argumentName === 'key') {
+        }
+
+        if ($argumentName === 'key') {
             $pluginName = $context->getWordAtIndex($context->getWordIndex() - 1);
-            /** @var InstallerService $pluginManager */
-            $pluginManager = $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\InstallerService::class);
+            $pluginManager = $this->container->get(InstallerService::class);
             try {
                 $plugin = $pluginManager->getPluginByName($pluginName);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 return [];
             }
 
-            /** @var Repository $shopRepository */
-            $shopRepository = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Shop::class);
+            $shopRepository = $this->getContainer()->get(ModelManager::class)->getRepository(Shop::class);
 
             $shops = $shopRepository->findAll();
 
-            /** @var string[] $result */
             $result = [];
 
             foreach ($shops as $shop) {
@@ -96,7 +93,9 @@ class PluginConfigSetCommand extends ShopwareCommand implements CompletionAwareI
             }
 
             return $result;
-        } elseif ($argumentName === 'value') {
+        }
+
+        if ($argumentName === 'value') {
             if (stripos('true', $context->getCurrentWord()) === 0) {
                 return ['true'];
             }
@@ -162,19 +161,18 @@ class PluginConfigSetCommand extends ShopwareCommand implements CompletionAwareI
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         /** @var InstallerService $pluginManager */
-        $pluginManager = $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\InstallerService::class);
+        $pluginManager = $this->container->get(InstallerService::class);
         $pluginName = $input->getArgument('plugin');
 
         try {
             $plugin = $pluginManager->getPluginByName($pluginName);
-        } catch (\Exception $e) {
-            $output->writeln(sprintf('Plugin by name "%s" was not found.', $pluginName));
+        } catch (Exception $e) {
+            $output->writeln(\sprintf('Plugin by name "%s" was not found.', $pluginName));
 
             return 1;
         }
 
-        /** @var ModelManager $em */
-        $em = $this->container->get(\Shopware\Components\Model\ModelManager::class);
+        $em = $this->container->get(ModelManager::class);
 
         $shopId = null;
 
@@ -191,7 +189,7 @@ class PluginConfigSetCommand extends ShopwareCommand implements CompletionAwareI
             $shop = $em->getRepository(Shop::class)->find($shopId);
 
             if (!$shop) {
-                $output->writeln(sprintf('Could not find shop with id %s.', $shopId));
+                $output->writeln(\sprintf('Could not find shop with id %s.', $shopId));
 
                 return 1;
             }
@@ -203,7 +201,7 @@ class PluginConfigSetCommand extends ShopwareCommand implements CompletionAwareI
         $rawValue = $input->getArgument('value');
         $value = $this->castValue($rawValue);
 
-        if (preg_match('/^\[(.+,?)*\]$/', $value, $matches) && count($matches) == 2) {
+        if (preg_match('/^\[(.+,?)*\]$/', $value, $matches) && \count($matches) == 2) {
             $value = explode(',', $matches[1]);
             $value = array_map(function ($val) {
                 return $this->castValue($val);
@@ -211,7 +209,7 @@ class PluginConfigSetCommand extends ShopwareCommand implements CompletionAwareI
         }
 
         $pluginManager->saveConfigElement($plugin, $input->getArgument('key'), $value, $shop);
-        $output->writeln(sprintf('Plugin configuration for Plugin %s saved.', $pluginName));
+        $output->writeln(\sprintf('Plugin configuration for Plugin %s saved.', $pluginName));
 
         return 0;
     }

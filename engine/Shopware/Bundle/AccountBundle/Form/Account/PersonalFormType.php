@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AccountBundle\Form\Account;
@@ -30,6 +30,7 @@ use Shopware\Bundle\AccountBundle\Type\SalutationType;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Models\Attribute\Customer as CustomerAttribute;
 use Shopware\Models\Customer\Customer;
+use Shopware_Components_Config;
 use Shopware_Components_Snippet_Manager;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\BirthdayType;
@@ -43,16 +44,30 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\EqualTo;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Regex;
 
 /**
  * Form reflects the personal fields for the registration, including auth
+ *
+ * @extends AbstractType<Customer>
  */
 class PersonalFormType extends AbstractType
 {
-    const SNIPPET_BIRTHDAY = [
+    /**
+     * The regex to check if string contains an url
+     */
+    public const DOMAIN_NAME_REGEX = '/(http[s]?\:\/\/)?(?!\-)(?:[a-zA-Z\d\-]{0,62}[a-zA-Z\d]\.){1,126}(?!\d+)[a-zA-Z\d]{1,63}/';
+
+    public const SNIPPET_BIRTHDAY = [
         'namespace' => 'frontend/account/internalMessages',
         'name' => 'DateFailure',
         'default' => 'Please enter a valid birthday',
+    ];
+
+    public const SNIPPET_URL = [
+        'namespace' => 'frontend/account/internalMessages',
+        'name' => 'UrlInFieldFailure',
+        'default' => 'A URL is not allowed in this field',
     ];
 
     /**
@@ -61,7 +76,7 @@ class PersonalFormType extends AbstractType
     private $snippetManager;
 
     /**
-     * @var \Shopware_Components_Config
+     * @var Shopware_Components_Config
      */
     private $config;
 
@@ -72,7 +87,7 @@ class PersonalFormType extends AbstractType
 
     public function __construct(
         Shopware_Components_Snippet_Manager $snippetManager,
-        \Shopware_Components_Config $config,
+        Shopware_Components_Config $config,
         ContextServiceInterface $context
     ) {
         $this->snippetManager = $snippetManager;
@@ -107,7 +122,7 @@ class PersonalFormType extends AbstractType
             $data = $event->getData();
 
             array_walk_recursive($data, function (&$item, $key) use ($whitelist) {
-                if (in_array($key, $whitelist, true)) {
+                if (\in_array($key, $whitelist, true)) {
                     return $item;
                 }
                 $item = strip_tags($item);
@@ -141,18 +156,28 @@ class PersonalFormType extends AbstractType
             'data' => 'private',
         ]);
 
-        $builder->add('salutation', SalutationType::class, [
-            'constraints' => [new NotBlank(['message' => null])],
-        ]);
+        if ($this->config->get('shopSalutationRequired')) {
+            $builder->add('salutation', SalutationType::class, [
+                'constraints' => [new NotBlank(['message' => null])],
+            ]);
+        }
 
         $builder->add('title', TextType::class);
 
         $builder->add('firstname', TextType::class, [
-            'constraints' => [new NotBlank(['message' => null])],
+            'constraints' => [new NotBlank(['message' => null]), new Regex([
+                'pattern' => self::DOMAIN_NAME_REGEX,
+                'match' => false,
+                'message' => $this->getSnippet(self::SNIPPET_URL),
+            ])],
         ]);
 
         $builder->add('lastname', TextType::class, [
-            'constraints' => [new NotBlank(['message' => null])],
+            'constraints' => [new NotBlank(['message' => null]), new Regex([
+                'pattern' => self::DOMAIN_NAME_REGEX,
+                'match' => false,
+                'message' => $this->getSnippet(self::SNIPPET_URL),
+            ])],
         ]);
 
         $builder->add('birthday', BirthdayType::class, [

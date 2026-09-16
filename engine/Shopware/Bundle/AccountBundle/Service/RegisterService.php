@@ -1,34 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AccountBundle\Service;
 
+use DateTime;
 use Doctrine\DBAL\Connection;
 use Enlight_Controller_Request_Request as Request;
+use Exception;
 use Shopware\Bundle\AccountBundle\Service\Validator\CustomerValidatorInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\Core\ContextService;
-use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
+use Shopware\Bundle\StoreFrontBundle\Struct\Shop as ShopStruct;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\NumberRangeIncrementerInterface;
 use Shopware\Components\Password\Manager;
@@ -37,7 +40,9 @@ use Shopware\Components\Routing\Context;
 use Shopware\Models\Customer\Address;
 use Shopware\Models\Customer\Customer;
 use Shopware\Models\Customer\Group;
+use Shopware\Models\Shop\Shop as ShopModel;
 use Shopware_Components_Config;
+use Shopware_Components_TemplateMail;
 
 class RegisterService implements RegisterServiceInterface
 {
@@ -95,13 +100,13 @@ class RegisterService implements RegisterServiceInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function register(
-        Shop $shop,
+        ShopStruct $shop,
         Customer $customer,
         Address $billing,
-        Address $shipping = null
+        ?Address $shipping = null
     ) {
         $this->modelManager->beginTransaction();
         try {
@@ -133,7 +138,7 @@ class RegisterService implements RegisterServiceInterface
             $this->saveReferer($customer);
 
             $this->modelManager->commit();
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             $this->modelManager->rollback();
             throw $ex;
         }
@@ -152,7 +157,7 @@ class RegisterService implements RegisterServiceInterface
         ]);
     }
 
-    private function saveCustomer(Shop $shop, Customer $customer): void
+    private function saveCustomer(ShopStruct $shop, Customer $customer): void
     {
         if ($customer->getValidation() !== ContextService::FALLBACK_CUSTOMER_GROUP) {
             $customer->setCustomerType(Customer::CUSTOMER_TYPE_BUSINESS);
@@ -165,7 +170,7 @@ class RegisterService implements RegisterServiceInterface
             // Reset login information if Double-Opt-In is active
             $customer->setFirstLogin(null);
             $customer->setLastLogin(null);
-            $customer->setDoubleOptinEmailSentDate(new \DateTime());
+            $customer->setDoubleOptinEmailSentDate(new DateTime());
         }
 
         // Password validation
@@ -191,13 +196,17 @@ class RegisterService implements RegisterServiceInterface
             $customer->setPaymentId($this->config->get('defaultPayment'));
         }
 
-        /** @var \Shopware\Models\Shop\Shop $subShop */
-        $subShop = $this->modelManager->find(\Shopware\Models\Shop\Shop::class, $shop->getId());
+        $subShop = $this->modelManager->find(ShopModel::class, $shop->getId());
+        if (!$subShop instanceof ShopModel) {
+            throw new ModelNotFoundException(ShopModel::class, $shop->getId());
+        }
         $customer->setLanguageSubShop($subShop);
 
         if ($customer->getGroup() === null) {
-            /** @var Group $customerGroup */
-            $customerGroup = $this->modelManager->find(\Shopware\Models\Customer\Group::class, $subShop->getCustomerGroup()->getId());
+            $customerGroup = $this->modelManager->find(Group::class, $subShop->getCustomerGroup()->getId());
+            if (!$customerGroup instanceof Group) {
+                throw new ModelNotFoundException(Group::class, $subShop->getCustomerGroup()->getId());
+            }
             $customer->setGroup($customerGroup);
         }
 
@@ -222,14 +231,18 @@ class RegisterService implements RegisterServiceInterface
         return (int) $this->connection->fetchColumn('SELECT id FROM s_emarketing_partner WHERE idcode = ?', [$customer->getAffiliate()]);
     }
 
-    private function doubleOptInVerificationMail(Shop $shop, Customer $customer, string $hash): void
+    private function doubleOptInVerificationMail(ShopStruct $shop, Customer $customer, string $hash): void
     {
         $container = Shopware()->Container();
-        $router = Shopware()->Front()->Router();
+        $router = Shopware()->Front()->ensureRouter();
 
+        $shopModel = $this->modelManager->getRepository(ShopModel::class)->getById($shop->getId());
+        if ($shopModel === null) {
+            throw new ModelNotFoundException(ShopModel::class, $shop->getId());
+        }
         $router->setContext(
             Context::createFromShop(
-                $this->modelManager->getRepository(\Shopware\Models\Shop\Shop::class)->getById($shop->getId()),
+                $shopModel,
                 $this->config
             )
         );
@@ -274,9 +287,9 @@ class RegisterService implements RegisterServiceInterface
         );
 
         if (((int) $customer->getAccountMode()) === 1) {
-            $mail = $container->get(\Shopware_Components_TemplateMail::class)->createMail('sOPTINREGISTERACCOUNTLESS', $context);
+            $mail = $container->get(Shopware_Components_TemplateMail::class)->createMail('sOPTINREGISTERACCOUNTLESS', $context);
         } else {
-            $mail = $container->get(\Shopware_Components_TemplateMail::class)->createMail('sOPTINREGISTER', $context);
+            $mail = $container->get(Shopware_Components_TemplateMail::class)->createMail('sOPTINREGISTER', $context);
         }
         $mail->addTo($customer->getEmail());
         $mail->send();
@@ -286,7 +299,7 @@ class RegisterService implements RegisterServiceInterface
     {
         /** @var Request|null $request */
         $request = Shopware()->Container()->get('front')->Request();
-        $fromCheckout = ($request && $request->getParam('sTarget') === 'checkout');
+        $fromCheckout = $request && $request->getParam('sTarget') === 'checkout';
 
         $sql = "INSERT INTO `s_core_optin` (`type`, `datum`, `hash`, `data`)
                 VALUES ('swRegister', ?, ?, ?)";

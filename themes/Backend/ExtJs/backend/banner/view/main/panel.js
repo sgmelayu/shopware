@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Banner
@@ -38,7 +37,7 @@
 //{block name="backend/banner/view/main/panel"}
 Ext.define('Shopware.apps.Banner.view.main.Panel', {
     extend: 'Ext.container.Container',
-    alias : 'widget.banner-view-main-panel',
+    alias: 'widget.banner-view-main-panel',
     layout: 'border',
     style: 'background: #fff',
 
@@ -46,14 +45,14 @@ Ext.define('Shopware.apps.Banner.view.main.Panel', {
      * Dummy category id - will be set later
      * @integer
      */
-    categoryId:0,
+    categoryId: 0,
 
     /**
      * Initialize the view.main.List and defines the necessary
      * default configuration
      * @return void
      */
-    initComponent : function () {
+    initComponent: function () {
         var me = this;
 
         me.categoryTree = me.getCategoryTree();
@@ -68,33 +67,33 @@ Ext.define('Shopware.apps.Banner.view.main.Panel', {
      *
      * @return Ext.toolbar.Toolbar
      */
-    getBannerToolbar : function() {
+    getBannerToolbar: function() {
         return Ext.create('Ext.toolbar.Toolbar', {
             region: 'north',
             ui: 'shopware-ui',
             items: [
                 /*{if {acl_is_allowed privilege=create}}*/
                 {
-                    iconCls : 'sprite-plus-circle',
-                    text : '{s name="view/main_add"}Add{/s}',
-                    action : 'addBanner',
-                    disabled : true
+                    iconCls: 'sprite-plus-circle',
+                    text: '{s name="view/main_add"}Add{/s}',
+                    action: 'addBanner',
+                    disabled: true
                 },
                 /* {/if} */
                 /*{if {acl_is_allowed privilege=delete}}*/
                 {
-                    iconCls : 'sprite-minus-circle',
-                    text : '{s name="view/main_delete"}Delete{/s}',
-                    disabled : true,
-                    action : 'deleteBanner'
+                    iconCls: 'sprite-minus-circle',
+                    text: '{s name="view/main_delete"}Delete{/s}',
+                    disabled: true,
+                    action: 'deleteBanner'
                 },
                 /* {/if} */
                 /*{if {acl_is_allowed privilege=update}}*/
                 {
-                    iconCls : 'sprite-pencil',
-                    text : '{s name="view/main_edit"}Edit{/s}',
-                    disabled : true,
-                    action : 'editBanner'
+                    iconCls: 'sprite-pencil',
+                    text: '{s name="view/main_edit"}Edit{/s}',
+                    disabled: true,
+                    action: 'editBanner'
                 }
                 /*{/if}*/
             ]
@@ -105,7 +104,7 @@ Ext.define('Shopware.apps.Banner.view.main.Panel', {
      *
      * @return Ext.Panel
      */
-    getBannerList : function() {
+    getBannerList: function() {
         var me = this;
 
         me.dataView = Ext.create('Ext.view.View', {
@@ -113,7 +112,7 @@ Ext.define('Shopware.apps.Banner.view.main.Panel', {
             region: 'center',
             tpl: me.getBannerListTemplate(),
             multiSelect: true,
-            height: '100%',//just for the selector plugin
+            height: '100%', //just for the selector plugin
             trackOver: true,
             overItemCls: 'x-item-over',
             itemSelector: 'div.thumb-wrap',
@@ -126,18 +125,18 @@ Ext.define('Shopware.apps.Banner.view.main.Panel', {
             *
             * @param data
             */
-             prepareData : function(data) {
+            prepareData: function(data) {
                 Ext.apply(data, {
-                    description : Ext.util.Format.ellipsis(data.description, 27),
-                    img         : data.image,
-                   id           : data.id
+                    description: Ext.util.Format.ellipsis(data.description, 27),
+                    img: data.image,
+                    id: data.id
                 });
                 return data;
             }
         });
 
         return Ext.create('Ext.panel.Panel', {
-            cls: 'banner-images-view',//only for the css styling
+            cls: 'banner-images-view', //only for the css styling
             region: 'center',
             unstyled: true,
             style: 'border-top: 1px solid #c7c7c7',
@@ -150,14 +149,14 @@ Ext.define('Shopware.apps.Banner.view.main.Panel', {
      *
      * @return array of strings
      */
-    getBannerListTemplate : function() {
+    getBannerListTemplate: function() {
         var basePath = '';
         return [
             '<tpl for=".">',
-                '<div class="thumb-wrap" id="{literal}{id}{/literal}">',
-                    '<div class="thumb"><img src="{literal}{image}{/literal}" title="{literal}{description}{/literal}"></div>',
-                    '<span class="x-editable">{literal}{description}{/literal}</span>',
-                '</div>',
+            '<div class="thumb-wrap" id="{literal}{id}{/literal}">',
+            '<div class="thumb"><img src="{literal}{image}{/literal}" title="{literal}{description}{/literal}"></div>',
+            '<span class="x-editable">{literal}{description}{/literal}</span>',
+            '</div>',
             '</tpl>',
             '<div class="x-clear"></div>'
         ];
@@ -168,7 +167,7 @@ Ext.define('Shopware.apps.Banner.view.main.Panel', {
      *
      * @return Ext.tree.Panel
      */
-    getCategoryTree : function() {
+    getCategoryTree: function() {
         return Ext.create('Ext.tree.Panel', {
             title: '{s name="view/tree_title"}Catergories{/s}',
             collapsible: true,

@@ -1,33 +1,42 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Shopware\Bundle\AttributeBundle\Repository\ProductRepository;
 use Shopware\Bundle\AttributeBundle\Repository\SearchCriteria;
+use Shopware\Bundle\StoreFrontBundle\Service\AdditionalTextServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\Core\ContextService;
 use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
 use Shopware\Components\Api\Resource\Article as ArticleResource;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Components\MultiEdit\Resource\ResourceInterface;
 use Shopware\Models\Article\Article;
 use Shopware\Models\Article\Detail;
+use Shopware\Models\Article\Repository as ProductModelRepository;
+use Shopware\Models\MultiEdit\Filter;
+use Shopware\Models\MultiEdit\Repository;
+use Shopware\Models\Shop\Shop;
 
 /**
  * Shopware SwagMultiEdit Plugin - MultiEdit Backend Controller
@@ -39,7 +48,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
     /**
      * Reference to the SwagMultiEdit repository
      *
-     * @var Shopware\Models\MultiEdit\Repository
+     * @var Repository|null
      */
     protected $multiEditRepository;
 
@@ -63,12 +72,12 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
     }
 
     /**
-     * @return \Shopware\Models\MultiEdit\Repository
+     * @return Repository
      */
     public function getMultiEditRepository()
     {
         if (!isset($this->multiEditRepository)) {
-            $this->multiEditRepository = Shopware()->Models()->getRepository('Shopware\Models\MultiEdit\Filter');
+            $this->multiEditRepository = $this->get('models')->getRepository('Shopware\Models\MultiEdit\Filter');
         }
 
         return $this->multiEditRepository;
@@ -76,12 +85,14 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Returns an array with all the columns the user is able to show / edit and their configuration
+     *
+     * @retrun void
      */
     public function columnConfigAction()
     {
         $resourceName = $this->Request()->getParam('resource');
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resourceName);
         $data = $resource->getColumnConfig();
 
@@ -93,6 +104,8 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Called when a single entity (=> product) is stored
+     *
+     * @retrun void
      */
     public function saveSingleEntityAction()
     {
@@ -109,7 +122,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
             $value = ['entity' => $entity, 'field' => $field, 'value' => $value];
         }
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $data = $resource->save($params);
 
@@ -120,18 +133,16 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
     }
 
     /**
-     * Backup related operations
-     */
-
-    /**
      * Controller action for deleting a given plugin
+     *
+     * @retrun void
      */
     public function deleteAction()
     {
         $resource = $this->Request()->getParam('resource');
         $id = $this->Request()->getParam('id');
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $success = $resource->deleteBackup($id);
 
@@ -142,14 +153,21 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Controller action for restoring a given backup
+     *
+     * @retrun void
      */
     public function restoreAction()
     {
         $resource = $this->Request()->getParam('resource');
-        $id = $this->Request()->getParam('id');
-        $offset = $this->Request()->getParam('offset');
+        $id = \is_null($this->Request()->getParam('id')) ? null : (int) $this->Request()->getParam('id');
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        if (!\is_int($id)) {
+            throw new DomainException('No ID was provided');
+        }
+
+        $offset = (int) $this->Request()->getParam('offset', 0);
+
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $data = $resource->restoreBackup($id, $offset);
 
@@ -161,15 +179,17 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Returns the backups available for the current resource
+     *
+     * @retrun void
      */
     public function listAction()
     {
-        $resource = $this->Request()->getParam('resource');
+        $resourceClass = $this->Request()->getParam('resource');
         $limit = $this->Request()->getParam('limit', 25);
         $offset = ($this->Request()->getParam('page', 1) - 1) * $limit;
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
-        $resource = $this->container->get('multi_edit.' . $resource);
+        /** @var ResourceInterface $resource */
+        $resource = $this->container->get('multi_edit.' . $resourceClass);
         $result = $resource->listBackups($offset, $limit);
         $result['success'] = true;
 
@@ -177,11 +197,9 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
     }
 
     /**
-     * Batch process related operations
-     */
-
-    /**
-     * Currently returns an array of an hardcoded default operation. Might be use for storing operations in the future
+     * Currently returns an array of a hardcoded default operation. Might be use for storing operations in the future
+     *
+     * @return void
      */
     public function getOperationsAction()
     {
@@ -199,12 +217,14 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Returns an array of operators
+     *
+     * @retrun void
      */
     public function getOperatorsAction()
     {
         $resource = $this->Request()->getParam('resource');
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $columns = $resource->getBatchColumns();
 
@@ -212,7 +232,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
         $operators = [];
         foreach ($columns as $columnOperators) {
             foreach ($columnOperators as $operator) {
-                if (!array_key_exists($operator, $operators)) {
+                if (!\array_key_exists($operator, $operators)) {
                     $operators[$operator] = ['name' => $operator];
                 }
             }
@@ -228,12 +248,14 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Returns a list of columns the user is able to edit
+     *
+     * @retrun void
      */
     public function getEditableColumnsAction()
     {
         $resource = $this->Request()->getParam('resource');
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $columns = $resource->getBatchColumns();
 
@@ -266,6 +288,8 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Runs the batch process
+     *
+     * @retrun void
      */
     public function batchAction()
     {
@@ -273,7 +297,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
         $queueId = $this->Request()->getParam('queueId');
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $data = $resource->batchProcess($queueId);
 
@@ -286,17 +310,15 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
     }
 
     /**
-     * Filter related operations
-     */
-
-    /**
      * Controller action which will return the grammar of the requested resource
+     *
+     * @retrun void
      */
     public function getGrammarAction()
     {
         $resource = $this->Request()->getParam('resource');
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $grammar = $resource->getGrammar();
 
@@ -310,6 +332,8 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Controller action that will return suggested values for a given resource and a given attribute
+     *
+     * @retrun void
      */
     public function getValuesAction()
     {
@@ -326,7 +350,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
             $filter = $this->Request()->getParam('query');
         }
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $data = $resource->getValuesFor(
             $attribute,
@@ -340,6 +364,8 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Controller action which filters the products
+     *
+     * @retrun void
      */
     public function filterAction()
     {
@@ -369,7 +395,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
             return;
         }
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $result = $resource->filter($ast, $offset, $limit, $sort);
 
@@ -388,6 +414,8 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Returns a list of all available filters
+     *
+     * @retrun void
      */
     public function getFilterAction()
     {
@@ -409,22 +437,26 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Save/update a given filter. Also called when a filter is (un)favored
+     *
+     * @retrun void
      */
     public function saveFilterAction()
     {
         $data = $this->Request()->getParams();
-        $id = $this->Request()->getParam('id', null);
+        $id = \is_null($this->Request()->getParam('id')) ? null : (int) $this->Request()->getParam('id');
 
-        if ($id) {
-            $filter = $this->getMultiEditRepository()->find((int) $id);
-        } else {
-            $filter = new Shopware\Models\MultiEdit\Filter();
+        $filter = null;
+        if (\is_int($id)) {
+            $filter = $this->getMultiEditRepository()->find($id);
+        }
+        if (!$filter instanceof Filter) {
+            $filter = new Filter();
         }
 
         $filter->fromArray($data);
 
-        Shopware()->Models()->persist($filter);
-        Shopware()->Models()->flush();
+        $this->get('models')->persist($filter);
+        $this->get('models')->flush();
 
         $this->View()->assign(
             [
@@ -435,16 +467,18 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Delete a given filter
+     *
+     * @retrun void
      */
     public function deleteFilterAction()
     {
         $id = $this->Request()->get('id');
 
-        $filter = Shopware()->Models()->find('Shopware\Models\MultiEdit\Filter', $id);
+        $filter = $this->get('models')->find(Filter::class, $id);
 
         if ($filter) {
-            Shopware()->Models()->remove($filter);
-            Shopware()->Models()->flush();
+            $this->get('models')->remove($filter);
+            $this->get('models')->flush();
         }
 
         $this->View()->assign(
@@ -461,7 +495,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
     /**
      * Controller action called while the batch queue is created
      *
-     * @throws RuntimeException
+     * @retrun void
      */
     public function createQueueAction()
     {
@@ -473,16 +507,16 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
         $offset = $this->Request()->getParam('offset', 0);
         $filterArray = json_decode($filterArray, true);
         if ($filterArray === false) {
-            throw new RuntimeException(sprintf('Could not decode "%s"', $this->Request()->getParam('filterArray')));
+            throw new RuntimeException(\sprintf('Could not decode "%s"', $this->Request()->getParam('filterArray')));
         }
 
         /** @var array|false $operations */
         $operations = json_decode($operations, true);
         if ($operations === false) {
-            throw new RuntimeException(sprintf('Could not decode "%s"', $this->Request()->getParam('operations')));
+            throw new RuntimeException(\sprintf('Could not decode "%s"', $this->Request()->getParam('operations')));
         }
 
-        /** @var \Shopware\Components\MultiEdit\Resource\ResourceInterface $resource */
+        /** @var ResourceInterface $resource */
         $resource = $this->container->get('multi_edit.' . $resource);
         $return = $resource->createQueue($filterArray, $operations, $offset, $limit, $queueId);
 
@@ -496,28 +530,30 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Event listener function of the product store of the backend module.
+     *
+     * @retrun void
      */
     public function deleteProductAction()
     {
-        $id = (int) $this->Request()->getParam('Detail_id');
+        $id = \is_null($this->Request()->getParam('Detail_id')) ? null : (int) $this->Request()->getParam('Detail_id');
 
         /** @var Detail $variant */
         $variant = $this->getDetailRepository()->find($id);
-        if (!is_object($variant)) {
+        if (!\is_object($variant)) {
             $this->View()->assign([
                 'success' => false,
             ]);
         } else {
             $articleResource = new ArticleResource();
-            $articleResource->setManager($this->get(\Shopware\Components\Model\ModelManager::class));
+            $articleResource->setManager($this->get(ModelManager::class));
 
             if ($variant->getKind() == 1) {
                 $articleResource->delete($variant->getArticle()->getId());
             } else {
-                Shopware()->Models()->remove($variant);
+                $this->get('models')->remove($variant);
             }
 
-            Shopware()->Models()->flush();
+            $this->get('models')->flush();
 
             $this->View()->assign([
                 'success' => true,
@@ -525,24 +561,19 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
         }
     }
 
-    /**
-     * Normalize filter
-     *
-     * @param string $filter
-     *
-     * @return string
-     */
-    private function normalizeFilter($filter)
+    private function normalizeFilter(string $filter): string
     {
-        return strtolower(preg_replace('/[^\da-z]/i', '_', strip_tags($filter)));
+        return strtolower((string) preg_replace('/[^\da-z]/i', '_', strip_tags($filter)));
     }
 
     /**
      * Translate filter name and description
      *
-     * @param array $filter
+     * @param array<string, string> $filter
+     *
+     * @return array<string, string>
      */
-    private function translateFilter($filter)
+    private function translateFilter(array $filter): array
     {
         $name = 'filterName-' . $this->normalizeFilter($filter['name']);
         $description = 'filterDescription-' . $this->normalizeFilter($filter['description']);
@@ -556,20 +587,18 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * Internal helper function to get access to the product repository.
-     *
-     * @return \Shopware\Components\Model\ModelRepository
      */
-    private function getDetailRepository()
+    private function getDetailRepository(): ProductModelRepository
     {
-        return Shopware()->Models()->getRepository(Detail::class);
+        return $this->get('models')->getRepository(Detail::class);
     }
 
     /**
-     * @param array[] $result
+     * @param array{data: array<array<string, mixed>>, total: int} $result
      *
-     * @return array[]
+     * @return array{data: array<array<string, mixed>>, total: int}
      */
-    private function addAdditionalText($result)
+    private function addAdditionalText(array $result): array
     {
         $products = $this->buildListProducts($result['data']);
 
@@ -581,25 +610,24 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
             if (!isset($products[$number])) {
                 continue;
             }
-            $product = $products[$number];
-            $item['Detail_additionalText_dynamic'] = $product->getAdditional();
+            $item['Detail_additionalText_dynamic'] = $products[$number]->getAdditional();
         }
 
         return $result;
     }
 
     /**
-     * @param array[] $result
+     * @param array<array<string, mixed>> $result
      *
-     * @return ListProduct[]
+     * @return array<string, ListProduct>
      */
-    private function buildListProducts($result)
+    private function buildListProducts(array $result): array
     {
         $products = [];
         foreach ($result as $item) {
-            $number = $item['Detail_number'];
+            $number = (string) $item['Detail_number'];
 
-            $product = new \Shopware\Bundle\StoreFrontBundle\Struct\ListProduct(
+            $product = new ListProduct(
                 $item['Article_id'],
                 $item['Detail_id'],
                 $item['Detail_number']
@@ -615,10 +643,8 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
 
     /**
      * @param array[] $ast
-     *
-     * @return bool
      */
-    private function displayVariants($ast)
+    private function displayVariants($ast): bool
     {
         foreach ($ast as $filter) {
             if (!isset($filter['token'])) {
@@ -633,23 +659,19 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\ListProduct[] $products
+     * @param ListProduct[] $products
      *
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\ListProduct[]
+     * @return ListProduct[]
      */
-    private function getAdditionalTexts($products)
+    private function getAdditionalTexts(array $products): array
     {
-        /** @var \Shopware\Bundle\StoreFrontBundle\Service\AdditionalTextServiceInterface $service */
-        $service = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\AdditionalTextServiceInterface::class);
+        $service = $this->get(AdditionalTextServiceInterface::class);
 
-        /** @var \Shopware\Models\Shop\Repository $shopRepo */
-        $shopRepo = $this->get(\Shopware\Components\Model\ModelManager::class)->getRepository(\Shopware\Models\Shop\Shop::class);
+        $shopRepo = $this->get(ModelManager::class)->getRepository(Shop::class);
 
-        /** @var \Shopware\Models\Shop\Shop $shop */
         $shop = $shopRepo->getActiveDefault();
 
-        /** @var \Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface $contextService */
-        $contextService = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class);
+        $contextService = $this->get(ContextServiceInterface::class);
 
         $context = $contextService->createShopContext(
             $shop->getId(),
@@ -660,7 +682,10 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
         return $service->buildAdditionalTextLists($products, $context);
     }
 
-    private function filterByRepository()
+    /**
+     * @return array{data: array, total: int}
+     */
+    private function filterByRepository(): array
     {
         $criteria = $this->createCriteria($this->Request());
 
@@ -671,7 +696,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
             ];
         }
 
-        $repository = $this->container->get(\Shopware\Bundle\AttributeBundle\Repository\ProductRepository::class);
+        $repository = $this->container->get(ProductRepository::class);
 
         $result = $repository->search($criteria);
 
@@ -694,10 +719,7 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
         return ['data' => $sortedData, 'total' => $result->getCount()];
     }
 
-    /**
-     * @return SearchCriteria
-     */
-    private function createCriteria(Enlight_Controller_Request_Request $request)
+    private function createCriteria(Enlight_Controller_Request_Request $request): SearchCriteria
     {
         if ($request->getParam('showVariants', false) === 'true') {
             $criteria = new SearchCriteria(Detail::class);
@@ -711,7 +733,8 @@ class Shopware_Controllers_Backend_ArticleList extends Shopware_Controllers_Back
         $criteria->sortings = $request->getParam('sort', []);
         $criteria->conditions = $request->getParam('filters', []);
 
-        $categoryId = (int) $request->getParam('categoryId');
+        $categoryId = (int) $request->getParam('categoryId', 0);
+
         if ($categoryId > 0) {
             $criteria->conditions[] = ['property' => 'categoryIds', 'value' => $categoryId, 'expression' => 'IN'];
         }

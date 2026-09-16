@@ -1,31 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Enlight_Event_EventManager;
+use Exception;
 use IteratorAggregate;
+use PDO;
+use RuntimeException;
 use Shopware\Bundle\SearchBundle;
 use Shopware\Bundle\StoreFrontBundle\Struct\Attribute;
 use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
@@ -45,13 +49,13 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
     private $facetHandlers;
 
     /**
-     * @var \Enlight_Event_EventManager
+     * @var Enlight_Event_EventManager
      */
     private $eventManager;
 
     public function __construct(
         QueryBuilderFactoryInterface $queryBuilderFactory,
-        \Enlight_Event_EventManager $eventManager,
+        Enlight_Event_EventManager $eventManager,
         IteratorAggregate $facetHandlers,
         Container $container
     ) {
@@ -79,7 +83,7 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
 
         $products = $this->getProducts($query);
 
-        $total = count($products);
+        $total = \count($products);
         if ($criteria->fetchCount()) {
             $total = $this->getTotalCount($query);
         }
@@ -94,10 +98,7 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
      */
     private function getProducts(QueryBuilder $query)
     {
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
         $products = [];
 
         foreach ($data as $row) {
@@ -127,13 +128,13 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return SearchBundle\FacetResultInterface[]
      */
     private function createFacets(SearchBundle\Criteria $criteria, ShopContextInterface $context)
     {
-        if (count($criteria->getFacets()) === 0) {
+        if (\count($criteria->getFacets()) === 0) {
             return [];
         }
 
@@ -150,13 +151,13 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
             $handler = $this->getFacetHandler($facet);
 
             if ($criteria->generatePartialFacets() && !$handler instanceof PartialFacetHandlerInterface) {
-                throw new \RuntimeException(sprintf("New filter mode activated, handler class %s doesn't support this mode", get_class($handler)));
+                throw new RuntimeException(\sprintf("New filter mode activated, handler class %s doesn't support this mode", \get_class($handler)));
             }
 
             if ($handler instanceof PartialFacetHandlerInterface) {
                 $result = $handler->generatePartialFacet($facet, $clone, $criteria, $context);
             } else {
-                trigger_error(sprintf("Facet handler %s doesn't support new filter mode. FacetHandlerInterface is deprecated since version 5.3 and will be removed in 5.8.", get_class($handler)), E_USER_DEPRECATED);
+                trigger_error(\sprintf("Facet handler %s doesn't support new filter mode. FacetHandlerInterface is deprecated since version 5.3 and will be removed in 5.8.", \get_class($handler)), E_USER_DEPRECATED);
                 $result = $handler->generateFacet($facet, $criteria, $context);
             }
 
@@ -164,7 +165,7 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
                 continue;
             }
 
-            if (!is_array($result)) {
+            if (!\is_array($result)) {
                 $result = [$result];
             }
 
@@ -197,7 +198,7 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return FacetHandlerInterface
      */
@@ -209,7 +210,7 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
             }
         }
 
-        throw new \Exception(sprintf('Facet %s not supported', get_class($facet)));
+        throw new Exception(\sprintf('Facet %s not supported', \get_class($facet)));
     }
 
     /**
@@ -226,7 +227,7 @@ class ProductNumberSearch implements SearchBundle\ProductNumberSearchInterface
                 }
             }
             if (!$implements) {
-                throw new \RuntimeException(sprintf('Object of class "%s" has to implement one of the following interfaces: "%s".', get_class($object), implode(',', $classes)));
+                throw new RuntimeException(\sprintf('Object of class "%s" has to implement one of the following interfaces: "%s".', \get_class($object), implode(',', $classes)));
             }
         }
     }

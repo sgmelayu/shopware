@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -39,7 +38,7 @@ Ext.define('Shopware.apps.Article.view.detail.Base', {
      * Define that the billing field set is an extension of the Ext.form.FieldSet
      * @string
      */
-    extend:'Ext.form.FieldSet',
+    extend: 'Ext.form.FieldSet',
 
     /**
      * The Ext.container.Container.layout for the fieldset's immediate child items.
@@ -51,7 +50,7 @@ Ext.define('Shopware.apps.Article.view.detail.Base', {
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.article-base-field-set',
+    alias: 'widget.article-base-field-set',
 
     /**
      * Set css class for this component
@@ -63,7 +62,7 @@ Ext.define('Shopware.apps.Article.view.detail.Base', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         titleEdit: '{s name="detail/base/title_edit"}Head data - last edit [0]{/s}',
         titleNew: '{s name="detail/base/title_new"}Head data{/s}',
         empty: '{s name="empty"}Please select...{/s}',
@@ -101,7 +100,7 @@ Ext.define('Shopware.apps.Article.view.detail.Base', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this,
             mainWindow = me.subApp.articleWindow;
 
@@ -134,30 +133,30 @@ Ext.define('Shopware.apps.Article.view.detail.Base', {
      *
      * @return Ext.container.Container[] Contains the left and right container
      */
-    createElements:function () {
+    createElements: function () {
         var leftContainer, rightContainer, me = this;
 
         leftContainer = Ext.create('Ext.container.Container', {
-            columnWidth:0.5,
+            columnWidth: 0.5,
             defaults: {
                 labelWidth: 155,
                 anchor: '100%'
             },
             padding: '0 20 0 0',
             layout: 'anchor',
-            border:false,
-            items:me.createLeftElements()
+            border: false,
+            items: me.createLeftElements()
         });
 
         rightContainer = Ext.create('Ext.container.Container', {
-            columnWidth:0.5,
+            columnWidth: 0.5,
             layout: 'anchor',
             defaults: {
                 labelWidth: 155,
                 anchor: '100%'
             },
-            border:false,
-            items:me.createRightElements()
+            border: false,
+            items: me.createRightElements()
         });
 
         return [
@@ -241,14 +240,14 @@ Ext.define('Shopware.apps.Article.view.detail.Base', {
                 name: 'active',
                 fieldLabel: me.snippets.active,
                 inputValue: true,
-                uncheckedValue:false
+                uncheckedValue: false
             },
             {
                 xtype: 'checkbox',
                 name: 'isConfigurator',
                 fieldLabel: me.snippets.configurator.fieldLabel,
                 inputValue: true,
-                uncheckedValue:false
+                uncheckedValue: false
             }
         ];
     },
@@ -321,7 +320,7 @@ Ext.define('Shopware.apps.Article.view.detail.Base', {
             name: 'priceGroupActive',
             fieldLabel: me.snippets.priceGroupActive,
             inputValue: true,
-            uncheckedValue:false,
+            uncheckedValue: false,
             listeners: {
                 change: function(checkbox, newValue) {
                     me.priceGroupComboBox.allowBlank = !newValue;

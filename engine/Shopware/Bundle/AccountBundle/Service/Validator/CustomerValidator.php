@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AccountBundle\Service\Validator;
@@ -28,6 +28,7 @@ use Shopware\Bundle\AccountBundle\Constraint\CustomerEmail;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\Api\Exception\ValidationException;
 use Shopware\Models\Customer\Customer;
+use Shopware_Components_Config;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\Choice;
 use Symfony\Component\Validator\Constraints\NotBlank;
@@ -36,30 +37,18 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class CustomerValidator implements CustomerValidatorInterface
 {
-    /**
-     * @var ValidatorInterface
-     */
-    private $validator;
+    private ValidatorInterface $validator;
 
-    /**
-     * @var ContextServiceInterface
-     */
-    private $context;
+    private ContextServiceInterface $context;
 
-    /**
-     * @var \Shopware_Components_Config
-     */
-    private $config;
+    private Shopware_Components_Config $config;
 
-    /**
-     * @var ContextualValidatorInterface
-     */
-    private $validationContext;
+    private ContextualValidatorInterface $validationContext;
 
     public function __construct(
         ValidatorInterface $validator,
         ContextServiceInterface $context,
-        \Shopware_Components_Config $config
+        Shopware_Components_Config $config
     ) {
         $this->validator = $validator;
         $this->context = $context;
@@ -75,7 +64,12 @@ class CustomerValidator implements CustomerValidatorInterface
 
         $this->validateField('firstname', $customer->getFirstname(), [new NotBlank()]);
         $this->validateField('lastname', $customer->getLastname(), [new NotBlank()]);
-        $this->validateField('salutation', $customer->getSalutation(), $this->getSalutationConstraints());
+
+        $salutationRequired = $this->config->get('shopsalutationrequired');
+        if ($salutationRequired) {
+            $this->validateField('salutation', $customer->getSalutation(), $this->getSalutationConstraints());
+        }
+
         $this->validateField('email', $customer->getEmail(), [
             new CustomerEmail([
                 'shop' => $this->context->getShopContext()->getShop(),
@@ -84,7 +78,7 @@ class CustomerValidator implements CustomerValidatorInterface
             ]),
         ]);
 
-        if ($this->validationContext->getViolations()->count()) {
+        if ($this->validationContext->getViolations()->count() > 0) {
             throw new ValidationException($this->validationContext->getViolations());
         }
     }
@@ -104,11 +98,9 @@ class CustomerValidator implements CustomerValidatorInterface
     }
 
     /**
-     * @param string       $property
-     * @param string       $value
      * @param Constraint[] $constraints
      */
-    private function validateField($property, $value, $constraints)
+    private function validateField(string $property, ?string $value, array $constraints): void
     {
         $this->validationContext->atPath($property)->validate($value, $constraints);
     }
@@ -116,10 +108,10 @@ class CustomerValidator implements CustomerValidatorInterface
     /**
      * @return Constraint[]
      */
-    private function getSalutationConstraints()
+    private function getSalutationConstraints(): array
     {
         $salutations = explode(',', $this->config->get('shopsalutations'));
 
-        return [new NotBlank(), new Choice(['choices' => $salutations])];
+        return [new Choice(['choices' => $salutations])];
     }
 }

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\HttpCache;
@@ -33,7 +33,6 @@ use Shopware\Components\ContainerAwareEventManager;
 use Shopware\Components\HttpClient\GuzzleFactory;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Routing\Context;
-use Shopware_Components_Config as Config;
 
 /**
  * Shopware Application
@@ -42,12 +41,12 @@ use Shopware_Components_Config as Config;
  */
 class CacheWarmer
 {
-    const ARTICLE_PATH = 'sViewport=detail&sArticle';
-    const CATEGORY_PATH = 'sViewport=cat&sCategory';
-    const BlOG_PATH = 'sViewport=blog';
-    const SUPPLIER_PATH = 'sViewport=listing&sAction=manufacturer&sSupplier=';
-    const CUSTOM_PATH = 'sViewport=custom&sCustom';
-    const EMOTION_LANDING_PAGE_PATH = 'sViewport=campaign';
+    public const ARTICLE_PATH = 'sViewport=detail&sArticle';
+    public const CATEGORY_PATH = 'sViewport=cat&sCategory';
+    public const BlOG_PATH = 'sViewport=blog';
+    public const SUPPLIER_PATH = 'sViewport=listing&sAction=manufacturer&sSupplier=';
+    public const CUSTOM_PATH = 'sViewport=custom&sCustom';
+    public const EMOTION_LANDING_PAGE_PATH = 'sViewport=campaign';
 
     /**
      * @var Connection connection
@@ -65,27 +64,19 @@ class CacheWarmer
     private $guzzleClient;
 
     /**
-     * @var Config
-     */
-    private $config;
-
-    /**
-     * @var ModelManager
-     */
-    private $modelManager;
-
-    /**
      * @var ContainerAwareEventManager
      */
     private $eventManager;
 
-    public function __construct(LoggerInterface $logger, GuzzleFactory $guzzleFactory, Config $config, ModelManager $modelManager, ContainerAwareEventManager $eventManager)
-    {
+    public function __construct(
+        LoggerInterface $logger,
+        GuzzleFactory $guzzleFactory,
+        ModelManager $modelManager,
+        ContainerAwareEventManager $eventManager
+    ) {
         $this->connection = $modelManager->getConnection();
         $this->logger = $logger;
         $this->guzzleClient = $guzzleFactory->createClient();
-        $this->config = $config;
-        $this->modelManager = $modelManager;
         $this->eventManager = $eventManager;
     }
 

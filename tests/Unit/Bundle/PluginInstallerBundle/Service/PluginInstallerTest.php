@@ -1,0 +1,103 @@
+<?php
+
+declare(strict_types=1);
+/**
+ * Shopware 5
+ * Copyright (c) shopware AG
+ *
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
+ *
+ * The texts of the GNU Affero General Public License with an additional
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
+ *
+ * "Shopware" is a registered trademark of shopware AG.
+ * The licensing of the program under the AGPLv3 does not imply a
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
+ */
+
+namespace Shopware\Tests\Unit\Bundle\PluginInstallerBundle\Service;
+
+use DateTimeImmutable;
+use Doctrine\DBAL\Connection;
+use Enlight_Event_EventManager;
+use PDO;
+use PDOStatement;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use Shopware\Bundle\PluginInstallerBundle\Service\PluginInstaller;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Components\Plugin\RequirementValidator;
+use Shopware\Components\ShopwareReleaseStruct;
+use Shopware\Components\Snippet\DatabaseHandler;
+use Shopware\Kernel;
+
+class PluginInstallerTest extends TestCase
+{
+    public function testRefreshPluginList(): void
+    {
+        $dateTime = new DateTimeImmutable();
+        $dateTimeString = $dateTime->format('Y-m-d H:i:s');
+
+        $expectedData = [
+            'namespace' => 'ShopwarePlugins',
+            'version' => '1.0.0',
+            'author' => null,
+            'name' => 'TestPlugin',
+            'link' => null,
+            'label' => 'TestPlugin',
+            'description' => null,
+            'capability_update' => 1,
+            'capability_install' => 1,
+            'capability_enable' => 1,
+            'capability_secure_uninstall' => 1,
+            'refresh_date' => $dateTimeString,
+            'translations' => '{"en":{"label":"TestPlugin"}}',
+            'changes' => null,
+            'added' => $dateTimeString,
+        ];
+
+        $connection = $this->createMock(Connection::class);
+        $connection->expects(static::once())->method('fetchAssociative')->willReturn(null);
+        $connection->expects(static::once())->method('insert')->with('s_core_plugins', $expectedData, [
+            'added' => 'datetime',
+            'refresh_date' => 'datetime',
+        ]);
+
+        $entityManager = $this->createMock(ModelManager::class);
+        $entityManager->expects(static::any())->method('getConnection')->willReturn($connection);
+
+        $databaseHandler = $this->createMock(DatabaseHandler::class);
+        $requirementValidator = $this->createMock(RequirementValidator::class);
+
+        $statement = $this->createMock(PDOStatement::class);
+        $statement->expects(static::once())->method('fetchAll')->willReturn([]);
+
+        $pdo = $this->createMock(PDO::class);
+        $pdo->expects(static::once())->method('query')->willReturn($statement);
+
+        $kernel = new Kernel('testing', true);
+        $releaseArray = $kernel->getRelease();
+
+        $pluginInstaller = new PluginInstaller(
+            $entityManager,
+            $databaseHandler,
+            $requirementValidator,
+            $pdo,
+            new Enlight_Event_EventManager(),
+            ['ShopwarePlugins' => __DIR__ . '/../Fixtures'],
+            new ShopwareReleaseStruct($releaseArray['version'], $releaseArray['version_text'], $releaseArray['revision']),
+            new NullLogger(),
+            $kernel
+        );
+
+        $pluginInstaller->refreshPluginList($dateTime);
+    }
+}

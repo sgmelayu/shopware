@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Log
@@ -111,10 +110,10 @@ Ext.define('Shopware.apps.Log.view.log.List', {
                 '->',
                 {
                     xtype: 'textfield',
-                    cls : 'searchfield',
-                    width : 170,
-                    emptyText : '{s name="toolbar/search"}Search...{/s}',
-                    enableKeyEvents : true,
+                    cls: 'searchfield',
+                    width: 170,
+                    emptyText: '{s name="toolbar/search"}Search...{/s}',
+                    enableKeyEvents: true,
                     checkChangeBuffer: 500,
                     listeners: {
                         change: function (field, value) {
@@ -130,14 +129,14 @@ Ext.define('Shopware.apps.Log.view.log.List', {
      * Creates the selectionModel of the grid with a listener to enable the delete-button
      */
     getGridSelModel: function(){
-        return Ext.create('Ext.selection.CheckboxModel',{
+        return Ext.create('Ext.selection.CheckboxModel', {
             listeners: {
                 selectionchange: function(sm, selections) {
                     var owner = this.view.ownerCt,
                         btn = owner.down('button[action=deleteMultipleLogs]');
 
                     //If no log is marked
-                    if(btn) {
+                    if (btn) {
                         btn.setDisabled(selections.length == 0);
                     }
                 }
@@ -159,7 +158,7 @@ Ext.define('Shopware.apps.Log.view.log.List', {
             flex: 1,
             xtype: 'datecolumn',
             renderer: me.renderDate
-        },{
+        }, {
             header: '{s name="grid/column_user"}User{/s}',
             dataIndex: 'user',
             flex: 1
@@ -177,19 +176,19 @@ Ext.define('Shopware.apps.Log.view.log.List', {
             items: [
                 /*{if {acl_is_allowed privilege=delete}}*/
                 {
-                    iconCls:'sprite-minus-circle',
-                    action:'deleteColumn',
+                    iconCls: 'sprite-minus-circle',
+                    action: 'deleteColumn',
                     tooltip: '{s name="grid/actioncolumn/buttonTooltip"}Delete log{/s}',
-                    handler:function (view, rowIndex) {
+                    handler: function (view, rowIndex) {
                         me.fireEvent('deleteColumn', rowIndex);
                     }
                 },
                 /*{/if}*/
                 {
-                    iconCls:'sprite-magnifier',
-                    action:'openLog',
+                    iconCls: 'sprite-magnifier',
+                    action: 'openLog',
                     tooltip: '{s name="grid/open_log"}Open log{/s}',
-                    handler:function (view, rowIndex, colIndex, item, event, record) {
+                    handler: function (view, rowIndex, colIndex, item, event, record) {
                         me.fireEvent('openLog', record);
                     }
                 }
@@ -215,7 +214,7 @@ Ext.define('Shopware.apps.Log.view.log.List', {
      *
      * @return void
      */
-    registerEvents:function () {
+    registerEvents: function () {
         this.addEvents(
             /**
              * Event will be fired when the user clicks the delete icon in the

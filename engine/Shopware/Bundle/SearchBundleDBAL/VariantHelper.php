@@ -1,30 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL;
 
 use Doctrine\DBAL\Connection;
+use InvalidArgumentException;
+use ReflectionException;
+use RuntimeException;
 use Shopware\Bundle\SearchBundle\Condition\VariantCondition;
 use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Bundle\SearchBundle\Facet\VariantFacet;
@@ -32,11 +35,12 @@ use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\FieldHelper;
 use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\CustomListingHydrator;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware\Components\ReflectionHelper;
+use Shopware_Components_Config;
 
 class VariantHelper implements VariantHelperInterface
 {
-    const VARIANTS_JOINED = 'all_variants';
-    const VARIANT_LISTING_PRICE_JOINED = 'variant_listing_price';
+    public const VARIANTS_JOINED = 'all_variants';
+    public const VARIANT_LISTING_PRICE_JOINED = 'variant_listing_price';
 
     /**
      * @var Connection
@@ -64,7 +68,7 @@ class VariantHelper implements VariantHelperInterface
     protected $reflectionHelper;
 
     /**
-     * @var \Shopware_Components_Config
+     * @var Shopware_Components_Config
      */
     protected $config;
 
@@ -77,7 +81,7 @@ class VariantHelper implements VariantHelperInterface
         Connection $connection,
         CustomListingHydrator $customFacetGateway,
         FieldHelper $fieldHelper,
-        \Shopware_Components_Config $config,
+        Shopware_Components_Config $config,
         ListingPriceHelper $listingPriceHelper
     ) {
         $this->connection = $connection;
@@ -89,7 +93,7 @@ class VariantHelper implements VariantHelperInterface
     }
 
     /**
-     * @throws \ReflectionException
+     * @throws ReflectionException
      *
      * @return VariantFacet|null
      */
@@ -112,13 +116,13 @@ class VariantHelper implements VariantHelperInterface
             return $this->variantFacet = null;
         }
 
+        /** @var array<class-string<VariantFacet>, array{label: string, depth: string}> $arr */
         $arr = json_decode($json, true);
 
         if (empty($arr)) {
             return $this->variantFacet = null;
         }
 
-        /** @var \Shopware\Bundle\SearchBundle\Facet\VariantFacet|null variantFacet */
         $variantFacet = $this->reflectionHelper->createInstanceFromNamedArguments(key($arr), reset($arr));
         $this->variantFacet = $variantFacet;
 
@@ -126,8 +130,8 @@ class VariantHelper implements VariantHelperInterface
     }
 
     /**
-     * @throws \RuntimeException
-     * @throws \InvalidArgumentException
+     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public function joinPrices(QueryBuilder $query, ShopContextInterface $context, Criteria $criteria)
     {
@@ -158,15 +162,14 @@ class VariantHelper implements VariantHelperInterface
     }
 
     /**
-     * @throws \RuntimeException
-     * @throws \InvalidArgumentException
+     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     public function joinVariantCondition(QueryBuilder $query, VariantCondition $condition)
     {
-        /** @var VariantCondition $condition */
         $tableKey = $condition->getName();
 
-        $suffix = md5(json_encode($condition));
+        $suffix = md5(json_encode($condition, JSON_THROW_ON_ERROR));
 
         if ($query->hasState('option_' . $tableKey)) {
             return;
@@ -205,8 +208,8 @@ class VariantHelper implements VariantHelperInterface
     }
 
     /**
-     * @throws \RuntimeException
-     * @throws \InvalidArgumentException
+     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     protected function joinListingPrices(QueryBuilder $query, ShopContextInterface $context, Criteria $criteria)
     {
@@ -249,8 +252,8 @@ class VariantHelper implements VariantHelperInterface
     }
 
     /**
-     * @throws \RuntimeException
-     * @throws \InvalidArgumentException
+     * @throws RuntimeException
+     * @throws InvalidArgumentException
      */
     protected function joinSalePrices(QueryBuilder $query, ShopContextInterface $context, Criteria $criteria)
     {
@@ -327,7 +330,7 @@ class VariantHelper implements VariantHelperInterface
             ',',
             array_map(
                 function ($column) use ($template) {
-                    return sprintf($template, $column, $column, $column);
+                    return \sprintf($template, $column, $column, $column);
                 },
                 $this->listingPriceHelper->getPriceColumns()
             )
@@ -352,6 +355,7 @@ class VariantHelper implements VariantHelperInterface
         $priceTable = $this->listingPriceHelper->getPriceTable($context);
         $priceTable->innerJoin('defaultPrice', 's_articles_details', 'details', 'details.id = defaultPrice.articledetailsID');
         $priceTable->andWhere('(details.laststock * details.instock) >= (details.laststock * details.minpurchase)');
+        $priceTable->andWhere('details.active = 1');
 
         $query->from('s_articles', 'product');
         $query->innerJoin('product', '(' . $priceTable->getSQL() . ')', 'prices', 'product.id = prices.articleID');
@@ -413,6 +417,12 @@ class VariantHelper implements VariantHelperInterface
 
         $priceTable = $this->listingPriceHelper->getPriceTable($context);
 
+        if ($this->hasDifferentCustomerGroups($context)) {
+            $priceTable->andWhere('IFNULL(customerPrice.`from`, defaultPrice.`from`)  = 1');
+        } else {
+            $priceTable->andWhere('defaultPrice.from = 1');
+        }
+
         $query->from('s_articles', 'product');
         $query->innerJoin('product', '(' . $priceTable->getSQL() . ')', 'prices', 'product.id = prices.articleID');
         $query->innerJoin('prices', 's_articles_details', 'variant', 'variant.id = prices.articledetailsID AND variant.active = 1');
@@ -437,8 +447,6 @@ class VariantHelper implements VariantHelperInterface
             $query->addSelect($column);
             $query->addGroupBy($tableKey . '.option_id');
         }
-
-        $query->andWhere('prices.from = 1');
 
         $query->setParameter(':fallbackCustomerGroup', $context->getFallbackCustomerGroup()->getKey());
         $query->setParameter(':priceGroupCustomerGroup', $context->getCurrentCustomerGroup()->getId());

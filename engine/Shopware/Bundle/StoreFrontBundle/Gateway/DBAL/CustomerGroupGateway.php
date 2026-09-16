@@ -1,38 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\CustomerGroupGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\CustomerGroupHydrator;
 
-class CustomerGroupGateway implements Gateway\CustomerGroupGatewayInterface
+class CustomerGroupGateway implements CustomerGroupGatewayInterface
 {
-    /**
-     * @var Hydrator\CustomerGroupHydrator
-     */
-    private $customerGroupHydrator;
+    private CustomerGroupHydrator $customerGroupHydrator;
 
     /**
      * The FieldHelper class is used for the
@@ -44,20 +43,15 @@ class CustomerGroupGateway implements Gateway\CustomerGroupGatewayInterface
      * Additionally the field helper reduce the work, to
      * select in a second step the different required
      * attribute tables for a parent table.
-     *
-     * @var FieldHelper
      */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\CustomerGroupHydrator $customerGroupHydrator
+        CustomerGroupHydrator $customerGroupHydrator
     ) {
         $this->customerGroupHydrator = $customerGroupHydrator;
         $this->connection = $connection;
@@ -87,14 +81,11 @@ class CustomerGroupGateway implements Gateway\CustomerGroupGatewayInterface
             ->where('customerGroup.groupkey IN (:keys)')
             ->setParameter(':keys', $keys, Connection::PARAM_STR_ARRAY);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         $customerGroups = [];
         foreach ($data as $group) {
-            $key = $group['__customerGroup_groupkey'];
+            $key = (string) $group['__customerGroup_groupkey'];
             $customerGroups[$key] = $this->customerGroupHydrator->hydrate($group);
         }
 

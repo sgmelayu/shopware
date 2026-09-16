@@ -1,47 +1,48 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Doctrine\DBAL\Query\QueryBuilder;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\ProductHydrator;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ListProductGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ListProductQueryHelperInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class ListProductGateway implements Gateway\ListProductGatewayInterface
+class ListProductGateway implements ListProductGatewayInterface
 {
     /**
-     * @var Hydrator\ProductHydrator
+     * @var ProductHydrator
      */
     protected $hydrator;
 
-    /**
-     * @var Gateway\ListProductQueryHelperInterface
-     */
-    private $queryHelper;
+    private ListProductQueryHelperInterface $queryHelper;
 
     public function __construct(
-        Hydrator\ProductHydrator $hydrator,
-        Gateway\ListProductQueryHelperInterface $queryHelper
+        ProductHydrator $hydrator,
+        ListProductQueryHelperInterface $queryHelper
     ) {
         $this->hydrator = $hydrator;
         $this->queryHelper = $queryHelper;
@@ -50,7 +51,7 @@ class ListProductGateway implements Gateway\ListProductGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function get($number, Struct\ShopContextInterface $context)
+    public function get($number, ShopContextInterface $context)
     {
         $products = $this->getList([$number], $context);
 
@@ -60,14 +61,9 @@ class ListProductGateway implements Gateway\ListProductGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getList(array $numbers, Struct\ShopContextInterface $context)
+    public function getList(array $numbers, ShopContextInterface $context)
     {
-        $query = $this->getQuery($numbers, $context);
-
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $this->getQuery($numbers, $context)->execute()->fetchAll(PDO::FETCH_ASSOC);
         $products = [];
         foreach ($data as $product) {
             $key = $product['__variant_ordernumber'];
@@ -78,9 +74,11 @@ class ListProductGateway implements Gateway\ListProductGatewayInterface
     }
 
     /**
-     * @return \Doctrine\DBAL\Query\QueryBuilder
+     * @param array<string> $numbers
+     *
+     * @return QueryBuilder
      */
-    protected function getQuery(array $numbers, Struct\ShopContextInterface $context)
+    protected function getQuery(array $numbers, ShopContextInterface $context)
     {
         return $this->queryHelper->getQuery($numbers, $context);
     }

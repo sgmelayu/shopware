@@ -1,28 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace ShopwarePlugin\PaymentMethods\Components;
+
+use Enlight_Controller_Request_Request;
 
 /**
  * Abstract class BasePaymentMethod
@@ -45,10 +47,10 @@ abstract class BasePaymentMethod
      * Creates/updates the payment information for the current
      * method.
      *
-     * @param int                                 $userId  The user id
-     * @param \Enlight_Controller_Request_Request $request The Request object
+     * @param int                                $userId  The user id
+     * @param Enlight_Controller_Request_Request $request The Request object
      */
-    abstract public function savePaymentData($userId, \Enlight_Controller_Request_Request $request);
+    abstract public function savePaymentData($userId, Enlight_Controller_Request_Request $request);
 
     /**
      * Fetches the customer's current payment data for this
@@ -68,7 +70,7 @@ abstract class BasePaymentMethod
      * @param int $userId    The User/Customer Id associated with the current payment
      * @param int $paymentId The Payment Method Id associated with the current payment
      *
-     * @return true|null
+     * @return true
      */
     abstract public function createPaymentInstance($orderId, $userId, $paymentId);
 }

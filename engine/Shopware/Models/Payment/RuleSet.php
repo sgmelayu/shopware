@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Payment;
@@ -80,16 +80,14 @@ class RuleSet extends ModelEntity
     private $value2;
 
     /**
-     * @var \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Payment\Payment>
+     * @var Payment
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Payment\Payment", inversedBy="ruleSets")
-     * @ORM\JoinColumn(name="paymentID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="paymentID", referencedColumnName="id", nullable=false)
      */
     private $payment;
 
     /**
-     * Gets the id of the ruleSet.
-     *
      * @return int
      */
     public function getId()
@@ -122,8 +120,6 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Sets the first rule.
-     *
      * @param string $rule1
      *
      * @return RuleSet
@@ -136,8 +132,6 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Gets the first rule.
-     *
      * @return string
      */
     public function getRule1()
@@ -146,8 +140,6 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Sets the value for the first rule.
-     *
      * @param string $value1
      *
      * @return RuleSet
@@ -160,8 +152,6 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Gets the value for the first rule.
-     *
      * @return string
      */
     public function getValue1()
@@ -170,8 +160,6 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Sets the second rule.
-     *
      * @param string $rule2
      *
      * @return RuleSet
@@ -184,8 +172,6 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Gets the second rule.
-     *
      * @return string
      */
     public function getRule2()
@@ -194,8 +180,6 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Sets the value of the second rule.
-     *
      * @param string $value2
      *
      * @return RuleSet
@@ -208,8 +192,6 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Gets the value of the second rule.
-     *
      * @return string
      */
     public function getValue2()
@@ -218,9 +200,7 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Gets the corresponding payment-model.
-     *
-     * @return \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Payment\Payment>
+     * @return Payment
      */
     public function getPayment()
     {
@@ -228,11 +208,9 @@ class RuleSet extends ModelEntity
     }
 
     /**
-     * Sets the payment-model.
+     * @param Payment $payment
      *
-     * @param \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Payment\Payment> $payment
-     *
-     * @return \Shopware\Models\Payment\RuleSet
+     * @return RuleSet
      */
     public function setPayment($payment)
     {

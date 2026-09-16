@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @package    Performance
  * @subpackage Sitemap
@@ -56,7 +55,7 @@ Ext.define('Shopware.apps.Performance.view.tabs.settings.fields.Sitemap', {
      * want to create a new customer or edit an existing customer
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         me.items = me.getItems();
@@ -157,7 +156,7 @@ Ext.define('Shopware.apps.Performance.view.tabs.settings.fields.Sitemap', {
      */
     getLastUpdateField: function () {
         return {
-            fieldLabel:  '{s name="fieldset/search/last_update"}Last index update{/s}',
+            fieldLabel: '{s name="fieldset/search/last_update"}Last index update{/s}',
             name: 'sitemap[sitemapLastRefresh]',
             xtype: 'displayfield',
             renderer: function(value) {

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -40,21 +39,21 @@ Ext.define('Shopware.apps.Order.model.Voucher', {
      * Extends the standard Ext Model
      * @string
      */
-    extend:'Ext.data.Model',
+    extend: 'Ext.data.Model',
     /**
      * The fields used for this model
      * @array
      */
-    fields:[
+    fields: [
         //{block name="backend/order/model/voucher/fields"}{/block}
-        { name: 'id', type:'int' },
-        { name: 'description', type:'string' },
-        { name: 'voucherCode', type:'string' },
-        { name: 'value', type:'float' },
-        { name: 'minimumCharge', type:'float' },
+        { name: 'id', type: 'int' },
+        { name: 'description', type: 'string' },
+        { name: 'voucherCode', type: 'string' },
+        { name: 'value', type: 'float' },
+        { name: 'minimumCharge', type: 'float' },
         {
             name: 'display',
-            type:'string',
+            type: 'string',
             convert: function(value, record) {
                 if (!Ext.isNumeric(record.get('value'))) {
                     return record.get('description');
@@ -70,19 +69,19 @@ Ext.define('Shopware.apps.Order.model.Voucher', {
      * Configure the data communication
      * @object
      */
-    proxy:{
+    proxy: {
         /**
          * Set proxy type to ajax
          * @string
          */
-        type:'ajax',
+        type: 'ajax',
 
         /**
          * Specific urls to call on CRUD action methods "create", "read", "update" and "destroy".
          * @object
          */
-        api:{
-            read:'{url action="getVouchers"}'
+        api: {
+            read: '{url action="getVouchers"}'
         },
 
         /**
@@ -91,9 +90,9 @@ Ext.define('Shopware.apps.Order.model.Voucher', {
          * a config object or just a valid Reader type name (e.g. 'json', 'xml').
          * @object
          */
-        reader:{
-            type:'json',
-            root:'data'
+        reader: {
+            type: 'json',
+            root: 'data'
         }
     }
 });

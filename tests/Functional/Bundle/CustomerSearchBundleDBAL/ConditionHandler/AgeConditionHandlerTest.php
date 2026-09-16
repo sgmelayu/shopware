@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\CustomerSearchBundleDBAL\ConditionHandler;
 
+use DateInterval;
+use DateTime;
 use Shopware\Bundle\CustomerSearchBundle\Condition\AgeCondition;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 use Shopware\Bundle\SearchBundle\Criteria;
@@ -38,11 +40,11 @@ class AgeConditionHandlerTest extends TestCase
             new AgeCondition(ConditionInterface::OPERATOR_EQ, 25)
         );
 
-        $date1 = new \DateTime();
-        $date1->sub(new \DateInterval('P25Y'));
+        $date1 = new DateTime();
+        $date1->sub(new DateInterval('P25Y'));
 
-        $date2 = new \DateTime();
-        $date2->sub(new \DateInterval('P24Y'));
+        $date2 = new DateTime();
+        $date2->sub(new DateInterval('P24Y'));
 
         $this->search(
             $criteria,
@@ -78,8 +80,8 @@ class AgeConditionHandlerTest extends TestCase
             new AgeCondition(ConditionInterface::OPERATOR_LT, 25)
         );
 
-        $date = new \DateTime();
-        $date->sub(new \DateInterval('P24Y'));
+        $date = new DateTime();
+        $date->sub(new DateInterval('P24Y'));
 
         $this->search(
             $criteria,
@@ -110,11 +112,11 @@ class AgeConditionHandlerTest extends TestCase
             new AgeCondition(ConditionInterface::OPERATOR_LTE, 25)
         );
 
-        $date1 = new \DateTime();
-        $date1->sub(new \DateInterval('P24Y'));
+        $date1 = new DateTime();
+        $date1->sub(new DateInterval('P24Y'));
 
-        $date2 = new \DateTime();
-        $date2->sub(new \DateInterval('P25Y'));
+        $date2 = new DateTime();
+        $date2->sub(new DateInterval('P25Y'));
 
         $this->search(
             $criteria,
@@ -153,17 +155,17 @@ class AgeConditionHandlerTest extends TestCase
             )
         );
 
-        $date1 = new \DateTime();
-        $date1->sub(new \DateInterval('P25Y'));
+        $date1 = new DateTime();
+        $date1->sub(new DateInterval('P25Y'));
 
-        $date2 = new \DateTime();
-        $date2->sub(new \DateInterval('P30Y'));
+        $date2 = new DateTime();
+        $date2->sub(new DateInterval('P30Y'));
 
-        $date3 = new \DateTime();
-        $date3->sub(new \DateInterval('P35Y'));
+        $date3 = new DateTime();
+        $date3->sub(new DateInterval('P35Y'));
 
-        $date4 = new \DateTime();
-        $date4->sub(new \DateInterval('P24Y'));
+        $date4 = new DateTime();
+        $date4->sub(new DateInterval('P24Y'));
 
         $this->search(
             $criteria,
@@ -209,11 +211,11 @@ class AgeConditionHandlerTest extends TestCase
             new AgeCondition(ConditionInterface::OPERATOR_GT, 25)
         );
 
-        $date1 = new \DateTime();
-        $date1->sub(new \DateInterval('P25Y'));
+        $date1 = new DateTime();
+        $date1->sub(new DateInterval('P25Y'));
 
-        $date2 = new \DateTime();
-        $date2->sub(new \DateInterval('P24Y'));
+        $date2 = new DateTime();
+        $date2->sub(new DateInterval('P24Y'));
 
         $this->search(
             $criteria,
@@ -249,8 +251,8 @@ class AgeConditionHandlerTest extends TestCase
             new AgeCondition(ConditionInterface::OPERATOR_GTE, 25)
         );
 
-        $date = new \DateTime();
-        $date->sub(new \DateInterval('P25Y'));
+        $date = new DateTime();
+        $date->sub(new DateInterval('P25Y'));
 
         $this->search(
             $criteria,

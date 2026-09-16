@@ -1,54 +1,49 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service\Core;
 
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Service;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ShopGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ShopPageChildrenGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ShopPageGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\ShopPageServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopPage;
 
-class ShopPageService implements Service\ShopPageServiceInterface
+class ShopPageService implements ShopPageServiceInterface
 {
-    /**
-     * @var Gateway\ShopPageGatewayInterface
-     */
-    private $shopPageGateway;
+    private ShopPageGatewayInterface $shopPageGateway;
 
-    /**
-     * @var Gateway\ShopGatewayInterface
-     */
-    private $shopGateway;
+    private ShopGatewayInterface $shopGateway;
 
-    /**
-     * @var Gateway\ShopPageChildrenGatewayInterface
-     */
-    private $shopPageChildrenGateway;
+    private ShopPageChildrenGatewayInterface $shopPageChildrenGateway;
 
     public function __construct(
-        Gateway\ShopPageGatewayInterface $shopPageGateway,
-        Gateway\ShopGatewayInterface $shopGateway,
-        Gateway\ShopPageChildrenGatewayInterface $shopPageChildrenGateway
+        ShopPageGatewayInterface $shopPageGateway,
+        ShopGatewayInterface $shopGateway,
+        ShopPageChildrenGatewayInterface $shopPageChildrenGateway
     ) {
         $this->shopPageGateway = $shopPageGateway;
         $this->shopGateway = $shopGateway;
@@ -58,7 +53,7 @@ class ShopPageService implements Service\ShopPageServiceInterface
     /**
      * {@inheritdoc}
      */
-    public function getList(array $ids, Struct\ShopContextInterface $context)
+    public function getList(array $ids, ShopContextInterface $context)
     {
         $shopPages = $this->shopPageGateway->getList($ids, $context);
 
@@ -70,9 +65,9 @@ class ShopPageService implements Service\ShopPageServiceInterface
     }
 
     /**
-     * @param Struct\ShopPage[] $shopPages
+     * @param array<int, ShopPage> $shopPages
      */
-    private function resolveShops(array $shopPages)
+    private function resolveShops(array $shopPages): void
     {
         $shopIds = [];
         foreach ($shopPages as $page) {
@@ -82,8 +77,8 @@ class ShopPageService implements Service\ShopPageServiceInterface
         $shops = $this->shopGateway->getList(array_keys(array_flip($shopIds)));
 
         foreach ($shopPages as $page) {
-            $pageShops = array_filter($shops, function (Struct\Shop $shop) use ($page) {
-                return array_key_exists($shop->getId(), $page->getShopIds());
+            $pageShops = array_filter($shops, function (Shop $shop) use ($page) {
+                return \array_key_exists($shop->getId(), $page->getShopIds());
             });
 
             $page->setShops($pageShops);
@@ -91,11 +86,11 @@ class ShopPageService implements Service\ShopPageServiceInterface
     }
 
     /**
-     * @param Struct\ShopPage[] $shopPages
+     * @param array<int, ShopPage> $shopPages
      */
-    private function resolveChildren(array $shopPages, Struct\ShopContextInterface $context)
+    private function resolveChildren(array $shopPages, ShopContextInterface $context): void
     {
-        $ids = array_map(function (Struct\ShopPage $page) {
+        $ids = array_map(function (ShopPage $page) {
             return $page->getId();
         }, $shopPages);
 
@@ -109,16 +104,16 @@ class ShopPageService implements Service\ShopPageServiceInterface
                 continue;
             }
 
-            if (array_key_exists($parentId, $shopPages)) {
+            if (\array_key_exists($parentId, $shopPages)) {
                 $shopPages[$parentId]->setChildren(array_merge($shopPages[$parentId]->getChildren(), [$page]));
             }
         }
     }
 
     /**
-     * @param Struct\ShopPage[] $shopPages
+     * @param array<int, ShopPage> $shopPages
      */
-    private function resolveParents(array $shopPages, Struct\ShopContextInterface $context)
+    private function resolveParents(array $shopPages, ShopContextInterface $context): void
     {
         $parentIds = array_map(function ($page) {
             return $page->getParentId();
@@ -127,7 +122,7 @@ class ShopPageService implements Service\ShopPageServiceInterface
         $parentPages = $this->shopPageGateway->getList($parentIds, $context);
 
         foreach ($shopPages as $page) {
-            if (array_key_exists($page->getParentId(), $parentPages)) {
+            if (\array_key_exists($page->getParentId(), $parentPages)) {
                 $page->setParent($parentPages[$page->getParentId()]);
             }
         }

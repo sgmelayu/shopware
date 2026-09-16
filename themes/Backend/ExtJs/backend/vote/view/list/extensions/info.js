@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Vote
@@ -32,7 +31,7 @@
 //{block name="backend/vote/view/list/extensions/info"}
 Ext.define('Shopware.apps.Vote.view.list.extensions.Info', {
     extend: 'Shopware.listing.InfoPanel',
-    alias:  'widget.vote-listing-info-panel',
+    alias: 'widget.vote-listing-info-panel',
     width: 320,
     mixins: {
         helper: 'Shopware.apps.Vote.view.PointHelper'
@@ -50,52 +49,52 @@ Ext.define('Shopware.apps.Vote.view.list.extensions.Info', {
 
         return new Ext.XTemplate(
             '<tpl for=".">',
-                '<div class="info-view">',
-                    '<div class="base-info">',
-                        '<p '+rowStyle+'>',
-                            '<b>{s name="headline"}{/s}:</b> ',
-                            '<span>{literal}{headline}{/literal}</span>',
-                        '</p>',
-                        '<p'+rowStyle+'>',
-                            '<b>{s name="author"}{/s}:</b> ',
-                            '<span>{literal}{[this.nameRenderer(values.name)]}{/literal}</span>',
-                        '</p>',
-                        '<tpl if="email">',
-                            '<p'+rowStyle+'>',
-                                '<b>{s name="email"}{/s}:</b> ',
-                                '<span>{literal}{email}{/literal}</span>',
-                            '</p>',
-                        '</tpl>',
-                        '<p'+rowStyle+'>',
-                            '<b>{s name="article"}{/s}:</b> ',
-                            '<span>{literal}{articleName}{/literal}</span>',
-                        '</p>',
-                        '<p'+rowStyle+'>',
-                            '<b>{s name="date"}{/s}:</b> ',
-                            '<span>{literal}{[this.formatDate(values.datum)]}{/literal}</span>',
-                        '</p>',
-                        '<p'+rowStyle+'>',
-                            '<b>{s name="active"}{/s}:</b> ',
-                            '<tpl if="active==1"><span style="color: green"><b>{s name="active"}{/s}</b></span></tpl>',
-                            '<tpl if="active==0"><span style="color: red"><b>{s name="not_accepted"}{/s}</b></span></tpl>',
-                        '</p>',
-                        '<p'+rowStyle+'>',
-                            '<b>{s name="points"}{/s}:</b> ',
-                            //function to create a star-rating
-                            '<span>{literal}{[this.formatPoints(values.points)]}{/literal}</span>',
-                        '</p>',
-                        '<p'+rowStyle+'>',
-                            '<b>{s name="comment"}{/s}:</b> ',
-                            '<br />',
-                            '<span>{literal}{comment}{/literal}</span>',
-                        '</p>',
-                        '<p'+rowStyle+'>',
-                            '<tpl if="answer"><b>{s name="answer"}{/s}:</b> ',
-                            '<br />',
-                            '<span>{literal}{answer}{/literal}</span></tpl>',
-                        '</p>',
-                    '</div>',
-                '</div>',
+            '<div class="info-view">',
+            '<div class="base-info">',
+            '<p ' + rowStyle + '>',
+            '<b>{s name="headline"}{/s}:</b> ',
+            '<span>{literal}{headline}{/literal}</span>',
+            '</p>',
+            '<p' + rowStyle + '>',
+            '<b>{s name="author"}{/s}:</b> ',
+            '<span>{literal}{[this.nameRenderer(values.name)]}{/literal}</span>',
+            '</p>',
+            '<tpl if="email">',
+            '<p' + rowStyle + '>',
+            '<b>{s name="email"}{/s}:</b> ',
+            '<span>{literal}{email}{/literal}</span>',
+            '</p>',
+            '</tpl>',
+            '<p' + rowStyle + '>',
+            '<b>{s name="article"}{/s}:</b> ',
+            '<span>{literal}{articleName}{/literal}</span>',
+            '</p>',
+            '<p' + rowStyle + '>',
+            '<b>{s name="date"}{/s}:</b> ',
+            '<span>{literal}{[this.formatDate(values.datum)]}{/literal}</span>',
+            '</p>',
+            '<p' + rowStyle + '>',
+            '<b>{s name="active"}{/s}:</b> ',
+            '<tpl if="active==1"><span style="color: green"><b>{s name="active"}{/s}</b></span></tpl>',
+            '<tpl if="active==0"><span style="color: red"><b>{s name="not_accepted"}{/s}</b></span></tpl>',
+            '</p>',
+            '<p' + rowStyle + '>',
+            '<b>{s name="points"}{/s}:</b> ',
+            //function to create a star-rating
+            '<span>{literal}{[this.formatPoints(values.points)]}{/literal}</span>',
+            '</p>',
+            '<p' + rowStyle + '>',
+            '<b>{s name="comment"}{/s}:</b> ',
+            '<br />',
+            '<span>{literal}{comment}{/literal}</span>',
+            '</p>',
+            '<p' + rowStyle + '>',
+            '<tpl if="answer"><b>{s name="answer"}{/s}:</b> ',
+            '<br />',
+            '<span>{literal}{answer}{/literal}</span></tpl>',
+            '</p>',
+            '</div>',
+            '</div>',
             '</tpl>',
             {
                 /**

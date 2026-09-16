@@ -1,31 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\HttpCache;
 
-use Shopware\Bundle\CookieBundle;
+use Exception;
+use Shopware\Bundle\CookieBundle\CookieCollection;
 use Shopware\Bundle\CookieBundle\CookieGroupCollection;
+use Shopware\Bundle\CookieBundle\Services\CookieRemoveHandler;
+use Shopware\Bundle\CookieBundle\Structs\CookieGroupStruct;
+use Shopware\Bundle\CookieBundle\Structs\CookieStruct;
 use Shopware\Components\Privacy\CookieRemoveSubscriber;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -55,13 +59,17 @@ class AppCache extends HttpCache
     protected $cacheDir;
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $options = [];
+    protected $options = [
+        'purge_allowed_ips' => ['127.0.0.1', '::1'],
+        'debug' => false,
+        'cache_cookies' => ['shop', 'currency', 'x-cache-context-hash'],
+    ];
 
     /**
-     * @param HttpKernelInterface $kernel  An HttpKernelInterface instance
-     * @param array               $options
+     * @param HttpKernelInterface  $kernel  An HttpKernelInterface instance
+     * @param array<string, mixed> $options
      */
     public function __construct(HttpKernelInterface $kernel, $options)
     {
@@ -71,11 +79,7 @@ class AppCache extends HttpCache
             $this->cacheDir = $options['cache_dir'];
         }
 
-        $this->options = array_merge([
-            'purge_allowed_ips' => ['127.0.0.1', '::1'],
-            'debug' => false,
-            'cache_cookies' => ['shop', 'currency', 'x-cache-context-hash'],
-        ], $options);
+        $this->options = array_merge($this->options, $options);
 
         parent::__construct(
             $kernel,
@@ -98,7 +102,7 @@ class AppCache extends HttpCache
 
         $request->headers->set('Surrogate-Capability', 'shopware="ESI/1.0"');
 
-        if (strpos($request->getPathInfo(), '/backend/') === 0) {
+        if (str_starts_with($request->getPathInfo(), '/backend/')) {
             return $this->pass($request, $catch);
         }
 
@@ -106,7 +110,7 @@ class AppCache extends HttpCache
             return $this->handleCookies($request, $this->pass($request, $catch));
         }
 
-        if (strpos($request->getPathInfo(), '/captcha/index/rand/') === 0) {
+        if (str_starts_with($request->getPathInfo(), '/captcha/index/rand/')) {
             return $this->pass($request, $catch);
         }
 
@@ -114,6 +118,10 @@ class AppCache extends HttpCache
 
         $response->headers->remove('cache-control');
         $response->headers->addCacheControlDirective('no-cache');
+
+        if (str_starts_with($request->getPathInfo(), '/account')) {
+            $response->headers->addCacheControlDirective('no-store');
+        }
 
         $response = $this->handleCookies($request, $response);
 
@@ -202,7 +210,9 @@ class AppCache extends HttpCache
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
+     *
+     * @return void
      */
     protected function store(Request $request, Response $response)
     {
@@ -228,12 +238,12 @@ class AppCache extends HttpCache
             return false;
         }
 
-        $cacheTag = $response->headers->get('x-shopware-allow-nocache');
+        $cacheTag = $response->headers->get('x-shopware-allow-nocache') ?? '';
         $cacheTag = explode(', ', $cacheTag);
         $noCacheCookie = $request->cookies->get('nocache');
 
         foreach ($cacheTag as $cacheTagValue) {
-            if (strpos($noCacheCookie, $cacheTagValue) !== false) {
+            if (str_contains($noCacheCookie, $cacheTagValue)) {
                 return true;
             }
         }
@@ -250,11 +260,10 @@ class AppCache extends HttpCache
      *
      * @return Response A Response instance
      */
-    protected function forward(Request $request, $raw = false, Response $entry = null)
+    protected function forward(Request $request, $raw = false, ?Response $entry = null)
     {
         $this->getKernel()->boot();
 
-        /** @var \Shopware\Components\DependencyInjection\Container $container */
         $container = $this->getKernel()->getContainer();
         $container->set('httpcache', $this);
 
@@ -262,7 +271,7 @@ class AppCache extends HttpCache
     }
 
     /**
-     * @return \Symfony\Component\HttpKernel\HttpCache\Esi
+     * @return Esi
      */
     protected function createEsi()
     {
@@ -275,13 +284,14 @@ class AppCache extends HttpCache
     protected function createStore()
     {
         if (isset($this->options['storeClass'])) {
+            /** @var class-string<StoreInterface> $class */
             $class = $this->options['storeClass'];
 
             return new $class($this->options, $this->kernel);
         }
 
         return new Store(
-            $this->cacheDir ? $this->cacheDir : $this->kernel->getCacheDir() . '/http_cache',
+            $this->cacheDir ?: ($this->kernel->getCacheDir() . '/http_cache'),
             $this->options['cache_cookies'],
             $this->options['lookup_optimization'],
             $this->options['ignored_url_parameters']
@@ -295,13 +305,16 @@ class AppCache extends HttpCache
      */
     protected function isPurgeRequestAllowed(Request $request)
     {
-        if ($request->server->has('SERVER_ADDR')) {
-            if ($request->server->get('SERVER_ADDR') == $request->getClientIp()) {
-                return true;
-            }
+        if ($request->server->has('SERVER_ADDR') && $request->server->get('SERVER_ADDR') === $request->getClientIp()) {
+            return true;
         }
 
-        return $this->isPurgeIPAllowed($request->getClientIp());
+        $clientIp = $request->getClientIp();
+        if (!\is_string($clientIp)) {
+            return true;
+        }
+
+        return $this->isPurgeIPAllowed($clientIp);
     }
 
     /**
@@ -321,22 +334,23 @@ class AppCache extends HttpCache
     /**
      * Returns an array of allowed IPs for Http PURGE requests.
      *
-     * @return array
+     * @return array<string>
      */
     protected function getPurgeAllowedIPs()
     {
         return $this->options['purge_allowed_ips'];
     }
 
-    private function checkSltCookie(Request $request)
+    private function checkSltCookie(Request $request): void
     {
         if (!$request->cookies->has('slt')) {
             return;
         }
 
-        $noCache = $request->cookies->get('nocache');
+        $noCache = $request->cookies->get('nocache', '');
+
         $noCache = array_filter(explode(', ', $noCache));
-        if (in_array('slt', $noCache)) {
+        if (\in_array('slt', $noCache, true)) {
             return;
         }
 
@@ -344,12 +358,12 @@ class AppCache extends HttpCache
         $request->cookies->set('nocache', implode(', ', $noCache));
     }
 
-    private function filterHttp2ServerPushHeader(Request $request, Response $response)
+    private function filterHttp2ServerPushHeader(Request $request, Response $response): void
     {
         /* We do not want to push the assets with every request, only for new visitors. We therefore check
            for an existing session-cookie, which would indicate that this isn't the first client request. */
         foreach ($request->cookies->keys() as $cookieName) {
-            if (strpos($cookieName, 'session-') === 0) {
+            if (str_starts_with($cookieName, 'session-')) {
                 $response->headers->remove('link');
 
                 return;
@@ -361,8 +375,8 @@ class AppCache extends HttpCache
     {
         $response = $this->removeCookies($request, $response);
 
-        $response->headers->remove(CookieBundle\Services\CookieRemoveHandler::COOKIE_CONFIG_KEY);
-        $response->headers->remove(CookieBundle\Services\CookieRemoveHandler::COOKIE_GROUP_COLLECTION_KEY);
+        $response->headers->remove(CookieRemoveHandler::COOKIE_CONFIG_KEY);
+        $response->headers->remove(CookieRemoveHandler::COOKIE_GROUP_COLLECTION_KEY);
 
         return $response;
     }
@@ -376,25 +390,34 @@ class AppCache extends HttpCache
         }
 
         $responseHeaders = $response->headers;
-        if (!$responseHeaders->has(CookieBundle\Services\CookieRemoveHandler::COOKIE_CONFIG_KEY)) {
+        $cookieResponseHeader = $responseHeaders->get(CookieRemoveHandler::COOKIE_CONFIG_KEY);
+        if (!\is_string($cookieResponseHeader)) {
             return $response;
         }
 
-        $cookieConfig = json_decode($responseHeaders->get(CookieBundle\Services\CookieRemoveHandler::COOKIE_CONFIG_KEY), true);
+        $cookieConfig = json_decode($cookieResponseHeader, true);
 
         if ($cookieConfig['cookieNoteMode'] === CookieRemoveSubscriber::COOKIE_MODE_ALL) {
             return $response;
         }
 
-        /** @var CookieGroupCollection $cookieGroupCollection */
-        $cookieGroupCollection = unserialize(base64_decode($responseHeaders->get(CookieBundle\Services\CookieRemoveHandler::COOKIE_GROUP_COLLECTION_KEY)), ['allowed_classes' => [
-            CookieBundle\CookieGroupCollection::class,
-            CookieBundle\CookieCollection::class,
-            CookieBundle\Structs\CookieGroupStruct::class,
-            CookieBundle\Structs\CookieStruct::class,
-        ]]);
+        $cookieGroupResponseHeader = $responseHeaders->get(CookieRemoveHandler::COOKIE_GROUP_COLLECTION_KEY);
+        if (!\is_string($cookieGroupResponseHeader)) {
+            return $response;
+        }
 
-        $cookieRemoveHandler = new CookieBundle\Services\CookieRemoveHandler($cookieGroupCollection);
+        $cookieGroupCollection = unserialize(base64_decode($cookieGroupResponseHeader),
+            [
+                'allowed_classes' => [
+                    CookieGroupCollection::class,
+                    CookieCollection::class,
+                    CookieGroupStruct::class,
+                    CookieStruct::class,
+                ],
+            ]
+        );
+
+        $cookieRemoveHandler = new CookieRemoveHandler($cookieGroupCollection);
         $cookieRemoveHandler->removeCookiesFromPreferences($request, $response);
 
         return $response;

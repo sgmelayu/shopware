@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Emotion
@@ -54,20 +53,20 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
     ],
 
     snippets: {
-            title: '{s name="global/title"}Shopping worlds{/s}',
-            copie: '{s name="global/copie"}Copie{/s}',
-            edited: '{s name="global/edited"}The template [0] was successfully edited.{/s}',
-            duplicated: '{s name="global/duplicated"}The template [0] was successfully duplicated.{/s}',
-            removed: '{s name="global/removed"}The template [0] was successfully removed.{/s}',
-            marked_removed: '{s name="global/marked_removed"}The selected template are successfully removed.{/s}',
-            confirm: {
-                remove: '{s name="global/confirm/remove"}Are you sure you want to remove the template [0]?{/s}',
-                marked_remove: '{s name="global/confirm/marked_remove"}Are you sure you want to remove the selected template(s)?{/s}'
-            },
-            alert: {
-                default_remove: '{s name="global/alert"}Default templates could not be removed.{/s}'
-            }
+        title: '{s name="global/title"}Shopping worlds{/s}',
+        copie: '{s name="global/copie"}Copie{/s}',
+        edited: '{s name="global/edited"}The template [0] was successfully edited.{/s}',
+        duplicated: '{s name="global/duplicated"}The template [0] was successfully duplicated.{/s}',
+        removed: '{s name="global/removed"}The template [0] was successfully removed.{/s}',
+        marked_removed: '{s name="global/marked_removed"}The selected template are successfully removed.{/s}',
+        confirm: {
+            remove: '{s name="global/confirm/remove"}Are you sure you want to remove the template [0]?{/s}',
+            marked_remove: '{s name="global/confirm/marked_remove"}Are you sure you want to remove the selected template(s)?{/s}'
         },
+        alert: {
+            default_remove: '{s name="global/alert"}Default templates could not be removed.{/s}'
+        }
+    },
 
     /**
      * Creates the necessary event listener for this
@@ -145,7 +144,7 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
             grid = editor.grid,
             record = values.record;
 
-        if(!record) {
+        if (!record) {
             return false;
         }
         grid.setLoading(true);
@@ -171,7 +170,7 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
     onDuplicate: function(grid, rec) {
         var me = this;
 
-        if(!rec) {
+        if (!rec) {
             return false;
         }
 
@@ -205,24 +204,24 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
         var me = this,
             store = grid.getStore();
 
-        if(rec.data.id < 2) {
+        if (rec.data.id < 2) {
             Ext.Msg.alert(me.snippets.title, me.snippets.alert.default_remove);
             return false;
         }
 
         Ext.Msg.confirm(me.snippets.title, Ext.String.format(me.snippets.confirm.remove, rec.get('name')), function(btn) {
-            if(btn !== 'yes') {
+            if (btn !== 'yes') {
                 return false;
             }
 
             store.remove(rec);
-                grid.setLoading(true);
-                rec.destroy({
-                    callback: function() {
-                        Shopware.Notification.createGrowlMessage(me.snippets.title, Ext.String.format(me.snippets.removed, rec.get('name')));
-                        grid.setLoading(false);
-                    }
-                });
+            grid.setLoading(true);
+            rec.destroy({
+                callback: function() {
+                    Shopware.Notification.createGrowlMessage(me.snippets.title, Ext.String.format(me.snippets.removed, rec.get('name')));
+                    grid.setLoading(false);
+                }
+            });
         });
     },
 
@@ -241,12 +240,12 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
             selected = selModel.getSelection();
 
         Ext.Msg.confirm(me.snippets.title, me.snippets.confirm.marked_remove, function(btn) {
-            if(btn !== 'yes') {
+            if (btn !== 'yes') {
                 return false;
             }
 
             Ext.each(selected, function(item) {
-                if(item.data.id > 1) {
+                if (item.data.id > 1) {
                     item.destroy();
                 }
             });
@@ -285,12 +284,12 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
             newRec = false;
 
         btn.setDisabled(true);
-        if(!form.getForm().isValid()) {
+        if (!form.getForm().isValid()) {
             btn.setDisabled(false);
             return false;
         }
 
-        if(rec) {
+        if (rec) {
             form.getForm().updateRecord(rec);
         } else {
             rec = Ext.create('Shopware.apps.Emotion.model.Template', form.getForm().getValues());
@@ -299,7 +298,7 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
 
         rec.save({
             callback: function() {
-                if(newRec) {
+                if (newRec) {
                     me.getList().getStore().add(rec);
                 }
                 Shopware.Notification.createGrowlMessage(me.snippets.title, Ext.String.format(me.snippets.edited, rec.get('name')));
@@ -324,7 +323,7 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
             defaultSelected;
 
         Ext.each(selection, function(item) {
-            if(item.data.id < 2) {
+            if (item.data.id < 2) {
                 defaultSelected = true;
                 return false;
             }
@@ -348,7 +347,7 @@ Ext.define('Shopware.apps.Emotion.controller.Templates', {
             grid = me.getList(),
             store = grid.getStore();
 
-        if(!value.length) {
+        if (!value.length) {
             store.clearFilter();
         } else {
             store.clearFilter(true);

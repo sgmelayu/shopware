@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -42,27 +41,27 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.OptionEdit', {
      * Define that the order main window is an extension of the enlight application window
      * @string
      */
-    extend:'Enlight.app.Window',
+    extend: 'Enlight.app.Window',
     /**
      * Set base css class prefix and module individual css class for css styling
      * @string
      */
-    cls:Ext.baseCSSPrefix + 'article-option-window',
+    cls: Ext.baseCSSPrefix + 'article-option-window',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.article-option-window',
+    alias: 'widget.article-option-window',
     /**
      * Set no border for the window
      * @boolean
      */
-    border:false,
+    border: false,
     /**
      * True to automatically show the component upon creation.
      * @boolean
      */
-    autoShow:false,
+    autoShow: false,
 
     width: 940,
     modal: true,
@@ -70,7 +69,7 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.OptionEdit', {
     autoScroll: true,
     layout: 'fit',
     footerButton: false,
-    stateId:'shopware-article-option-window',
+    stateId: 'shopware-article-option-window',
 
     /**
      * Contains all snippets for the component
@@ -95,7 +94,7 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.OptionEdit', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.registerEvents();
         me.items = me.createItems();
@@ -190,7 +189,7 @@ Ext.define('Shopware.apps.Article.view.variant.configurator.OptionEdit', {
                 { xtype: 'tbfill' },
                 {
                     xtype: 'button',
-                    cls:'primary',
+                    cls: 'primary',
                     text: me.snippets.save,
                     handler: function() {
                         me.fireEvent('saveOption', me.record, me.formPanel, me);

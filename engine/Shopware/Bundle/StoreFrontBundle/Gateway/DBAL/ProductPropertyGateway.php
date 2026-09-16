@@ -1,39 +1,40 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\PropertyHydrator;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ProductPropertyGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Property\Set;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class ProductPropertyGateway implements Gateway\ProductPropertyGatewayInterface
+class ProductPropertyGateway implements ProductPropertyGatewayInterface
 {
-    /**
-     * @var Hydrator\PropertyHydrator
-     */
-    private $propertyHydrator;
+    private PropertyHydrator $propertyHydrator;
 
     /**
      * The FieldHelper class is used for the
@@ -45,20 +46,15 @@ class ProductPropertyGateway implements Gateway\ProductPropertyGatewayInterface
      * Additionally the field helper reduce the work, to
      * select in a second step the different required
      * attribute tables for a parent table.
-     *
-     * @var FieldHelper
      */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\PropertyHydrator $propertyHydrator
+        PropertyHydrator $propertyHydrator
     ) {
         $this->propertyHydrator = $propertyHydrator;
         $this->connection = $connection;
@@ -68,7 +64,7 @@ class ProductPropertyGateway implements Gateway\ProductPropertyGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function get(Struct\BaseProduct $product, Struct\ShopContextInterface $context)
+    public function get(BaseProduct $product, ShopContextInterface $context)
     {
         $properties = $this->getList([$product], $context);
 
@@ -78,7 +74,7 @@ class ProductPropertyGateway implements Gateway\ProductPropertyGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getList($products, Struct\ShopContextInterface $context)
+    public function getList($products, ShopContextInterface $context)
     {
         $ids = [];
         foreach ($products as $product) {
@@ -118,9 +114,7 @@ class ProductPropertyGateway implements Gateway\ProductPropertyGatewayInterface
         $this->fieldHelper->addPropertyOptionTranslation($query, $context);
         $this->fieldHelper->addMediaTranslation($query, $context);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-        $data = $statement->fetchAll(\PDO::FETCH_GROUP);
+        $data = $query->execute()->fetchAll(PDO::FETCH_GROUP);
 
         $properties = [];
         foreach ($data as $productId => $values) {
@@ -133,7 +127,12 @@ class ProductPropertyGateway implements Gateway\ProductPropertyGatewayInterface
                 continue;
             }
             $sets = $properties[$product->getId()];
-            $result[$product->getNumber()] = array_shift($sets);
+            $set = array_shift($sets);
+            if (!$set instanceof Set) {
+                continue;
+            }
+
+            $result[$product->getNumber()] = $set;
         }
 
         return $result;

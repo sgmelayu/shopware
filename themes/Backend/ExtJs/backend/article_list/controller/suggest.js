@@ -2,25 +2,23 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
-
 
 //{namespace name="backend/article_list/main"}
 
@@ -46,13 +44,13 @@ Ext.define('Shopware.apps.ArticleList.controller.Suggest', {
     parser: null,
 
     refs: [
-        { ref:'batchEditButton', selector:'multiedit-main-window button[name=batchEdit]' },
-        { ref:'runButton', selector:'query-field button[name=run-button]' },
-        { ref:'simpleRunButton', selector:'multi-edit-add-filter-grid button[name=run-button-simple]' },
-        { ref:'statusLabel', selector:'query-field label[name=status-label]' },
-        { ref:'statusLabelSimple', selector:'multi-edit-add-filter-grid label[name=status-label-simple]' },
-        { ref:'filterCombo', selector:'query-field combo[name=filterString]' },
-        { ref:'mainWindow', selector:'shopware-multiedit-main-window' }
+        { ref: 'batchEditButton', selector: 'multiedit-main-window button[name=batchEdit]' },
+        { ref: 'runButton', selector: 'query-field button[name=run-button]' },
+        { ref: 'simpleRunButton', selector: 'multi-edit-add-filter-grid button[name=run-button-simple]' },
+        { ref: 'statusLabel', selector: 'query-field label[name=status-label]' },
+        { ref: 'statusLabelSimple', selector: 'multi-edit-add-filter-grid label[name=status-label-simple]' },
+        { ref: 'filterCombo', selector: 'query-field combo[name=filterString]' },
+        { ref: 'mainWindow', selector: 'shopware-multiedit-main-window' }
     ],
 
     /**
@@ -88,22 +86,21 @@ Ext.define('Shopware.apps.ArticleList.controller.Suggest', {
     prepareGrammar: function(grammar)  {
         var me = this;
 
-
         Ext.each(Object.keys(grammar.binaryOperators), function(key) {
             var items = grammar.binaryOperators[key];
 
             Ext.each(items, function(item, idx) {
-                if (item.charAt(item.length-1) == '/' && item.charAt(0) == '/') {
+                if (item.charAt(item.length - 1) == '/' && item.charAt(0) == '/') {
 
-                    grammar.binaryOperators[key][idx] = new RegExp(item.slice(1).slice(0,-1));
+                    grammar.binaryOperators[key][idx] = new RegExp(item.slice(1).slice(0, -1));
                 }
             });
         });
 
         Ext.each(grammar.values, function(item, idx) {
-            if (item.charAt(item.length-1) == '/' && item.charAt(0) == '/') {
+            if (item.charAt(item.length - 1) == '/' && item.charAt(0) == '/') {
 
-                grammar.values[idx] = new RegExp(item.slice(1).slice(0,-1));
+                grammar.values[idx] = new RegExp(item.slice(1).slice(0, -1));
             }
         });
 
@@ -120,16 +117,16 @@ Ext.define('Shopware.apps.ArticleList.controller.Suggest', {
 
         Ext.Ajax.request({
             url: '{url controller="ArticleList" action = "getGrammar"}',
-            params : {
+            params: {
                 resource: 'product'
             },
             method: 'GET',
             success: function (response, request) {
                 var result = Ext.JSON.decode(response.responseText);
 
-                if(!result) {
+                if (!result) {
                     me.showError(response.responseText);
-                }else if(result.success) {
+                } else if (result.success) {
                     var grammar = me.prepareGrammar(result.data);
 
                     me.parser = new Parser(grammar);
@@ -141,7 +138,7 @@ Ext.define('Shopware.apps.ArticleList.controller.Suggest', {
 
             },
             failure: function (response, request) {
-                if(response.responseText) {
+                if (response.responseText) {
                     me.showError(response.responseText);
                 } else {
                     me.showError('{s name="unknownError"}An unknown error occurred, please check your server logs{/s}');
@@ -176,7 +173,6 @@ Ext.define('Shopware.apps.ArticleList.controller.Suggest', {
         return me.parser;
     },
 
-
     /**
      * Actually do show suggestions in the combobox; depending on the type of suggestion, local or remote
      * suggestions are shown
@@ -204,17 +200,17 @@ Ext.define('Shopware.apps.ArticleList.controller.Suggest', {
 
         lastSeenAttribute = lastSeenAttribute.toUpperCase();
 
-        for (i=0;i<attributesLength;i++) {
-           if (lastSeenAttribute == attributes[i].toUpperCase()) {
-               // Get the suggested values from remote
-               var params = {
-                   resource: 'product',
-                   attribute: lastSeenAttribute
-               };
+        for (i = 0;i < attributesLength;i++) {
+            if (lastSeenAttribute == attributes[i].toUpperCase()) {
+                // Get the suggested values from remote
+                var params = {
+                    resource: 'product',
+                    attribute: lastSeenAttribute
+                };
 
-               combo.showRemoteSuggestion(params, lastToken, lastValidToken);
-               return;
-           }
+                combo.showRemoteSuggestion(params, lastToken, lastValidToken);
+                return;
+            }
         }
 
         // If attribute was not valid, collapse suggestion box
@@ -345,7 +341,7 @@ Ext.define('Shopware.apps.ArticleList.controller.Suggest', {
             me.subApplication.articleStore.loadPage(1, { callback: function () {
                 me.getController('BatchProcess').updateBatchProcessWindow();
                 mainWindow.setWindowTitle(name);
-            }});
+            } });
             batchEditButton.enable();
             return true;
         } else {
@@ -405,7 +401,6 @@ Ext.define('Shopware.apps.ArticleList.controller.Suggest', {
         } catch (e) {
             // The picker might not be available
         }
-
 
     }
 });

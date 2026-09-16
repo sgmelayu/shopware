@@ -1,28 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Migrations;
+
+use PDO;
+use ReflectionClass;
 
 abstract class AbstractMigration
 {
@@ -30,22 +33,22 @@ abstract class AbstractMigration
     public const MODUS_INSTALL = 'install';
 
     /**
-     * @var \PDO
+     * @var PDO
      */
     protected $connection;
 
     /**
-     * @var array
+     * @var array<string>
      */
     protected $sql = [];
 
-    public function __construct(\PDO $connection)
+    public function __construct(PDO $connection)
     {
         $this->connection = $connection;
     }
 
     /**
-     * @param \PDO $connection
+     * @param PDO $connection
      *
      * @return AbstractMigration
      */
@@ -56,7 +59,7 @@ abstract class AbstractMigration
         return $this;
     }
 
-    public function getConnection(): \PDO
+    public function getConnection(): PDO
     {
         return $this->connection;
     }
@@ -67,12 +70,12 @@ abstract class AbstractMigration
 
         $regexPattern = '/[\d]*-(.+)\.php$/i';
 
-        $rc = new \ReflectionClass(get_class($this));
-        $fileName = basename($rc->getFileName());
+        $rc = new ReflectionClass(\get_class($this));
+        $fileName = basename((string) $rc->getFileName());
 
         preg_match($regexPattern, $fileName, $result);
 
-        return $result[1];
+        return (string) ($result[1] ?? '');
     }
 
     public function getVersion(): int
@@ -80,13 +83,15 @@ abstract class AbstractMigration
         $result = [];
         $regexPattern = '/[\d]*$/';
 
-        preg_match($regexPattern, get_class($this), $result);
+        preg_match($regexPattern, \get_class($this), $result);
 
-        return (int) $result[0];
+        return (int) ($result[0] ?? 0);
     }
 
     /**
-     * @param string $modus
+     * @param self::MODUS_* $modus
+     *
+     * @return void
      */
     abstract public function up($modus);
 
@@ -103,6 +108,9 @@ abstract class AbstractMigration
         return $this;
     }
 
+    /**
+     * @return array<string>
+     */
     public function getSql(): array
     {
         return $this->sql;

@@ -1,26 +1,29 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
+
+use Shopware\Components\ShopRegistrationServiceInterface;
+use Shopware\Models\Shop\Shop;
 
 class Shopware_Plugins_Core_CronBirthday_Bootstrap extends Shopware_Components_Plugin_Bootstrap
 {
@@ -117,24 +120,31 @@ class Shopware_Plugins_Core_CronBirthday_Bootstrap extends Shopware_Components_P
                 WHERE id=?
                 AND userID IS NULL
             ';
-            $result = Shopware()->Db()->query($sql, [
-                $user['userID'], $voucher['vouchercodeID'],
-            ]);
-            if (empty($result)) {
+            try {
+                $result = Shopware()->Db()->query($sql, [
+                    $user['userID'],
+                    $voucher['vouchercodeID'],
+                ]);
+            } catch (Zend_Db_Exception $e) {
                 continue;
             }
-            $result = $result->rowCount();
+
+            try {
+                $result = $result->rowCount();
+            } catch (Zend_Db_Exception $e) {
+                continue;
+            }
+
             if (empty($result)) {
                 continue;
             }
 
-            /** @var Shopware\Models\Shop\Repository $repository */
-            $repository = Shopware()->Models()->getRepository('Shopware\Models\Shop\Shop');
+            $repository = Shopware()->Models()->getRepository(Shop::class);
             $shopId = is_numeric($user['language']) ? $user['language'] : $user['subshopID'];
             $shop = $repository->getActiveById($shopId);
-            $this->get(\Shopware\Components\ShopRegistrationServiceInterface::class)->registerShop($shop);
+            $this->get(ShopRegistrationServiceInterface::class)->registerShop($shop);
 
-            //language subshopID
+            // language subshopID
             $context = [
                 'sUser' => $user,
                 'sVoucher' => $voucher,
@@ -146,6 +156,6 @@ class Shopware_Plugins_Core_CronBirthday_Bootstrap extends Shopware_Components_P
             $mail->send();
         }
 
-        return count($users) . ' birthday email(s) with voucher was send.';
+        return \count($users) . ' birthday email(s) with voucher was send.';
     }
 }

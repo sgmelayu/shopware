@@ -18,6 +18,7 @@
  */
 
 use Shopware\Components\DependencyInjection\ContainerAwareInterface;
+use Shopware\Components\DispatchFormatHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface as Container;
 
 /**
@@ -34,6 +35,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface as Container;
  */
 class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatcher
 {
+    private const CLASS_NAMESPACE_SEPARATOR = '_';
+
     /**
      * @var string contains the current module.
      *             Will be set in the getControllerClass method or in the getControllerPath method.
@@ -75,12 +78,13 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
 
     /**
      * Holds all valid modules
+     *
      * @var array
      */
     protected $modules = ['frontend', 'api', 'widgets', 'backend'];
 
     /**
-     * @var \Shopware\Components\DispatchFormatHelper
+     * @var DispatchFormatHelper
      */
     protected $dispatchFormatHelper;
 
@@ -102,7 +106,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
     }
 
     /**
-     * @return \Shopware\Components\DispatchFormatHelper
+     * @return DispatchFormatHelper
      */
     public function getDispatchFormatHelper()
     {
@@ -118,13 +122,13 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
      *
      * @param string $unFormatted
      *
-     * @return mixed
+     * @return string
      */
     public function formatControllerName($unFormatted)
     {
         $dispatchFormatHelper = $this->getDispatchFormatHelper();
 
-        return str_replace('_', '', $dispatchFormatHelper->formatNameForDispatch($unFormatted));
+        return str_replace(self::CLASS_NAMESPACE_SEPARATOR, '', $dispatchFormatHelper->formatNameForDispatch($unFormatted));
     }
 
     /**
@@ -132,13 +136,13 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
      *
      * @param string $unFormatted
      *
-     * @return mixed
+     * @return string
      */
     public function formatActionName($unFormatted)
     {
         $dispatchFormatHelper = $this->getDispatchFormatHelper();
 
-        return str_replace('_', '', $dispatchFormatHelper->formatNameForDispatch($unFormatted));
+        return str_replace(self::CLASS_NAMESPACE_SEPARATOR, '', $dispatchFormatHelper->formatNameForDispatch($unFormatted));
     }
 
     /**
@@ -230,9 +234,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
     /**
      * Returns the controller class of the given request class. The class name is imploded by '_'
      *
-     * @param Enlight_Controller_Request_Request $request
-     *
-     * @return array|string
+     * @return class-string
      */
     public function getControllerClass(Enlight_Controller_Request_Request $request)
     {
@@ -251,17 +253,16 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
         $controllerName = $this->formatControllerName($request->getControllerName());
 
         $class = ['Shopware', 'Controllers', $moduleName, $controllerName];
-        $class = implode('_', $class);
+        /** @var class-string $className */
+        $className = implode(self::CLASS_NAMESPACE_SEPARATOR, $class);
 
-        return $class;
+        return $className;
     }
 
     /**
      * Returns the controller path of the given request class.
      *
-     * @param Enlight_Controller_Request_Request $request
-     *
-     * @return string
+     * @return object|string|null
      */
     public function getControllerPath(Enlight_Controller_Request_Request $request)
     {
@@ -272,15 +273,15 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
         $request->unsetAttribute('controllerId');
 
         if ($event = Shopware()->Events()->notifyUntil(
-                'Enlight_Controller_Dispatcher_ControllerPath_' . $moduleName . '_' . $controllerName,
-                ['subject' => $this, 'request' => $request]
-                )
+            'Enlight_Controller_Dispatcher_ControllerPath_' . $moduleName . self::CLASS_NAMESPACE_SEPARATOR . $controllerName,
+            ['subject' => $this, 'request' => $request])
         ) {
             return $event->getReturn();
         }
 
         if ($controllerId) {
             $request->setAttribute('controllerId', $controllerId);
+
             return clone $this->container->get($controllerId);
         }
 
@@ -290,8 +291,6 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
     /**
      * Returns the action method of the given request class.
      * If no action name is set in the request class, the default action is used.
-     *
-     * @param Enlight_Controller_Request_Request $request
      *
      * @return string
      */
@@ -303,17 +302,14 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
             $request->setActionName($action);
         }
         $formatted = $this->formatActionName($action);
-        $formatted = strtolower(substr($formatted, 0, 1)) . substr($formatted, 1) . 'Action';
 
-        return $formatted;
+        return strtolower($formatted[0]) . substr($formatted, 1) . 'Action';
     }
 
     /**
      * Returns the full path of the controller name by the given request class.
      * To generate the full controller path the module and controller name must be set in the given request object.
      * The module and controller path is imploded by '_'
-     *
-     * @param Enlight_Controller_Request_Request $request
      *
      * @return string
      */
@@ -324,15 +320,13 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
             $this->formatControllerName($request->getControllerName()),
         ];
 
-        return implode('_', $parts);
+        return implode(self::CLASS_NAMESPACE_SEPARATOR, $parts);
     }
 
     /**
      * Returns the full path of the action name.
      * To generate the full action path the module, controller and action name must be set in the given request object.
      * The module, controller and action path is imploded by '_'.
-     *
-     * @param Enlight_Controller_Request_Request $request
      *
      * @return string
      */
@@ -344,7 +338,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
             $this->formatActionName($request->getActionName()),
         ];
 
-        return implode('_', $parts);
+        return implode(self::CLASS_NAMESPACE_SEPARATOR, $parts);
     }
 
     /**
@@ -352,9 +346,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
      * Checks first if the controller class of the request object exists.
      * If the controller class exists, the enlight loader class checks if the controller path is readable.
      *
-     * @param Enlight_Controller_Request_Request $request
-     *
-     * @return bool|string
+     * @return bool
      */
     public function isDispatchable(Enlight_Controller_Request_Request $request)
     {
@@ -377,7 +369,7 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
             return false;
         }
 
-        return is_object($path) || class_exists($path) || Enlight_Loader::isReadable($path);
+        return \is_object($path) || class_exists($path) || Enlight_Loader::isReadable($path);
     }
 
     /**
@@ -389,11 +381,11 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
      */
     public function isValidModule($module)
     {
-        if (!is_string($module)) {
+        if (!\is_string($module)) {
             return false;
         }
 
-        return in_array(strtolower($module), $this->modules);
+        return \in_array(strtolower($module), $this->modules, true);
     }
 
     public function setModules(array $modules): void
@@ -414,13 +406,11 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
      * After that, run the dispatch on the controller.
      * At the ending the body is added to the response object.
      *
-     * @param Enlight_Controller_Request_Request   $request
-     * @param Enlight_Controller_Response_Response $response
-     *
      * @throws Enlight_Controller_Exception|Enlight_Exception|Exception
      */
-    public function dispatch(Enlight_Controller_Request_Request $request,
-                             Enlight_Controller_Response_Response $response
+    public function dispatch(
+        Enlight_Controller_Request_Request $request,
+        Enlight_Controller_Response_Response $response
     ) {
         $this->setResponse($response);
 
@@ -434,16 +424,16 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
         $class = $this->getControllerClass($request);
         $path = $this->getControllerPath($request);
 
-        if (is_object($path) || class_exists($path)) {
+        if (\is_object($path) || class_exists($path)) {
             $class = $path;
             $path = null;
         }
 
-        if (!is_object($class)) {
+        if (!\is_object($class)) {
             try {
                 Shopware()->Loader()->loadClass($class, $path);
             } catch (Exception $e) {
-                throw new Enlight_Exception('Controller "' . $class . '" can\'t load failure');
+                throw new Enlight_Exception(\sprintf('Controller "%s" could not be loaded', $class));
             }
 
             $proxy = Shopware()->Hooks()->getProxy($class);
@@ -455,14 +445,14 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
             $controller = $class;
         }
 
-        $controller->initController($request, $response);
-
-        $controller->setFront($this->Front());
-
         if ($controller instanceof ContainerAwareInterface) {
             $container = Shopware()->Container();
             $controller->setContainer($container);
         }
+
+        $controller->initController($request, $response);
+
+        $controller->setFront($this->Front());
 
         $action = $this->getActionMethod($request);
 
@@ -495,13 +485,13 @@ class Enlight_Controller_Dispatcher_Default extends Enlight_Controller_Dispatche
 
     private function getControllerServiceId(string $module, string $name): ?string
     {
-        $controllerKey = strtolower(sprintf('%s_%s', $module, $name));
+        $controllerKey = strtolower(\sprintf('%s_%s', $module, $name));
 
-        return isset($this->controllers[$controllerKey]) ? $this->controllers[$controllerKey] : null;
+        return $this->controllers[$controllerKey] ?? null;
     }
 
     private function isForbiddenController(string $className): bool
     {
-        return in_array($className, $this->container->getParameter('shopware.controller.blacklisted_controllers'), true);
+        return \in_array($className, $this->container->getParameter('shopware.controller.blacklisted_controllers'), true);
     }
 }

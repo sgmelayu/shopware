@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/article_list/main"}
@@ -66,8 +65,8 @@ Ext.define('Shopware.apps.ArticleList.view.FilterCombo', {
             extend: 'Ext.data.Model',
             fields: [
                 { name: 'id' },
-                { name: 'title'},
-                { name: 'addQuotes', defaultValue: true}
+                { name: 'title' },
+                { name: 'addQuotes', defaultValue: true }
             ]
         });
 
@@ -79,7 +78,7 @@ Ext.define('Shopware.apps.ArticleList.view.FilterCombo', {
                 url: '{url controller="ArticleList" action="getValues"}',
                 reader: {
                     type: 'json',
-                    root:'data',
+                    root: 'data',
                     totalProperty: 'total'
                 }
             }
@@ -102,7 +101,7 @@ Ext.define('Shopware.apps.ArticleList.view.FilterCombo', {
             position = me.inputEl.dom.selectionStart;
 
         rest = value.substring(position);
-        value = value.substring(0, position-tokenLength);
+        value = value.substring(0, position - tokenLength);
 
         if (suggestion.get('addQuotes')) {
             suggestion = '"' + suggestion.get('title') + '"';
@@ -111,7 +110,7 @@ Ext.define('Shopware.apps.ArticleList.view.FilterCombo', {
         }
 
         me.ignoreToken = true;
-        me.setValue (value + suggestion + " " + rest);
+        me.setValue(value + suggestion + " " + rest);
 
     },
 
@@ -135,7 +134,6 @@ Ext.define('Shopware.apps.ArticleList.view.FilterCombo', {
         me.store.proxy.extraParams = params;
         me.store.remoteFilter = true;
         me.queryCaching = true;
-
 
         // Setting the filter this way ensures the filter to be replaced
         me.store.clearFilter(true);
@@ -162,8 +160,7 @@ Ext.define('Shopware.apps.ArticleList.view.FilterCombo', {
 
         me.store.clearFilter(true);
 
-
-        if (!me.getValue() || me.getValue().substring(position-1, position).trim() == "") {
+        if (!me.getValue() || me.getValue().substring(position - 1, position).trim() == "") {
             token = undefined;
         }
 
@@ -181,9 +178,8 @@ Ext.define('Shopware.apps.ArticleList.view.FilterCombo', {
 
         me.expand();
         me.store.clearFilter(true);
-        me.store.filter({ id: 'filter', anyMatch:true, property: 'title', value: token ? token.replace('"', "") : '' });
+        me.store.filter({ id: 'filter', anyMatch: true, property: 'title', value: token ? token.replace('"', "") : '' });
     },
-
 
     /**
      * Override the key up callback: We trigger the queries on our own!
@@ -301,7 +297,7 @@ Ext.define('Shopware.apps.ArticleList.view.FilterCombo', {
                     /**
                      * Override
                      */
-                   // me.setValue(me.value);
+                    // me.setValue(me.value);
                 }
             }
         }

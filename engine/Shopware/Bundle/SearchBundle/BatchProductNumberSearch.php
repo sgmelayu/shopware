@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundle;
@@ -30,23 +30,19 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class BatchProductNumberSearch
 {
-    /**
-     * @var ProductNumberSearchInterface
-     */
-    private $productNumberSearch;
+    private ProductNumberSearchInterface $productNumberSearch;
+
+    private BaseProductFactoryServiceInterface $baseProductFactoryService;
 
     /**
-     * @var BaseProductFactoryServiceInterface
+     * @var array<string, int>
      */
-    private $baseProductFactoryService;
+    private array $pointer = [];
 
-    /**
-     * @var array
-     */
-    private $pointer = [];
-
-    public function __construct(ProductNumberSearchInterface $productNumberSearch, BaseProductFactoryServiceInterface $baseProductFactoryService)
-    {
+    public function __construct(
+        ProductNumberSearchInterface $productNumberSearch,
+        BaseProductFactoryServiceInterface $baseProductFactoryService
+    ) {
         $this->productNumberSearch = $productNumberSearch;
         $this->baseProductFactoryService = $baseProductFactoryService;
     }
@@ -75,27 +71,25 @@ class BatchProductNumberSearch
     }
 
     /**
-     * @param string        $key
      * @param BaseProduct[] $baseProducts
-     * @param int           $numberOfProducts
      *
      * @return BaseProduct[]
      */
-    private function getBaseProductsRange($key, array $baseProducts, $numberOfProducts = 0)
+    private function getBaseProductsRange(string $key, array $baseProducts, int $numberOfProducts = 0): array
     {
         // cancel on empty results to prevent infinite loop
-        if (count($baseProducts) === 0) {
+        if (\count($baseProducts) === 0) {
             return [];
         }
 
-        if (!array_key_exists($key, $this->pointer)) {
+        if (!\array_key_exists($key, $this->pointer)) {
             $this->pointer[$key] = 0;
         }
 
         // use internal pointer to return different products to each request with the same criteria/context
-        $items = array_slice($baseProducts, $this->pointer[$key], $numberOfProducts);
-        $missingItems = $numberOfProducts - count($items);
-        $this->pointer[$key] += count($items);
+        $items = \array_slice($baseProducts, $this->pointer[$key], $numberOfProducts);
+        $missingItems = $numberOfProducts - \count($items);
+        $this->pointer[$key] += \count($items);
 
         if ($missingItems === 0) {
             return $items;
@@ -107,22 +101,23 @@ class BatchProductNumberSearch
     }
 
     /**
-     * @return array
+     * @param array<string, Criteria> $criteriaList
+     *
+     * @return array<string, array<string, BaseProduct>>
      */
-    private function getBaseProductsByCriteriaList(array $criteriaList, ShopContextInterface $context)
+    private function getBaseProductsByCriteriaList(array $criteriaList, ShopContextInterface $context): array
     {
         $products = [];
         $optimizedCriteriaList = $this->getOptimizedCriteriaList($criteriaList);
 
         foreach ($optimizedCriteriaList as $key => $criteriaMeta) {
-            /** @var ProductNumberSearchResult $searchResult */
             $searchResult = $this->productNumberSearch->search($criteriaMeta['criteria'], $context);
             $baseProducts = $searchResult->getProducts();
 
             $this->pointer[$key] = 0;
             foreach ($criteriaMeta['requests'] as $request) {
                 $products[$request['key']] = [];
-                $productRange = $this->getBaseProductsRange($key, $baseProducts, $request['criteria']->getLimit());
+                $productRange = $this->getBaseProductsRange($key, $baseProducts, (int) $request['criteria']->getLimit());
 
                 foreach ($productRange as $product) {
                     $products[$request['key']][$product->getNumber()] = $product;
@@ -134,21 +129,21 @@ class BatchProductNumberSearch
     }
 
     /**
-     * @param Criteria[] $criteriaList
+     * @param array<string, Criteria> $criteriaList
      *
-     * @return array
+     * @return array<array{criteria: Criteria, requests: array<array{criteria: Criteria, key: string}>}>
      */
-    private function getOptimizedCriteriaList(array $criteriaList)
+    private function getOptimizedCriteriaList(array $criteriaList): array
     {
-        /** @var array{criteria: Criteria, request: array{criteria: Criteria, key: int}} $optimizedCriteriaList */
         $optimizedCriteriaList = [];
 
         foreach ($criteriaList as $key => $originalCriteria) {
-            /** @var int|bool $criteriaPosition */
             $criteriaPosition = $this->getOptimizedCriteriaListPosition($originalCriteria, $optimizedCriteriaList);
 
             if ($criteriaPosition !== false) {
-                /** @var Criteria $existingCriteria */
+                if (!isset($optimizedCriteriaList[$criteriaPosition]['criteria'])) {
+                    continue;
+                }
                 $existingCriteria = $optimizedCriteriaList[$criteriaPosition]['criteria'];
 
                 // search requests already exists, increase limit to select more products and satisfy all requests
@@ -173,6 +168,8 @@ class BatchProductNumberSearch
     }
 
     /**
+     * @param array<array{criteria: Criteria, requests: array<array{criteria: Criteria, key: string}>}> $criteriaList
+     *
      * @return int|false
      */
     private function getOptimizedCriteriaListPosition(Criteria $criteria, array $criteriaList)
@@ -182,7 +179,6 @@ class BatchProductNumberSearch
         foreach ($criteriaList as $index => $existingCriteria) {
             $existingCriteria = $this->getComparableCriteria($existingCriteria['criteria']);
 
-            /* @noinspection TypeUnsafeComparisonInspection */
             if ($comparableCriteria == $existingCriteria) {
                 return $index;
             }
@@ -191,10 +187,7 @@ class BatchProductNumberSearch
         return false;
     }
 
-    /**
-     * @return Criteria
-     */
-    private function getComparableCriteria(Criteria $criteria)
+    private function getComparableCriteria(Criteria $criteria): Criteria
     {
         $conditions = $criteria->getConditions();
         $sortings = $criteria->getSortings();
@@ -216,13 +209,13 @@ class BatchProductNumberSearch
     }
 
     /**
-     * @return BaseProduct[]
+     * @return array<string, BaseProduct>
      */
-    private function getBaseProductsByProductNumberRequest(BatchProductNumberSearchRequest $request)
+    private function getBaseProductsByProductNumberRequest(BatchProductNumberSearchRequest $request): array
     {
         $baseProductList = [];
 
-        if (count($request->getProductNumbers())) {
+        if (\count($request->getProductNumbers())) {
             $productNumbers = array_merge(...array_values($request->getProductNumbers()));
             $baseProductList = $this->baseProductFactoryService->createBaseProducts($productNumbers);
         }

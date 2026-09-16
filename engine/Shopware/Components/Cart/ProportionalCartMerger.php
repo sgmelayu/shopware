@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Cart;
@@ -59,7 +59,7 @@ class ProportionalCartMerger implements ProportionalCartMergerInterface
 
             if (!isset($newCart[$cartItem['ordernumber']]['fixedName'])) {
                 $newCart[$cartItem['ordernumber']]['proportion'] = [$newCart[$cartItem['ordernumber']], $cartItem];
-                $newCart[$cartItem['ordernumber']]['articlename'] = substr($newCart[$cartItem['ordernumber']]['articlename'], 0, strrpos($newCart[$cartItem['ordernumber']]['articlename'], ' '));
+                $newCart[$cartItem['ordernumber']]['articlename'] = substr($newCart[$cartItem['ordernumber']]['articlename'], 0, (int) strrpos($newCart[$cartItem['ordernumber']]['articlename'], ' '));
                 $newCart[$cartItem['ordernumber']]['fixedName'] = true;
             } elseif (isset($newCart[$cartItem['ordernumber']]['proportion'])) {
                 $newCart[$cartItem['ordernumber']]['proportion'][] = $cartItem;
@@ -78,7 +78,7 @@ class ProportionalCartMerger implements ProportionalCartMergerInterface
         foreach ($newCart as &$item) {
             if (isset($item['proportion'])) {
                 usort($item['proportion'], function ($a, $b) {
-                    return $a['tax_rate'] > $b['tax_rate'] ? 1 : -1;
+                    return $a['tax_rate'] <=> $b['tax_rate'];
                 });
             }
         }
@@ -88,14 +88,15 @@ class ProportionalCartMerger implements ProportionalCartMergerInterface
     }
 
     /**
-     * @param string $property
+     * @param array<string, mixed> $item1
+     * @param array<string, mixed> $item2
      *
-     * @return float
+     * @return float|string
      */
-    private function mergeAmount(array $item1, array $item2, $property)
+    private function mergeAmount(array $item1, array $item2, string $property)
     {
-        $hasComma = strpos($item1[$property], ',') !== false;
-        $amount = (float) str_replace(',', '.', $item1[$property]) + (float) str_replace(',', '.', $item2[$property]);
+        $hasComma = str_contains($item1[$property] ?? '', ',');
+        $amount = (float) str_replace(',', '.', $item1[$property] ?? '') + (float) str_replace(',', '.', $item2[$property] ?? '');
 
         if ($hasComma) {
             $amount = $this->modules->Articles()->sFormatPrice($amount);

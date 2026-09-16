@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Translation
@@ -36,9 +35,9 @@
  */
 
 //{block name="backend/translation/controller/main"}
-Ext.define('Shopware.apps.Translation.controller.Main',
-/** @lends Ext.app.Controller# */
-{
+Ext.define('Shopware.apps.Translation.controller.Main', {
+    /** @lends Ext.app.Controller# */
+
     /**
      * Extend from the standard ExtJS 4 controller
      * @string
@@ -189,7 +188,7 @@ Ext.define('Shopware.apps.Translation.controller.Main',
             record = view.getRootNode().getChildAt(index),
             node = view.getView().getNode(index);
 
-        if(record && !view.initialized) {
+        if (record && !view.initialized) {
             view.getSelectionModel().select(record);
             view.initialized = true;
             me.activeLanguage = record;
@@ -214,7 +213,7 @@ Ext.define('Shopware.apps.Translation.controller.Main',
         var me = this,
             pnl = me.getLanguageForm();
 
-        if(record.get('default')) {
+        if (record.get('default')) {
             return false;
         }
 
@@ -295,12 +294,12 @@ Ext.define('Shopware.apps.Translation.controller.Main',
 
         // Sanitize the parameters for the AJAX request
         Ext.iterate(values, function(item, index) {
-            if(index === true) {
+            if (index === true) {
                 index = '1';
-            } else if(index === false) {
+            } else if (index === false) {
                 index = '0';
             }
-            if(index !== null) {
+            if (index !== null) {
                 params['data[' + item + ']'] = index;
             }
         });
@@ -348,11 +347,11 @@ Ext.define('Shopware.apps.Translation.controller.Main',
         // Get all translatable fields with an empty text
         var data = [];
         Ext.each(me.subApplication.translatableFields, function(field) {
-            if(field.emptyText) {
+            if (field.emptyText) {
                 var label;
 
                 // Special behavior - if the fieldLabel contains a non-breaking space, then set an custom label
-                if(field.fieldLabel === '&nbsp') {
+                if (field.fieldLabel === '&nbsp') {
                     label = '{s name="emptyFieldLabel"}Description{/s}';
                 }
 
@@ -418,7 +417,7 @@ Ext.define('Shopware.apps.Translation.controller.Main',
 
         text = Ext.String.trim(Ext.util.Format.stripTags(text));
         text = Ext.String.htmlDecode(text);
-        url =Ext.String.format(win.serviceInfo.tpl, fromLanguage, toLanguage, Ext.String.trim(Ext.util.Format.stripTags(text)));
+        url = Ext.String.format(win.serviceInfo.tpl, fromLanguage, toLanguage, Ext.String.trim(Ext.util.Format.stripTags(text)));
 
         window.open(url);
     }

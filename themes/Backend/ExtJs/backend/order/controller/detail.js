@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -42,7 +41,7 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
      * Extend from the standard ExtJS 4 controller
      * @string
      */
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
 
     refs: [
         { ref: 'orderList', selector: 'order-list' },
@@ -51,9 +50,9 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
     ],
 
     snippets: {
-        successTitle:'{s name="message/save/success_title"}Successful{/s}',
-        failureTitle:'{s name="message/save/error_title"}Error{/s}',
-        warningTitle:'{s name="message/save/warning_title"}Warning{/s}',
+        successTitle: '{s name="message/save/success_title"}Successful{/s}',
+        failureTitle: '{s name="message/save/error_title"}Error{/s}',
+        warningTitle: '{s name="message/save/warning_title"}Warning{/s}',
         internalComment: {
             successMessage: '{s name="message/internal_comment/success"}Internal comment has been saved successfully for order [0]{/s}',
             failureMessage: '{s name="message/internal_comment/failure"}An error has occurred while saving the internal comment for order [0].{/s}'
@@ -108,7 +107,7 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
      *
      * @return void
      */
-    init:function () {
+    init: function () {
         var me = this;
 
         me.control({
@@ -138,7 +137,7 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
                 updateForms: me.onUpdateDetailPage
             },
             'order-detail-window order-detail-panel order-debit-field-set': {
-                changePayment:me.onChangePayment
+                changePayment: me.onChangePayment
             },
             'order-detail-window order-detail-panel order-dispatch-field-set': {
                 changeDispatch: me.onChangeDispatch
@@ -193,7 +192,7 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
                         Shopware.app.Application.addSubApplication({
                             name: 'Shopware.apps.Order',
                             params: {
-                                orderId:record.get('id')
+                                orderId: record.get('id')
                             }
                         });
                         window.destroy();
@@ -268,8 +267,8 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
             columns = editor.editor.items.items,
             articleId = e.record.get('articleId');
 
-            columns[1].setValue(e.record.get('articleNumber'));
-            columns[2].setValue(e.record.get('articleName'));
+        columns[1].setValue(e.record.get('articleNumber'));
+        columns[2].setValue(e.record.get('articleName'));
 
     },
 
@@ -308,7 +307,7 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
             params: {
                 changed: order.get('changed') ? order.get('changed').toISOString() : null,
             },
-            callback:function (data, operation) {
+            callback: function (data, operation) {
                 var records = operation.getRecords(),
                     record = records[0],
                     rawData = record.getProxy().getReader().rawData;
@@ -370,14 +369,23 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
             updateButton = editor.editor.floatingButtons.items.items[0];
 
         updateButton.setDisabled(false);
-        columns[1].setValue(record.get('number'));
-        columns[2].setValue(record.get('name'));
+
+        columns.forEach(function(column){
+            if (column.name === 'articleNumber'){
+                column.setValue(record.get('number'));
+            } else if (column.name === 'articleName'){
+                column.setValue(record.get('name'));
+            } else if (column.name === 'price'){
+                column.setValue(record.get('price'));
+            } else if (column.name === 'taxId'){
+                column.setValue(record.get('taxId'));
+            }
+        });
 
         // Update articleId for row
         editor.context.record.set('articleId', record.get('articleId'));
         editor.context.record.set('articleDetailID', record.get('id'));
     },
-
 
     /**
      * Event will be fired when the user clicks the add button to add an order position.
@@ -431,7 +439,7 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
                 changed: order.get('changed') ? order.get('changed').toISOString() : null,
             };
             store.sync({
-                callback:function (batch, operation) {
+                callback: function (batch, operation) {
                     var rawData = batch.proxy.getReader().rawData;
 
                     if ( rawData.success === true ) {
@@ -468,7 +476,6 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
         });
     },
 
-
     /**
      * Event will be fired when the user change the payment combo box which
      * is displayed on bottom of the detail page.
@@ -477,14 +484,14 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
      * @param [object] container - The field container which contains the debit account fields
      * @return void
      */
-    onChangePayment:function (value, container) {
+    onChangePayment: function (value, container) {
         if ( value !== 2 ) {
             if (container.getEl()) {
                 container.getEl().fadeOut({
-                    opacity:0,
-                    easing:'easeOut',
-                    duration:500,
-                    callback:function () {
+                    opacity: 0,
+                    easing: 'easeOut',
+                    duration: 500,
+                    callback: function () {
                         container.hide();
                     }
                 });
@@ -495,9 +502,9 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
             container.show();
             if (container.getEl()) {
                 container.getEl().fadeIn({
-                    opacity:1,
-                    easing:'easeOut',
-                    duration:500
+                    opacity: 1,
+                    easing: 'easeOut',
+                    duration: 500
                 });
             }
         }
@@ -540,6 +547,10 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
         countryStateCombo.show();
         store.load({
             callback: function() {
+                if (!Ext.isDefined(countryStateCombo.view) || countryStateCombo.view.isDestroyed === true) {
+                    return;
+                }
+
                 var record = store.getById(oldStateId);
                 if (store.getCount() === 0) {
                     countryStateCombo.setValue(null);
@@ -567,7 +578,7 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
     onDocumentPreview: function(order, config, panel) {
         window.open('{url action="createDocument"}' + '' +
                 '?orderId=' + order.get('id') +
-                '&preview=1'+ '' +
+                '&preview=1' + '' +
                 '&taxFree=' + config.get('taxFree') +
                 '&temp=1' +
                 '&documentType=' + config.get('documentType') )
@@ -748,7 +759,7 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
         errorMessage = Ext.String.format(errorMessage, order.get('number'));
 
         order.save({
-            callback:function (data, operation) {
+            callback: function (data, operation) {
                 var records = operation.getRecords(),
                     record = records[0],
                     rawData = record.getProxy().getReader().rawData;
@@ -814,7 +825,6 @@ Ext.define('Shopware.apps.Order.controller.Detail', {
             }
         });
     },
-
 
     /**
      * Event listener method which fired when the user clicks the pencil button

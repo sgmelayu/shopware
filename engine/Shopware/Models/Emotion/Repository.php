@@ -1,51 +1,57 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Emotion;
 
+use DateTime;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder as DBALQueryBuilder;
+use Doctrine\ORM\Query;
 use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Model\QueryBuilder;
 use Shopware\Models\Attribute\Emotion as EmotionAttribute;
 
+/**
+ * @extends ModelRepository<Emotion>
+ */
 class Repository extends ModelRepository
 {
     /**
      * Helper function to create the query builder for the "getListQuery" function.
      * This function can be hooked to modify the query builder of the query object.
      *
-     * @param string $filter
-     * @param array  $orderBy
+     * @param string                                                        $filter
+     * @param string|array<array{property: string, direction: string}>|null $orderBy
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getListQueryBuilder($filter = null, $orderBy = null)
     {
         /** @var QueryBuilder $builder */
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select(['emotions', 'categories'])
-            ->from(\Shopware\Models\Emotion\Emotion::class, 'emotions')
+            ->from(Emotion::class, 'emotions')
             ->leftJoin('emotions.categories', 'categories');
 
         // Filter the displayed columns with the passed filter string
@@ -67,7 +73,7 @@ class Repository extends ModelRepository
      * @param string|null $filterBy
      * @param int|null    $categoryId
      *
-     * @return \Doctrine\DBAL\Query\QueryBuilder
+     * @return DBALQueryBuilder
      */
     public function getListingQuery($filter = null, $filterBy = null, $categoryId = null)
     {
@@ -194,7 +200,7 @@ class Repository extends ModelRepository
      * @param int       $offset
      * @param int       $limit
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Emotion>
      */
     public function getNameListQuery($filter = null, $orderBy = null, $offset = null, $limit = null)
     {
@@ -211,17 +217,17 @@ class Repository extends ModelRepository
      * Helper function to create the query builder for the "getLandingPageListQuery" function.
      * This function can be hooked to modify the query builder of the query object.
      *
-     * @param bool  $filter
-     * @param array $orderBy
+     * @param bool                                                          $filter
+     * @param string|array<array{property: string, direction: string}>|null $orderBy
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getNameListQueryBuilder($filter = null, $orderBy = null)
     {
         /** @var QueryBuilder $builder */
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select(['emotions.id', 'emotions.name'])
-            ->from(\Shopware\Models\Emotion\Emotion::class, 'emotions');
+            ->from(Emotion::class, 'emotions');
 
         if ($filter === true) {
             $builder->where('emotions.isLandingPage = :isLandingPage')
@@ -244,7 +250,7 @@ class Repository extends ModelRepository
      *
      * @param int $emotionId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Emotion>
      */
     public function getEmotionDetailQuery($emotionId)
     {
@@ -259,13 +265,13 @@ class Repository extends ModelRepository
      *
      * @param int $emotionId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getEmotionDetailQueryBuilder($emotionId)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select(['emotions', 'elements', 'component', 'fields', 'attribute', 'categories', 'shops', 'template'])
-            ->from(\Shopware\Models\Emotion\Emotion::class, 'emotions')
+            ->from(Emotion::class, 'emotions')
             ->leftJoin('emotions.template', 'template')
             ->leftJoin('emotions.elements', 'elements')
             ->leftJoin('emotions.attribute', 'attribute')
@@ -285,7 +291,7 @@ class Repository extends ModelRepository
      * @param int $elementId
      * @param int $componentId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Data>
      */
     public function getElementDataQuery($elementId, $componentId)
     {
@@ -301,7 +307,7 @@ class Repository extends ModelRepository
      * @param int $elementId
      * @param int $componentId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getElementDataQueryBuilder($elementId, $componentId)
     {
@@ -321,7 +327,7 @@ class Repository extends ModelRepository
     /**
      * @param int[] $elementIds
      *
-     * @return array[] indexed by elementId
+     * @return array<int, list<array<string, mixed>>> indexed by elementId
      */
     public function getElementsViewports($elementIds)
     {
@@ -331,7 +337,7 @@ class Repository extends ModelRepository
         $viewports = [];
 
         foreach ($viewportsData as $viewport) {
-            $elementId = $viewport['elementId'];
+            $elementId = (int) $viewport['elementId'];
             $viewports[$elementId][] = $viewport;
         }
 
@@ -343,7 +349,7 @@ class Repository extends ModelRepository
      *
      * @param int $emotionId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<EmotionAttribute>
      */
     public function getEmotionAttributesQuery($emotionId)
     {
@@ -358,7 +364,7 @@ class Repository extends ModelRepository
      *
      * @param int $emotionId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getEmotionAttributesQueryBuilder($emotionId)
     {
@@ -374,7 +380,7 @@ class Repository extends ModelRepository
     /**
      * @param int $categoryId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Emotion>
      */
     public function getCategoryBaseEmotionsQuery($categoryId)
     {
@@ -386,7 +392,7 @@ class Repository extends ModelRepository
     /**
      * @param int $categoryId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getCategoryBaseEmotionsQueryBuilder($categoryId)
     {
@@ -399,7 +405,7 @@ class Repository extends ModelRepository
             ->andWhere('emotions.isLandingPage = 0 ')
             ->andWhere('emotions.active = 1 ')
             ->setParameter(1, $categoryId)
-            ->setParameter('now', new \DateTime());
+            ->setParameter('now', new DateTime());
 
         return $builder;
     }
@@ -430,7 +436,7 @@ class Repository extends ModelRepository
      * @param int $offset
      * @param int $limit
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getCampaigns($offset = null, $limit = null)
     {
@@ -450,7 +456,7 @@ class Repository extends ModelRepository
     /**
      * @param int $shopId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getCampaignsByShopId($shopId)
     {
@@ -478,7 +484,7 @@ class Repository extends ModelRepository
             ->andWhere('(emotions.validFrom <= :now OR emotions.validFrom IS NULL)')
             ->andWhere('(emotions.validTo >= :now OR emotions.validTo IS NULL)')
             ->setParameter(1, $id)
-            ->setParameter('now', new \DateTime());
+            ->setParameter('now', new DateTime());
 
         return $builder;
     }
@@ -486,7 +492,7 @@ class Repository extends ModelRepository
     /**
      * @param int[] $elementIds
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     private function getElementViewportsQueryBuilder($elementIds)
     {

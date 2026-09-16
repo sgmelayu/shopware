@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -41,13 +40,13 @@ Ext.define('Shopware.apps.Order.view.detail.Communication', {
      * Define that the additional information is an Ext.panel.Panel extension
      * @string
      */
-    extend:'Ext.form.Panel',
+    extend: 'Ext.form.Panel',
 
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.order-communication-panel',
+    alias: 'widget.order-communication-panel',
 
     /**
      * An optional extra CSS class that will be added to this component's Element.
@@ -68,7 +67,7 @@ Ext.define('Shopware.apps.Order.view.detail.Communication', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         title: '{s name="communication/window_title"}Communication{/s}',
         internal: {
             title: '{s name="communication/internal/title"}Internal communication{/s}',
@@ -95,7 +94,7 @@ Ext.define('Shopware.apps.Order.view.detail.Communication', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         me.registerEvents();
@@ -150,7 +149,7 @@ Ext.define('Shopware.apps.Order.view.detail.Communication', {
                 labelStyle: 'font-weight: 700;'
             },
             layout: 'anchor',
-            minWidth:250,
+            minWidth: 250,
             items: me.createInternalElements()
         });
     },
@@ -169,7 +168,7 @@ Ext.define('Shopware.apps.Order.view.detail.Communication', {
                 labelStyle: 'font-weight: 700;'
             },
             layout: 'anchor',
-            minWidth:250,
+            minWidth: 250,
             items: me.createExternalElements()
         });
     },

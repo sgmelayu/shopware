@@ -1,31 +1,35 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
 
+use Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface;
+use Shopware\Bundle\StoreFrontBundle\Service\SimilarProductsServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ListProduct;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
+use Shopware\Models\Article\Article;
 use Shopware\Models\Category\Category;
 
 /**
@@ -49,75 +53,71 @@ class SimilarProductsTest extends TestCase
         Shopware()->Config()->offsetSet('similarlimit', 0);
     }
 
-    public function testSimilarProduct()
+    public function testSimilarProduct(): void
     {
         $context = $this->getContext();
 
         $number = 'testSimilarProduct';
-        $article = $this->getProduct($number, $context);
+        $article = $this->getProductObject($number, $context);
 
         $similarNumbers = [];
         $similarProducts = [];
         for ($i = 0; $i < 4; ++$i) {
             $similarNumber = 'SimilarProduct-' . $i;
             $similarNumbers[] = $similarNumber;
-            $similarProduct = $this->getProduct($similarNumber, $context);
+            $similarProduct = $this->getProductObject($similarNumber, $context);
             $similarProducts[] = $similarProduct->getId();
         }
         $this->linkSimilarProduct($article->getId(), $similarProducts);
 
-        $product = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface::class)
-            ->get($number, $context);
-
-        $similarProducts = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\SimilarProductsServiceInterface::class)
-            ->get($product, $context);
+        $product = $this->getContainer()->get(ListProductServiceInterface::class)->get($number, $context);
+        static::assertNotNull($product);
+        $similarProducts = $this->getContainer()->get(SimilarProductsServiceInterface::class)->get($product, $context);
+        static::assertIsArray($similarProducts);
 
         static::assertCount(4, $similarProducts);
 
-        /** @var ListProduct $similarProduct */
         foreach ($similarProducts as $similarProduct) {
-            static::assertInstanceOf('\Shopware\Bundle\StoreFrontBundle\Struct\ListProduct', $similarProduct);
+            static::assertInstanceOf(ListProduct::class, $similarProduct);
             static::assertContains($similarProduct->getNumber(), $similarNumbers);
         }
     }
 
-    public function testSimilarProductsList()
+    public function testSimilarProductsList(): void
     {
         $context = $this->getContext();
 
         $number = 'testSimilarProductsList';
         $number2 = 'testSimilarProductsList2';
 
-        $article = $this->getProduct($number, $context);
-        $article2 = $this->getProduct($number2, $context);
+        $article = $this->getProductObject($number, $context);
+        $article2 = $this->getProductObject($number2, $context);
 
         $similarNumbers = [];
         $similarProducts = [];
         for ($i = 0; $i < 4; ++$i) {
             $similarNumber = 'SimilarProduct-' . $i;
             $similarNumbers[] = $similarNumber;
-            $similarProduct = $this->getProduct($similarNumber, $context);
+            $similarProduct = $this->getProductObject($similarNumber, $context);
             $similarProducts[] = $similarProduct->getId();
         }
 
         $this->linkSimilarProduct($article->getId(), $similarProducts);
         $this->linkSimilarProduct($article2->getId(), $similarProducts);
 
-        $products = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface::class)
+        $products = $this->getContainer()->get(ListProductServiceInterface::class)
             ->getList([$number, $number2], $context);
 
-        $similarProductList = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\SimilarProductsServiceInterface::class)
+        $similarProductList = $this->getContainer()->get(SimilarProductsServiceInterface::class)
             ->getList($products, $context);
 
         static::assertCount(2, $similarProductList);
 
-        /** @var ListProduct $product */
         foreach ($products as $product) {
             $similarProducts = $similarProductList[$product->getNumber()];
 
             static::assertCount(4, $similarProducts);
 
-            /** @var ListProduct $similarProduct */
             foreach ($similarProducts as $similarProduct) {
                 static::assertInstanceOf(ListProduct::class, $similarProduct);
                 static::assertContains($similarProduct->getNumber(), $similarNumbers);
@@ -125,22 +125,21 @@ class SimilarProductsTest extends TestCase
         }
     }
 
-    public function testSimilarProductsByCategory()
+    public function testSimilarProductsByCategory(): void
     {
         $number = __FUNCTION__;
         $context = $this->getContext();
         $category = $this->helper->createCategory();
 
-        $this->getProduct($number, $context, $category);
+        $this->getProductObject($number, $context, $category);
 
         for ($i = 0; $i < 4; ++$i) {
             $similarNumber = 'SimilarProduct-' . $i;
-            $this->getProduct($similarNumber, $context, $category);
+            $this->getProductObject($similarNumber, $context, $category);
         }
 
-        $helper = new Helper();
-        $converter = new Converter();
-        $convertedShop = $converter->convertShop($helper->getShop(1));
+        $helper = new Helper($this->getContainer());
+        $convertedShop = (new Converter())->convertShop($helper->getShop());
         if (!$convertedShop->getCurrency()) {
             $convertedShop->setCurrency($context->getCurrency());
         }
@@ -149,11 +148,10 @@ class SimilarProductsTest extends TestCase
             $convertedShop
         );
 
-        $product = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\ListProductServiceInterface::class)
-            ->get($number, $context);
-
-        $similar = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\SimilarProductsServiceInterface::class)
-            ->get($product, $context);
+        $product = $this->getContainer()->get(ListProductServiceInterface::class)->get($number, $context);
+        static::assertNotNull($product);
+        $similar = $this->getContainer()->get(SimilarProductsServiceInterface::class)->get($product, $context);
+        static::assertIsArray($similar);
 
         static::assertCount(3, $similar);
 
@@ -165,22 +163,20 @@ class SimilarProductsTest extends TestCase
         }
     }
 
-    protected function getProduct(
-        $number,
+    private function getProductObject(
+        string $number,
         ShopContext $context,
-        Category $category = null,
-        $additonally = null
-    ) {
-        $data = parent::getProduct($number, $context, $category);
+        ?Category $category = null
+    ): Article {
+        $data = $this->getProduct($number, $context, $category);
 
-        return $this->helper->createArticle($data);
+        return $this->helper->createProduct($data);
     }
 
     /**
-     * @param int   $productId
      * @param int[] $similarProductIds
      */
-    private function linkSimilarProduct($productId, $similarProductIds)
+    private function linkSimilarProduct(int $productId, array $similarProductIds): void
     {
         foreach ($similarProductIds as $similarProductId) {
             Shopware()->Db()->insert('s_articles_similar', [

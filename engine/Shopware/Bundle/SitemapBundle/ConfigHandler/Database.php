@@ -1,29 +1,31 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SitemapBundle\ConfigHandler;
 
+use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
 use Shopware\Bundle\SitemapBundle\Service\ConfigHandler;
 
@@ -53,18 +55,18 @@ class Database implements ConfigHandlerInterface
         $this->connection->exec('TRUNCATE s_sitemap_custom');
 
         $customUrls = array_map(static function (array $customUrl) {
-            if (array_key_exists('shopId', $customUrl)) {
+            if (\array_key_exists('shopId', $customUrl)) {
                 $customUrl['shop_id'] = $customUrl['shopId'];
                 unset($customUrl['shopId']);
             }
 
-            if (array_key_exists('lastMod', $customUrl)) {
+            if (\array_key_exists('lastMod', $customUrl)) {
                 $customUrl['last_mod'] = $customUrl['lastMod'];
                 unset($customUrl['lastMod']);
             }
 
             if (!$customUrl['last_mod']) {
-                $customUrl['last_mod'] = (new \DateTimeImmutable('now'))->format('Y-m-d H:i:s');
+                $customUrl['last_mod'] = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
             }
 
             if (isset($customUrl['changeFreq'])) {
@@ -91,7 +93,7 @@ class Database implements ConfigHandlerInterface
         $this->connection->exec('TRUNCATE s_sitemap_exclude');
 
         $excludedUrls = array_map(static function (array $excludedUrl) {
-            if (array_key_exists('shopId', $excludedUrl)) {
+            if (\array_key_exists('shopId', $excludedUrl)) {
                 $excludedUrl['shop_id'] = $excludedUrl['shopId'];
                 unset($excludedUrl['shopId']);
             }

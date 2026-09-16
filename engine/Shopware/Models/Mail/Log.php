@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Mail;
@@ -51,9 +51,9 @@ class Log extends ModelEntity
     protected $id;
 
     /**
-     * @var string
+     * @var string|null
      *
-     * @ORM\Column(name="subject", type="text")
+     * @ORM\Column(name="subject", type="text", nullable=true)
      */
     protected $subject;
 
@@ -70,8 +70,8 @@ class Log extends ModelEntity
      * @ORM\ManyToMany(targetEntity="Contact", cascade={"persist", "remove"}, fetch="EXTRA_LAZY")
      * @ORM\JoinTable(
      *     name="s_mail_log_recipient",
-     *     joinColumns={@ORM\JoinColumn(name="log_id", referencedColumnName="id", onDelete="CASCADE")},
-     *     inverseJoinColumns={@ORM\JoinColumn(name="contact_id", referencedColumnName="id", onDelete="CASCADE")}
+     *     joinColumns={@ORM\JoinColumn(name="log_id", referencedColumnName="id", onDelete="CASCADE", nullable=false)},
+     *     inverseJoinColumns={@ORM\JoinColumn(name="contact_id", referencedColumnName="id", onDelete="CASCADE", nullable=false)}
      * )
      */
     protected $recipients;
@@ -79,26 +79,26 @@ class Log extends ModelEntity
     /**
      * @var DateTimeInterface
      *
-     * @ORM\Column(name="sent_at", type="datetime")
+     * @ORM\Column(name="sent_at", type="datetime", nullable=false)
      */
     protected $sentAt;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(name="content_html", type="text", nullable=true)
      */
     protected $contentHtml;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @ORM\Column(name="content_text", type="text", nullable=true)
      */
     protected $contentText;
 
     /**
-     * @var Mail
+     * @var Mail|null
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Mail\Mail")
      */
@@ -121,7 +121,7 @@ class Log extends ModelEntity
     /**
      * @var Collection<Document>
      *
-     * @ORM\ManyToMany(targetEntity="Shopware\Models\Order\Document\Document", cascade={"persist", "remove"}, fetch="EXTRA_LAZY")
+     * @ORM\ManyToMany(targetEntity="Shopware\Models\Order\Document\Document", cascade={"persist"}, fetch="EXTRA_LAZY")
      * @ORM\JoinTable(
      *     name="s_mail_log_document",
      *     joinColumns={@ORM\JoinColumn(name="log_id", referencedColumnName="id", onDelete="CASCADE")},

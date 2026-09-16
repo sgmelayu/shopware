@@ -1,34 +1,36 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\AbstractQuery;
 use Shopware\Bundle\PluginInstallerBundle\Service\InstallerService;
 use Shopware\Bundle\SitemapBundle\Service\ConfigHandler;
+use Shopware\Bundle\SitemapBundle\Service\SitemapExporter;
 use Shopware\Components\CacheManager;
 use Shopware\Components\HttpCache\CacheWarmer;
 use Shopware\Components\HttpCache\UrlProviderFactoryInterface;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Routing\Context;
 use Shopware\Models\Article\Article as ProductModel;
@@ -39,18 +41,17 @@ use Shopware\Models\Config\Element;
 use Shopware\Models\Config\Form;
 use Shopware\Models\Emotion\Emotion;
 use Shopware\Models\Plugin\Plugin;
-use Shopware\Models\Shop\Repository as ShopRepository;
 use Shopware\Models\Shop\Shop;
 use Shopware\Models\Site\Site;
 
 class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Backend_ExtJs
 {
-    const PHP_RECOMMENDED_VERSION = '7.4.0';
-    const PHP_MINIMUM_VERSION = '7.3.0';
+    public const PHP_RECOMMENDED_VERSION = '8.0.0';
+    public const PHP_MINIMUM_VERSION = '7.4.0';
 
-    const PERFORMANCE_VALID = 1;
-    const PERFORMANCE_WARNING = 2;
-    const PERFORMANCE_INVALID = 0;
+    public const PERFORMANCE_VALID = 1;
+    public const PERFORMANCE_WARNING = 2;
+    public const PERFORMANCE_INVALID = 0;
 
     /**
      * Stores a list of all needed config data
@@ -66,7 +67,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
     {
         $httpCache = $this->getPluginByName('HttpCache');
 
-        $active = ($httpCache->getActive() && $httpCache->getInstalled() != null);
+        $active = $httpCache->getActive() && $httpCache->getInstalled() != null;
 
         $this->View()->assign([
             'success' => true,
@@ -115,7 +116,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
 
     public function getConfigAction()
     {
-        Shopware()->Container()->get(\Zend_Cache_Core::class)->remove(CacheManager::ITEM_TAG_CONFIG);
+        Shopware()->Container()->get(Zend_Cache_Core::class)->remove(CacheManager::ITEM_TAG_CONFIG);
         $this->View()->assign([
             'success' => true,
             'data' => $this->prepareConfigData(),
@@ -127,7 +128,6 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function getActiveShopsAction()
     {
-        /** @var ShopRepository $shopRepo */
         $shopRepo = $this->container->get(ModelManager::class)->getRepository(Shop::class);
         $shops = $shopRepo->getActiveShops(AbstractQuery::HYDRATE_ARRAY);
         $this->View()->assign([
@@ -151,7 +151,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
         $this->saveConfigData($data);
         $this->saveSitemapData($sitemapData);
 
-        Shopware()->Container()->get(\Zend_Cache_Core::class)->remove(CacheManager::ITEM_TAG_CONFIG);
+        Shopware()->Container()->get(Zend_Cache_Core::class)->remove(CacheManager::ITEM_TAG_CONFIG);
 
         // Reload config, so that the actual config from the
         // db is returned
@@ -170,7 +170,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function saveConfigData(array $data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         foreach ($data as $values) {
             foreach ($values as $configKey => $value) {
@@ -190,7 +190,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function prepareDataForSaving($data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $output = [];
         $output['httpCache'] = $this->prepareHttpCacheConfigForSaving($data['httpCache'][0]);
@@ -215,7 +215,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function prepareForSavingDefault(array $data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         unset($data['id']);
 
@@ -231,7 +231,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function prepareSeoConfigForSaving(array $data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         unset($data['id']);
 
@@ -258,7 +258,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function prepareHttpCacheConfigForSaving(array $data)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $modelManager = $this->container->get(ModelManager::class);
         $repo = $modelManager->getRepository(Plugin::class);
@@ -310,15 +310,14 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      */
     public function saveConfig($name, $value)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $modelManager = $this->container->get(ModelManager::class);
-        /** @var ShopRepository $shopRepository */
         $shopRepository = $modelManager->getRepository(Shop::class);
         $elementRepository = $modelManager->getRepository(Element::class);
         $formRepository = $modelManager->getRepository(Form::class);
 
-        /** @var \Shopware\Models\Shop\Shop $shop */
+        /** @var Shop $shop */
         $shop = $shopRepository->find($shopRepository->getActiveDefault()->getId());
 
         if (strpos($name, ':') !== false) {
@@ -331,7 +330,6 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
             $findBy['form'] = $form;
         }
 
-        /** @var Shopware\Models\Config\Element $element */
         $element = $elementRepository->findOneBy($findBy);
 
         // If the element is empty, the given setting does not exists. This might be the case for some plugins
@@ -369,11 +367,11 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
      * @param string $configName
      * @param string $defaultValue
      *
-     * @return string|null
+     * @return array<array-key, mixed>|bool|float|int|string|null
      */
     public function readConfig($configName, $defaultValue = '')
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be private with 5.8.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         // If we have a simple config item, we can return it by using Shopware()->Config()
         if (strpos($configName, ':') === false) {
@@ -383,8 +381,8 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
         // The colon separates formName and elementName
         list($scope, $config) = explode(':', $configName, 2);
 
-        $elementRepository = $this->container->get(ModelManager::class)->getRepository(\Shopware\Models\Config\Element::class);
-        $formRepository = $this->container->get(ModelManager::class)->getRepository(\Shopware\Models\Config\Form::class);
+        $elementRepository = $this->container->get(ModelManager::class)->getRepository(Element::class);
+        $formRepository = $this->container->get(ModelManager::class)->getRepository(Form::class);
 
         $form = $formRepository->findOneBy(['name' => $scope]);
 
@@ -392,7 +390,6 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
             return $defaultValue;
         }
 
-        /** @var \Shopware\Models\Config\Element|null $element */
         $element = $elementRepository->findOneBy(['name' => $config, 'form' => $form]);
 
         if (!$element) {
@@ -400,7 +397,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
         }
 
         $values = $element->getValues();
-        if (empty($values) || empty($values[0])) {
+        if ($values->count() === 0 || empty($values[0])) {
             return $element->getValue();
         }
 
@@ -457,10 +454,14 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
     {
         $shopId = (int) $this->Request()->getParam('shopId', 1);
 
-        /** @var Context $context */
+        $shopModel = $this->container->get(ModelManager::class)->getRepository(Shop::class)->getById($shopId);
+        if ($shopModel === null) {
+            throw new ModelNotFoundException(Shop::class, $shopId);
+        }
+
         $context = Context::createFromShop(
-            $this->container->get(ModelManager::class)->getRepository(Shop::class)->getById($shopId),
-            $this->container->get(\Shopware_Components_Config::class)
+            $shopModel,
+            $this->container->get(Shopware_Components_Config::class)
         );
 
         $providers = $this->get('shopware_cache_warmer.url_provider_factory')->getAllProviders();
@@ -501,11 +502,13 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
         /** @var CacheWarmer $cacheWarmer */
         $cacheWarmer = $this->get('http_cache_warmer');
 
-        /** @var Context $context */
-        $context = Context::createFromShop(
-            Shopware()->Models()->getRepository(Shop::class)->getById((int) $this->Request()->getParam('shopId', 1)),
-            Shopware()->Config()
-        );
+        $shopId = (int) $this->Request()->getParam('shopId', 1);
+        $shopModel = $this->container->get(ModelManager::class)->getRepository(Shop::class)->getById($shopId);
+        if ($shopModel === null) {
+            throw new ModelNotFoundException(Shop::class, $shopId);
+        }
+
+        $context = Context::createFromShop($shopModel, Shopware()->Config());
 
         $limit = (int) $this->Request()->get('limit');
         $offset = (int) $this->Request()->get('offset');
@@ -526,7 +529,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
 
         $this->View()->assign([
             'success' => true,
-            'data' => ['count' => count($urls)],
+            'data' => ['count' => \count($urls)],
         ]);
     }
 
@@ -538,7 +541,7 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
         $shops = $this->getModelManager()->getRepository(Shop::class)->getActiveShopsFixed();
 
         foreach ($shops as $shop) {
-            $this->container->get(\Shopware\Bundle\SitemapBundle\Service\SitemapExporter::class)->generate($shop);
+            $this->container->get(SitemapExporter::class)->generate($shop);
         }
 
         $this->View()->assign('success', true);
@@ -615,14 +618,14 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
             [
                 'id' => 1,
                 'name' => Shopware()->Snippets()->getNamespace('backend/performance/main')->get('cache/apc'),
-                'value' => extension_loaded('apcu'),
-                'valid' => extension_loaded('apcu') === true && ini_get('apc.enabled') ? self::PERFORMANCE_VALID : self::PERFORMANCE_INVALID,
+                'value' => \extension_loaded('apcu'),
+                'valid' => \extension_loaded('apcu') === true && \ini_get('apc.enabled') ? self::PERFORMANCE_VALID : self::PERFORMANCE_INVALID,
             ],
             [
                 'id' => 3,
                 'name' => Shopware()->Snippets()->getNamespace('backend/performance/main')->get('cache/zend'),
-                'value' => extension_loaded('Zend OPcache'),
-                'valid' => extension_loaded('Zend OPcache') === true && ini_get('opcache.enable') ? self::PERFORMANCE_VALID : self::PERFORMANCE_INVALID,
+                'value' => \extension_loaded('Zend OPcache'),
+                'valid' => \extension_loaded('Zend OPcache') === true && \ini_get('opcache.enable') ? self::PERFORMANCE_VALID : self::PERFORMANCE_INVALID,
             ],
             [
                 'id' => 4,
@@ -774,8 +777,8 @@ class Shopware_Controllers_Backend_Performance extends Shopware_Controllers_Back
             'sitemapLastRefresh',
         ]);
 
-        $sitemapConfig['customUrls'] = $this->get(ConfigHandler::class)->get(Confighandler::CUSTOM_URLS_KEY);
-        $sitemapConfig['excludedUrls'] = $this->get(ConfigHandler::class)->get(Confighandler::EXCLUDED_URLS_KEY);
+        $sitemapConfig['customUrls'] = $this->get(ConfigHandler::class)->get(ConfigHandler::CUSTOM_URLS_KEY);
+        $sitemapConfig['excludedUrls'] = $this->get(ConfigHandler::class)->get(ConfigHandler::EXCLUDED_URLS_KEY);
 
         $sitemapConfig['excludedUrls'] = array_map(function ($excludeUrl) {
             $excludeUrl['resource'] = $this->convertModelToResource($excludeUrl['resource']);

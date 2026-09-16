@@ -1,35 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Common\HttpClient;
 
 class CurlClient implements Client
 {
-    const METHOD_GET = 'GET';
-    const METHOD_PUT = 'PUT';
-    const METHOD_POST = 'POST';
-    const METHOD_DELETE = 'DELETE';
+    public const METHOD_GET = 'GET';
+    public const METHOD_PUT = 'PUT';
+    public const METHOD_POST = 'POST';
+    public const METHOD_DELETE = 'DELETE';
 
     /**
      * @var string[]
@@ -85,7 +85,7 @@ class CurlClient implements Client
      */
     private function call($url, $method = self::METHOD_GET, array $header = [], $data = null)
     {
-        if (!in_array($method, $this->validMethods)) {
+        if (!\in_array($method, $this->validMethods)) {
             throw new ClientException('Invalid HTTP-METHOD: ' . $method);
         }
 
@@ -93,7 +93,7 @@ class CurlClient implements Client
             throw new ClientException('Invalid URL given');
         }
 
-        //Initializes the cURL instance
+        // Initializes the cURL instance
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_HTTPHEADER, $header);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);

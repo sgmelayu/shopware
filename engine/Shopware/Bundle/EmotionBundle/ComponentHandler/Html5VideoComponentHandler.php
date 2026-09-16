@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EmotionBundle\ComponentHandler;
@@ -32,13 +32,10 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class Html5VideoComponentHandler implements ComponentHandlerInterface
 {
-    const LEGACY_CONVERT_FUNCTION = 'getHtml5Video';
-    const COMPONENT_NAME = 'emotion-components-html-video';
+    public const LEGACY_CONVERT_FUNCTION = 'getHtml5Video';
+    public const COMPONENT_NAME = 'emotion-components-html-video';
 
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
+    private MediaServiceInterface $mediaService;
 
     public function __construct(MediaServiceInterface $mediaService)
     {
@@ -60,9 +57,7 @@ class Html5VideoComponentHandler implements ComponentHandlerInterface
 
     public function handle(ResolvedDataCollection $collection, Element $element, ShopContextInterface $context)
     {
-        $mediaFields = ['webm_video', 'ogg_video', 'h264_video', 'fallback_picture'];
-
-        foreach ($mediaFields as $field) {
+        foreach (['webm_video', 'ogg_video', 'h264_video', 'fallback_picture'] as $field) {
             $value = $element->getConfig()->get($field);
 
             if (!preg_match('#^media/*#i', $value)) {

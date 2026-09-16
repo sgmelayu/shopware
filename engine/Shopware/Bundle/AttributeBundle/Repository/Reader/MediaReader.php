@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AttributeBundle\Repository\Reader;
@@ -30,16 +30,10 @@ use Shopware\Models\Media\Media;
 
 class MediaReader extends GenericReader
 {
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
+    private MediaServiceInterface $mediaService;
 
-    /**
-     * @param string $entity
-     */
     public function __construct(
-        $entity,
+        string $entity,
         ModelManager $entityManager,
         MediaServiceInterface $mediaService
     ) {
@@ -49,19 +43,14 @@ class MediaReader extends GenericReader
 
     public function getList($identifiers)
     {
-        $list = parent::getList($identifiers);
-        foreach ($list as &$media) {
+        $medias = parent::getList($identifiers);
+        foreach ($medias as &$media) {
             $media['thumbnail'] = $this->getMediaThumbnail($media);
         }
 
-        return $list;
+        return $medias;
     }
 
-    /**
-     * @param int|string $identifier
-     *
-     * @return array
-     */
     public function get($identifier)
     {
         $media = parent::get($identifier);
@@ -71,11 +60,9 @@ class MediaReader extends GenericReader
     }
 
     /**
-     * @param array $media
-     *
-     * @return string|null
+     * @param array<string, mixed> $media
      */
-    private function getMediaThumbnail($media)
+    private function getMediaThumbnail(array $media): ?string
     {
         if ($media['type'] === Media::TYPE_IMAGE) {
             $media['path'] = str_replace($media['name'], $media['name'] . '_140x140', $media['path']);

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Shopware_Config
@@ -109,7 +108,7 @@ Ext.define('Shopware.apps.Config.controller.Form', {
         'variantFilter.ExpandGroupsHiddenField'
     ],
 
-    stores:[
+    stores: [
         'form.Shop',
         'form.Currency',
         'form.Locale',
@@ -135,7 +134,7 @@ Ext.define('Shopware.apps.Config.controller.Form', {
         'base.SearchTable'
     ],
 
-    models:[
+    models: [
         'form.Shop',
         'form.Currency',
         'form.Locale',
@@ -241,15 +240,15 @@ Ext.define('Shopware.apps.Config.controller.Form', {
                         deleteButton = baseForm.getDeleteButton(),
                         record = records.length ? records[0] : null,
                         formPanel = baseForm.getDetail(), action;
-                    if(record) {
+                    if (record) {
                         me.doEditEntry(baseForm, record);
-                        if(deleteButton) {
+                        if (deleteButton) {
                             action = record.get('deletable') !== false;
                             action = action ? 'enable' : 'disable';
                             deleteButton[action]();
                         }
                     } else {
-                        if(deleteButton) {
+                        if (deleteButton) {
                             deleteButton.disable();
                         }
                         formPanel.disable();
@@ -264,11 +263,11 @@ Ext.define('Shopware.apps.Config.controller.Form', {
                     var me = this,
                         table = field.up('grid'),
                         store = table.getStore(), model;
-                    if(!records.length) {
+                    if (!records.length) {
                         return;
                     }
                     model = records[0];
-                    if(!store.getById(model.getId())) {
+                    if (!store.getById(model.getId())) {
                         store.add(model.data);
                     }
                     field.reset();
@@ -281,7 +280,7 @@ Ext.define('Shopware.apps.Config.controller.Form', {
                         store = table.getStore(),
                         filter = field.getModelData();
                     store.clearFilter(true);
-                    for(var key in filter) {
+                    for (var key in filter) {
                         var keyFilter = new Ext.util.Filter({
                             filterFn: function(item) {
                                 return item.get(key) === filter[key];
@@ -329,7 +328,7 @@ Ext.define('Shopware.apps.Config.controller.Form', {
 
     onKeyHandler: function(key, event) {
         var me = this, baseForm = me.getDetail();
-        switch(key) {
+        switch (key) {
             case 83:
                 me.onSaveEntry(baseForm);
                 break;
@@ -353,7 +352,7 @@ Ext.define('Shopware.apps.Config.controller.Form', {
             fields, record;
 
         // Get the detail store, if available
-        if(formPanel.store) {
+        if (formPanel.store) {
             formStore = me.getStore(formPanel.store);
         }
 
@@ -363,14 +362,14 @@ Ext.define('Shopware.apps.Config.controller.Form', {
 
         // Focus an first field
         fields = basicForm.getFields();
-        if(fields.getCount() > 0) {
+        if (fields.getCount() > 0) {
             fields.first().focus();
         }
     },
 
     onSelectCustomerGroupOnTax: function(field, newValue, oldValue) {
         var me = this,
-        addButton = me.getTaxRuleAddButton();
+            addButton = me.getTaxRuleAddButton();
         addButton.setDisabled(!newValue);
     },
 
@@ -391,25 +390,25 @@ Ext.define('Shopware.apps.Config.controller.Form', {
             store = table.getStore(),
             formStore = store;
 
-        if(!basicForm.isValid()) {
+        if (!basicForm.isValid()) {
             return;
         }
 
-        if(formPanel.store) {
+        if (formPanel.store) {
             formStore = me.getStore(formPanel.store);
         }
-        if(!record) {
+        if (!record) {
             return;
         }
 
         formPanel.updateRecord();
-        if(!record.store) {
+        if (!record.store) {
             formStore.add(record);
         }
 
         //todo@hl
         var values = formPanel.getValues();
-        if(values['elements']){
+        if (values['elements']){
             var elementFieldSet = formPanel.down('fieldset[name=elementFieldSet]'),
                 elementComboBox = elementFieldSet.down('combo'),
                 elementStore = elementComboBox.getStore(),
@@ -432,14 +431,14 @@ Ext.define('Shopware.apps.Config.controller.Form', {
             title = me.messages.saveEntryTitle;
 
         formStore.sync({
-            success :function (records, operation) {
+            success: function (records, operation) {
                 message = me.messages.saveEntrySuccess;
                 me.createGrowlMessage(record, title, message);
                 store.load();
             },
-            failure:function (batch) {
+            failure: function (batch) {
                 message = me.messages.saveEntryError;
-                if(batch.proxy.reader.rawData.message) {
+                if (batch.proxy.reader.rawData.message) {
                     message += '<br />' + batch.proxy.reader.rawData.message;
                 }
                 me.createGrowlMessage(record, title, message);
@@ -464,7 +463,7 @@ Ext.define('Shopware.apps.Config.controller.Form', {
             table = baseForm.getTable();
         var selectionModel = table.getSelectionModel(),
             record = selectionModel.getLastSelected();
-        if(!record) {
+        if (!record) {
             return;
         }
         me.doDeleteEntry(record);
@@ -492,7 +491,7 @@ Ext.define('Shopware.apps.Config.controller.Form', {
                 },
                 failure: function (batch) {
                     message = me.messages.deleteEntryError;
-                    if(batch.proxy.reader.rawData.message) {
+                    if (batch.proxy.reader.rawData.message) {
                         message += '<br />' + batch.proxy.reader.rawData.message;
                     }
                     me.createGrowlMessage(record, title, message);
@@ -505,15 +504,15 @@ Ext.define('Shopware.apps.Config.controller.Form', {
         var me = this,
             formPanel = baseForm.getDetail(),
             formStore;
-        if(!formPanel) {
+        if (!formPanel) {
             return;
         }
-        if(formPanel.store) {
+        if (formPanel.store) {
             formStore = me.getStore(formPanel.store);
         }
-        if(record && formStore) {
+        if (record && formStore) {
             formStore.load({
-                filters : [{
+                filters: [{
                     property: 'id',
                     value: record.data.id
                 }],
@@ -534,14 +533,14 @@ Ext.define('Shopware.apps.Config.controller.Form', {
             formPanel = baseForm.getDetail(),
             basicForm = formPanel.getForm();
 
-        if(!record) {
+        if (!record) {
             record = basicForm.getRecord();
         }
 
         formPanel.enable();
         formPanel.loadRecord(record);
 
-        if(record) {
+        if (record) {
             record.associations.each(function(association) {
                 var store = record[association.name](),
                     associationKey = association.associationKey,
@@ -550,19 +549,19 @@ Ext.define('Shopware.apps.Config.controller.Form', {
                     filter;
 
                 //Bind the association store to the combobox
-                if(combo && store) {
+                if (combo && store) {
                     combo.setValue(null);
                     combo.bindStore(store);
                     record.setDirty();
                 }
 
-                if(grid && store) {
+                if (grid && store) {
                     grid.reconfigure(store);
                     record.setDirty();
                     filter = grid.down('[isPropertyFilter]');
-                    if(filter) {
+                    if (filter) {
                         filter = filter.getModelData();
-                        for(var key in filter) {
+                        for (var key in filter) {
                             var keyFilter = new Ext.util.Filter({
                                 filterFn: function(item) {
                                     return item.get(key) === filter[key];
@@ -581,7 +580,7 @@ Ext.define('Shopware.apps.Config.controller.Form', {
             table = button.up('grid'),
             fields = table.query('[isFormField]'),
             data = { }, fieldData;
-        if(!table) {
+        if (!table) {
             return;
         }
         Ext.each(fields, function(field) {

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Log
@@ -53,13 +52,13 @@ Ext.define('Shopware.apps.Log.controller.Log', {
         var me = this;
 
         me.control({
-            'log-main-list':{
+            'log-main-list': {
                 deleteColumn: me.onDeleteSingleLog,
                 openLog: me.onViewLog,
                 searchLog: me.onSearchLog
             },
 
-            'log-main-list button[action=deleteMultipleLogs]':{
+            'log-main-list button[action=deleteMultipleLogs]': {
                 click: me.onDeleteMultipleLogs
             }
         });
@@ -94,10 +93,10 @@ Ext.define('Shopware.apps.Log.controller.Log', {
             store.sync({
                 callback: function(batch, operation) {
                     var rawData = batch.proxy.getReader().rawData;
-                    if(rawData.success){
+                    if (rawData.success){
                         Shopware.Notification.createGrowlMessage('{s name="growlMessage/deleteMultipleLogs/success/title"}Logs deleted{/s}', '{s name="growlMessage/deleteMultipleLogs/success/content"}The logs were successfully deleted{/s}', '{s name="window_title"}{/s}');
                         grid.getStore().load();
-                    }else{
+                    } else {
                         Shopware.Notification.createGrowlMessage('{s name="growlMessage/deleteMultipleLogs/error/title"}An error occurred{/s}');
                     }
                 }
@@ -127,9 +126,9 @@ Ext.define('Shopware.apps.Log.controller.Log', {
                     var records = operation.getRecords(),
                         record = records[0],
                         rawData = record.getProxy().getReader().rawData;
-                    if(operation.success){
+                    if (operation.success){
                         Shopware.Notification.createGrowlMessage('{s name="growlMessage/deleteSingleLog/success/title"}Log deleted{/s}', '{s name="growlMessage/deleteSingleLog/success/content"}The log has been deleted successfully.{/s}', '{s name="window_title"}{/s}');
-                    }else{
+                    } else {
                         Shopware.Notification.createGrowlMessage('{s name="growlMessage/deleteSingleLog/error/title"}An error has occurred{/s}', rawData.errorMsg, '{s name="window_title"}{/s}');
                     }
                     store.load();

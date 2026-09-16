@@ -1,39 +1,50 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-use Shopware\Components\Api\Exception as ApiException;
+use Shopware\Components\Api\Exception\ApiException;
+use Shopware\Components\Api\Exception\NonUniqueIdentifierUsedException;
+use Shopware\Components\Api\Exception\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
  * REST API Error Handler
  */
 class Shopware_Controllers_Api_Error extends Shopware_Controllers_Api_Rest
 {
+    /**
+     * @return void
+     */
     public function invalidAction()
     {
         $this->View()->assign(['success' => false, 'message' => 'Invalid method or invalid json string.']);
     }
 
+    /**
+     * @return void
+     */
     public function noAuthAction()
     {
         $this->View()->assign(['success' => false, 'message' => 'Invalid or missing auth']);
@@ -41,16 +52,21 @@ class Shopware_Controllers_Api_Error extends Shopware_Controllers_Api_Rest
 
     /**
      * Error Action to catch all Exceptions and return valid json response
+     *
+     * @return void
      */
     public function errorAction()
     {
-        $error = $this->Request()->getParam('error_handler');
+        $exception = $this->Request()->getParam('error_handler')->exception;
 
-        /** @var \Exception $exception */
-        $exception = $error->exception;
+        if ($exception instanceof ApiException && $exception instanceof Enlight_Exception) {
+            $this->handleApiExceptions($exception);
+
+            return;
+        }
 
         if ($exception instanceof Enlight_Controller_Exception) {
-            $this->Response()->setStatusCode(404);
+            $this->Response()->setStatusCode(Response::HTTP_NOT_FOUND);
 
             $this->View()->assign([
                 'success' => false,
@@ -60,94 +76,44 @@ class Shopware_Controllers_Api_Error extends Shopware_Controllers_Api_Rest
             return;
         }
 
-        if ($exception instanceof ApiException\PrivilegeException) {
-            $this->Response()->setStatusCode(403);
-
-            $this->View()->assign([
-                'success' => false,
-                'message' => $exception->getMessage(),
-            ]);
-
-            return;
-        }
-
-        if ($exception instanceof ApiException\NotFoundException) {
-            $this->Response()->setStatusCode(404);
-
-            $this->View()->assign([
-                'success' => false,
-                'message' => $exception->getMessage(),
-            ]);
-
-            return;
-        }
-
-        if ($exception instanceof ApiException\ParameterMissingException) {
-            $this->Response()->setStatusCode(400);
-
-            if ($exception->getMissingParam() === null) {
-                $this->View()->assign([
-                   'success' => false,
-                   'code' => 400,
-                   'message' => 'A required parameter is missing',
-                ]);
-            } else {
-                $this->View()->assign([
-                   'success' => false,
-                   'code' => 400,
-                   'message' => sprintf('A required parameter is missing: %s', $exception->getMissingParam()),
-                ]);
-            }
-
-            return;
-        }
-
-        if ($exception instanceof ApiException\CustomValidationException) {
-            $this->Response()->setStatusCode(400);
-
-            $this->View()->assign([
-                'success' => false,
-                'message' => $exception->getMessage(),
-            ]);
-
-            return;
-        }
-
-        if ($exception instanceof ApiException\ValidationException) {
-            /* @var \Shopware\Components\Api\Exception\ValidationException $exception */
-            $this->Response()->setStatusCode(400);
-
-            $errors = [];
-            /** @var \Symfony\Component\Validator\ConstraintViolation $violation */
-            foreach ($exception->getViolations() as $violation) {
-                $errors[] = sprintf(
-                    '%s: %s',
-                    $violation->getPropertyPath(),
-                    $violation->getMessage()
-                );
-            }
-
-            $this->View()->assign([
-                'success' => false,
-                'message' => 'Validation error',
-                'errors' => $errors,
-            ]);
-
-            return;
-        }
-
-        if ($exception instanceof ApiException\BatchInterfaceNotImplementedException) {
-            $this->Response()->setStatusCode(405);
-            $this->View()->assign([
-                'success' => false,
-                'code' => 405,
-                'message' => 'This resource has no support for batch operations.',
-            ]);
-
-            return;
-        }
-
-        $this->Response()->setStatusCode(500);
+        $this->Response()->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
         $this->View()->assign(['success' => false, 'message' => 'Error message: ' . $exception->getMessage()]);
+    }
+
+    private function handleApiExceptions(Enlight_Exception $exception): void
+    {
+        $code = (int) $exception->getCode();
+        if ($code === 0) {
+            $code = Response::HTTP_INTERNAL_SERVER_ERROR;
+        }
+        $message = $exception->getMessage();
+
+        if ($exception instanceof ValidationException) {
+            $message = 'Validation error';
+
+            if ($exception->getViolations() instanceof ConstraintViolationListInterface) {
+                $errors = [];
+                foreach ($exception->getViolations() as $violation) {
+                    $errors[] = \sprintf(
+                        '%s: %s',
+                        $violation->getPropertyPath(),
+                        $violation->getMessage()
+                    );
+                }
+
+                $this->View()->assign('errors', $errors);
+            }
+        }
+
+        if ($exception instanceof NonUniqueIdentifierUsedException) {
+            $this->View()->assign('foundIds', $exception->getAlternativeIds());
+        }
+
+        $this->Response()->setStatusCode($code);
+        $this->View()->assign([
+            'success' => false,
+            'message' => $message,
+            'code' => $code,
+        ]);
     }
 }

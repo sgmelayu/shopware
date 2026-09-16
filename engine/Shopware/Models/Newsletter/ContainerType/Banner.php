@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Newsletter\ContainerType;
 
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\Newsletter\Container;
 
 /**
  * Shopware text model represents a banner container type.
@@ -39,10 +40,10 @@ class Banner extends ModelEntity
      * OWNING SIDE
      * Owning side of relation between container type 'article' and parent container
      *
-     * @var \Shopware\Models\Newsletter\Container|null
+     * @var Container
      *
      * @ORM\OneToOne(targetEntity="Shopware\Models\Newsletter\Container", inversedBy="banner")
-     * @ORM\JoinColumn(name="parentID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="parentID", referencedColumnName="id", nullable=false)
      */
     protected $container;
 
@@ -60,11 +61,11 @@ class Banner extends ModelEntity
     /**
      * ID of the container this model belongs to
      *
-     * @var int|null
+     * @var int
      *
-     * @ORM\Column(name="parentID", type="integer", length=11, nullable=true)
+     * @ORM\Column(name="parentID", type="integer", length=11, nullable=false)
      */
-    private $containerId = null;
+    private $containerId;
 
     /**
      * Image of the banner
@@ -165,16 +166,16 @@ class Banner extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Newsletter\Container $container
+     * @param Container $container
      */
     public function setContainer($container)
     {
         $this->container = $container;
-        $container->setType('ctBanner');
+        $container->setType(Container::TYPE_BANNER);
     }
 
     /**
-     * @return \Shopware\Models\Newsletter\Container|null
+     * @return Container
      */
     public function getContainer()
     {

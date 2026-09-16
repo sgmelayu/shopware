@@ -1,31 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AttributeBundle\Service;
 
+use DateTime;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Column;
+use Exception;
+use PDO;
 use Shopware\Components\Model\DBAL\Types\DateStringType;
 use Shopware\Components\Model\DBAL\Types\DateTimeStringType;
 
@@ -56,15 +59,15 @@ class DataPersister implements DataPersisterInterface
     /**
      * {@inheritdoc}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function persist($data, $table, $foreignKey)
     {
         if (!$this->mapping->isAttributeTable($table)) {
-            throw new \Exception(sprintf('Table %s is no attribute table', $table));
+            throw new Exception(\sprintf('Table %s is no attribute table', $table));
         }
         if (!$foreignKey) {
-            throw new \Exception('No foreign key provided');
+            throw new Exception('No foreign key provided');
         }
         $data = $this->filter($table, $data);
 
@@ -86,15 +89,15 @@ class DataPersister implements DataPersisterInterface
     /**
      * {@inheritdoc}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function cloneAttribute($table, $sourceForeignKey, $targetForeignKey)
     {
         if (!$this->mapping->isAttributeTable($table)) {
-            throw new \Exception(sprintf('Table %s is no attribute table', $table));
+            throw new Exception(\sprintf('Table %s is no attribute table', $table));
         }
         if (!$sourceForeignKey) {
-            throw new \Exception('No foreign key provided');
+            throw new Exception('No foreign key provided');
         }
         $data = $this->dataLoader->load($table, $sourceForeignKey);
 
@@ -110,15 +113,15 @@ class DataPersister implements DataPersisterInterface
     /**
      * {@inheritdoc}
      *
-     * @throws \Exception
+     * @throws Exception
      */
     public function cloneAttributeTranslations($table, $sourceForeignKey, $targetForeignKey)
     {
         if (!$this->mapping->isAttributeTable($table)) {
-            throw new \Exception(sprintf('Table %s is no attribute table', $table));
+            throw new Exception(\sprintf('Table %s is no attribute table', $table));
         }
         if (!$sourceForeignKey) {
-            throw new \Exception('No foreign key provided');
+            throw new Exception('No foreign key provided');
         }
 
         $translations = $this->dataLoader->loadTranslations($table, $sourceForeignKey);
@@ -192,7 +195,7 @@ class DataPersister implements DataPersisterInterface
      * @param string $table
      * @param array  $data
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array
      */
@@ -207,11 +210,11 @@ class DataPersister implements DataPersisterInterface
                 continue;
             }
 
-            if (!array_key_exists($column->getName(), $data)) {
+            if (!\array_key_exists($column->getName(), $data)) {
                 continue;
             }
 
-            if (in_array($column->getName(), $readOnly, true)) {
+            if (\in_array($column->getName(), $readOnly, true)) {
                 continue;
             }
 
@@ -237,10 +240,10 @@ class DataPersister implements DataPersisterInterface
         }
 
         try {
-            new \DateTime($date);
+            new DateTime($date);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }
@@ -267,6 +270,6 @@ class DataPersister implements DataPersisterInterface
             ->setParameter(':tablename', $table)
         ;
 
-        return $builder->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        return $builder->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 }

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -47,19 +46,19 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.grid.Panel',
+    extend: 'Ext.grid.Panel',
 
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.order-position-grid',
+    alias: 'widget.order-position-grid',
 
     /**
      * Set css class
      * @string
      */
-    cls:Ext.baseCSSPrefix + 'order-position-grid',
+    cls: Ext.baseCSSPrefix + 'order-position-grid',
 
     /**
      * Min heighht of the component
@@ -69,7 +68,7 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
      * The view needs to be scrollable
      * @string
      */
-    autoScroll:true,
+    autoScroll: true,
 
     /**
      * Contains all snippets for the component
@@ -102,7 +101,7 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.registerEvents();
         me.columns = me.getColumns();
@@ -135,42 +134,40 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
         );
     },
 
-
-
     /**
      * Creates the grid columns
      *
      * @return [array] grid columns
      */
-    getColumns:function () {
+    getColumns: function () {
         var me = this;
 
         var columns = [
             {
                 header: me.snippets.articleNumber,
                 dataIndex: 'articleNumber',
-                flex:2
+                flex: 2
             },
             {
                 header: me.snippets.articleName,
                 dataIndex: 'articleName',
-                flex:2
+                flex: 2
             },
             {
                 header: me.snippets.quantity,
                 dataIndex: 'quantity',
-                flex:1
+                flex: 1
             },
             {
                 header: me.snippets.price,
                 dataIndex: 'price',
-                flex:1,
+                flex: 1,
                 renderer: me.priceColumn
             },
             {
                 header: me.snippets.total,
                 dataIndex: 'total',
-                flex:1,
+                flex: 1,
                 renderer: me.totalColumn
             },
             {
@@ -182,58 +179,58 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
             {
                 header: me.snippets.tax,
                 dataIndex: 'taxId',
-                flex:1,
+                flex: 1,
                 renderer: me.taxRenderer
             },
             {
                 header: me.snippets.inStock,
                 dataIndex: 'inStock',
-                flex:1
+                flex: 1
             },
             {
                 /**
                  * Special column type which provides
                  * clickable icons in each row
                  */
-                xtype:'actioncolumn',
-                width:90,
-                items:[
+                xtype: 'actioncolumn',
+                width: 90,
+                items: [
                     /*{if {acl_is_allowed privilege=update}}*/
-                        {
-                            iconCls:'sprite-minus-circle-frame',
-                            action:'deletePosition',
-                            tooltip: me.snippets.deletePosition,
-                            /**
+                    {
+                        iconCls: 'sprite-minus-circle-frame',
+                        action: 'deletePosition',
+                        tooltip: me.snippets.deletePosition,
+                        /**
                              * Add button handler to fire the deleteOrder event which is handled
                              * in the list controller.
                              */
-                            handler:function (view, rowIndex, colIndex, item) {
-                                var store = view.getStore(),
-                                    record = store.getAt(rowIndex);
+                        handler: function (view, rowIndex, colIndex, item) {
+                            var store = view.getStore(),
+                                record = store.getAt(rowIndex);
 
-                                me.fireEvent('deletePosition', record, store);
-                            }
-                        },
+                            me.fireEvent('deletePosition', record, store);
+                        }
+                    },
                     /*{/if}*/
                     {
-                        iconCls:'sprite-inbox',
-                        action:'openArticle',
+                        iconCls: 'sprite-inbox',
+                        action: 'openArticle',
                         tooltip: me.snippets.openArticle,
                         /**
                          * Add button handler to fire the openCustomer event which is handled
                          * in the list controller.
                          */
-                        handler:function (view, rowIndex, colIndex, item) {
+                        handler: function (view, rowIndex, colIndex, item) {
                             var store = view.getStore(),
                                 record = store.getAt(rowIndex);
 
                             me.fireEvent('openArticle', record);
                         },
                         getClass: function(value, metadata, record) {
-                             if (!record.get('articleId') || record.get('mode') !== 0)  {
-                                 return 'x-hidden';
-                             }
-                         }
+                            if (!record.get('articleId') || record.get('mode') !== 0)  {
+                                return 'x-hidden';
+                            }
+                        }
                     }
                 ]
             }
@@ -247,13 +244,13 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
             record;
 
         // SW-3289 If we have no valid taxId, return the taxRate
-        if(value == 0 || value == null || value == Ext.undefined) {
-            return rowRecord.get('taxRate').toString().replace(/[.,]/, Ext.util.Format.decimalSeparator)+'%';
+        if (value == 0 || value == null || value == Ext.undefined) {
+            return rowRecord.get('taxRate').toString().replace(/[.,]/, Ext.util.Format.decimalSeparator) + '%';
         }
 
         record = me.taxStore.findRecord('id', value);
-        if(record instanceof Ext.data.Model && record.get('tax') != Ext.undefined && record.get('tax') != null) {
-            var tax = record.get('tax')+'%';
+        if (record instanceof Ext.data.Model && record.get('tax') != Ext.undefined && record.get('tax') != null) {
+            var tax = record.get('tax') + '%';
             return tax.replace(/[.,]/, Ext.util.Format.decimalSeparator);
         }
 
@@ -265,9 +262,9 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
             record;
 
         record = me.statusStore.getAt(value);
-        if(record !== Ext.undefined) {
+        if (record !== Ext.undefined) {
             return record.get('description');
-        }else{
+        } else {
             return value;
         }
     },
@@ -277,7 +274,7 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
      * @param [string] - The price value
      * @return [string] - The passed value, formatted with Ext.util.Format.currency()
      */
-    priceColumn:function (value) {
+    priceColumn: function (value) {
         if ( value === Ext.undefined ) {
             return value;
         }
@@ -295,8 +292,6 @@ Ext.define('Shopware.apps.Order.view.list.Position', {
         }
         return Ext.util.Format.currency(value);
     }
-
-
 
 });
 //{/block}

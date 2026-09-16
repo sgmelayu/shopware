@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service;
@@ -69,6 +69,8 @@ interface ContextServiceInterface
      * - Tax rules of the current customer group
      * - Price group discounts of the current customer group
      *
+     * @deprecated 5.7, removed in 5.8. Please use getShopContext instead
+     *
      * @return ShopContextInterface
      */
     public function getProductContext();
@@ -84,24 +86,34 @@ interface ContextServiceInterface
     /**
      * Initials a global context class which contains
      * all information about the current request state.
+     *
+     * @return void
      */
     public function initializeContext();
 
     /**
      * Initials a shop context class which contains
      * the information about the shop state
+     *
+     * @return void
      */
     public function initializeShopContext();
 
     /**
      * Initials a location context class which contains
      * the information about the country state
+     *
+     * @return void
      */
     public function initializeLocationContext();
 
     /**
      * Initials a product context class which contains
      * all required information to calculate a product.
+     *
+     * @deprecated 5.7, removed in 5.8. Please use initializeShopContext instead
+     *
+     * @return void
      */
     public function initializeProductContext();
 
@@ -109,6 +121,8 @@ interface ContextServiceInterface
      * @param int         $shopId
      * @param int|null    $currencyId
      * @param string|null $customerGroupKey
+     *
+     * @deprecated 5.7, removed in 5.8. Please use createShopContext instead
      *
      * @return ShopContextInterface
      */

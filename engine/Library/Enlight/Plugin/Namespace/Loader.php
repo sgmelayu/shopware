@@ -18,18 +18,13 @@
  */
 
 /**
- *
  * Allows to register multiple plugins from a namespace over an prefix path.
  *
  * The Enlight_Plugin_Namespace_Loader iterates over the specified directory and
  * checks whether bootstrap files are present. If a bootstrap is found loaded via
  * the Enlight_Loader the corresponding class.
  *
- *
- * @category   Enlight
  * @package    Enlight_Plugin
- * @copyright  Copyright (c) 2011, shopware AG (http://www.shopware.de)
- * @license    http://enlight.de/license     New BSD License
  */
 class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
 {
@@ -44,23 +39,33 @@ class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
      * @param string $name
      * @param bool   $throwException
      *
-     * @return Enlight_Plugin_Bootstrap
+     * @return Enlight_Plugin_Bootstrap|null
      */
     public function get($name, $throwException = true)
     {
         if (!$this->plugins->offsetExists($name)) {
             $this->load($name, $throwException);
         }
-        return $this->plugins->offsetGet($name);
+
+        $plugin = $this->plugins->offsetGet($name);
+        if ($plugin instanceof Enlight_Plugin_Bootstrap) {
+            return $plugin;
+        }
+
+        if ($throwException) {
+            throw new Enlight_Exception('Plugin "' . $name . '" in namespace "' . $this->getName() . '" not found');
+        }
+
+        return null;
     }
 
     /**
-     * Adds a prefix path to the plugin namespace. Is used for the auto loading of plugins.
+     * Adds a prefix path to the plugin namespace. Is used to autoload plugins.
      *
-     * @param   string $prefix
-     * @param   string $path
+     * @param string $prefix
+     * @param string $path
      *
-     * @return  Enlight_Plugin_Namespace
+     * @return Enlight_Plugin_Namespace
      */
     public function addPrefixPath($prefix, $path)
     {
@@ -72,35 +77,14 @@ class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
     }
 
     /**
-     * Instantiates a plugin from the plugin namespace and adds it to the internal plugins array.
-     *
-     * @param   string      $name
-     * @param   string      $prefix
-     * @param   string|null $file
-     *
-     * @return  Enlight_Plugin_Namespace_Loader
-     */
-    protected function initPlugin($name, $prefix, $file = null)
-    {
-        $class = implode('_', array($prefix, $name, 'Bootstrap'));
-        if (!class_exists($class, false)) {
-            Shopware()->Loader()->loadClass($class, $file);
-        }
-
-        $plugin = new $class($name, $this);
-        $this->plugins[$name] = $plugin;
-        return $this;
-    }
-
-    /**
      * Loads a plugin in the plugin namespace by name.
      *
-     * @param   string $name
-     * @param   bool   $throwException
+     * @param string $name
+     * @param bool   $throwException
      *
-     * @throws  Enlight_Exception
+     * @throws Enlight_Exception
      *
-     * @return  Enlight_Plugin_PluginCollection
+     * @return Enlight_Plugin_PluginCollection
      */
     public function load($name, $throwException = true)
     {
@@ -113,10 +97,11 @@ class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
                 continue;
             }
             $this->initPlugin($name, $prefix, $file);
+
             return $this;
         }
         if ($throwException) {
-            throw new Enlight_Exception('Plugin "' . $name .'" in namespace "' . $this->getName() .'" not found');
+            throw new Enlight_Exception('Plugin "' . $name . '" in namespace "' . $this->getName() . '" not found');
         }
     }
 
@@ -138,6 +123,7 @@ class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
                 $this->initPlugin($name, $prefix, $file);
             }
         }
+
         return $this;
     }
 
@@ -146,7 +132,12 @@ class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
      */
     public function Json()
     {
-        return $this->get(__FUNCTION__);
+        $jsonPlugin = $this->get(__FUNCTION__);
+        if (!$jsonPlugin instanceof Enlight_Controller_Plugins_Json_Bootstrap) {
+            throw new Enlight_Exception('Plugin "Enlight_Controller_Plugins_Json_Bootstrap" not found');
+        }
+
+        return $jsonPlugin;
     }
 
     /**
@@ -154,7 +145,12 @@ class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
      */
     public function ViewRenderer()
     {
-        return $this->get(__FUNCTION__);
+        $viewRendererPlugin = $this->get(__FUNCTION__);
+        if (!$viewRendererPlugin instanceof Enlight_Controller_Plugins_ViewRenderer_Bootstrap) {
+            throw new Enlight_Exception('Plugin "Enlight_Controller_Plugins_ViewRenderer_Bootstrap" not found');
+        }
+
+        return $viewRendererPlugin;
     }
 
     /**
@@ -162,7 +158,12 @@ class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
      */
     public function ScriptRenderer()
     {
-        return $this->get(__FUNCTION__);
+        $scriptRendererPlugin = $this->get(__FUNCTION__);
+        if (!$scriptRendererPlugin instanceof Enlight_Controller_Plugins_ScriptRenderer_Bootstrap) {
+            throw new Enlight_Exception('Plugin "Enlight_Controller_Plugins_ScriptRenderer_Bootstrap" not found');
+        }
+
+        return $scriptRendererPlugin;
     }
 
     /**
@@ -170,6 +171,34 @@ class Enlight_Plugin_Namespace_Loader extends Enlight_Plugin_Namespace
      */
     public function JsonRequest()
     {
-        return $this->get(__FUNCTION__);
+        $jsonRequestPlugin = $this->get(__FUNCTION__);
+        if (!$jsonRequestPlugin instanceof Enlight_Controller_Plugins_JsonRequest_Bootstrap) {
+            throw new Enlight_Exception('Plugin "Enlight_Controller_Plugins_JsonRequest_Bootstrap" not found');
+        }
+
+        return $jsonRequestPlugin;
+    }
+
+    /**
+     * Instantiates a plugin from the plugin namespace and adds it to the internal plugins array.
+     *
+     * @param string      $name
+     * @param string      $prefix
+     * @param string|null $file
+     *
+     * @return Enlight_Plugin_Namespace_Loader
+     */
+    protected function initPlugin($name, $prefix, $file = null)
+    {
+        /** @var class-string<Enlight_Plugin_Bootstrap|Enlight_Plugin_Namespace> $class */
+        $class = implode('_', [$prefix, $name, 'Bootstrap']);
+        if (!class_exists($class, false)) {
+            Shopware()->Loader()->loadClass($class, $file);
+        }
+
+        $plugin = new $class($name, $this);
+        $this->plugins[$name] = $plugin;
+
+        return $this;
     }
 }

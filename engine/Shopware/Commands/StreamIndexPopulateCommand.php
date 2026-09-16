@@ -1,32 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\AbstractQuery;
-use Shopware\Components\Model\ModelRepository;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\CustomerStream\CustomerStream;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
@@ -42,8 +42,7 @@ class StreamIndexPopulateCommand extends ShopwareCommand implements CompletionAw
     public function completeOptionValues($optionName, CompletionContext $context)
     {
         if ($optionName === 'streamId') {
-            /** @var ModelRepository $customerStreamRepository */
-            $customerStreamRepository = $this->getContainer()->get(\Shopware\Components\Model\ModelManager::class)->getRepository(CustomerStream::class);
+            $customerStreamRepository = $this->getContainer()->get(ModelManager::class)->getRepository(CustomerStream::class);
             $queryBuilder = $customerStreamRepository->createQueryBuilder('stream');
 
             if (is_numeric($context->getCurrentWord())) {
@@ -101,13 +100,13 @@ class StreamIndexPopulateCommand extends ShopwareCommand implements CompletionAw
     }
 
     /**
-     * @param array $ids
+     * @param array<int> $ids
      *
-     * @return CustomerStream[]|false
+     * @return CustomerStream[]
      */
-    private function getStreams($ids = [])
+    private function getStreams(array $ids = []): array
     {
-        $query = $this->container->get(\Shopware\Components\Model\ModelManager::class)->createQueryBuilder();
+        $query = $this->container->get(ModelManager::class)->createQueryBuilder();
         $query->select(['stream']);
         $query->from(CustomerStream::class, 'stream');
 

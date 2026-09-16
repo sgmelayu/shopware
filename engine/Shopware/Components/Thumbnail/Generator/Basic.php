@@ -1,32 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Thumbnail\Generator;
 
+use RuntimeException;
 use Shopware\Bundle\MediaBundle\Exception\OptimizerNotFoundException;
 use Shopware\Bundle\MediaBundle\MediaServiceInterface;
 use Shopware\Bundle\MediaBundle\OptimizerServiceInterface;
+use Shopware_Components_Config;
 
 /**
  * Shopware Basic Thumbnail Generator
@@ -37,24 +39,15 @@ use Shopware\Bundle\MediaBundle\OptimizerServiceInterface;
  */
 class Basic implements GeneratorInterface
 {
-    /**
-     * @var bool
-     */
-    private $fixGdImageBlur;
+    private bool $fixGdImageBlur;
 
-    /**
-     * @var MediaServiceInterface
-     */
-    private $mediaService;
+    private MediaServiceInterface $mediaService;
 
-    /**
-     * @var OptimizerServiceInterface
-     */
-    private $optimizerService;
+    private OptimizerServiceInterface $optimizerService;
 
-    public function __construct(\Shopware_Components_Config $config, MediaServiceInterface $mediaService, OptimizerServiceInterface $optimizerService)
+    public function __construct(Shopware_Components_Config $config, MediaServiceInterface $mediaService, OptimizerServiceInterface $optimizerService)
     {
-        $this->fixGdImageBlur = $config->get('thumbnailNoiseFilter');
+        $this->fixGdImageBlur = (bool) $config->get('thumbnailNoiseFilter');
         $this->mediaService = $mediaService;
         $this->optimizerService = $optimizerService;
     }
@@ -64,11 +57,18 @@ class Basic implements GeneratorInterface
      */
     public function createThumbnail($imagePath, $destination, $maxWidth, $maxHeight, $keepProportions = false, $quality = 90)
     {
+        $maxWidth = (int) $maxWidth;
+        $maxHeight = (int) $maxHeight;
+        $quality = (int) $quality;
+
         if (!$this->mediaService->has($imagePath)) {
-            throw new \Exception(sprintf('File not found: %s', $imagePath));
+            throw new RuntimeException(\sprintf('File not found: %s', $imagePath));
         }
 
         $content = $this->mediaService->read($imagePath);
+        if (!\is_string($content)) {
+            throw new RuntimeException(\sprintf('Could not read image from file: %s', $imagePath));
+        }
         $image = $this->createImageResource($content, $imagePath);
 
         // Determines the width and height of the original image
@@ -107,9 +107,9 @@ class Basic implements GeneratorInterface
      *
      * @param resource $imageResource
      *
-     * @return array
+     * @return array{width: int<1, max>, height: int<1, max>}
      */
-    private function getOriginalImageSize($imageResource)
+    private function getOriginalImageSize($imageResource): array
     {
         return [
             'width' => imagesx($imageResource),
@@ -122,17 +122,15 @@ class Basic implements GeneratorInterface
      * the given path and calls the right creation
      * method for the image extension
      *
-     * @param string $fileContent
-     * @param string $imagePath
-     *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      *
      * @return resource
      */
-    private function createImageResource($fileContent, $imagePath)
+    private function createImageResource(string $fileContent, string $imagePath)
     {
-        if (!$image = @imagecreatefromstring($fileContent)) {
-            throw new \RuntimeException(sprintf('Image is not in a recognized format (%s)', $imagePath));
+        $image = imagecreatefromstring($fileContent);
+        if ($image === false) {
+            throw new RuntimeException(\sprintf('Image is not in a recognized format (%s)', $imagePath));
         }
 
         return $image;
@@ -140,27 +138,20 @@ class Basic implements GeneratorInterface
 
     /**
      * Returns the extension of the file with passed path
-     *
-     * @param string $path
-     *
-     * @return string
      */
-    private function getImageExtension($path)
+    private function getImageExtension(string $path): string
     {
-        $pathInfo = pathinfo($path);
-
-        return $pathInfo['extension'];
+        return pathinfo($path, PATHINFO_EXTENSION);
     }
 
     /**
      * Calculate image proportion and set the new resolution
      *
-     * @param int $width
-     * @param int $height
+     * @param array{width: int<1, max>, height: int<1, max>} $originalSize
      *
-     * @return array
+     * @return array{width: int<1, max>, height: int<1, max>, proportion: float}
      */
-    private function calculateProportionalThumbnailSize(array $originalSize, $width, $height)
+    private function calculateProportionalThumbnailSize(array $originalSize, int $width, int $height): array
     {
         // Source image size
         $srcWidth = $originalSize['width'];
@@ -180,10 +171,13 @@ class Basic implements GeneratorInterface
             $dstHeight = $srcHeight;
             $factor = 1;
         } else {
-            //Get the destination size
+            // Get the destination size
             $dstWidth = round($srcWidth * $factor);
             $dstHeight = round($srcHeight * $factor);
         }
+
+        $dstWidth = max(1, (int) $dstWidth);
+        $dstHeight = max(1, (int) $dstHeight);
 
         return [
             'width' => $dstWidth,
@@ -193,20 +187,22 @@ class Basic implements GeneratorInterface
     }
 
     /**
-     * @param resource $image
-     * @param array    $originalSize
-     * @param array    $newSize
-     * @param string   $extension
+     * @param resource                                       $image
+     * @param array{width: int<1, max>, height: int<1, max>} $originalSize
+     * @param array{width: int<1, max>, height: int<1, max>} $newSize
      *
      * @return resource
      */
-    private function createNewImage($image, $originalSize, $newSize, $extension)
+    private function createNewImage($image, array $originalSize, array $newSize, string $extension)
     {
         // Creates a new image with given size
         $newImage = imagecreatetruecolor($newSize['width'], $newSize['height']);
+        if ($newImage === false) {
+            throw new RuntimeException('Could not create image');
+        }
 
-        if (in_array($extension, ['jpg', 'jpeg'])) {
-            $background = imagecolorallocate($newImage, 255, 255, 255);
+        if (\in_array($extension, ['jpg', 'jpeg'])) {
+            $background = (int) imagecolorallocate($newImage, 255, 255, 255);
             imagefill($newImage, 0, 0, $background);
         } else {
             // Disables blending
@@ -234,16 +230,16 @@ class Basic implements GeneratorInterface
     /**
      * Fix #fefefe in white backgrounds
      *
-     * @param array    $newSize
-     * @param resource $newImage
+     * @param array{width: int, height: int} $newSize
+     * @param resource                       $newImage
      */
-    private function fixGdImageBlur($newSize, $newImage)
+    private function fixGdImageBlur(array $newSize, $newImage): void
     {
-        $colorWhite = imagecolorallocate($newImage, 255, 255, 255);
+        $colorWhite = (int) imagecolorallocate($newImage, 255, 255, 255);
         $processHeight = $newSize['height'] + 0;
         $processWidth = $newSize['width'] + 0;
-        for ($y = 0; $y < ($processHeight); ++$y) {
-            for ($x = 0; $x < ($processWidth); ++$x) {
+        for ($y = 0; $y < $processHeight; ++$y) {
+            for ($x = 0; $x < $processWidth; ++$x) {
                 $colorat = imagecolorat($newImage, $x, $y);
                 $r = ($colorat >> 16) & 0xFF;
                 $g = ($colorat >> 8) & 0xFF;
@@ -256,11 +252,10 @@ class Basic implements GeneratorInterface
     }
 
     /**
-     * @param string   $destination
      * @param resource $newImage
-     * @param int      $quality     - JPEG quality
+     * @param int      $quality  - JPEG quality
      */
-    private function saveImage($destination, $newImage, $quality)
+    private function saveImage(string $destination, $newImage, int $quality): void
     {
         ob_start();
         // saves the image information into a specific file extension
@@ -277,15 +272,15 @@ class Basic implements GeneratorInterface
         }
 
         $content = ob_get_contents();
+        if (!\is_string($content)) {
+            throw new RuntimeException('Could not open image');
+        }
         ob_end_clean();
 
         $this->mediaService->write($destination, $content);
     }
 
-    /**
-     * @param string $destination
-     */
-    private function optimizeImage($destination)
+    private function optimizeImage(string $destination): void
     {
         $tmpFilename = $this->downloadImage($destination);
 
@@ -299,31 +294,35 @@ class Basic implements GeneratorInterface
         }
     }
 
-    /**
-     * @param string $destination
-     *
-     * @return string
-     */
-    private function downloadImage($destination)
+    private function downloadImage(string $destination): string
     {
         $tmpFilename = tempnam(sys_get_temp_dir(), 'optimize_image');
+        if (!\is_string($tmpFilename)) {
+            throw new RuntimeException('Could not create tmp file name');
+        }
         $handle = fopen($tmpFilename, 'wb');
+        if (!\is_resource($handle)) {
+            throw new RuntimeException(\sprintf('Could not open file at: %s', $tmpFilename));
+        }
 
+        $fromHandle = $this->mediaService->readStream($destination);
+        if (!\is_resource($fromHandle)) {
+            throw new RuntimeException(\sprintf('Could not open file at: %s', $destination));
+        }
         stream_copy_to_stream(
-            $this->mediaService->readStream($destination),
+            $fromHandle,
             $handle
         );
 
         return $tmpFilename;
     }
 
-    /**
-     * @param string $destination
-     * @param string $tmpFilename
-     */
-    private function uploadImage($destination, $tmpFilename)
+    private function uploadImage(string $destination, string $tmpFilename): void
     {
         $fileHandle = fopen($tmpFilename, 'rb');
+        if (!\is_resource($fileHandle)) {
+            throw new RuntimeException(\sprintf('Could not open file at: %s', $tmpFilename));
+        }
         $this->mediaService->writeStream($destination, $fileHandle);
         fclose($fileHandle);
     }

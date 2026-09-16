@@ -1,37 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components\Model;
 
+use Exception;
+use PDO;
+use PDOException;
 use PHPUnit\Framework\TestCase;
 use Shopware\Components\Model\CategoryDenormalization;
 
-class PDOMock extends \PDO
+class PDOMock extends PDO
 {
-    public function __construct()
-    {
-    }
 }
 
 class CategoryDenormalizationTest extends TestCase
@@ -42,27 +42,23 @@ class CategoryDenormalizationTest extends TestCase
     private $component;
 
     /**
-     * @var \PDO
+     * @var PDO
      */
     private $conn;
 
     protected function setUp(): void
     {
-        if (!extension_loaded('sqlite3')) {
+        if (!\extension_loaded('sqlite3')) {
             static::markTestSkipped(
                 'The Sqlite3 extension is not available.'
             );
-
-            parent::setUp();
-
-            return;
         }
 
         try {
-            $conn = new \PDO('sqlite::memory:');
-            $conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-            $conn->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
-        } catch (\PDOException $e) {
+            $conn = new PDO('sqlite::memory:');
+            $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
             static::markTestSkipped(
                 'Could not create sqlite connection, got error:  ' . $e->getMessage()
             );
@@ -178,7 +174,7 @@ class CategoryDenormalizationTest extends TestCase
             ['id' => '7', 'path' => '|6|3|'],
         ];
 
-        $result = $this->conn->query('SELECT id, path FROM s_categories WHERE path IS NOT NULL')->fetchAll(\PDO::FETCH_ASSOC);
+        $result = $this->conn->query('SELECT id, path FROM s_categories WHERE path IS NOT NULL')->fetchAll(PDO::FETCH_ASSOC);
 
         static::assertEquals($expectedResult, $result);
     }
@@ -344,7 +340,7 @@ class CategoryDenormalizationTest extends TestCase
     {
         $statement = 'SELECT * FROM example';
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
 
         $this->component->limit($statement, 0, 20);
     }
@@ -353,7 +349,7 @@ class CategoryDenormalizationTest extends TestCase
     {
         $statement = 'SELECT * FROM example';
 
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
 
         $this->component->limit($statement, 5, -1);
     }

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -40,9 +39,9 @@
  *
  * @example Ext.create('Shopware.MediaManager.MediaSelection');
  */
-Ext.define('Shopware.MediaManager.MediaSelection',
-/** @lends Ext.form.field.Trigger */
-{
+Ext.define('Shopware.MediaManager.MediaSelection', {
+    /** @lends Ext.form.field.Trigger */
+
     extend: 'Ext.form.field.Trigger',
     alternateClassName: [ 'Shopware.form.field.MediaSelection', 'Shopware.MediaSelection' ],
     alias: [ 'widget.mediafield', 'widget.mediaselectionfield' ],
@@ -138,7 +137,7 @@ Ext.define('Shopware.MediaManager.MediaSelection',
         }
 
         inputEl = me.inputEl;
-        if(me.buttonOnly) {
+        if (me.buttonOnly) {
             inputEl.setDisplayed(false);
         }
 
@@ -207,7 +206,7 @@ Ext.define('Shopware.MediaManager.MediaSelection',
      * @return [array|false] Array of the selected records e.g. Ext.data.Model's
      */
     getRecords: function() {
-        if(!this.selectedRecords) {
+        if (!this.selectedRecords) {
             return false;
         }
 
@@ -220,7 +219,7 @@ Ext.define('Shopware.MediaManager.MediaSelection',
      * @return [integer]
      */
     getRecordsCount: function() {
-        if(!this.selectedRecords) {
+        if (!this.selectedRecords) {
             return 0;
         }
 
@@ -270,7 +269,7 @@ Ext.define('Shopware.MediaManager.MediaSelection',
             dataPnl = win.down('.mediamanager-media-view'),
             selModel, selected;
 
-        if(dataPnl.selectedLayout === 'grid') {
+        if (dataPnl.selectedLayout === 'grid') {
             dataPnl = dataPnl.dataView;
         } else {
             dataPnl = dataPnl.cardContainer.getLayout().getActiveItem();
@@ -282,7 +281,7 @@ Ext.define('Shopware.MediaManager.MediaSelection',
         me.selectedRecords = selected;
         me.fireEvent('selectMedia', me, me.selectedRecords, selModel);
 
-        if(me.selectedRecords.length > 1) {
+        if (me.selectedRecords.length > 1) {
 
             // Multi selection
             var paths = [];
@@ -299,7 +298,7 @@ Ext.define('Shopware.MediaManager.MediaSelection',
             me.inputEl.dom.value = selected.get(me.returnValue);
         }
 
-//        me.window.setLoading(false);
+        //        me.window.setLoading(false);
         win.close();
     },
 
@@ -334,19 +333,19 @@ Ext.define('Shopware.MediaManager.MediaSelection',
         this.disableItems();
     },
 
-//    /**
-//     * Overridden to do nothing
-//     *
-//     * @private
-//     */
-//    setValue: Ext.emptyFn,
+    //    /**
+    //     * Overridden to do nothing
+    //     *
+    //     * @private
+    //     */
+    //    setValue: Ext.emptyFn,
 
     /**
      * Resets the input field
      *
      * @return void
      */
-    reset : function(){
+    reset: function(){
         var me = this;
 
         if (me.rendered) {

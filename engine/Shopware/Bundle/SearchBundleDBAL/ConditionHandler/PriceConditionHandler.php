@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\ConditionHandler;
@@ -35,7 +35,7 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class PriceConditionHandler implements ConditionHandlerInterface, CriteriaAwareInterface
 {
-    const LISTING_PRICE_JOINED = 'listing_price';
+    public const LISTING_PRICE_JOINED = 'listing_price';
 
     /**
      * @var ListingPriceSwitcher
@@ -68,14 +68,23 @@ class PriceConditionHandler implements ConditionHandlerInterface, CriteriaAwareI
         QueryBuilder $query,
         ShopContextInterface $context
     ) {
+        $this->addCondition($condition, $query, $context);
+    }
+
+    public function setCriteria(Criteria $criteria)
+    {
+        $this->criteria = $criteria;
+    }
+
+    private function addCondition(PriceCondition $condition, QueryBuilder $query, ShopContextInterface $context): void
+    {
         $this->priceSwitcher->joinPrice($query, $this->criteria, $context);
 
-        $suffix = md5(json_encode($condition));
+        $suffix = md5(json_encode($condition, JSON_THROW_ON_ERROR));
 
         $minKey = ':priceMin' . $suffix;
         $maxKey = ':priceMax' . $suffix;
 
-        /** @var PriceCondition $condition */
         if ($condition->getMaxPrice() > 0 && $condition->getMinPrice() > 0) {
             $query->andWhere('listing_price.cheapest_price BETWEEN ' . $minKey . ' AND ' . $maxKey);
             $query->setParameter($minKey, $condition->getMinPrice());
@@ -93,13 +102,6 @@ class PriceConditionHandler implements ConditionHandlerInterface, CriteriaAwareI
         if ($condition->getMinPrice() > 0) {
             $query->andWhere('listing_price.cheapest_price >= ' . $minKey);
             $query->setParameter($minKey, $condition->getMinPrice());
-
-            return;
         }
-    }
-
-    public function setCriteria(Criteria $criteria)
-    {
-        $this->criteria = $criteria;
     }
 }

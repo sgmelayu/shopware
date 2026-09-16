@@ -1,35 +1,37 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ContentTypeBundle\Controller\Frontend;
 
+use Enlight_Controller_Action;
+use Enlight_Controller_Exception;
 use Shopware\Bundle\ContentTypeBundle\Field\TemplateProvidingFieldInterface;
 use Shopware\Bundle\ContentTypeBundle\Services\RepositoryInterface;
 use Shopware\Bundle\ContentTypeBundle\Structs\Criteria;
 use Shopware\Bundle\ContentTypeBundle\Structs\Type;
 
-class ContentType extends \Enlight_Controller_Action
+class ContentType extends Enlight_Controller_Action
 {
     private const LIMIT = 10;
 
@@ -57,7 +59,7 @@ class ContentType extends \Enlight_Controller_Action
         $criteria->limit = self::LIMIT;
         $criteria->sort = [['property' => 'id', 'direction' => 'DESC']];
 
-        $this->get('events')->notify(sprintf('Content_Type_Frontend_Criteria_Creation_%s', $this->type->getInternalName()), [
+        $this->get('events')->notify(\sprintf('Content_Type_Frontend_Criteria_Creation_%s', $this->type->getInternalName()), [
             'subject' => $this,
             'criteria' => $criteria,
         ]);
@@ -79,8 +81,8 @@ class ContentType extends \Enlight_Controller_Action
 
         $result = $this->repository->findAll($criteria);
 
-        if (count($result->items) === 0) {
-            throw new \Enlight_Controller_Exception(sprintf('Cannot find element with id %d of type \'%s\'', $id, $this->type->getInternalName()));
+        if (\count($result->items) === 0) {
+            throw new Enlight_Controller_Exception(\sprintf('Cannot find element with id %d of type \'%s\'', $id, $this->type->getInternalName()));
         }
 
         $item = current($result->items);
@@ -113,7 +115,7 @@ class ContentType extends \Enlight_Controller_Action
         }
     }
 
-    public function getBreadcrumb(array $item = null): array
+    public function getBreadcrumb(?array $item = null): array
     {
         $breadCrumb = [
             [

@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\SearchBundle\Facet;
@@ -38,7 +39,7 @@ use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestCase;
  */
 class CategoryFacetTest extends TestCase
 {
-    public function testSingleProductInFacet()
+    public function testSingleProductInFacet(): void
     {
         $baseCategory = $this->helper->createCategory([
             'name' => 'firstLevel',
@@ -62,22 +63,19 @@ class CategoryFacetTest extends TestCase
             [new CategoryFacet()]
         );
 
-        static::assertCount(1, $result->getFacets());
+        static::assertCount(2, $result->getFacets());
 
-        $facet = $result->getFacets();
-        $facet = $facet[0];
-
-        /* @var $facet TreeFacetResult */
-        static::assertInstanceOf('Shopware\Bundle\SearchBundle\FacetResult\TreeFacetResult', $facet);
+        $facet = $result->getFacets()[0];
+        static::assertInstanceOf(TreeFacetResult::class, $facet);
 
         static::assertCount(1, $facet->getValues());
 
-        /** @var TreeItem $value */
         $value = $facet->getValues()[0];
+        static::assertInstanceOf(TreeItem::class, $value);
         static::assertEquals('firstLevel', $value->getLabel());
     }
 
-    public function testMultipleCategories()
+    public function testMultipleCategories(): void
     {
         $baseCategory = $this->helper->createCategory([
             'name' => 'firstLevel',
@@ -106,11 +104,8 @@ class CategoryFacetTest extends TestCase
             [new CategoryFacet()]
         );
 
-        $facet = $result->getFacets();
-        $facet = $facet[0];
-
-        /* @var $facet TreeFacetResult */
-        static::assertInstanceOf('Shopware\Bundle\SearchBundle\FacetResult\TreeFacetResult', $facet);
+        $facet = $result->getFacets()[0];
+        static::assertInstanceOf(TreeFacetResult::class, $facet);
 
         static::assertCount(1, $facet->getValues());
 
@@ -122,7 +117,7 @@ class CategoryFacetTest extends TestCase
         static::assertEquals('secondLevel-2', $value->getValues()[1]->getLabel());
     }
 
-    public function testNestedCategories()
+    public function testNestedCategories(): void
     {
         $baseCategory = $this->helper->createCategory([
             'name' => 'firstLevel',
@@ -157,16 +152,13 @@ class CategoryFacetTest extends TestCase
             [new CategoryFacet(null, 4)]
         );
 
-        $facet = $result->getFacets();
-        $facet = $facet[0];
-
-        /* @var $facet TreeFacetResult */
-        static::assertInstanceOf('Shopware\Bundle\SearchBundle\FacetResult\TreeFacetResult', $facet);
+        $facet = $result->getFacets()[0];
+        static::assertInstanceOf(TreeFacetResult::class, $facet);
 
         static::assertCount(1, $facet->getValues());
 
-        /** @var TreeItem $value */
         $value = $facet->getValues()[0];
+        static::assertInstanceOf(TreeItem::class, $value);
         static::assertEquals('firstLevel', $value->getLabel());
 
         $value = $value->getValues()[0];
@@ -178,30 +170,23 @@ class CategoryFacetTest extends TestCase
     }
 
     protected function getProduct(
-        $number,
+        string $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $additionally = null
-    ) {
+    ): array {
+        if ($additionally !== null) {
+            static::assertInstanceOf(Category::class, $additionally);
+        }
+
         return parent::getProduct($number, $context, $additionally);
     }
 
-    /**
-     * @param array $conditions
-     */
-    protected function addCategoryBaseCondition(
-        Criteria $criteria,
-        Category $category,
-        $conditions,
-        ShopContext $context
-    ) {
-        if ($category) {
-            $criteria->addBaseCondition(
-                new CategoryCondition([$category->getId()])
-            );
-            $criteria->addCondition(
-                new CategoryCondition([$category->getId()])
-            );
-        }
+    protected function addCategoryBaseCondition(Criteria $criteria, Category $category): void
+    {
+        parent::addCategoryBaseCondition($criteria, $category);
+        $criteria->addCondition(
+            new CategoryCondition([$category->getId()])
+        );
     }
 }

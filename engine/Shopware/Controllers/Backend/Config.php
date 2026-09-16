@@ -1,42 +1,70 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Shopware\Models\Config\Element;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\DBALException;
+use Doctrine\ORM\AbstractQuery;
+use Doctrine\ORM\Query\Expr\Join;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
+use Shopware\Components\Model\ModelEntity;
+use Shopware\Components\Model\ModelRepository;
+use Shopware\Models\Article\Unit;
+use Shopware\Models\Category\Category;
+use Shopware\Models\Config\Element as ConfigElement;
+use Shopware\Models\Config\Form;
 use Shopware\Models\Config\Value;
+use Shopware\Models\Country\Area;
+use Shopware\Models\Country\Country;
+use Shopware\Models\Customer\Discount;
+use Shopware\Models\Customer\Group as CustomerGroup;
+use Shopware\Models\Document\Document;
 use Shopware\Models\Document\Element as DocumentElement;
+use Shopware\Models\Order\Number;
+use Shopware\Models\Plugin\Plugin;
+use Shopware\Models\Price\Group as PriceGroup;
+use Shopware\Models\Shop\Currency;
+use Shopware\Models\Shop\Locale;
+use Shopware\Models\Shop\Repository as ShopRepository;
 use Shopware\Models\Shop\Shop;
+use Shopware\Models\Shop\Template;
+use Shopware\Models\Site\Group as SiteGroup;
+use Shopware\Models\Tax\Rule;
+use Shopware\Models\Tax\Tax;
+use Shopware\Models\User\User;
+use Shopware\Models\Widget\View;
+use Shopware\Models\Widget\Widget;
 
 class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_ExtJs
 {
     /**
-     * @var array<string, \Shopware\Components\Model\ModelRepository>
+     * @var array<string, ModelRepository>
      */
-    public static $repositories;
+    public static $repositories = [];
 
     /**
-     * @var array
+     * @var array<string, string>
      */
     public $tables = [
         'searchField' => 's_search_fields',
@@ -46,6 +74,8 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
 
     /**
      * Return the config form navigation
+     *
+     * @return void
      */
     public function getNavigationAction()
     {
@@ -54,17 +84,16 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         $repository = $this->getRepository('form');
 
         $user = Shopware()->Container()->get('auth')->getIdentity();
-        /** @var \Shopware\Models\Shop\Locale $locale */
+        /** @var Locale $locale */
         $locale = $user->locale;
 
         $fallback = $this->getFallbackLocaleId($locale->getId());
 
-        /** @var \Shopware\Components\Model\QueryBuilder $builder */
         $builder = $repository->createQueryBuilder('form')
             ->leftJoin('form.elements', 'element')
-            ->leftJoin('element.translations', 'elementTranslation', \Doctrine\ORM\Query\Expr\Join::WITH, 'elementTranslation.localeId IN(:localeId, :fallbackId)')
-            ->leftJoin('form.translations', 'translation', \Doctrine\ORM\Query\Expr\Join::WITH, 'translation.localeId = :localeId')
-            ->leftJoin('form.translations', 'translationFallback', \Doctrine\ORM\Query\Expr\Join::WITH, 'translationFallback.localeId = :fallbackId')
+            ->leftJoin('element.translations', 'elementTranslation', Join::WITH, 'elementTranslation.localeId IN(:localeId, :fallbackId)')
+            ->leftJoin('form.translations', 'translation', Join::WITH, 'translation.localeId = :localeId')
+            ->leftJoin('form.translations', 'translationFallback', Join::WITH, 'translationFallback.localeId = :fallbackId')
             ->leftJoin('form.children', 'children')
             ->leftJoin('form.plugin', 'plugin')
             ->select([
@@ -119,29 +148,29 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         $this->View()->assign([
             'success' => true,
             'data' => $data,
-            'total' => count($data),
+            'total' => \count($data),
         ]);
     }
 
     /**
      * Returns a form with values and elements
+     *
+     * @return void
      */
     public function getFormAction()
     {
         $repository = $this->getRepository('form');
 
-        $user = Shopware()->Container()->get('auth')->getIdentity();
-        /** @var \Shopware\Models\Shop\Locale $locale */
-        $locale = $user->locale;
+        /** @var Locale $locale */
+        $locale = Shopware()->Container()->get('auth')->getIdentity()->locale;
         $language = $locale->toString();
 
         $fallback = $this->getFallbackLocaleId($locale->getId());
 
-        /** @var \Shopware\Components\Model\QueryBuilder $builder */
         $builder = $repository->createQueryBuilder('form')
             ->leftJoin('form.elements', 'element')
-            ->leftJoin('form.translations', 'formTranslation', \Doctrine\ORM\Query\Expr\Join::WITH, 'formTranslation.localeId IN (:localeId, :fallbackId)', 'formTranslation.localeId')
-            ->leftJoin('element.translations', 'elementTranslation', \Doctrine\ORM\Query\Expr\Join::WITH, 'elementTranslation.localeId IN (:localeId, :fallbackId)', 'elementTranslation.localeId')
+            ->leftJoin('form.translations', 'formTranslation', Join::WITH, 'formTranslation.localeId IN (:localeId, :fallbackId)', 'formTranslation.localeId')
+            ->leftJoin('element.translations', 'elementTranslation', Join::WITH, 'elementTranslation.localeId IN (:localeId, :fallbackId)', 'elementTranslation.localeId')
             ->leftJoin('element.values', 'value')
             ->leftJoin('form.plugin', 'plugin')
             ->select(['form', 'element', 'value', 'elementTranslation', 'formTranslation', 'plugin'])
@@ -151,7 +180,7 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         $builder->addOrderBy((array) $this->Request()->getParam('sort', []))
             ->addFilter((array) $this->Request()->getParam('filter', []));
 
-        $data = $builder->getQuery()->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+        $data = $builder->getQuery()->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
         if (isset($data['plugin']['translations'])) {
             $shortLanguage = substr($language, 0, 2);
@@ -182,14 +211,14 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
             $values = $this->translateValues($fallback, $values);
             $values = $this->translateValues($locale->getId(), $values);
 
-            if (!in_array($values['type'], ['select', 'combo'])) {
+            if (!\in_array($values['type'], ['select', 'combo'])) {
                 continue;
             }
 
             $store = $values['options']['store'];
 
             // Replace the store, which may contain multiple translations, with a store with translated messages:
-            if ($values['options']['translateUsingSnippets']) {
+            if (!empty($values['options']['translateUsingSnippets'])) {
                 $values['options']['store'] = $this->translateStoreUsingSnippets($store, $values['options']['namespace']);
             } else {
                 $values['options']['store'] = $this->translateStore($language, $store, $storeFallbackLocales);
@@ -205,25 +234,24 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         $this->View()->assign([
             'success' => true,
             'data' => $data,
-            'total' => count($data),
+            'total' => \count($data),
         ]);
     }
 
     /**
      * Save values from a config form
+     *
+     * @return void
      */
     public function saveFormAction()
     {
         $shopRepository = $this->getRepository('shop');
+        if (!$shopRepository instanceof ShopRepository) {
+            throw new RuntimeException(\sprintf('%s needed', ShopRepository::class));
+        }
         $elements = $this->Request()->getParam('elements');
 
-        /* @var Shop $defaultShop */
         $defaultShop = $shopRepository->getDefault();
-        if ($defaultShop === null) {
-            $this->View()->assign(['success' => false, 'message' => 'No default shop found. Check your shop configuration']);
-
-            return;
-        }
 
         foreach ($elements as $elementData) {
             $this->saveElement($elementData, $defaultShop);
@@ -234,21 +262,13 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
 
     /**
      * Return a list of values for extended forms
+     *
+     * @return void
      */
     public function getListAction()
     {
-        /** @var string $name */
-        $name = $this->Request()->get('_repositoryClass');
-
-        /** @var Shopware\Components\Model\ModelRepository $repository */
-        $repository = $this->getRepository($name);
-
-        /** @var \Shopware\Components\Model\QueryBuilder $builder */
-        $builder = null;
-
-        if ($repository !== null) {
-            $builder = $repository->createQueryBuilder($name);
-        }
+        $name = (string) $this->Request()->get('_repositoryClass');
+        $builder = $this->getRepository($name)->createQueryBuilder($name);
 
         switch ($name) {
             case 'shop':
@@ -298,19 +318,14 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
                 break;
         }
 
-        $data = [];
-        $total = null;
+        $builder->addFilter((array) $this->Request()->getParam('filter', []))
+            ->addOrderBy((array) $this->Request()->getParam('sort', []));
+        $builder->setFirstResult($this->Request()->getParam('start'))
+            ->setMaxResults($this->Request()->getParam('limit'));
 
-        if ($builder !== null) {
-            $builder->addFilter((array) $this->Request()->getParam('filter', []))
-                ->addOrderBy((array) $this->Request()->getParam('sort', []));
-            $builder->setFirstResult($this->Request()->getParam('start'))
-                ->setMaxResults($this->Request()->getParam('limit'));
-
-            $query = $builder->getQuery();
-            $total = Shopware()->Models()->getQueryCount($query);
-            $data = $query->getArrayResult();
-        }
+        $query = $builder->getQuery();
+        $total = $this->get('models')->getQueryCount($query);
+        $data = $query->getArrayResult();
 
         if (!empty($data) && $name === 'locale') {
             $data = $this->getSnippetsForLocales($data);
@@ -333,14 +348,21 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
 
     /**
      * Return a list of values for extended forms
+     *
+     * @return void
      */
     public function getTableListAction()
     {
         $name = $this->Request()->get('_repositoryClass');
         $limit = (int) $this->Request()->get('limit');
         $start = (int) $this->Request()->get('start');
-        $table = $this->getTable($name);
         $filter = $this->Request()->get('filter');
+
+        $table = $this->getTable($name);
+        if ($table === null) {
+            throw new RuntimeException('Invalid parameter "_repositoryClass" given');
+        }
+
         $data = [];
         if (isset($filter[0]['property']) && $filter[0]['property'] === 'name') {
             $search = $filter[0]['value'];
@@ -351,8 +373,7 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
                 $select->from(['c' => $table]);
                 if (isset($search)) {
                     $select->where(
-                        'c.name LIKE :search OR ' .
-                        'c.action LIKE :search'
+                        'c.name LIKE :search OR c.action LIKE :search'
                     );
                     $select->bind(
                         [
@@ -379,9 +400,9 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
                         'informMail' => $row['inform_mail'],
                         'pluginId' => isset($row['pluginID']) ? (int) $row['pluginID'] : null,
                     ];
-                    $row['data'] = !is_string($row['data']) ? var_export($row['data'], true) : $row['data'];
+                    $row['data'] = !\is_string($row['data']) ? var_export($row['data'], true) : $row['data'];
                 }
-                //get the total count
+                // get the total count
                 $select->reset(Zend_Db_Select::FROM);
                 $select->reset(Zend_Db_Select::LIMIT_COUNT);
                 $select->reset(Zend_Db_Select::LIMIT_OFFSET);
@@ -413,9 +434,7 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
                         LEFT JOIN s_search_tables t on f.tableID = t.id';
 
                 if (isset($search)) {
-                    $sql .= ' WHERE f.name LIKE :search OR ' .
-                        'f.field LIKE :search OR ' .
-                        't.table LIKE :search';
+                    $sql .= ' WHERE f.name LIKE :search OR f.field LIKE :search OR t.table LIKE :search';
                     $sqlParams = ['search' => $search];
                 }
 
@@ -435,22 +454,19 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
                 break;
         }
 
-        $totalCount = empty($totalCount) ? count($data) : $totalCount;
+        $totalCount = empty($totalCount) ? \count($data) : $totalCount;
         $this->View()->assign(['success' => true, 'data' => $data, 'total' => $totalCount]);
     }
 
     /**
      * Return values for extended forms
+     *
+     * @return void
      */
     public function getValuesAction()
     {
-        $name = $this->Request()->get('_repositoryClass');
-        $repository = $this->getRepository($name);
-        if ($repository === null) {
-            return;
-        }
-        /** @var Shopware\Components\Model\QueryBuilder $builder */
-        $builder = $repository->createQueryBuilder($name);
+        $name = (string) $this->Request()->get('_repositoryClass');
+        $builder = $this->getRepository($name)->createQueryBuilder($name);
 
         switch ($name) {
             case 'shop':
@@ -513,33 +529,25 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
 
         $builder->addFilter((array) $this->Request()->getParam('filter', []));
 
-        $query = $builder->getQuery();
-        $data = $query->getArrayResult();
-        $total = count($data);
+        $data = $builder->getQuery()->getArrayResult();
+        $total = \count($data);
 
         $this->View()->assign(['success' => true, 'data' => $data, 'total' => $total]);
     }
 
     /**
      * Save the custom table values
+     *
+     * @return void
      */
     public function saveValuesAction()
     {
-        $manager = Shopware()->Models();
+        $manager = $this->get('models');
         $name = $this->Request()->get('_repositoryClass');
         $repository = $this->getRepository($name);
+
         $data = $this->Request()->getPost();
-
         $data = isset($data[0]) ? array_pop($data) : $data;
-
-        if ($repository === null) {
-            $this->View()->assign([
-                'success' => false,
-                'message' => 'Model repository "' . $name . '" not found failure.',
-            ]);
-
-            return;
-        }
 
         if (!empty($data['id'])) {
             $model = $repository->find($data['id']);
@@ -548,20 +556,29 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
             $model = $repository->getClassName();
             $model = new $model();
         }
+        if (!$model instanceof ModelEntity) {
+            throw new RuntimeException('Model object could not be created correctly');
+        }
 
         switch ($name) {
             case 'tax':
+                if (!$model instanceof Tax) {
+                    throw new RuntimeException(\sprintf('Model object is not an instance of expected class "%s"', Tax::class));
+                }
                 $this->saveTaxRules($data, $model);
 
                 return;
 
             case 'customerGroup':
                 if (isset($data['discounts'])) {
+                    if (!$model instanceof CustomerGroup) {
+                        throw new RuntimeException(\sprintf('Model object is not an instance of expected class "%s"', CustomerGroup::class));
+                    }
                     $model->getDiscounts()->clear();
                     $manager->flush();
                     $discounts = [];
                     foreach ($data['discounts'] as $discountData) {
-                        $discount = new Shopware\Models\Customer\Discount();
+                        $discount = new Discount();
                         $discount->setDiscount($discountData['discount']);
                         $discount->setValue($discountData['value']);
                         $discount->setGroup($model);
@@ -593,7 +610,7 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
                     $data['pages'] = $currencies;
                 }
                 foreach ($data as $key => $value) {
-                    if ($value === '' && !in_array($key, ['name', 'hosts'])) {
+                    if ($value === '' && !\in_array($key, ['name', 'hosts'])) {
                         $data[$key] = null;
                     }
                 }
@@ -654,7 +671,7 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
                 } else {
                     $data['mapping'] = null;
                 }
-                $connection = $this->container->get(\Doctrine\DBAL\Connection::class);
+                $connection = $this->container->get(Connection::class);
 
                 $currentKey = $connection->fetchColumn('SELECT `key` FROM s_cms_static_groups WHERE id = ?', [
                     (int) $this->Request()->getParam('id'),
@@ -700,15 +717,16 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
                 break;
 
             case 'document':
-                if ($data['id']) {
+                if (!$model instanceof Document) {
+                    throw new RuntimeException(\sprintf('Model object is not an instance of expected class "%s"', Document::class));
+                }
+
+                if (!empty($data['id'])) {
                     $elements = new ArrayCollection();
                     foreach ($data['elements'] as $element) {
-                        $elementRepository = $this->getRepository('documentElement');
+                        $elementModel = $this->getRepository('documentElement')->find($element['id']);
 
-                        /** @var DocumentElement|null $elementModel */
-                        $elementModel = $elementRepository->find($element['id']);
-
-                        if (!$elementModel) {
+                        if (!$elementModel instanceof DocumentElement) {
                             $elementModel = new DocumentElement();
                             $elementModel->setDocument($model);
                         }
@@ -731,10 +749,10 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         try {
             $manager->persist($model);
             $manager->flush();
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             switch ($name) {
                 case 'country':
-                    if ($ex instanceof \Doctrine\DBAL\DBALException && stripos($ex->getMessage(), 'violation: 1451') !== false) {
+                    if ($ex instanceof DBALException && stripos($ex->getMessage(), 'violation: 1451') !== false) {
                         $this->View()->assign(['success' => false, 'message' => 'A state marked to be deleted is still in use.']);
 
                         return;
@@ -768,6 +786,8 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
 
     /**
      * Save the custom table values
+     *
+     * @return void
      */
     public function saveTableValuesAction()
     {
@@ -831,23 +851,22 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
 
     /**
      * Save form values values with shop reverence
+     *
+     * @return void
      */
     public function deleteValuesAction()
     {
-        $manager = Shopware()->Models();
+        $manager = $this->get('models');
         $name = $this->Request()->get('_repositoryClass');
         $repository = $this->getRepository($name);
+
         $data = $this->Request()->getPost();
-
-        if ($repository === null) {
-            $this->View()->assign(['success' => false, 'message' => 'Repository not found.']);
-
-            return;
-        }
+        $model = null;
         if (!empty($data['id'])) {
             $model = $repository->find($data['id']);
-        } else {
-            $this->View()->assign(['success' => false, 'message' => 'Entry not found.']);
+        }
+        if ($model === null) {
+            $this->View()->assign(['success' => false, 'message' => 'Entity not found.']);
 
             return;
         }
@@ -855,7 +874,7 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         try {
             $manager->remove($model);
             $manager->flush();
-        } catch (\Exception $ex) {
+        } catch (Exception $ex) {
             switch ($name) {
                 case 'country':
                     $this->View()->assign(['success' => false, 'message' => 'The country is still being used.']);
@@ -871,6 +890,8 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
 
     /**
      * Save the custom table values
+     *
+     * @return void
      */
     public function deleteTableValuesAction()
     {
@@ -908,79 +929,79 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
     /**
      * @param string $name
      *
-     * @return \Doctrine\ORM\EntityRepository|null
+     * @return ModelRepository
      */
     protected function getRepository($name)
     {
         if (!isset(self::$repositories[$name])) {
             switch ($name) {
                 case 'form':
-                    $repository = 'Shopware\Models\Config\Form';
+                    $repository = Form::class;
                     break;
                 case 'documentTemplate':
                 case 'template':
-                    $repository = 'Shopware\Models\Shop\Template';
+                    $repository = Template::class;
                     break;
                 case 'main':
                 case 'shop':
                 case 'fallback':
-                    $repository = 'Shopware\Models\Shop\Shop';
+                    $repository = Shop::class;
                     break;
                 case 'locale':
-                    $repository = 'Shopware\Models\Shop\Locale';
+                    $repository = Locale::class;
                     break;
                 case 'currency':
-                    $repository = 'Shopware\Models\Shop\Currency';
+                    $repository = Currency::class;
                     break;
                 case 'customerGroup':
-                    $repository = 'Shopware\Models\Customer\Group';
+                    $repository = CustomerGroup::class;
                     break;
                 case 'priceGroup':
-                    $repository = 'Shopware\Models\Price\Group';
+                    $repository = PriceGroup::class;
                     break;
                 case 'tax':
-                    $repository = 'Shopware\Models\Tax\Tax';
+                    $repository = Tax::class;
                     break;
                 case 'country':
-                    $repository = 'Shopware\Models\Country\Country';
+                    $repository = Country::class;
                     break;
                 case 'countryArea':
-                    $repository = 'Shopware\Models\Country\Area';
+                    $repository = Area::class;
                     break;
                 case 'number':
-                    $repository = 'Shopware\Models\Order\Number';
+                    $repository = Number::class;
                     break;
                 case 'unit':
-                    $repository = 'Shopware\Models\Article\Unit';
+                    $repository = Unit::class;
                     break;
                 case 'category':
-                    $repository = 'Shopware\Models\Category\Category';
+                    $repository = Category::class;
                     break;
                 case 'widget':
-                    $repository = 'Shopware\Models\Widget\Widget';
+                    $repository = Widget::class;
                     break;
                 case 'widgetView':
-                    $repository = 'Shopware\Models\Widget\View';
+                    $repository = View::class;
                     break;
                 case 'auth':
-                    $repository = 'Shopware\Models\User\User';
+                    $repository = User::class;
                     break;
                 case 'plugin':
-                    $repository = 'Shopware\Models\Plugin\Plugin';
+                    $repository = Plugin::class;
                     break;
                 case 'pageGroup':
-                    $repository = 'Shopware\Models\Site\Group';
+                    $repository = SiteGroup::class;
                     break;
                 case 'document':
-                    $repository = 'Shopware\Models\Document\Document';
+                    $repository = Document::class;
                     break;
                 case 'documentElement':
-                    $repository = 'Shopware\Models\Document\Element';
+                    $repository = DocumentElement::class;
                     break;
                 default:
-                    return null;
+                    throw new RuntimeException(\sprintf('Repository with name "%s" not found', $name));
             }
-            self::$repositories[$name] = Shopware()->Models()->getRepository($repository);
+            self::$repositories[$name] = $this->get('models')->getRepository($repository);
         }
 
         return self::$repositories[$name];
@@ -993,20 +1014,21 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
      */
     protected function getTable($name)
     {
-        return isset($this->tables[$name]) ? $this->tables[$name] : null;
+        return $this->tables[$name] ?? null;
     }
 
     /**
-     * @param string|int $localeId
+     * @param string|int           $localeId
+     * @param array<string, mixed> $values
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    private function translateValues($localeId, array $values)
+    private function translateValues($localeId, array $values): array
     {
-        if (!array_key_exists('translations', $values)) {
+        if (!\array_key_exists('translations', $values)) {
             return $values;
         }
-        if (!array_key_exists($localeId, $values['translations'])) {
+        if (!\array_key_exists($localeId, $values['translations'])) {
             return $values;
         }
         $translation = $values['translations'][$localeId];
@@ -1038,12 +1060,15 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
      *              array(4, 'A string without translation')
      *          );
      *
-     * @param string $language        the preferred locale (e.g., the user's locale)
-     * @param array  $fallbackLocales a list of locales (e.g., ['en_GB', 'en'])
+     * @param string                                    $language        the preferred locale (e.g., the user's locale)
+     * @param array<array<string|array<string>>>|string $store
+     * @param array<string>                             $fallbackLocales a list of locales (e.g., ['en_GB', 'en'])
+     *
+     * @return array<array<string|array<string>>>|string
      */
-    private function translateStore($language, $store, array $fallbackLocales)
+    private function translateStore(string $language, $store, array $fallbackLocales)
     {
-        if (!is_array($store)) {
+        if (\is_string($store)) {
             return $store;
         }
 
@@ -1054,7 +1079,7 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
             $value = array_pop($row);
 
             // If not an array, there are no translations and we directly choose the given value:
-            if (!is_array($value)) {
+            if (!\is_array($value)) {
                 $row[] = $value;
                 continue;
             }
@@ -1074,16 +1099,14 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
     }
 
     /**
-     * @param string $namespace
-     *
      * @return array
      */
-    private function translateStoreUsingSnippets(array $store, $namespace)
+    private function translateStoreUsingSnippets(array $store, string $namespace)
     {
         $namespace = $this->container->get('snippets')->getNamespace($namespace);
         foreach ($store as &$row) {
             $text = $row[1];
-            if (is_array($text)) {
+            if (\is_array($text)) {
                 $text = current($text);
             }
 
@@ -1096,9 +1119,10 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
     }
 
     /**
-     * @return string|null
+     * @param array<string, string> $value
+     * @param array<string>         $tryLocales
      */
-    private function getTranslation(array $value, array $tryLocales)
+    private function getTranslation(array $value, array $tryLocales): ?string
     {
         foreach ($tryLocales as $tryLocale) {
             if (isset($value[$tryLocale])) {
@@ -1109,105 +1133,105 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         return null;
     }
 
-    private function createDocumentElements($model)
+    /**
+     * @return ArrayCollection<int, DocumentElement>
+     */
+    private function createDocumentElements(Document $model): ArrayCollection
     {
         $elementCollection = new ArrayCollection();
 
-        /**
-         * @var Shopware\Models\Document\Document
-         */
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Body');
         $elementModel->setValue('');
         $elementModel->setStyle('width:100%; font-family: Verdana, Arial, Helvetica, sans-serif; font-size:11px;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Logo');
         $elementModel->setValue('<p><img src="http://www.shopware.de/logo/logo.png" alt="" /></p>');
         $elementModel->setStyle('height: 20mm; width: 90mm; margin-bottom:5mm;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Header_Recipient');
         $elementModel->setValue('');
         $elementModel->setStyle('');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Header');
         $elementModel->setValue('');
         $elementModel->setStyle('height: 60mm;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Header_Sender');
         $elementModel->setValue('<p>Demo GmbH - Stra&szlig;e 3 - 00000 Musterstadt</p>');
         $elementModel->setStyle('');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Header_Box_Left');
         $elementModel->setValue('');
         $elementModel->setStyle('width: 120mm; height:60mm; float:left;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Header_Box_Right');
         $elementModel->setValue('<p><strong>Demo GmbH </strong><br /> Max Mustermann<br /> Stra&szlig;e 3<br /> 00000 Musterstadt<br /> Fon: 01234 / 56789<br /> Fax: 01234 /            56780<br />info@demo.de<br />www.demo.de</p>');
         $elementModel->setStyle('width: 45mm; height: 60mm; float:left; margin-top:-20px; margin-left:5px;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Header_Box_Bottom');
         $elementModel->setValue('');
         $elementModel->setStyle('font-size:14px; height: 10mm;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Content');
         $elementModel->setValue('');
         $elementModel->setStyle('height: 65mm; width: 170mm;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Td');
         $elementModel->setValue('');
         $elementModel->setStyle('white-space:nowrap; padding: 5px 0;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Td_Name');
         $elementModel->setValue('');
         $elementModel->setStyle('white-space:normal;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Td_Line');
         $elementModel->setValue('');
         $elementModel->setStyle('border-bottom: 1px solid #999; height: 0px;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Td_Head');
         $elementModel->setValue('');
         $elementModel->setStyle('border-bottom:1px solid #000;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Footer');
         $elementModel->setValue(
             '<table style="vertical-align: top;" width="100%" border="0">
@@ -1237,14 +1261,14 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Content_Amount');
         $elementModel->setValue('');
         $elementModel->setStyle('margin-left:90mm;');
         $elementModel->setDocument($model);
         $elementCollection->add($elementModel);
 
-        $elementModel = new Shopware\Models\Document\Element();
+        $elementModel = new DocumentElement();
         $elementModel->setName('Content_Info');
         $elementModel->setValue('<p>Die Ware bleibt bis zur vollst&auml;ndigen Bezahlung unser Eigentum</p>');
         $elementModel->setStyle('');
@@ -1257,25 +1281,36 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
     /**
      * Simple validation for backend config elements
      *
-     * @param array $elementData
-     * @param array $value
-     *
-     * @return bool
+     * @param mixed|null           $value
+     * @param array<string, mixed> $elementData
      */
-    private function validateData($elementData, $value)
+    private function validateData(array $elementData, $value): bool
     {
+        switch ($elementData['type']) {
+            case 'number':
+                $option = $elementData['options'];
+
+                if (isset($option['minValue']) && (float) $option['minValue'] > $value) {
+                    return false;
+                }
+
+                if (isset($option['maxValue']) && (float) $option['maxValue'] < $value) {
+                    return false;
+                }
+        }
+
         switch ($elementData['name']) {
             /*
              * Add rules for a bad case and return false to abort saving
              */
             case 'backendLocales':
-                if (!is_array($value) || count($value) === 0) {
+                if (!\is_array($value) || \count($value) === 0) {
                     return false;
                 }
 
                 // check existence of each locale
                 foreach ($value as $localeId) {
-                    $locale = Shopware()->Models()->find('Shopware\Models\Shop\Locale', $localeId);
+                    $locale = $this->get('models')->find(Locale::class, $localeId);
                     if ($locale === null) {
                         return false;
                     }
@@ -1287,13 +1322,13 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         return true;
     }
 
-    private function saveTaxRules(array $data, \Shopware\Models\Tax\Tax $model)
+    private function saveTaxRules(array $data, Tax $model): void
     {
         if (isset($data['rules'])) {
             $model->getRules()->clear();
             $rules = [];
             foreach ($data['rules'] as $ruleData) {
-                $rule = new Shopware\Models\Tax\Rule();
+                $rule = new Rule();
                 $rule->fromArray($ruleData);
                 $rule->setGroup($model);
                 $rules[] = $rule;
@@ -1309,28 +1344,19 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         $this->View()->assign(['success' => true]);
     }
 
-    /**
-     * @param array $elementData
-     *
-     * @return bool
-     */
-    private function beforeSaveElement($elementData)
+    private function beforeSaveElement(array $elementData): void
     {
-        switch ($elementData['name']) {
-            case 'shopsalutations':
-                $this->createSalutationSnippets($elementData);
-                break;
+        if ($elementData['name'] === 'shopsalutations') {
+            $this->createSalutationSnippets($elementData);
         }
-
-        return true;
     }
 
     /**
      * @return int[] indexed by shop id
      */
-    private function getShopLocaleMapping()
+    private function getShopLocaleMapping(): array
     {
-        $connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
+        $connection = Shopware()->Container()->get(Connection::class);
         $query = $connection->createQueryBuilder();
         $query->select(['locale_id, IFNULL(main_id, id)']);
         $query->from('s_core_shops');
@@ -1341,13 +1367,13 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
     }
 
     /**
-     * @param array $elementData
+     * @param array<string, mixed> $elementData
      *
-     * @throws \Doctrine\DBAL\DBALException
+     * @throws DBALException
      */
-    private function createSalutationSnippets($elementData)
+    private function createSalutationSnippets(array $elementData): void
     {
-        $connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
+        $connection = Shopware()->Container()->get(Connection::class);
 
         $shops = $this->getShopLocaleMapping();
 
@@ -1378,12 +1404,18 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
     }
 
     /**
-     * @param array $elementData
+     * @param array<string, mixed>      $elementData
+     * @param array<string>|string|null $value
+     *
+     * @return array<string>|string|null
      */
-    private function prepareValue($elementData, $value)
+    private function prepareValue(array $elementData, $value)
     {
         switch ($elementData['name']) {
             case 'shopsalutations':
+                if (!\is_string($value)) {
+                    throw new InvalidArgumentException('Value for config option "shopsalutations" needs to be a string');
+                }
                 $values = explode(',', $value);
                 $value = implode(',', array_map('trim', $values));
                 break;
@@ -1392,19 +1424,25 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         return $value;
     }
 
-    private function saveElement(array $elementData, Shop $defaultShop)
+    /**
+     * @param array<string, mixed> $elementData
+     */
+    private function saveElement(array $elementData, Shop $defaultShop): void
     {
         $shopRepository = $this->getRepository('shop');
 
-        /** @var Element $element */
-        $element = Shopware()->Models()->find(Element::class, $elementData['id']);
+        $element = $this->get('models')->find(ConfigElement::class, $elementData['id']);
+        if (!$element instanceof ConfigElement) {
+            throw new ModelNotFoundException(ConfigElement::class, $elementData['id']);
+        }
 
         $removedValues = [];
+        $modelManager = $this->get('models');
         foreach ($element->getValues() as $value) {
-            Shopware()->Models()->remove($value);
+            $modelManager->remove($value);
             $removedValues[] = $value;
         }
-        Shopware()->Models()->flush($removedValues);
+        $modelManager->flush($removedValues);
 
         $values = [];
         foreach ($elementData['values'] as $valueData) {
@@ -1456,9 +1494,9 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
             ]
         );
 
-        $element->setValues($values);
+        $element->setValues(new ArrayCollection($values));
 
-        Shopware()->Models()->flush($element);
+        $modelManager->flush($element);
 
         Shopware()->Events()->notify('Shopware_Controllers_Backend_Config_After_Save_Config_Element', [
             'subject' => $this,
@@ -1466,32 +1504,25 @@ class Shopware_Controllers_Backend_Config extends Shopware_Controllers_Backend_E
         ]);
     }
 
-    /**
-     * @param int $currentLocaleId
-     *
-     * @return int
-     */
-    private function getFallbackLocaleId($currentLocaleId)
+    private function getFallbackLocaleId(int $currentLocaleId): int
     {
         if ($currentLocaleId === 1) {
             return 1;
         }
 
-        $fallback = (int) $this->container->get(\Doctrine\DBAL\Connection::class)->fetchColumn(
+        return (int) $this->container->get(Connection::class)->fetchColumn(
             "SELECT id FROM s_core_locales WHERE locale = 'en_GB'"
         );
-
-        return $fallback;
     }
 
     /**
      * Replaces the locales with the snippets data
      *
-     * @param array $data
+     * @param array<array<string, string>> $data
      *
-     * @return array $data
+     * @return array<array<string, string>> $data
      */
-    private function getSnippetsForLocales($data)
+    private function getSnippetsForLocales(array $data): array
     {
         $snippets = $this->container->get('snippets');
         foreach ($data as &$locale) {

@@ -1,39 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ConfiguratorOptionsGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\ConfiguratorHydrator;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class ConfiguratorOptionsGateway implements Gateway\ConfiguratorOptionsGatewayInterface
+class ConfiguratorOptionsGateway implements ConfiguratorOptionsGatewayInterface
 {
-    /**
-     * @var Hydrator\ConfiguratorHydrator
-     */
-    private $hydrator;
+    private ConfiguratorHydrator $hydrator;
 
     /**
      * The FieldHelper class is used for the
@@ -45,34 +44,19 @@ class ConfiguratorOptionsGateway implements Gateway\ConfiguratorOptionsGatewayIn
      * Additionally the field helper reduce the work, to
      * select in a second step the different required
      * attribute tables for a parent table.
-     *
-     * @var FieldHelper
      */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var Gateway\MediaGatewayInterface
-     */
-    private $mediaGateway;
-
-    /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Gateway\MediaGatewayInterface $mediaGateway
-     */
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\ConfiguratorHydrator $configuratorHydrator,
-        Gateway\MediaGatewayInterface $mediaGateway
+        ConfiguratorHydrator $configuratorHydrator
     ) {
         $this->connection = $connection;
         $this->hydrator = $configuratorHydrator;
         $this->fieldHelper = $fieldHelper;
-        $this->mediaGateway = $mediaGateway;
     }
 
     /**
@@ -107,7 +91,7 @@ class ConfiguratorOptionsGateway implements Gateway\ConfiguratorOptionsGatewayIn
         $this->fieldHelper->addConfiguratorOptionTranslation($query, $context);
         $this->fieldHelper->addMediaTranslation($query, $context);
 
-        $data = $query->execute()->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         return $this->hydrator->hydrateGroups($data);
     }

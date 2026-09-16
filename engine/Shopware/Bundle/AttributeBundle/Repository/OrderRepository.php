@@ -1,34 +1,36 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AttributeBundle\Repository;
 
 use Shopware\Bundle\AttributeBundle\Repository\Reader\ReaderInterface;
 use Shopware\Bundle\AttributeBundle\Repository\Searcher\SearcherInterface;
+use Shopware\Bundle\AttributeBundle\Service\TypeMappingInterface;
 use Shopware\Bundle\EsBackendBundle\EsAwareRepository;
 use Shopware\Bundle\ESIndexingBundle\LastIdQuery;
 use Shopware\Bundle\ESIndexingBundle\TextMappingInterface;
+use Shopware\Components\Model\ModelEntity;
 use Shopware\Components\Model\ModelManager;
 
 class OrderRepository extends GenericRepository implements EsAwareRepository
@@ -39,7 +41,7 @@ class OrderRepository extends GenericRepository implements EsAwareRepository
     private $textMapping;
 
     /**
-     * @param string $entity
+     * @param class-string<ModelEntity> $entity
      */
     public function __construct(
         $entity,
@@ -75,34 +77,35 @@ class OrderRepository extends GenericRepository implements EsAwareRepository
     {
         return [
             'properties' => [
-                'id' => ['type' => 'long'],
+                'id' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'number' => $this->getTextFieldWithRawData(),
-                'invoiceAmount' => ['type' => 'double'],
-                'invoiceShipping' => ['type' => 'double'],
-                'orderTime' => ['type' => 'date', 'format' => 'yyyy-MM-dd'],
-                'status' => ['type' => 'long'],
-                'cleared' => ['type' => 'long'],
-                'customerId' => ['type' => 'long'],
+                'invoiceAmount' => TypeMappingInterface::MAPPING_DOUBLE_FIELD,
+                'invoiceShipping' => TypeMappingInterface::MAPPING_DOUBLE_FIELD,
+                'orderTime' => TypeMappingInterface::MAPPING_DATE_AND_DATE_TIME_FIELD,
+                'status' => TypeMappingInterface::MAPPING_LONG_FIELD,
+                'cleared' => TypeMappingInterface::MAPPING_LONG_FIELD,
+                'customerId' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'supplierId' => $this->textMapping->getTextField(),
-                'billingCountryId' => ['type' => 'long'],
-                'shippingCountryId' => ['type' => 'long'],
+                'billingCountryId' => TypeMappingInterface::MAPPING_LONG_FIELD,
+                'shippingCountryId' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'groupKey' => $this->textMapping->getKeywordField(),
                 'email' => $this->getTextFieldWithRawData(),
                 'orderDocuments' => $this->getTextFieldWithRawData(),
                 'transactionId' => $this->textMapping->getKeywordField(),
                 'firstname' => $this->getTextFieldWithRawData(),
                 'lastname' => $this->getTextFieldWithRawData(),
-                'paymentId' => ['type' => 'long'],
+                'paymentId' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'paymentName' => $this->textMapping->getTextField(),
-                'dispatchId' => ['type' => 'long'],
+                'dispatchId' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'dispatchName' => $this->textMapping->getTextField(),
-                'shopId' => ['type' => 'long'],
+                'shopId' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'shopName' => $this->textMapping->getTextField(),
                 'title' => $this->textMapping->getTextField(),
                 'company' => $this->textMapping->getTextField(),
                 'department' => $this->textMapping->getTextField(),
                 'street' => $this->textMapping->getTextField(),
                 'zipcode' => $this->textMapping->getKeywordField(),
+                'articleNumber' => $this->textMapping->getKeywordField(),
                 'city' => $this->textMapping->getTextField(),
                 'phone' => $this->textMapping->getKeywordField(),
                 'countryName' => $this->textMapping->getTextField(),

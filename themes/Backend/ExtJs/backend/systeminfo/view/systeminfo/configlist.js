@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Systeminfo
@@ -81,7 +80,7 @@ Ext.define('Shopware.apps.Systeminfo.view.systeminfo.Configlist', {
         translations['extension'] = '{s name="systeminfo/groupingFeature_extension"}Extensions{/s}';
         translations['other'] = '{s name="systeminfo/groupingFeature_other"}Other{/s}';
 
-//        Row grouping
+        //        Row grouping
         this.groupingFeature = Ext.create('Ext.grid.feature.Grouping', {
             groupHeaderTpl: Ext.create('Ext.XTemplate',
                 '{literal}<div>{name:this.formatName}</div>{/literal}',
@@ -108,18 +107,18 @@ Ext.define('Shopware.apps.Systeminfo.view.systeminfo.Configlist', {
                 header: '{s name="config_grid/column/name"}Name{/s}',
                 dataIndex: 'name',
                 flex: 1
-            },{
+            }, {
                 header: '{s name="config_grid/column/required"}Required{/s}',
                 dataIndex: 'required',
                 align: 'right',
                 flex: 1
-            },{
+            }, {
                 header: '{s name="config_grid/column/version"}Version{/s}',
                 dataIndex: 'version',
                 align: 'right',
                 flex: 1,
                 renderer: me.renderVersion
-            },{
+            }, {
                 header: '{s name="config_grid/column/status"}Status{/s}',
                 dataIndex: 'status',
                 flex: 1,
@@ -134,9 +133,9 @@ Ext.define('Shopware.apps.Systeminfo.view.systeminfo.Configlist', {
      * @param value The value of the field
      */
     renderStatus: function(value, meta, record){
-        if(value === 'ok') {
+        if (value === 'ok') {
             return Ext.String.format('<div style="height: 16px; width: 16px" class="sprite-tick"></div>')
-        } else if(value === 'warning') {
+        } else if (value === 'warning') {
             return Ext.String.format('<div style="height: 16px; width: 16px" class="sprite-exclamation" title="' + record.get('notice')  + '"></div>')
         } else {
             return Ext.String.format('<div style="height: 16px; width: 16px" class="sprite-cross"></div>')
@@ -148,11 +147,11 @@ Ext.define('Shopware.apps.Systeminfo.view.systeminfo.Configlist', {
      * @param value The value of the field
      */
     renderVersion: function(value){
-        if(value==true){
+        if (value == true){
             return 1
-        }else if(value==false){
+        } else if (value == false){
             return 0
-        }else{
+        } else {
             return value;
         }
     }

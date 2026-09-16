@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\FacetHandler;
 
-use Shopware\Bundle\AttributeBundle\Service\ConfigurationStruct;
+use PDO;
+use RuntimeException;
 use Shopware\Bundle\AttributeBundle\Service\CrudServiceInterface;
 use Shopware\Bundle\AttributeBundle\Service\TypeMappingInterface;
 use Shopware\Bundle\SearchBundle\Condition\ProductAttributeCondition;
@@ -40,20 +41,13 @@ use Shopware\Bundle\SearchBundle\FacetResultInterface;
 use Shopware\Bundle\SearchBundleDBAL\PartialFacetHandlerInterface;
 use Shopware\Bundle\SearchBundleDBAL\QueryBuilder;
 use Shopware\Bundle\SearchBundleDBAL\QueryBuilderFactoryInterface;
-use Shopware\Bundle\StoreFrontBundle\Struct;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
 {
-    /**
-     * @var QueryBuilderFactoryInterface
-     */
-    private $queryBuilderFactory;
+    private QueryBuilderFactoryInterface $queryBuilderFactory;
 
-    /**
-     * @var CrudServiceInterface
-     */
-    private $crudService;
+    private CrudServiceInterface $crudService;
 
     public function __construct(
         QueryBuilderFactoryInterface $queryBuilderFactory,
@@ -71,17 +65,24 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         return $facet instanceof ProductAttributeFacet;
     }
 
-    /**
-     * @param FacetInterface|ProductAttributeFacet $facet
-     *
-     * @return FacetResultInterface|null
-     */
     public function generatePartialFacet(
         FacetInterface $facet,
         Criteria $reverted,
         Criteria $criteria,
         ShopContextInterface $context
     ) {
+        return $this->getFacet($facet, $reverted, $criteria, $context);
+    }
+
+    /**
+     * @return BooleanFacetResult|RadioFacetResult|RangeFacetResult|ValueListFacetResult|null
+     */
+    private function getFacet(
+        ProductAttributeFacet $facet,
+        Criteria $reverted,
+        Criteria $criteria,
+        ShopContextInterface $context
+    ): ?FacetResultInterface {
         $query = $this->queryBuilderFactory->createQuery($reverted, $context);
         $query->resetQueryPart('orderBy');
         $query->resetQueryPart('groupBy');
@@ -90,12 +91,10 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         $query->andWhere($sqlField . ' IS NOT NULL')
             ->andWhere($sqlField . " NOT IN ('', '0', '0000-00-00')");
 
-        /** @var ConfigurationStruct|null $attribute */
         $attribute = $this->crudService->get('s_articles_attributes', $facet->getField());
 
         $type = $attribute ? $attribute->getColumnType() : null;
 
-        /** @var ProductAttributeFacet $facet */
         switch ($facet->getMode()) {
             case ProductAttributeFacet::MODE_VALUE_LIST_RESULT:
             case ProductAttributeFacet::MODE_RADIO_LIST_RESULT:
@@ -116,7 +115,7 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         }
 
         if ($result === null) {
-            return $result;
+            return null;
         }
 
         if ($facet->getTemplate()) {
@@ -125,9 +124,7 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
             return $result;
         }
 
-        $result->setTemplate(
-            $this->getTypeTemplate($type, $facet->getMode(), $result->getTemplate())
-        );
+        $result->setTemplate($this->getTypeTemplate($type, $facet->getMode(), $result->getTemplate()));
 
         return $result;
     }
@@ -139,8 +136,8 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         QueryBuilder $query,
         ProductAttributeFacet $facet,
         Criteria $criteria,
-        Struct\ShopContextInterface $context
-    ) {
+        ShopContextInterface $context
+    ): ?FacetResultInterface {
         $sqlField = 'productAttribute.' . $facet->getField();
 
         $query->addSelect($sqlField)
@@ -149,21 +146,18 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
 
         $this->addTranslations($query, $context);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-        $result = $statement->fetchAll();
+        $result = $query->execute()->fetchAll();
         if (empty($result)) {
             return null;
         }
 
         $actives = [];
-        /** @var ProductAttributeCondition|null $condition */
         $condition = $criteria->getCondition($facet->getName());
-        if ($condition !== null) {
+        if ($condition instanceof ProductAttributeCondition) {
             $actives = $condition->getValue();
         }
 
-        if (!is_array($actives)) {
+        if (!\is_array($actives)) {
             $actives = [$actives];
         }
 
@@ -174,10 +168,10 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
                 $viewName = $translation;
             }
 
-            return new ValueListItem($row[$facet->getField()], $viewName, in_array($row[$facet->getField()], $actives));
+            return new ValueListItem($row[$facet->getField()], $viewName, \in_array($row[$facet->getField()], $actives));
         }, $result);
 
-        if ($facet->getMode() == ProductAttributeFacet::MODE_RADIO_LIST_RESULT) {
+        if ($facet->getMode() === ProductAttributeFacet::MODE_RADIO_LIST_RESULT) {
             return new RadioFacetResult(
                 $facet->getName(),
                 $criteria->hasCondition($facet->getName()),
@@ -196,14 +190,11 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         );
     }
 
-    /**
-     * @return RangeFacetResult|null
-     */
     private function createRangeFacetResult(
         QueryBuilder $query,
         ProductAttributeFacet $facet,
         Criteria $criteria
-    ) {
+    ): ?RangeFacetResult {
         $sqlField = 'productAttribute.' . $facet->getField();
 
         $query->select([
@@ -211,9 +202,7 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
             'MAX(' . $sqlField . ') as maxValues',
         ]);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-        $result = $statement->fetch(\PDO::FETCH_ASSOC);
+        $result = $query->execute()->fetch(PDO::FETCH_ASSOC);
 
         if (empty($result)) {
             return null;
@@ -228,13 +217,17 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
 
         $activeMin = $result['minValues'];
         $activeMax = $result['maxValues'];
-
-        /** @var ProductAttributeCondition|null $condition */
         $condition = $criteria->getCondition($facet->getName());
-        if ($condition !== null) {
+        if ($condition instanceof ProductAttributeCondition) {
             $data = $condition->getValue();
-            $activeMin = $data['min'];
-            $activeMax = $data['max'];
+
+            if (\is_array($data) && isset($data['min'])) {
+                $activeMin = $data['min'];
+            }
+
+            if (\is_array($data) && isset($data['max'])) {
+                $activeMax = $data['max'];
+            }
         }
 
         return new RangeFacetResult(
@@ -253,21 +246,16 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         );
     }
 
-    /**
-     * @return BooleanFacetResult|null
-     */
     private function createBooleanFacetResult(
         QueryBuilder $query,
         ProductAttributeFacet $facet,
         Criteria $criteria
-    ) {
+    ): ?BooleanFacetResult {
         $sqlField = 'productAttribute.' . $facet->getField();
 
         $query->select('COUNT(' . $sqlField . ')');
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-        $result = $statement->fetch(\PDO::FETCH_COLUMN);
+        $result = $query->execute()->fetch(PDO::FETCH_COLUMN);
 
         if (empty($result)) {
             return null;
@@ -281,11 +269,7 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         );
     }
 
-    /**
-     * @param QueryBuilder                $query
-     * @param Struct\ShopContextInterface $context
-     */
-    private function addTranslations($query, $context)
+    private function addTranslations(QueryBuilder $query, ShopContextInterface $context): void
     {
         if ($context->getShop()->isDefault()) {
             return;
@@ -319,34 +303,19 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
     }
 
     /**
-     * @param array  $row
-     * @param string $fieldName
-     *
-     * @return string|null
+     * @param array<string, string> $row
      */
-    private function extractTranslations($row, $fieldName)
+    private function extractTranslations(array $row, string $fieldName): ?string
     {
         $translation = $this->unserializeTranslation($row, '__attribute_translation', $fieldName);
-        if ($translation !== null) {
-            return $translation;
-        }
 
-        $translation = $this->unserializeTranslation($row, '__attribute_translation_fallback', $fieldName);
-        if ($translation !== null) {
-            return $translation;
-        }
-
-        return null;
+        return $translation ?? $this->unserializeTranslation($row, '__attribute_translation_fallback', $fieldName);
     }
 
     /**
-     * @param array  $row
-     * @param string $key
-     * @param string $fieldName
-     *
-     * @return string|null
+     * @param array<string, string> $row
      */
-    private function unserializeTranslation($row, $key, $fieldName)
+    private function unserializeTranslation(array $row, string $key, string $fieldName): ?string
     {
         if (!isset($row[$key])) {
             return null;
@@ -364,36 +333,27 @@ class ProductAttributeFacetHandler implements PartialFacetHandlerInterface
         return $result[$fieldName];
     }
 
-    /**
-     * @param string $type
-     * @param string $mode
-     * @param string $defaultTemplate
-     *
-     * @return string
-     */
-    private function getTypeTemplate($type, $mode, $defaultTemplate)
+    private function getTypeTemplate(?string $type, string $mode, ?string $defaultTemplate): string
     {
         switch (true) {
             case $type === TypeMappingInterface::TYPE_DATE && $mode === ProductAttributeFacet::MODE_RANGE_RESULT:
-
                 return 'frontend/listing/filter/facet-date-range.tpl';
             case $type === TypeMappingInterface::TYPE_DATE && $mode === ProductAttributeFacet::MODE_VALUE_LIST_RESULT:
-
                 return 'frontend/listing/filter/facet-date-multi.tpl';
             case $type === TypeMappingInterface::TYPE_DATE && $mode !== ProductAttributeFacet::MODE_BOOLEAN_RESULT:
-
                 return 'frontend/listing/filter/facet-date.tpl';
             case $type === TypeMappingInterface::TYPE_DATETIME && $mode === ProductAttributeFacet::MODE_RANGE_RESULT:
-
                 return 'frontend/listing/filter/facet-datetime-range.tpl';
             case $type === TypeMappingInterface::TYPE_DATETIME && $mode === ProductAttributeFacet::MODE_VALUE_LIST_RESULT:
-
                 return 'frontend/listing/filter/facet-datetime-multi.tpl';
             case $type === TypeMappingInterface::TYPE_DATETIME && $mode !== ProductAttributeFacet::MODE_BOOLEAN_RESULT:
-
                 return 'frontend/listing/filter/facet-datetime.tpl';
             default:
-                return $defaultTemplate;
+                if (\is_string($defaultTemplate)) {
+                    return $defaultTemplate;
+                }
         }
+
+        throw new RuntimeException(\sprintf('Could not find template for type "%s" or default template not set', $type));
     }
 }

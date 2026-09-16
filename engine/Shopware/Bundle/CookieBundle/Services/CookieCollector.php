@@ -1,54 +1,59 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\CookieBundle\Services;
 
+use ArrayIterator;
+use Enlight_Event_EventManager;
 use Shopware\Bundle\CookieBundle\CookieCollection;
 use Shopware\Bundle\CookieBundle\CookieGroupCollection;
 use Shopware\Bundle\CookieBundle\Exceptions\InvalidCookieGroupItemException;
 use Shopware\Bundle\CookieBundle\Exceptions\InvalidCookieItemException;
 use Shopware\Bundle\CookieBundle\Structs\CookieGroupStruct;
 use Shopware\Bundle\CookieBundle\Structs\CookieStruct;
+use Shopware_Components_Config;
+use Shopware_Components_Snippet_Manager;
 
 class CookieCollector implements CookieCollectorInterface
 {
     /**
-     * @var \Enlight_Event_EventManager
+     * @var Enlight_Event_EventManager
      */
     private $eventManager;
 
     /**
-     * @var \Shopware_Components_Snippet_Manager
+     * @var Shopware_Components_Snippet_Manager
      */
     private $snippetManager;
 
     /**
-     * @var \Shopware_Components_Config
+     * @var Shopware_Components_Config
      */
     private $config;
 
-    public function __construct(\Enlight_Event_EventManager $eventManager, \Shopware_Components_Snippet_Manager $snippetManager, \Shopware_Components_Config $config)
+    public function __construct(Enlight_Event_EventManager $eventManager, Shopware_Components_Snippet_Manager $snippetManager, Shopware_Components_Config $config)
     {
         $this->eventManager = $eventManager;
         $this->snippetManager = $snippetManager;
@@ -68,7 +73,7 @@ class CookieCollector implements CookieCollectorInterface
         );
 
         if (!$cookieCollection->isValid()) {
-            throw new InvalidCookieItemException(sprintf('Found item inside cookie collection, which is not of type \Shopware\Bundle\CookieBundle\Structs\CookieStruct'));
+            throw new InvalidCookieItemException(\sprintf('Found item inside cookie collection, which is not of type \Shopware\Bundle\CookieBundle\Structs\CookieStruct'));
         }
 
         $cookieCollection = $this->sortCookies($cookieCollection);
@@ -143,11 +148,12 @@ class CookieCollector implements CookieCollectorInterface
 
     private function sortCookies(CookieCollection $cookieCollection): CookieCollection
     {
+        /** @var ArrayIterator<int, CookieStruct> $cookieIterator */
         $cookieIterator = $cookieCollection->getIterator();
         $cookieIterator->uasort(static function (CookieStruct $firstCookie, CookieStruct $secondCookie) {
             return strcmp($firstCookie->getLabel(), $secondCookie->getLabel());
         });
 
-        return new CookieCollection(\iterator_to_array($cookieIterator, false));
+        return new CookieCollection(iterator_to_array($cookieIterator, false));
     }
 }

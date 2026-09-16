@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ContentTypeBundle\Services;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
+use Exception;
 use Shopware\Bundle\ContentTypeBundle\Field\CheckboxField;
 use Shopware\Bundle\ContentTypeBundle\Structs\Criteria;
 use Shopware\Bundle\ContentTypeBundle\Structs\Field;
@@ -33,6 +34,7 @@ use Shopware\Bundle\ContentTypeBundle\Structs\SearchResult;
 use Shopware\Bundle\ContentTypeBundle\Structs\Type;
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\Api\Exception\CustomValidationException;
+use Shopware_Components_Translation;
 
 class Repository implements RepositoryInterface
 {
@@ -42,7 +44,7 @@ class Repository implements RepositoryInterface
     private $connection;
 
     /**
-     * @var \Shopware_Components_Translation
+     * @var Shopware_Components_Translation
      */
     private $translation;
 
@@ -64,7 +66,7 @@ class Repository implements RepositoryInterface
     public function __construct(
         Connection $connection,
         Type $type,
-        \Shopware_Components_Translation $translation,
+        Shopware_Components_Translation $translation,
         ContextServiceInterface $contextService,
         TypeFieldResolverInterface $fieldResolver
     ) {
@@ -165,14 +167,14 @@ class Repository implements RepositoryInterface
                             continue;
                         }
 
-                        $query->orWhere(sprintf('`%s` LIKE :search', $field->getName()));
+                        $query->orWhere(\sprintf('`%s` LIKE :search', $field->getName()));
                     }
                 } else {
                     $where = $item['value'];
                     $expression = null;
 
                     if ($item['property'] === 'id') {
-                        $idSearch = is_array($where) ? $where : [$where];
+                        $idSearch = \is_array($where) ? $where : [$where];
                     }
 
                     if (isset($item['expression'])) {
@@ -181,10 +183,10 @@ class Repository implements RepositoryInterface
 
                     if ($expression === null) {
                         switch (true) {
-                            case is_string($where):
+                            case \is_string($where):
                                 $expression = 'LIKE';
                                 break;
-                            case is_array($where):
+                            case \is_array($where):
                                 $expression = 'IN';
                                 break;
                             case $where === null:
@@ -221,10 +223,10 @@ class Repository implements RepositoryInterface
         }
 
         // Sorting result by given ids
-        if ($idSearch && count($filters) === 1) {
+        if ($idSearch && \count($filters) === 1) {
             $idSearch = array_map('intval', $idSearch);
 
-            $orderBy = sprintf('FIELD(id, %s)', implode(',', $idSearch));
+            $orderBy = \sprintf('FIELD(id, %s)', implode(',', $idSearch));
 
             $query->addOrderBy($orderBy);
         }
@@ -236,7 +238,7 @@ class Repository implements RepositoryInterface
     {
         try {
             $context = $this->contextService->getShopContext()->getShop();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $items;
         }
 
@@ -269,7 +271,7 @@ class Repository implements RepositoryInterface
         $names[] = 'created_at';
 
         foreach ($fields as $key => $field) {
-            if (!in_array($key, $names, true)) {
+            if (!\in_array($key, $names, true)) {
                 unset($fields[$key]);
             }
         }
@@ -285,7 +287,7 @@ class Repository implements RepositoryInterface
             }
 
             if (empty($data[$field->getName()])) {
-                throw new CustomValidationException(sprintf('Field %s is required', $field->getName()));
+                throw new CustomValidationException(\sprintf('Field %s is required', $field->getName()));
             }
         }
     }

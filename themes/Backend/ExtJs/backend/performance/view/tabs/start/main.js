@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/performance/main"}
@@ -101,14 +100,14 @@ Ext.define('Shopware.apps.Performance.view.tabs.start.Main', {
 
         me.radioGroup = me.createRadioGroup();
         return [{
-            xtype   : 'container',
-            cls     : 'radiogroup-container',
-            padding : 20,
-            items   : [me.radioGroup]
+            xtype: 'container',
+            cls: 'radiogroup-container',
+            padding: 20,
+            items: [me.radioGroup]
         }, {
-            xtype   : 'component',
-            flex    : 1,
-            html    : clearText
+            xtype: 'component',
+            flex: 1,
+            html: clearText
         }];
     },
 
@@ -120,19 +119,19 @@ Ext.define('Shopware.apps.Performance.view.tabs.start.Main', {
         var me = this;
 
         return Ext.create('Ext.form.RadioGroup', {
-            columns : 1,
-            items   : [
+            columns: 1,
+            items: [
                 { name: 'productiveMode', inputValue: true, boxLabel: '<b>{s name="tabs/start/production_mode_title"}{/s}</b>'/*{if !{acl_is_allowed privilege=update}}*/, disabled: true/*{/if}*/ },
-                { xtype: 'component', cls:'component-first', html: '{s name="tabs/start/production_mode_description"}{/s}'},
+                { xtype: 'component', cls: 'component-first', html: '{s name="tabs/start/production_mode_description"}{/s}' },
                 { name: 'productiveMode', inputValue: false, boxLabel: '<b>{s name="tabs/start/development_mode_title"}{/s}</b>'/*{if !{acl_is_allowed privilege=update}}*/, disabled: true/*{/if}*/ },
                 { xtype: 'component', html: '{s name="tabs/start/development_mode_description"}{/s}' }
             ],
             listeners: {
                 change: function (elem, newValue, oldValue) {
                     if (
-                        !Ext.isEmpty(oldValue.productiveMode)
-                        && !Ext.isEmpty(newValue.productiveMode)
-                        && oldValue.productiveMode !== newValue.productiveMode
+                        !Ext.isEmpty(oldValue.productiveMode) &&
+                        !Ext.isEmpty(newValue.productiveMode) &&
+                        oldValue.productiveMode !== newValue.productiveMode
                     ) {
                         me.fireEvent('toggle-productive', me)
                     }

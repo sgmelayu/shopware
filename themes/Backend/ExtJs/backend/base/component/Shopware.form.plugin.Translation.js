@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -37,9 +36,9 @@
 
 //{block name="backend/base/component/form_plugin_translation"}
 
-Ext.define('Shopware.form.plugin.Translation',
-/** @lends Ext.AbstractPlugin# */
-{
+Ext.define('Shopware.form.plugin.Translation', {
+    /** @lends Ext.AbstractPlugin# */
+
     /**
      * Extends the abstact plugin component
      * @string
@@ -182,7 +181,7 @@ Ext.define('Shopware.form.plugin.Translation',
         globeIcon = new Ext.Element(document.createElement('span'));
         globeIcon.set({
             cls: Ext.baseCSSPrefix + 'translation-globe sprite-globe',
-            style: 'position: absolute;width: 16px; height: 16px;display:block;cursor:pointer;'+style
+            style: 'position: absolute;width: 16px; height: 16px;display:block;cursor:pointer;' + style
         });
 
         globeIcon.addListener('click', function() {
@@ -214,7 +213,7 @@ Ext.define('Shopware.form.plugin.Translation',
      * @returns string
      */
     getGlobeElementStyle: function(field) {
-        switch(this.getFieldType(field)) {
+        switch (this.getFieldType(field)) {
             case 'tinymce':
                 return 'top: 3px; right: 3px';
             case 'codemirror':
@@ -224,6 +223,7 @@ Ext.define('Shopware.form.plugin.Translation',
             case 'trigger':
                 return 'top: 6px; right: 26px';
             case 'textfield':
+            case 'alphanumeric':
             default:
                 return 'top: 6px; right: 6px; z-index:1;';
         }
@@ -319,30 +319,34 @@ Ext.define('Shopware.form.plugin.Translation',
         var type = null;
 
         Ext.each(field.alternateClassName, function(className) {
-            if(className === 'Ext.form.TextField') {
+            if (className === 'Ext.form.TextField') {
                 type = 'textfield';
             }
 
-            if(className === 'Shopware.form.TinyMCE') {
+            if (className === 'Shopware.form.TinyMCE') {
                 type = 'tinymce';
             }
 
-            if(className === 'Shopware.form.CodeMirror') {
+            if (className === 'Shopware.form.CodeMirror') {
                 type = 'codemirror';
             }
 
-            if(className === 'Ext.form.TextArea') {
+            if (className === 'Ext.form.TextArea') {
                 type = 'textarea';
             }
 
-            if(className === 'Ext.form.TriggerField'
-                || className === 'Ext.form.ComboBox'
-                || className === 'Ext.form.DateField'
-                || className === 'Ext.form.Picker'
-                || className === 'Ext.form.Spinner'
-                || className === 'Ext.form.NumberField'
-                || className === 'Ext.form.Number'
-                || className === 'Ext.form.TimeField') {
+            if (className === 'Ext.form.NoUrl') {
+                type = 'nourl'
+            }
+
+            if (className === 'Ext.form.TriggerField' ||
+                className === 'Ext.form.ComboBox' ||
+                className === 'Ext.form.DateField' ||
+                className === 'Ext.form.Picker' ||
+                className === 'Ext.form.Spinner' ||
+                className === 'Ext.form.NumberField' ||
+                className === 'Ext.form.Number' ||
+                className === 'Ext.form.TimeField') {
                 type = 'trigger';
             }
         });

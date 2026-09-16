@@ -1,32 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Comparison;
+use Doctrine\ORM\Query\Expr\OrderBy;
+use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder as BaseQueryBuilder;
 
 /**
@@ -74,7 +77,7 @@ class QueryBuilder extends BaseQueryBuilder
      *         ->setParameters(new ArrayCollection(array(
      *             new Parameter('user_id1', 1),
      *             new Parameter('user_id2', 2)
-     )));
+     * )));
      * </code>
      *
      * Notice: This method overrides ALL parameters in Doctrine 2.3 and up.
@@ -83,19 +86,19 @@ class QueryBuilder extends BaseQueryBuilder
      * instead or call {@link setParameters()} only once, or with all the
      * parameters.
      *
-     * @deprecated This method is deprecated since 5.4.
+     * @deprecated This method is deprecated since 5.4 and will be removed with Shopware 5.8
      *
-     * @param \Doctrine\Common\Collections\ArrayCollection|array $parameters the query parameters to set
+     * @param ArrayCollection|array $parameters the query parameters to set
      *
      * @return QueryBuilder this QueryBuilder instance
      */
     public function setParameters($parameters)
     {
-        trigger_error(sprintf('%s::%s() is deprecated. Please use setParameter().', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s::%s() is deprecated. Please use setParameter().', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $existingParameters = $this->getParameters();
 
-        if (count($existingParameters) && is_array($parameters)) {
+        if (\count($existingParameters) && \is_array($parameters)) {
             return $this->addParameters($parameters);
         }
 
@@ -110,13 +113,13 @@ class QueryBuilder extends BaseQueryBuilder
      * should only use it to quickly move backwards to the old
      * {@link setParameters()} behavior.
      *
-     * @deprecated This method is deprecated since 5.4.
+     * @deprecated This method is deprecated since 5.4. and will be removed with Shopware 5.8
      *
      * @return QueryBuilder this QueryBuilder instance
      */
     public function addParameters(array $parameters)
     {
-        trigger_error(sprintf('%s::%s() is deprecated. Please use addParameter().', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s::%s() is deprecated. Please use addParameter().', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $existingParameters = $this->getParameters();
         $newParameters = new ArrayCollection();
@@ -128,7 +131,7 @@ class QueryBuilder extends BaseQueryBuilder
         }
 
         foreach ($parameters as $key => $value) {
-            $parameter = new \Doctrine\ORM\Query\Parameter($key, $value);
+            $parameter = new Parameter($key, $value);
             $newParameters->add($parameter);
         }
 
@@ -161,6 +164,8 @@ class QueryBuilder extends BaseQueryBuilder
      *      )));
      * </code>
      *
+     * @param array<string, mixed>|array<array{property: string, value: mixed, expression?: string, operator?: string|null}> $filter
+     *
      * @return QueryBuilder
      */
     public function addFilter(array $filter)
@@ -177,25 +182,25 @@ class QueryBuilder extends BaseQueryBuilder
             if (\is_array($where) && isset($where['property'])) {
                 $exprKey = $where['property'];
 
-                if (isset($where['expression']) && !empty($where['expression'])) {
+                if (!empty($where['expression'])) {
                     $expression = $where['expression'];
                 }
 
-                if (isset($where['operator']) && !empty($where['operator'])) {
+                if (!empty($where['operator'])) {
                     $operator = $where['operator'];
                 }
 
                 $where = $where['value'];
             }
 
-            if (!\preg_match('#^[a-z][a-z0-9_.]+$#i', $exprKey)) {
+            if (!preg_match('#^[a-z][a-z0-9_.]+$#i', $exprKey)) {
                 continue;
             }
 
             // The return value of uniqid, even w/o parameters, may contain dots in some environments
             // so we make sure to strip those as well
-            $parameterKey = \str_replace(['.'], ['_'], $exprKey . \uniqid());
-            if (isset($this->alias) && \strpos($exprKey, '.') === false) {
+            $parameterKey = str_replace(['.'], ['_'], $exprKey . uniqid());
+            if (isset($this->alias) && strpos($exprKey, '.') === false) {
                 $exprKey = $this->alias . '.' . $exprKey;
             }
 
@@ -224,7 +229,7 @@ class QueryBuilder extends BaseQueryBuilder
             }
 
             $exprParameterKey = ':' . $parameterKey;
-            if (is_array($where)) {
+            if (\is_array($where)) {
                 $exprParameterKey = '(' . $exprParameterKey . ')';
             }
 
@@ -255,8 +260,8 @@ class QueryBuilder extends BaseQueryBuilder
      *      )));
      * </code>
      *
-     * @param string|array $orderBy the ordering expression
-     * @param string       $order   the ordering direction
+     * @param string|OrderBy|array<array{property: string, direction?: string}> $orderBy the ordering expression
+     * @param string                                                            $order   the ordering direction
      *
      * @return QueryBuilder
      */
@@ -264,27 +269,27 @@ class QueryBuilder extends BaseQueryBuilder
     {
         /** @var array<int, mixed|null> $select */
         $select = $this->getDQLPart('select');
-        if (is_array($orderBy)) {
-            foreach ($orderBy as $order) {
-                if (!isset($order['property']) || !preg_match('#^[a-zA-Z0-9_.]+$#', $order['property'])) {
+        if (\is_array($orderBy)) {
+            foreach ($orderBy as $orderByParts) {
+                if (!isset($orderByParts['property']) || !preg_match('#^[a-zA-Z0-9_.]+$#', $orderByParts['property'])) {
                     continue;
                 }
 
                 if (isset($select[0], $this->alias)
                     && $select[0]->count() === 1
-                    && strpos($order['property'], '.') === false) {
-                    $order['property'] = $this->alias . '.' . $order['property'];
+                    && strpos($orderByParts['property'], '.') === false) {
+                    $orderByParts['property'] = $this->alias . '.' . $orderByParts['property'];
                 }
 
-                if (isset($order['direction']) && $order['direction'] === 'DESC') {
-                    $order['direction'] = 'DESC';
+                if (isset($orderByParts['direction']) && $orderByParts['direction'] === 'DESC') {
+                    $orderByParts['direction'] = 'DESC';
                 } else {
-                    $order['direction'] = 'ASC';
+                    $orderByParts['direction'] = 'ASC';
                 }
 
                 parent::addOrderBy(
-                    $order['property'],
-                    $order['direction']
+                    $orderByParts['property'],
+                    $orderByParts['direction']
                 );
             }
         } else {
@@ -297,14 +302,12 @@ class QueryBuilder extends BaseQueryBuilder
     /**
      * Overrides the original function to add the SQL_NO_CACHE parameter
      * for each doctrine orm query if the global shopware debug mode is activated.
-     *
-     * @return \Doctrine\ORM\Query
      */
     public function getQuery()
     {
+        /** @var Query<ModelEntity> $query */
         $query = parent::getQuery();
 
-        /** @var ModelManager $em */
         $em = $this->getEntityManager();
 
         if ($em->isDebugModeEnabled() && $this->getType() === self::SELECT) {
@@ -312,5 +315,10 @@ class QueryBuilder extends BaseQueryBuilder
         }
 
         return $query;
+    }
+
+    public function getEntityManager(): ModelManager
+    {
+        return parent::getEntityManager();
     }
 }

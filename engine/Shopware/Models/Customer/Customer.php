@@ -1,36 +1,43 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Customer;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use LogicException;
 use Shopware\Components\Model\LazyFetchModelEntity;
 use Shopware\Components\Model\ModelEntity;
 use Shopware\Components\Security\AttributeCleanerTrait;
+use Shopware\Models\Article\Notification;
 use Shopware\Models\Attribute\Customer as CustomerAttribute;
+use Shopware\Models\Order\Order;
+use Shopware\Models\Payment\PaymentInstance;
 use Shopware\Models\Shop\Shop;
+use Shopware\Models\Voucher\Code;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -67,11 +74,11 @@ class Customer extends LazyFetchModelEntity
      */
     use AttributeCleanerTrait;
 
-    const ACCOUNT_MODE_CUSTOMER = 0;
-    const ACCOUNT_MODE_FAST_LOGIN = 1;
+    public const ACCOUNT_MODE_CUSTOMER = 0;
+    public const ACCOUNT_MODE_FAST_LOGIN = 1;
 
-    const CUSTOMER_TYPE_PRIVATE = 'private';
-    const CUSTOMER_TYPE_BUSINESS = 'business';
+    public const CUSTOMER_TYPE_PRIVATE = 'private';
+    public const CUSTOMER_TYPE_BUSINESS = 'business';
 
     /**
      * Contains the unique customer number
@@ -90,7 +97,7 @@ class Customer extends LazyFetchModelEntity
      * @var Group
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Customer\Group", inversedBy="customers", cascade={"persist"})
-     * @ORM\JoinColumn(name="customergroup", referencedColumnName="groupkey")
+     * @ORM\JoinColumn(name="customergroup", referencedColumnName="groupkey", nullable=false)
      */
     protected $group;
 
@@ -99,7 +106,7 @@ class Customer extends LazyFetchModelEntity
      * The orders property is the inverse side of the association between customer and orders.
      * The association is joined over the customer id field and the userID field of the order.
      *
-     * @var ArrayCollection<\Shopware\Models\Order\Order>
+     * @var ArrayCollection<Order>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Order\Order", mappedBy="customer")
      */
@@ -111,7 +118,7 @@ class Customer extends LazyFetchModelEntity
      * @var Shop
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Shop\Shop")
-     * @ORM\JoinColumn(name="subshopID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="subshopID", referencedColumnName="id", nullable=false)
      */
     protected $shop;
 
@@ -140,21 +147,21 @@ class Customer extends LazyFetchModelEntity
     /**
      * INVERSE SIDE
      *
-     * @var ArrayCollection<\Shopware\Models\Article\Notification>
+     * @var ArrayCollection<Notification>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Article\Notification", mappedBy="customer")
      */
     protected $notifications;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Payment\PaymentInstance>
+     * @var ArrayCollection<PaymentInstance>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Payment\PaymentInstance", mappedBy="customer")
      */
     protected $paymentInstances;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Customer\PaymentData>
+     * @var ArrayCollection<array-key, PaymentData>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Customer\PaymentData", mappedBy="customer", orphanRemoval=true, cascade={"persist"})
      */
@@ -163,7 +170,7 @@ class Customer extends LazyFetchModelEntity
     /**
      * OWNING SIDE
      *
-     * @var \Shopware\Models\Customer\Address
+     * @var Address|null
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\Customer\Address", inversedBy="customer")
      * @ORM\JoinColumn(name="default_billing_address_id", referencedColumnName="id")
@@ -173,12 +180,21 @@ class Customer extends LazyFetchModelEntity
     /**
      * OWNING SIDE
      *
-     * @var \Shopware\Models\Customer\Address
+     * @var Address|null
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\Customer\Address", inversedBy="customer")
      * @ORM\JoinColumn(name="default_shipping_address_id", referencedColumnName="id")
      */
     protected $defaultShippingAddress;
+
+    /**
+     * INVERSE SIDE
+     *
+     * @var ArrayCollection<int, Code>
+     *
+     * @ORM\OneToMany(targetEntity="\Shopware\Models\Voucher\Code", mappedBy="customer")
+     */
+    protected $codes;
 
     /**
      * @var array
@@ -200,9 +216,9 @@ class Customer extends LazyFetchModelEntity
     /**
      * Time of the last modification of the customer
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface|null
      *
-     * @ORM\Column(name="changed", type="datetime", nullable=false)
+     * @ORM\Column(name="changed", type="datetime", nullable=true)
      */
     private $changed;
 
@@ -283,7 +299,7 @@ class Customer extends LazyFetchModelEntity
      *
      * @ORM\Column(name="active", type="boolean", nullable=false)
      */
-    private $active = 0;
+    private $active = false;
 
     /**
      * Contains the customer email address which is used to send the order confirmation mail
@@ -300,7 +316,7 @@ class Customer extends LazyFetchModelEntity
     /**
      * Contains the date on which the customer account was created.
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="firstlogin", type="date", nullable=true)
      */
@@ -309,7 +325,7 @@ class Customer extends LazyFetchModelEntity
     /**
      * Contains the date on which the customer has logged in recently.
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="lastlogin", type="datetime", nullable=true)
      */
@@ -334,9 +350,9 @@ class Customer extends LazyFetchModelEntity
     /**
      * Contains the session id of the last customer session.
      *
-     * @var string
+     * @var string|null
      *
-     * @ORM\Column(name="sessionID", type="string", length=255, nullable=false)
+     * @ORM\Column(name="sessionID", type="string", length=255, nullable=true)
      */
     private $sessionId = '';
 
@@ -381,7 +397,7 @@ class Customer extends LazyFetchModelEntity
      *
      * @ORM\Column(name="language", type="string", length=10, nullable=false)
      */
-    private $languageId = 1;
+    private $languageId = '1';
 
     /**
      * OWNING SIDE
@@ -391,7 +407,7 @@ class Customer extends LazyFetchModelEntity
      * @var Shop
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Shop\Shop")
-     * @ORM\JoinColumn(name="language", referencedColumnName="id")
+     * @ORM\JoinColumn(name="language", referencedColumnName="id", nullable=false)
      */
     private $languageSubShop;
 
@@ -423,67 +439,66 @@ class Customer extends LazyFetchModelEntity
     /**
      * Contains the time, since the customer is logged into a session.
      *
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="lockedUntil", type="datetime", nullable=true)
      */
     private $lockedUntil;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @Assert\NotBlank()
-     *
-     * @ORM\Column(name="salutation", type="text", nullable=false)
+     * @ORM\Column(name="salutation", type="text", nullable=true)
      */
-    private $salutation;
+    private $salutation = 'not_defined';
 
     /**
-     * @var string
+     * @var string|null
      *
-     * @ORM\Column(name="title", type="text", nullable=false)
+     * @ORM\Column(name="title", type="text", nullable=true)
      */
     private $title;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @Assert\NotBlank()
-     * @ORM\Column(name="firstname", type="text", nullable=false)
+     * @ORM\Column(name="firstname", type="text", nullable=true)
      */
     private $firstname;
 
     /**
-     * @var string
+     * @var string|null
      *
      * @Assert\NotBlank()
-     * @ORM\Column(name="lastname", type="text", nullable=false)
+     * @ORM\Column(name="lastname", type="text", nullable=true)
      */
     private $lastname;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="birthday", type="date", nullable=true)
      */
     private $birthday;
 
     /**
-     * @var bool
+     * @var bool|null
      *
-     * @ORM\Column(name="doubleOptinRegister", type="boolean", nullable=false)
+     * @ORM\Column(name="doubleOptinRegister", type="boolean", nullable=true)
      */
     private $doubleOptinRegister;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="doubleOptinEmailSentDate", type="datetime", nullable=true)
      */
     private $doubleOptinEmailSentDate;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="doubleOptinConfirmDate", type="datetime", nullable=true)
      */
@@ -497,7 +512,7 @@ class Customer extends LazyFetchModelEntity
     /**
      * Contains the date on which the customer account last changed the password
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="password_change_date", type="datetime", nullable=false)
      */
@@ -506,7 +521,7 @@ class Customer extends LazyFetchModelEntity
     /**
      * Contains the ID of the opt-in entry, if any available
      *
-     * @var int
+     * @var int|null
      *
      * @ORM\Column(name="register_opt_in_id", type="integer", nullable=true)
      */
@@ -515,8 +530,8 @@ class Customer extends LazyFetchModelEntity
     public function __construct()
     {
         $this->orders = new ArrayCollection();
-        $this->firstLogin = new \DateTime();
-        $this->passwordChangeDate = new \DateTime();
+        $this->firstLogin = new DateTime();
+        $this->passwordChangeDate = new DateTime();
         $this->notifications = new ArrayCollection();
         $this->paymentInstances = new ArrayCollection();
         $this->paymentData = new ArrayCollection();
@@ -533,7 +548,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface|null
      */
     public function getChanged()
     {
@@ -686,14 +701,14 @@ class Customer extends LazyFetchModelEntity
      * with the date when the customer creates the account. The parameter can be a DateTime object
      * or a string with the date. If a string is passed, the string converts to an DateTime object.
      *
-     * @param \DateTimeInterface|string|null $firstLogin
+     * @param DateTimeInterface|string|null $firstLogin
      *
      * @return Customer
      */
     public function setFirstLogin($firstLogin)
     {
-        if ($firstLogin !== null && !($firstLogin instanceof \DateTimeInterface)) {
-            $firstLogin = new \DateTime($firstLogin);
+        if ($firstLogin !== null && !($firstLogin instanceof DateTimeInterface)) {
+            $firstLogin = new DateTime($firstLogin);
         }
         $this->firstLogin = $firstLogin;
 
@@ -704,7 +719,7 @@ class Customer extends LazyFetchModelEntity
      * Getter function for the first login column property of the customer, which contains a DateTime object
      * with the date when the customer creates the account.
      *
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getFirstLogin()
     {
@@ -716,14 +731,14 @@ class Customer extends LazyFetchModelEntity
      * with the date when the customer last logged in. The parameter can be a DateTime object
      * or a string with the date. If a string is passed, the string converts to an DateTime object.
      *
-     * @param \DateTimeInterface|string|null $lastLogin
+     * @param DateTimeInterface|string|null $lastLogin
      *
      * @return Customer
      */
     public function setLastLogin($lastLogin)
     {
-        if ($lastLogin !== null && !($lastLogin instanceof \DateTimeInterface)) {
-            $lastLogin = new \DateTime($lastLogin);
+        if ($lastLogin !== null && !($lastLogin instanceof DateTimeInterface)) {
+            $lastLogin = new DateTime($lastLogin);
         }
         $this->lastLogin = $lastLogin;
 
@@ -734,7 +749,7 @@ class Customer extends LazyFetchModelEntity
      * Getter function for the last login column property of the customer, which contains a DateTime object
      * with the date when the customer last logged in.
      *
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getLastLogin()
     {
@@ -744,7 +759,7 @@ class Customer extends LazyFetchModelEntity
     /**
      * Setter function of the session id column property. Used to verify the login without the credentials.
      *
-     * @param string $sessionId
+     * @param string|null $sessionId
      *
      * @return Customer
      */
@@ -758,7 +773,7 @@ class Customer extends LazyFetchModelEntity
     /**
      * Getter function of the session id column property. Used to verify the login without the credentials. <br>
      *
-     * @return string
+     * @return string|null
      */
     public function getSessionId()
     {
@@ -818,9 +833,9 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * Setter function for the affiliate column property, which is a flag whether the customer is a shop partner.
+     * Setter function for the affiliate column property, which indicates if the customer is a shop partner.
      * 0 => Customer isn't a shop partner
-     * 1 => Customer is a shop partner
+     * Other than 0 => ID of @see \Shopware\Models\Partner\Partner model
      *
      * @param int $affiliate
      *
@@ -834,9 +849,9 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * Getter function for the affiliate column property, which is a flag whether the customer is a shop partner.
+     * Getter function for the affiliate column property, which indicates if the customer is a shop partner.
      * 0 => Customer isn't a shop partner
-     * 1 => Customer is a shop partner
+     * Other than 0 => ID of @see \Shopware\Models\Partner\Partner model
      *
      * @return int
      */
@@ -945,14 +960,14 @@ class Customer extends LazyFetchModelEntity
      * Setter function for the lockedUntil column property, which contains the time since the customer is logged into a session.
      * Expects a \DateTimeInterface object or a time string which will be converted to a \DateTime object.
      *
-     * @param string|\DateTimeInterface|null $lockedUntil
+     * @param string|DateTimeInterface|null $lockedUntil
      *
      * @return Customer
      */
     public function setLockedUntil($lockedUntil)
     {
-        if (!$lockedUntil instanceof \DateTimeInterface) {
-            $lockedUntil = new \DateTime($lockedUntil);
+        if (!$lockedUntil instanceof DateTimeInterface) {
+            $lockedUntil = new DateTime($lockedUntil);
         }
         $this->lockedUntil = $lockedUntil;
 
@@ -962,7 +977,7 @@ class Customer extends LazyFetchModelEntity
     /**
      * Getter function for the lockedUntil column property, which contains the time since the customer is logged into a session.
      *
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getLockedUntil()
     {
@@ -975,15 +990,15 @@ class Customer extends LazyFetchModelEntity
      *
      * @ORM\PrePersist()
      *
-     * @throws \LogicException (See AttributeCleanerTrait)
+     * @throws LogicException (See AttributeCleanerTrait)
      */
     public function onSave()
     {
         if ($this->firstLogin === null) {
-            $this->firstLogin = new \DateTime();
+            $this->firstLogin = new DateTime();
         }
         if ($this->lastLogin === null) {
-            $this->lastLogin = new \DateTime();
+            $this->lastLogin = new DateTime();
         }
 
         if (!empty($this->rawPassword)) {
@@ -999,7 +1014,7 @@ class Customer extends LazyFetchModelEntity
      *
      * @ORM\PreUpdate()
      *
-     * @throws \LogicException (See AttributeCleanerTrait)
+     * @throws LogicException (See AttributeCleanerTrait)
      */
     public function onUpdate()
     {
@@ -1015,7 +1030,7 @@ class Customer extends LazyFetchModelEntity
         $passwordChanged = isset($changeSet['hashPassword']) && $changeSet['hashPassword'][0] !== $changeSet['hashPassword'][1];
 
         if ($passwordChanged) {
-            $this->passwordChangeDate = new \DateTime();
+            $this->passwordChangeDate = new DateTime();
         }
     }
 
@@ -1074,7 +1089,7 @@ class Customer extends LazyFetchModelEntity
      * the Customer.orders property (INVERSE SIDE) and the Order.customer (OWNING SIDE) property.
      * The order data is joined over the s_order.userID field.
      *
-     * @return ArrayCollection<\Shopware\Models\Order\Order>
+     * @return ArrayCollection<Order>
      */
     public function getOrders()
     {
@@ -1087,7 +1102,7 @@ class Customer extends LazyFetchModelEntity
      * the Customer.orders property (INVERSE SIDE) and the Order.customer (OWNING SIDE) property.
      * The order data is joined over the s_order.userID field.
      *
-     * @param ArrayCollection<\Shopware\Models\Order\Order>|null $orders
+     * @param ArrayCollection<Order> $orders
      *
      * @return Customer
      */
@@ -1111,10 +1126,7 @@ class Customer extends LazyFetchModelEntity
      */
     public function getGroup()
     {
-        /** @var Group|null $return */
-        $return = $this->fetchLazy($this->group, ['key' => $this->groupKey]);
-
-        return $return;
+        return $this->fetchLazy($this->group, ['key' => $this->groupKey]);
     }
 
     /**
@@ -1191,7 +1203,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param ArrayCollection<\Shopware\Models\Payment\PaymentInstance> $paymentInstances
+     * @param ArrayCollection<PaymentInstance> $paymentInstances
      */
     public function setPaymentInstances($paymentInstances)
     {
@@ -1199,7 +1211,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Payment\PaymentInstance>
+     * @return ArrayCollection<PaymentInstance>
      */
     public function getPaymentInstances()
     {
@@ -1207,7 +1219,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param ArrayCollection<\Shopware\Models\Customer\PaymentData> $paymentData
+     * @param ArrayCollection<PaymentData> $paymentData
      */
     public function setPaymentData($paymentData)
     {
@@ -1215,16 +1227,13 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @return ArrayCollection<\Shopware\Models\Customer\PaymentData>
+     * @return ArrayCollection<array-key, PaymentData>
      */
     public function getPaymentData()
     {
         return $this->paymentData;
     }
 
-    /**
-     * @param \Shopware\Models\Customer\PaymentData $paymentData
-     */
     public function addPaymentData(PaymentData $paymentData)
     {
         $paymentData->setCustomer($this);
@@ -1249,7 +1258,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param Address $defaultBillingAddress
+     * @param Address|null $defaultBillingAddress
      *
      * @return ModelEntity
      */
@@ -1267,7 +1276,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param Address $defaultShippingAddress
+     * @param Address|null $defaultShippingAddress
      *
      * @return ModelEntity
      */
@@ -1277,7 +1286,23 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @return string
+     * @return ArrayCollection<int, Code>
+     */
+    public function getCodes(): ArrayCollection
+    {
+        return $this->codes;
+    }
+
+    /**
+     * @param ArrayCollection<int, Code> $codes
+     */
+    public function setCodes(ArrayCollection $codes): void
+    {
+        $this->codes = $codes;
+    }
+
+    /**
+     * @return string|null
      */
     public function getSalutation()
     {
@@ -1285,15 +1310,18 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param string $salutation
+     * @param string|null $salutation
      */
     public function setSalutation($salutation)
     {
-        $this->salutation = $this->cleanup($salutation);
+        if (\is_string($salutation)) {
+            $salutation = $this->cleanup($salutation);
+        }
+        $this->salutation = $salutation;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getTitle()
     {
@@ -1301,15 +1329,18 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param string $title
+     * @param string|null $title
      */
     public function setTitle($title)
     {
-        $this->title = $this->cleanup($title);
+        if (\is_string($title)) {
+            $title = $this->cleanup($title);
+        }
+        $this->title = $title;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getFirstname()
     {
@@ -1317,15 +1348,18 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param string $firstname
+     * @param string|null $firstname
      */
     public function setFirstname($firstname)
     {
-        $this->firstname = $this->cleanup($firstname);
+        if (\is_string($firstname)) {
+            $firstname = $this->cleanup($firstname);
+        }
+        $this->firstname = $firstname;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getLastname()
     {
@@ -1333,15 +1367,18 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param string $lastname
+     * @param string|null $lastname
      */
     public function setLastname($lastname)
     {
-        $this->lastname = $this->cleanup($lastname);
+        if (\is_string($lastname)) {
+            $lastname = $this->cleanup($lastname);
+        }
+        $this->lastname = $lastname;
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface|null
      */
     public function getBirthday()
     {
@@ -1349,12 +1386,16 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param \DateTimeInterface|string|null $birthday
+     * @param DateTimeInterface|string|null $birthday
      */
     public function setBirthday($birthday = null)
     {
-        if (!$birthday instanceof \DateTimeInterface && $birthday !== null) {
-            $birthday = new \DateTime($birthday);
+        if ($birthday === '') {
+            $birthday = null;
+        }
+
+        if (!$birthday instanceof DateTimeInterface && $birthday !== null) {
+            $birthday = new DateTime($birthday);
         }
 
         $this->birthday = $birthday;
@@ -1425,7 +1466,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @return bool
+     * @return bool|null
      */
     public function getDoubleOptinRegister()
     {
@@ -1433,7 +1474,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param bool $doubleOptinRegister
+     * @param bool|null $doubleOptinRegister
      */
     public function setDoubleOptinRegister($doubleOptinRegister)
     {
@@ -1441,7 +1482,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getDoubleOptinEmailSentDate()
     {
@@ -1449,7 +1490,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param \DateTimeInterface|null $doubleOptinEmailSentDate
+     * @param DateTimeInterface|null $doubleOptinEmailSentDate
      */
     public function setDoubleOptinEmailSentDate($doubleOptinEmailSentDate)
     {
@@ -1457,7 +1498,7 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getDoubleOptinConfirmDate()
     {
@@ -1465,14 +1506,14 @@ class Customer extends LazyFetchModelEntity
     }
 
     /**
-     * @param \DateTimeInterface|null $doubleOptinConfirmDate
+     * @param DateTimeInterface|null $doubleOptinConfirmDate
      */
     public function setDoubleOptinConfirmDate($doubleOptinConfirmDate)
     {
         $this->doubleOptinConfirmDate = $doubleOptinConfirmDate;
     }
 
-    public function getPasswordChangeDate(): \DateTimeInterface
+    public function getPasswordChangeDate(): DateTimeInterface
     {
         return $this->passwordChangeDate;
     }
@@ -1483,7 +1524,7 @@ class Customer extends LazyFetchModelEntity
      */
     public function updateChangedTimestamp()
     {
-        $this->changed = new \DateTime();
+        $this->changed = new DateTime();
     }
 
     public function getRegisterOptInId(): ?int
@@ -1491,10 +1532,7 @@ class Customer extends LazyFetchModelEntity
         return $this->registerOptInId;
     }
 
-    /**
-     * @param int $registerOptInId
-     */
-    public function setRegisterOptInId(int $registerOptInId = null): void
+    public function setRegisterOptInId(?int $registerOptInId = null): void
     {
         $this->registerOptInId = $registerOptInId;
     }

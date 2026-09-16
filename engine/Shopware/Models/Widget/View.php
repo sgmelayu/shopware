@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Widget;
 
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\User\User;
 
 /**
  * @ORM\Table(name="s_core_widget_views")
@@ -46,22 +47,22 @@ class View extends ModelEntity
      * @var Widget
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Widget\Widget", inversedBy="views")
-     * @ORM\JoinColumn(name="widget_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="widget_id", referencedColumnName="id", nullable=false)
      */
     private $widget;
 
     /**
-     * @var \Shopware\Models\User\User|null
+     * @var User
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\User\User")
-     * @ORM\JoinColumn(name="auth_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="auth_id", referencedColumnName="id", nullable=false)
      */
     private $auth;
 
     /**
-     * @var int|null
+     * @var int
      *
-     * @ORM\Column(name="auth_id", type="integer", nullable=true)
+     * @ORM\Column(name="auth_id", type="integer", nullable=false)
      */
     private $authId;
 
@@ -111,7 +112,7 @@ class View extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\User\User|null
+     * @return User
      */
     public function getAuth()
     {
@@ -119,7 +120,7 @@ class View extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\User\User $auth
+     * @param User $auth
      */
     public function setAuth($auth)
     {
@@ -159,7 +160,7 @@ class View extends ModelEntity
     }
 
     /**
-     * @return int|null
+     * @return int
      */
     public function getAuthId()
     {

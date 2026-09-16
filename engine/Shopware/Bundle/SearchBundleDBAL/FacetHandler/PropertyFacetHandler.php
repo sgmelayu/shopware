@@ -1,62 +1,53 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\FacetHandler;
 
 use Shopware\Bundle\SearchBundle\Condition\PropertyCondition;
 use Shopware\Bundle\SearchBundle\Criteria;
-use Shopware\Bundle\SearchBundle\Facet;
+use Shopware\Bundle\SearchBundle\Facet\PropertyFacet;
 use Shopware\Bundle\SearchBundle\FacetInterface;
 use Shopware\Bundle\SearchBundle\FacetResult\FacetResultGroup;
 use Shopware\Bundle\SearchBundle\FacetResult\MediaListFacetResult;
 use Shopware\Bundle\SearchBundle\FacetResult\MediaListItem;
 use Shopware\Bundle\SearchBundle\FacetResult\ValueListFacetResult;
-use Shopware\Bundle\SearchBundle\FacetResultInterface;
 use Shopware\Bundle\SearchBundleDBAL\PartialFacetHandlerInterface;
 use Shopware\Bundle\SearchBundleDBAL\QueryBuilder;
 use Shopware\Bundle\SearchBundleDBAL\QueryBuilderFactoryInterface;
 use Shopware\Bundle\StoreFrontBundle\Gateway\PropertyGatewayInterface;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Property\Set;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware\Components\QueryAliasMapper;
 
 class PropertyFacetHandler implements PartialFacetHandlerInterface
 {
-    /**
-     * @var PropertyGatewayInterface
-     */
-    private $propertyGateway;
+    private PropertyGatewayInterface $propertyGateway;
 
-    /**
-     * @var QueryBuilderFactoryInterface
-     */
-    private $queryBuilderFactory;
+    private QueryBuilderFactoryInterface $queryBuilderFactory;
 
-    /**
-     * @var string
-     */
-    private $fieldName;
+    private string $fieldName;
 
     public function __construct(
         PropertyGatewayInterface $propertyGateway,
@@ -65,10 +56,7 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
     ) {
         $this->propertyGateway = $propertyGateway;
         $this->queryBuilderFactory = $queryBuilderFactory;
-
-        if (!$this->fieldName = $queryAliasMapper->getShortAlias('sFilterProperties')) {
-            $this->fieldName = 'sFilterProperties';
-        }
+        $this->fieldName = $queryAliasMapper->getShortAlias('sFilterProperties') ?? 'sFilterProperties';
     }
 
     /**
@@ -76,14 +64,9 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
      */
     public function supportsFacet(FacetInterface $facet)
     {
-        return $facet instanceof Facet\PropertyFacet;
+        return $facet instanceof PropertyFacet;
     }
 
-    /**
-     * @param FacetInterface|Facet\PropertyFacet $facet
-     *
-     * @return FacetResultInterface|null
-     */
     public function generatePartialFacet(
         FacetInterface $facet,
         Criteria $reverted,
@@ -97,40 +80,37 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
         }
         $actives = $this->getFilteredValues($criteria);
 
-        /* @var Facet\PropertyFacet $facet */
         return $this->createCollectionResult($facet, $properties, $actives);
     }
 
     /**
-     * @return Struct\Property\Set[]|null
+     * @deprecated - Will be private with Shopware 5.8
+     *
+     * @return array<int, Set>|null
      */
-    protected function getProperties(Struct\ShopContextInterface $context, Criteria $queryCriteria)
+    protected function getProperties(ShopContextInterface $context, Criteria $queryCriteria)
     {
         $query = $this->queryBuilderFactory->createQuery($queryCriteria, $context);
         $this->rebuildQuery($query);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $propertyData = $statement->fetchAll();
+        $propertyData = $query->execute()->fetchAllAssociative();
 
         $valueIds = array_column($propertyData, 'id');
         $filterGroupIds = array_keys(array_flip(array_column($propertyData, 'filterGroupId')));
+        $filterGroupIds = array_map('\intval', $filterGroupIds);
 
         if (empty($valueIds)) {
             return null;
         }
 
-        $properties = $this->propertyGateway->getList(
+        return $this->propertyGateway->getList(
             $valueIds,
             $context,
             $filterGroupIds
         );
-
-        return $properties;
     }
 
-    private function rebuildQuery(QueryBuilder $query)
+    private function rebuildQuery(QueryBuilder $query): void
     {
         $query->resetQueryPart('orderBy');
         $query->resetQueryPart('groupBy');
@@ -144,9 +124,9 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
     }
 
     /**
-     * @return array
+     * @return array<int>
      */
-    private function getFilteredValues(Criteria $criteria)
+    private function getFilteredValues(Criteria $criteria): array
     {
         $values = [];
         foreach ($criteria->getConditions() as $condition) {
@@ -159,16 +139,14 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
     }
 
     /**
-     * @param Struct\Property\Set[] $sets
-     * @param int[]                 $actives
-     *
-     * @return FacetResultGroup
+     * @param array<Set> $sets
+     * @param array<int> $actives
      */
     private function createCollectionResult(
-        Facet\PropertyFacet $facet,
+        PropertyFacet $facet,
         array $sets,
-        $actives
-    ) {
+        array $actives
+    ): FacetResultGroup {
         $results = [];
 
         foreach ($sets as $set) {
@@ -181,7 +159,7 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
                     $listItem = new MediaListItem(
                         $option->getId(),
                         $option->getName(),
-                        in_array(
+                        \in_array(
                             $option->getId(),
                             $actives
                         ),
@@ -189,8 +167,8 @@ class PropertyFacetHandler implements PartialFacetHandlerInterface
                         $option->getAttributes()
                     );
 
-                    $isActive = ($isActive || $listItem->isActive());
-                    $useMedia = ($useMedia || $listItem->getMedia() !== null);
+                    $isActive = $isActive || $listItem->isActive();
+                    $useMedia = $useMedia || $listItem->getMedia() !== null;
 
                     $items[] = $listItem;
                 }

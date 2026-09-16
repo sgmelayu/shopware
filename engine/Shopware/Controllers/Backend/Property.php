@@ -1,30 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\AbstractQuery;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Media\Media;
 use Shopware\Models\Property\Group;
 use Shopware\Models\Property\Option;
+use Shopware\Models\Property\Repository;
 use Shopware\Models\Property\Value;
 
 class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend_ExtJs
@@ -32,12 +36,12 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
     /**
      * Entity Manager
      *
-     * @var \Shopware\Components\Model\ModelManager
+     * @var ModelManager
      */
     protected $manager;
 
     /**
-     * @var \Shopware\Models\Property\Repository
+     * @var Repository
      */
     protected $propertyRepository;
 
@@ -76,7 +80,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             [
                 'success' => true,
                 'data' => $assignments,
-                'total' => count($assignments),
+                'total' => \count($assignments),
             ]
         );
     }
@@ -88,18 +92,18 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $group = new Group();
         $group->fromArray($params);
 
-        $modelManager = $this->get(\Shopware\Components\Model\ModelManager::class);
+        $modelManager = $this->get(ModelManager::class);
         try {
             $modelManager->persist($group);
             $modelManager->flush();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->View()->assign(['success' => false, 'message' => $e->getMessage()]);
 
             return;
         }
         $data = $this->getPropertyRepository()
                      ->getGroupDetailQuery($group->getId())
-                     ->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+                     ->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
         $this->View()->assign(['success' => true, 'data' => $data]);
     }
@@ -116,7 +120,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         }
 
         /** @var Group $group */
-        $group = Shopware()->Models()->getRepository(Group::class)->find($id);
+        $group = $this->get('models')->getRepository(Group::class)->find($id);
         if (!$group) {
             $this->View()->assign(['success' => false, 'message' => 'Group not found']);
 
@@ -127,7 +131,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $group->fromArray($params);
 
         try {
-            Shopware()->Models()->flush();
+            $this->get('models')->flush();
         } catch (Exception $e) {
             $this->View()->assign(['success' => false, 'message' => $e->getMessage()]);
 
@@ -136,7 +140,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
 
         $data = $this->getPropertyRepository()
                      ->getGroupDetailQuery($group->getId())
-                     ->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+                     ->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
         $this->View()->assign(['success' => true, 'data' => $data]);
     }
@@ -149,15 +153,14 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        /* @var Group $group */
-        $group = $this->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Group::class)->find($id);
+        $group = $this->get(ModelManager::class)->getRepository(Group::class)->find($id);
         if (!$group) {
             $this->View()->assign(['success' => false, 'message' => 'Group not found']);
 
             return;
         }
 
-        $modelManager = $this->get(\Shopware\Components\Model\ModelManager::class);
+        $modelManager = $this->get(ModelManager::class);
         try {
             $modelManager->remove($group);
             $modelManager->flush();
@@ -186,17 +189,15 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        /* @var Group $group */
-        $group = Shopware()->Models()->getRepository(Group::class)->find($setId);
-        if (!$group) {
+        $group = $this->get('models')->getRepository(Group::class)->find($setId);
+        if ($group === null) {
             $this->View()->assign(['success' => false, 'message' => 'Group not found']);
 
             return;
         }
 
-        /* @var Option|null $option */
-        $option = Shopware()->Models()->getReference(Option::class, $optionId);
-        if (!$option) {
+        $option = $this->get('models')->getReference(Option::class, $optionId);
+        if ($option === null) {
             $this->View()->assign(['success' => false, 'message' => 'Option not found']);
 
             return;
@@ -205,8 +206,8 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $group->addOption($option);
 
         try {
-            Shopware()->Models()->flush();
-        } catch (\Exception $e) {
+            $this->get('models')->flush();
+        } catch (Exception $e) {
             $this->View()->assign(['success' => false, 'message' => $e->getMessage()]);
 
             return;
@@ -229,17 +230,15 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        /* @var Group $group */
-        $group = Shopware()->Models()->getRepository(Group::class)->find($groupId);
-        if (!$group) {
+        $group = $this->get('models')->getRepository(Group::class)->find($groupId);
+        if ($group === null) {
             $this->View()->assign(['success' => false, 'message' => 'Group not found']);
 
             return;
         }
 
-        /* @var Option $option */
-        $option = Shopware()->Models()->getRepository(Option::class)->find($optionId);
-        if (!$option) {
+        $option = $this->get('models')->getRepository(Option::class)->find($optionId);
+        if ($option === null) {
             $this->View()->assign(['success' => false, 'message' => 'Option not found']);
 
             return;
@@ -248,8 +247,8 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $group->removeOption($option);
 
         try {
-            Shopware()->Models()->flush();
-        } catch (\Exception $e) {
+            $this->get('models')->flush();
+        } catch (Exception $e) {
             $this->View()->assign(['success' => false, 'message' => $e->getMessage()]);
 
             return;
@@ -271,9 +270,9 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $options = $query->getArrayResult();
 
         $this->View()->assign([
-           'success' => true,
-           'data' => $options,
-           'total' => $totalCount,
+            'success' => true,
+            'data' => $options,
+            'total' => $totalCount,
         ]);
     }
 
@@ -284,7 +283,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $option = new Option();
         $option->fromArray($params);
 
-        $modelManager = $this->get(\Shopware\Components\Model\ModelManager::class);
+        $modelManager = $this->get(ModelManager::class);
         try {
             $modelManager->persist($option);
             $modelManager->flush();
@@ -294,7 +293,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        $data = Shopware()->Models()->toArray($option);
+        $data = $this->get('models')->toArray($option);
         $this->View()->assign(['success' => true, 'data' => $data]);
     }
 
@@ -309,8 +308,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        /* @var Option $option */
-        $option = Shopware()->Models()->getRepository(Option::class)->find($id);
+        $option = $this->get('models')->getRepository(Option::class)->find($id);
         if (!$option) {
             $this->View()->assign(['success' => false, 'message' => 'Option not found']);
 
@@ -320,14 +318,14 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $option->fromArray($this->Request()->getPost());
 
         try {
-            Shopware()->Models()->flush();
+            $this->get('models')->flush();
         } catch (Exception $e) {
             $this->View()->assign(['success' => false, 'message' => $e->getMessage()]);
 
             return;
         }
 
-        $data = Shopware()->Models()->toArray($option);
+        $data = $this->get('models')->toArray($option);
         $this->View()->assign(['success' => true, 'data' => $data]);
     }
 
@@ -344,15 +342,14 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        /* @var Option $option */
-        $option = Shopware()->Models()->getRepository(Option::class)->find($id);
+        $option = $this->get('models')->getRepository(Option::class)->find($id);
         if (!$option) {
             $this->View()->assign(['success' => false, 'message' => 'Snippet not found']);
 
             return;
         }
 
-        $modelManager = $this->get(\Shopware\Components\Model\ModelManager::class);
+        $modelManager = $this->get(ModelManager::class);
         try {
             // Cascades remove to associated values
             $modelManager->remove($option);
@@ -381,7 +378,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $this->View()->assign([
             'success' => true,
             'data' => $values,
-            'total' => count($values),
+            'total' => \count($values),
         ]);
     }
 
@@ -394,8 +391,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        /* @var Option|null $option */
-        $option = Shopware()->Models()->getReference(Option::class, $optionId);
+        $option = $this->get('models')->getReference(Option::class, $optionId);
         if (!$option) {
             $this->View()->assign(['success' => false, 'message' => 'Option not found']);
 
@@ -405,7 +401,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $postValue = $request->getPost('value');
         $value = new Value($option, $postValue);
 
-        $modelManager = $this->get(\Shopware\Components\Model\ModelManager::class);
+        $modelManager = $this->get(ModelManager::class);
         try {
             $modelManager->persist($value);
             $modelManager->flush();
@@ -415,7 +411,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        $data = Shopware()->Models()->toArray($value);
+        $data = $this->get('models')->toArray($value);
         $this->View()->assign(['success' => true, 'data' => $data]);
     }
 
@@ -428,8 +424,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        /* @var Value $value */
-        $value = Shopware()->Models()->getRepository(Value::class)->find($id);
+        $value = $this->get('models')->getRepository(Value::class)->find($id);
         if (!$value) {
             $this->View()->assign(['success' => false, 'message' => 'Value not found']);
 
@@ -439,14 +434,14 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $value->setValue($request->getPost('value'));
 
         if ($request->has('mediaId') && $request->getParam('mediaId')) {
-            $media = $this->get(\Shopware\Components\Model\ModelManager::class)->find(Media::class, $request->getPost('mediaId'));
+            $media = $this->get(ModelManager::class)->find(Media::class, $request->getPost('mediaId'));
             $value->setMedia($media);
         } else {
             $value->setMedia(null);
         }
 
         try {
-            Shopware()->Models()->flush();
+            $this->get('models')->flush();
         } catch (Exception $e) {
             $this->View()->assign(['success' => false, 'message' => $e->getMessage()]);
 
@@ -457,7 +452,7 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
         $query->where('value.id = ?0')
             ->setParameter(0, $value->getId());
 
-        $data = $query->getQuery()->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+        $data = $query->getQuery()->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
         $this->View()->assign(['success' => true, 'data' => $data]);
     }
 
@@ -472,15 +467,14 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
             return;
         }
 
-        /* @var Value $value */
-        $value = Shopware()->Models()->getRepository(Value::class)->find($id);
+        $value = $this->get('models')->getRepository(Value::class)->find($id);
         if (!$value) {
             $this->View()->assign(['success' => false, 'message' => 'Value not found']);
 
             return;
         }
 
-        $modelManager = $this->get(\Shopware\Components\Model\ModelManager::class);
+        $modelManager = $this->get(ModelManager::class);
         try {
             $modelManager->remove($value);
             $modelManager->flush();
@@ -560,12 +554,12 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
     /**
      * Helper function to get access to the property repository.
      *
-     * @return \Shopware\Models\Property\Repository
+     * @return Repository
      */
     private function getPropertyRepository()
     {
         if ($this->propertyRepository === null) {
-            $this->propertyRepository = Shopware()->Models()->getRepository(Group::class);
+            $this->propertyRepository = $this->get('models')->getRepository(Group::class);
         }
 
         return $this->propertyRepository;
@@ -574,12 +568,12 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
     /**
      * Internal helper function to get access to the entity manager.
      *
-     * @return \Shopware\Components\Model\ModelManager
+     * @return ModelManager
      */
     private function getManager()
     {
         if ($this->manager === null) {
-            $this->manager = Shopware()->Models();
+            $this->manager = $this->get('models');
         }
 
         return $this->manager;
@@ -591,6 +585,6 @@ class Shopware_Controllers_Backend_Property extends Shopware_Controllers_Backend
     private function removeSetRelationsFromProducts($filterSetId)
     {
         $sql = 'UPDATE s_articles SET filtergroupID = null WHERE filtergroupID = ?';
-        $this->get(\Doctrine\DBAL\Connection::class)->executeUpdate($sql, [$filterSetId]);
+        $this->get(Connection::class)->executeUpdate($sql, [$filterSetId]);
     }
 }

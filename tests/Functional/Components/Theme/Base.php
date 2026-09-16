@@ -1,138 +1,129 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Theme;
 
+use Enlight_Components_Test_TestCase;
+use Enlight_Event_EventManager;
+use PHPUnit\Framework\MockObject\MockObject;
+use Shopware\Components\Form\Persister\Theme as ThemePersister;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Components\Snippet\DatabaseHandler;
 use Shopware\Components\Theme\Configurator;
+use Shopware\Components\Theme\PathResolver;
+use Shopware\Components\Theme\Util;
+use Shopware\Models\Shop\Repository;
 use Shopware\Models\Shop\Template;
+use Shopware\Tests\TestReflectionHelper;
+use Shopware\Themes\TestBare\Theme as TestBareTheme;
+use Shopware\Themes\TestResponsive\Theme;
 
-class Base extends \Enlight_Components_Test_TestCase
+class Base extends Enlight_Components_Test_TestCase
 {
     /**
-     * @return \PHPUnit\Framework\MockObject\MockObject
+     * @return ModelManager&MockObject
      */
-    protected function getEntityManager()
+    protected function getEntityManager(): ModelManager
     {
-        return $this->createMock(\Shopware\Components\Model\ModelManager::class);
+        return $this->createMock(ModelManager::class);
     }
 
     /**
-     * @return \PHPUnit\Framework\MockObject\MockObject
+     * @return Enlight_Event_EventManager&MockObject
      */
-    protected function getEventManager()
+    protected function getEventManager(): Enlight_Event_EventManager
     {
-        return $this->createMock(\Enlight_Event_EventManager::class);
+        return $this->createMock(Enlight_Event_EventManager::class);
     }
 
     /**
-     * @return \PHPUnit\Framework\MockObject\MockObject
+     * @return PathResolver&MockObject
      */
-    protected function getPathResolver()
+    protected function getPathResolver(): PathResolver
     {
-        return $this->createMock(\Shopware\Components\Theme\PathResolver::class);
+        return $this->createMock(PathResolver::class);
     }
 
     /**
-     * @return \PHPUnit\Framework\MockObject\MockObject
+     * @return Util&MockObject
      */
-    protected function getUtilClass()
+    protected function getUtilClass(): Util
     {
-        return $this->createMock(\Shopware\Components\Theme\Util::class);
+        return $this->createMock(Util::class);
     }
 
-    /**
-     * @return \PHPUnit\Framework\MockObject\MockObject
-     */
-    protected function getConfigurator()
+    protected function getConfigurator(): Configurator
     {
         return $this->createMock(Configurator::class);
     }
 
-    /**
-     * @return \PHPUnit\Framework\MockObject\MockObject
-     */
-    protected function getFormPersister()
+    protected function getFormPersister(): ThemePersister
     {
-        return $this->createMock(\Shopware\Components\Form\Persister\Theme::class);
+        return $this->createMock(ThemePersister::class);
     }
 
-    /**
-     * @return \Shopware\Themes\TestBare\Theme
-     */
-    protected function getBareTheme()
+    protected function getBareTheme(): TestBareTheme
     {
         require_once __DIR__ . '/Themes/TestBare/Theme.php';
 
-        return new \Shopware\Themes\TestBare\Theme();
+        return new TestBareTheme();
     }
 
-    /**
-     * @return \Shopware\Themes\TestResponsive\Theme
-     */
-    protected function getResponsiveTheme()
+    protected function getResponsiveTheme(): Theme
     {
         require_once __DIR__ . '/Themes/TestResponsive/Theme.php';
 
-        return new \Shopware\Themes\TestResponsive\Theme();
+        return new Theme();
     }
 
-    /**
-     * @return Template
-     */
-    protected function getTemplate()
+    protected function getTemplate(): Template
     {
         return $this->createMock(Template::class);
     }
 
-    /**
-     * @return \PHPUnit\Framework\MockObject\MockObject
-     */
-    protected function getShopRepository()
+    protected function getShopRepository(): Repository
     {
-        return $this->createMock(\Shopware\Models\Shop\Repository::class);
+        return $this->createMock(Repository::class);
     }
 
-    protected function getSnippetHandler()
+    protected function getSnippetHandler(): DatabaseHandler
     {
-        return $this->createMock(\Shopware\Components\Snippet\DatabaseHandler::class);
+        return $this->createMock(DatabaseHandler::class);
     }
 
     /**
      * Call protected/private method of a class.
      *
-     * @param object &$object    Instantiated object that we will run method on
-     * @param string $methodName Method name to call
-     * @param array  $parameters array of parameters to pass into method
+     * @param object      $object     Instantiated object that we will run method on
+     * @param string      $methodName Method name to call
+     * @param list<mixed> $parameters array of parameters to pass into method
      *
      * @return mixed method return
      */
-    protected function invokeMethod(&$object, $methodName, array $parameters = [])
+    protected function invokeMethod(object $object, string $methodName, array $parameters = [])
     {
-        $reflection = new \ReflectionClass(get_class($object));
-        $method = $reflection->getMethod($methodName);
-        $method->setAccessible(true);
-
-        return $method->invokeArgs($object, $parameters);
+        return TestReflectionHelper::getMethod(\get_class($object), $methodName)->invokeArgs($object, $parameters);
     }
 }

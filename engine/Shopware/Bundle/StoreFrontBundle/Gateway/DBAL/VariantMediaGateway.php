@@ -1,54 +1,49 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use Doctrine\DBAL\Query\QueryBuilder;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\MediaHydrator;
+use Shopware\Bundle\StoreFrontBundle\Gateway\VariantMediaGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class VariantMediaGateway implements Gateway\VariantMediaGatewayInterface
+class VariantMediaGateway implements VariantMediaGatewayInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var FieldHelper
-     */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var Hydrator\MediaHydrator
-     */
-    private $hydrator;
+    private MediaHydrator $hydrator;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\MediaHydrator $hydrator
+        MediaHydrator $hydrator
     ) {
         $this->connection = $connection;
         $this->fieldHelper = $fieldHelper;
@@ -58,7 +53,7 @@ class VariantMediaGateway implements Gateway\VariantMediaGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function get(Struct\BaseProduct $product, Struct\ShopContextInterface $context)
+    public function get(BaseProduct $product, ShopContextInterface $context)
     {
         $media = $this->getList([$product], $context);
 
@@ -68,7 +63,7 @@ class VariantMediaGateway implements Gateway\VariantMediaGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getCover(Struct\BaseProduct $product, Struct\ShopContextInterface $context)
+    public function getCover(BaseProduct $product, ShopContextInterface $context)
     {
         $covers = $this->getCovers([$product], $context);
 
@@ -78,7 +73,7 @@ class VariantMediaGateway implements Gateway\VariantMediaGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getList($products, Struct\ShopContextInterface $context)
+    public function getList($products, ShopContextInterface $context)
     {
         $ids = [];
         foreach ($products as $product) {
@@ -93,17 +88,14 @@ class VariantMediaGateway implements Gateway\VariantMediaGatewayInterface
             ->addOrderBy('image.position')
             ->setParameter(':products', $ids, Connection::PARAM_INT_ARRAY);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         $result = [];
         foreach ($data as $row) {
-            $productId = $row['number'];
-            $imageId = $row['__image_id'];
+            $productNumber = (string) $row['number'];
+            $imageId = (int) $row['__image_id'];
 
-            $result[$productId][$imageId] = $this->hydrator->hydrateProductImage($row);
+            $result[$productNumber][$imageId] = $this->hydrator->hydrateProductImage($row);
         }
 
         return $result;
@@ -112,7 +104,7 @@ class VariantMediaGateway implements Gateway\VariantMediaGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getCovers($products, Struct\ShopContextInterface $context)
+    public function getCovers($products, ShopContextInterface $context)
     {
         $ids = [];
         foreach ($products as $product) {
@@ -127,10 +119,7 @@ class VariantMediaGateway implements Gateway\VariantMediaGatewayInterface
             ->addOrderBy('image.position')
             ->setParameter(':products', $ids, Connection::PARAM_INT_ARRAY);
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_GROUP);
+        $data = $query->execute()->fetchAll(PDO::FETCH_GROUP);
 
         $result = [];
         foreach ($data as $number => $row) {
@@ -142,12 +131,7 @@ class VariantMediaGateway implements Gateway\VariantMediaGatewayInterface
         return $result;
     }
 
-    /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface $context
-     *
-     * @return \Doctrine\DBAL\Query\QueryBuilder
-     */
-    private function getQuery(Struct\ShopContextInterface $context)
+    private function getQuery(ShopContextInterface $context): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
 

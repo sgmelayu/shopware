@@ -1,41 +1,44 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service\Core;
 
+use Shopware\Bundle\StoreFrontBundle\Exception\StructNotFoundException;
 use Shopware\Bundle\StoreFrontBundle\Gateway\CountryGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Gateway\CurrencyGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Gateway\CustomerGroupGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Gateway\PriceGroupDiscountGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Gateway\ShopGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Gateway\TaxGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\Country;
+use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class ShopContextFactory implements ShopContextFactoryInterface
 {
-    const FALLBACK_CUSTOMER_GROUP = 'EK';
+    public const FALLBACK_CUSTOMER_GROUP = 'EK';
 
     /**
      * @var CustomerGroupGatewayInterface
@@ -97,9 +100,12 @@ class ShopContextFactory implements ShopContextFactoryInterface
         array $streamIds = []
     ): ShopContextInterface {
         $shop = $this->shopGateway->get($shopId);
+        if (!$shop instanceof Shop) {
+            throw new StructNotFoundException(Shop::class, $shopId);
+        }
         $fallbackCustomerGroupKey = self::FALLBACK_CUSTOMER_GROUP;
 
-        if ($currentCustomerGroupKey == null) {
+        if ($currentCustomerGroupKey === null) {
             $currentCustomerGroupKey = $fallbackCustomerGroupKey;
         }
 
@@ -109,10 +115,11 @@ class ShopContextFactory implements ShopContextFactoryInterface
         $fallbackCustomerGroup = $groups[$fallbackCustomerGroupKey];
 
         $currency = null;
-        if ($currencyId != null) {
+        if ($currencyId !== null) {
             $currency = $this->currencyGateway->getList([$currencyId]);
             $currency = array_shift($currency);
         }
+
         if (!$currency) {
             $currency = $shop->getCurrency();
         }
@@ -127,6 +134,10 @@ class ShopContextFactory implements ShopContextFactoryInterface
         $country = null;
         if ($countryId !== null) {
             $country = $this->countryGateway->getCountry($countryId, $context);
+        } else {
+            if (method_exists($this->countryGateway, 'getFallbackCountry')) {
+                $country = $this->countryGateway->getFallbackCountry($context);
+            }
         }
 
         $state = null;
@@ -134,7 +145,12 @@ class ShopContextFactory implements ShopContextFactoryInterface
             $state = $this->countryGateway->getState($stateId, $context);
         }
 
+        if (!$area && $country instanceof Country && \is_int($country->getAreaId())) {
+            $area = $this->countryGateway->getArea($country->getAreaId(), $context);
+        }
+
         $taxRules = $this->taxGateway->getRules($currentCustomerGroup, $area, $country, $state);
+
         $priceGroups = $this->priceGroupDiscountGateway->getPriceGroups($currentCustomerGroup, $context);
 
         return new ShopContext(

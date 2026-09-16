@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\MailBundle\Controllers\Backend;
@@ -33,9 +33,13 @@ use Shopware\Components\Model\QueryBuilder;
 use Shopware\Models\Mail\Log;
 use Shopware_Components_Config;
 use Shopware_Components_Snippet_Manager;
+use Shopware_Controllers_Backend_Application;
 use Traversable;
 
-class MailLog extends \Shopware_Controllers_Backend_Application
+/**
+ * @extends \Shopware_Controllers_Backend_Application<Log>
+ */
+class MailLog extends Shopware_Controllers_Backend_Application
 {
     public const CONFIG_KEY_MAILLOG_ACTIVE = 'mailLogActive';
     public const CONFIG_KEY_MAILLOG_ACTIVE_FILTERS = 'mailLogActiveFilters';
@@ -132,10 +136,6 @@ class MailLog extends \Shopware_Controllers_Backend_Application
     {
         $view = $this->View();
         $baseEntry = $this->getRepository()->find($id);
-
-        if ($view === null) {
-            return;
-        }
 
         if (!($baseEntry instanceof Log)) {
             $view->assign([
@@ -236,8 +236,23 @@ class MailLog extends \Shopware_Controllers_Backend_Application
     {
         $conditions = parent::getFilterConditions($filters, $model, $alias, $whiteList);
 
+        $handledAllFilters = \count($conditions) >= \count($filters);
+
+        // Enable searching for recipients
+        foreach ($filters as $filter) {
+            if ($filter['property'] === 'search') {
+                $value = $this->formatSearchValue($filter['value'], ['type' => 'text']);
+
+                $conditions[] = [
+                    'property' => self::JOIN_ALIAS_RECIPIENTS . '.mailAddress',
+                    'operator' => 'OR',
+                    'value' => $value,
+                ];
+            }
+        }
+
         // Simple check to see if there were any filter conditions which couldn't be handled by the parent method
-        if (count($conditions) >= count($filters)) {
+        if ($handledAllFilters) {
             return $conditions;
         }
 
@@ -245,12 +260,9 @@ class MailLog extends \Shopware_Controllers_Backend_Application
 
         foreach ($filters as $filter) {
             $property = $filter['property'];
-            $operator = $filter['operator'];
-            $expression = $filter['expression'];
-            $value = $filter['value'];
 
             // The property can already be filtered correctly if it is available via getModelFields
-            if (array_key_exists($property, $fields)) {
+            if (\array_key_exists($property, $fields)) {
                 continue;
             }
 
@@ -260,12 +272,16 @@ class MailLog extends \Shopware_Controllers_Backend_Application
                 $property = self::JOIN_ALIAS_ORDER . '.id';
             }
 
-            $conditions[] = [
+            $condition = [
                 'property' => $property,
-                'operator' => $operator,
-                'expression' => $expression,
-                'value' => $value,
+                'operator' => $filter['operator'],
+                'value' => $filter['value'],
             ];
+            if (isset($filter['expression'])) {
+                $condition['expression'] = $filter['expression'];
+            }
+
+            $conditions[] = $condition;
         }
 
         return $conditions;
@@ -301,7 +317,7 @@ class MailLog extends \Shopware_Controllers_Backend_Application
 
     private function overrideRecipients(Enlight_Components_Mail $mail, array $recipients): Enlight_Components_Mail
     {
-        if (count($recipients) > 0) {
+        if (\count($recipients) > 0) {
             $mail->clearRecipients();
             $mail->addTo(array_column($recipients, 'mailAddress'));
         }

@@ -26,19 +26,14 @@
  *
  * @category   Enlight
  * @package    Enlight_Hook
+ *
  * @copyright  Copyright (c) 2011, shopware AG (http://www.shopware.de)
  * @license    http://enlight.de/license     New BSD License
  */
 interface Enlight_Hook_Proxy
 {
     /**
-     * @return string[]
-     */
-    public static function getHookMethods();
-
-    /**
      * @param string $method
-     * @param Enlight_Hook_HookExecutionContext $context
      */
     public function __pushHookExecutionContext($method, Enlight_Hook_HookExecutionContext $context);
 
@@ -49,27 +44,30 @@ interface Enlight_Hook_Proxy
 
     /**
      * @param string $method
+     *
      * @return Enlight_Hook_HookExecutionContext
      */
     public function __getCurrentHookProxyExecutionContext($method);
 
     /**
      * @param string $method
+     *
      * @return Enlight_Hook_HookManager
      */
     public function __getActiveHookManager($method);
 
     /**
      * @param string $method
-     * @param array $args
-     * @return mixed
      */
-    public function executeParent($method, array $args = array());
+    public function __executeOriginalMethod($method, array $args = []);
+
+    /**
+     * @return string[]
+     */
+    public static function getHookMethods();
 
     /**
      * @param string $method
-     * @param array $args
-     * @return mixed
      */
-    public function __executeOriginalMethod($method, array $args = array());
+    public function executeParent($method, array $args = []);
 }

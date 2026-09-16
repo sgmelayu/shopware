@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Components\CSRFWhitelistAware;
@@ -53,6 +53,8 @@ class Shopware_Controllers_Backend_Login extends Shopware_Controllers_Backend_Ex
     /**
      * Do authentication and return result in json-format
      * Check if account is blocked
+     *
+     * @return void
      */
     public function loginAction()
     {
@@ -65,35 +67,44 @@ class Shopware_Controllers_Backend_Login extends Shopware_Controllers_Backend_Ex
             return;
         }
 
-        /** @var Shopware_Components_Auth $auth */
         $auth = Shopware()->Container()->get('auth');
         $result = $auth->login($username, $password);
         $user = $auth->getIdentity();
+        if (!$user instanceof stdClass) {
+            $this->View()->assign(['success' => false]);
+
+            return;
+        }
+
         if (!empty($user->roleID)) {
-            $user->role = Shopware()->Models()->find(
+            $user->role = $this->get('models')->find(
                 Role::class,
                 $user->roleID
             );
         }
-        if ($user && ($locale = $this->Request()->get('locale')) !== null) {
-            $user->locale = Shopware()->Models()->getRepository(
+
+        $locale = $this->Request()->get('locale');
+        if ($locale !== null) {
+            $user->locale = $this->get('models')->getRepository(
                 Locale::class
             )->find($locale);
         }
+
         if (!isset($user->locale) && !empty($user->localeID)) {
-            $user->locale = Shopware()->Models()->find(
+            $user->locale = $this->get('models')->find(
                 Locale::class,
                 $user->localeID
             );
         }
-        if ($user && !isset($user->locale)) {
-            $user->locale = Shopware()->Models()->getRepository(
+
+        if (!isset($user->locale)) {
+            $user->locale = $this->get('models')->getRepository(
                 Locale::class
             )->find($this->getPlugin()->getDefaultLocale());
         }
 
         $messages = $result->getMessages();
-        /* @var Zend_Date $lockedUntil */
+
         if (isset($messages['lockedUntil'])) {
             $lockedUntil = isset($messages['lockedUntil']) ? $messages['lockedUntil'] : null;
             $lockedUntil = $lockedUntil->toString(Zend_Date::ISO_8601);
@@ -109,6 +120,8 @@ class Shopware_Controllers_Backend_Login extends Shopware_Controllers_Backend_Ex
 
     /**
      * On logout destroy session and redirect to auth controller
+     *
+     * @return void
      */
     public function logoutAction()
     {
@@ -119,7 +132,7 @@ class Shopware_Controllers_Backend_Login extends Shopware_Controllers_Backend_Ex
     /**
      * @deprecated in 5.6, will be private in 5.8
      *
-     * @return \Shopware_Plugins_Backend_Auth_Bootstrap
+     * @return Shopware_Plugins_Backend_Auth_Bootstrap
      */
     public function getPlugin()
     {
@@ -131,6 +144,8 @@ class Shopware_Controllers_Backend_Login extends Shopware_Controllers_Backend_Ex
      * friendly format
      *
      * Note that this function returns sample data to build up the module.
+     *
+     * @return void
      */
     public function getLocalesAction()
     {
@@ -154,12 +169,14 @@ class Shopware_Controllers_Backend_Login extends Shopware_Controllers_Backend_Ex
         $this->View()->assign([
             'success' => true,
             'data' => $data,
-            'total' => count($data),
+            'total' => \count($data),
         ]);
     }
 
     /**
      * Gets the current login status of the user.
+     *
+     * @return void
      */
     public function getLoginStatusAction()
     {
@@ -168,7 +185,7 @@ class Shopware_Controllers_Backend_Login extends Shopware_Controllers_Backend_Ex
         if ($auth->hasIdentity()) {
             $refresh = $auth->refresh();
         }
-        if ($auth->hasIdentity()) {
+        if ($refresh instanceof Zend_Auth_Result && $auth->hasIdentity()) {
             $messages = $refresh->getMessages();
             $this->View()->assign([
                 'success' => true,
@@ -182,9 +199,11 @@ class Shopware_Controllers_Backend_Login extends Shopware_Controllers_Backend_Ex
         }
     }
 
+    /**
+     * @return void
+     */
     public function validatePasswordAction()
     {
-        /** @var Shopware_Components_Auth $auth */
         $auth = Shopware()->Container()->get('auth');
         $username = $auth->getIdentity()->username;
         $password = $this->Request()->get('password');

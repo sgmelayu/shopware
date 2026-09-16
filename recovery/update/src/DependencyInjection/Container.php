@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Update\DependencyInjection;
@@ -40,6 +40,7 @@ use Shopware\Recovery\Update\FilesystemFactory;
 use Shopware\Recovery\Update\PathBuilder;
 use Shopware\Recovery\Update\PluginCheck;
 use Shopware\Recovery\Update\StoreApi;
+use Shopware\Recovery\Update\UpdateHtaccess;
 use Shopware\Recovery\Update\Utils;
 
 class Container extends BaseContainer
@@ -50,13 +51,13 @@ class Container extends BaseContainer
 
         $me = $this;
 
-        $container['shopware.version'] = function () use ($me) {
+        $container['shopware.version'] = function () {
             $version = trim(file_get_contents(UPDATE_ASSET_PATH . DIRECTORY_SEPARATOR . 'version'));
 
             return $version;
         };
 
-        $container['db'] = function () use ($me) {
+        $container['db'] = function () {
             $conn = Utils::getConnection(SW_PATH);
 
             return $conn;
@@ -69,7 +70,7 @@ class Container extends BaseContainer
             return new FilesystemFactory(SW_PATH, $ftp);
         };
 
-        $container['path.builder'] = function () use ($me, $backupDir) {
+        $container['path.builder'] = function () use ($backupDir) {
             $baseDir = SW_PATH;
             $updateDir = UPDATE_FILES_PATH;
 
@@ -85,7 +86,7 @@ class Container extends BaseContainer
             return $migrationManger;
         };
 
-        $container['dump'] = function () use ($me) {
+        $container['dump'] = function () {
             $snippetsSql = UPDATE_ASSET_PATH . DIRECTORY_SEPARATOR . 'snippets.sql';
             $snippetsSql = file_exists($snippetsSql) ? $snippetsSql : null;
 
@@ -198,6 +199,10 @@ class Container extends BaseContainer
                 ['chmod' => 0775, 'filePath' => SW_PATH . '/bin/console'],
                 ['chmod' => 0775, 'filePath' => SW_PATH . '/var/cache/clear_cache.sh'],
             ]);
+        };
+
+        $container['shopware.update.update_htaccess'] = function ($container) {
+            return new UpdateHtaccess(SW_PATH . '/.htaccess');
         };
     }
 }

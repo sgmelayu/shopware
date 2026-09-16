@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -47,7 +46,7 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.order-position-panel',
+    alias: 'widget.order-position-panel',
 
     /**
      * An optional extra CSS class that will be added to this component's Element.
@@ -73,12 +72,11 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         title: '{s name="position/window_title"}Positions{/s}',
-        add:'{s name="position/button_add"}Add{/s}',
-        remove:'{s name="position/button_delete"}Delete all selected{/s}'
+        add: '{s name="position/button_add"}Add{/s}',
+        remove: '{s name="position/button_delete"}Delete all selected{/s}'
     },
-
 
     /**
      * The initComponent template method is an important initialization step for a Component.
@@ -90,7 +88,7 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         me.registerEvents();
@@ -142,7 +140,6 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
             me.articleNameSearch.getDropDownMenu().hide();
         }, me);
     },
-
 
     /**
      * Defines additional events which will be
@@ -239,7 +236,6 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
              */
             'articleNumberSelect',
 
-
             /**
              * Event will be fired when the user clicks the "Save button" button.
              *
@@ -294,7 +290,7 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
     /**
      * Overrides the getColumns function of the order position grid which is defined in view/list/position.js
      */
-    getColumns:function (grid) {
+    getColumns: function (grid) {
         var me = this;
 
         me.articleNumberSearch = me.createArticleSearch('number', 'name', 'articleNumber');
@@ -306,19 +302,19 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
             {
                 header: grid.snippets.articleNumber,
                 dataIndex: 'articleNumber',
-                flex:2,
+                flex: 2,
                 editor: me.articleNumberSearch
             },
             {
                 header: grid.snippets.articleName,
                 dataIndex: 'articleName',
-                flex:2,
+                flex: 2,
                 editor: me.articleNameSearch
             },
             {
                 header: grid.snippets.quantity,
                 dataIndex: 'quantity',
-                flex:1,
+                flex: 1,
                 editor: {
                     xtype: 'numberfield',
                     allowBlank: false,
@@ -328,7 +324,7 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
             {
                 header: grid.snippets.price,
                 dataIndex: 'price',
-                flex:1,
+                flex: 1,
                 renderer: grid.priceColumn,
                 editor: {
                     xtype: 'numberfield',
@@ -339,7 +335,7 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
             {
                 header: grid.snippets.total,
                 dataIndex: 'total',
-                flex:1,
+                flex: 1,
                 renderer: grid.totalColumn
             },
             {
@@ -352,7 +348,7 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
                     editable: false,
                     xtype: 'combobox',
                     queryMode: 'local',
-                    store: grid.statusStore ,
+                    store: grid.statusStore,
                     displayField: 'description',
                     valueField: 'id'
                 }
@@ -360,7 +356,7 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
             {
                 header: grid.snippets.tax,
                 dataIndex: 'taxId',
-                flex:1,
+                flex: 1,
                 renderer: me.taxColumn,
                 editor: {
                     xtype: 'combobox',
@@ -375,55 +371,55 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
             {
                 header: grid.snippets.inStock,
                 dataIndex: 'inStock',
-                flex:1
+                flex: 1
             },
             {
                 /**
                  * Special column type which provides
                  * clickable icons in each row
                  */
-                xtype:'actioncolumn',
-                width:90,
-                items:[
+                xtype: 'actioncolumn',
+                width: 90,
+                items: [
                     /*{if {acl_is_allowed privilege=update}}*/
-                        {
-                            iconCls:'sprite-minus-circle-frame',
-                            action:'deletePosition',
-                            tooltip: grid.snippets.deletePosition,
-                            /**
+                    {
+                        iconCls: 'sprite-minus-circle-frame',
+                        action: 'deletePosition',
+                        tooltip: grid.snippets.deletePosition,
+                        /**
                              * Add button handler to fire the deleteOrder event which is handled
                              * in the list controller.
                              */
-                            handler:function (view, rowIndex, colIndex, item) {
-                                var store = view.getStore(),
-                                    position = store.getAt(rowIndex);
+                        handler: function (view, rowIndex, colIndex, item) {
+                            var store = view.getStore(),
+                                position = store.getAt(rowIndex);
 
-                                grid.fireEvent('deletePosition', position, store, {
-                                    callback: function(order) {
-                                        me.fireEvent('updateForms', order, me.up('window'));
-                                    }
-                                });
-                            }
-                        },
+                            grid.fireEvent('deletePosition', position, store, {
+                                callback: function(order) {
+                                    me.fireEvent('updateForms', order, me.up('window'));
+                                }
+                            });
+                        }
+                    },
                     /*{/if}*/
                     {
-                        iconCls:'sprite-inbox',
-                        action:'openArticle',
+                        iconCls: 'sprite-inbox',
+                        action: 'openArticle',
                         tooltip: grid.snippets.openArticle,
                         /**
                          * Add button handler to fire the openCustomer event which is handled
                          * in the list controller.
                          */
-                        handler:function (view, rowIndex, colIndex, item) {
+                        handler: function (view, rowIndex, colIndex, item) {
                             var store = view.getStore(),
                                 record = store.getAt(rowIndex);
 
                             grid.fireEvent('openArticle', record);
                         },
                         getClass: function(value, metadata, record) {
-                             if (!record.get('articleId') || record.get('mode') !== 0)  {
-                                 return 'x-hidden';
-                             }
+                            if (!record.get('articleId') || record.get('mode') !== 0)  {
+                                return 'x-hidden';
+                            }
                         }
                     }, {
                         iconCls: 'sprite-attributes',
@@ -478,7 +474,8 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
             name: name,
             returnValue: returnValue,
             hiddenReturnValue: hiddenReturnValue,
-            articleStore: Ext.create('Shopware.apps.Base.store.Variant'),
+            articleStore: Ext.create('Shopware.apps.Order.store.PositionProductSearch'),
+            extraParam: { 'orderId': this.record.data.id },
             allowBlank: false,
             getValue: function() {
                 return this.getSearchField().getValue();
@@ -497,10 +494,10 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
         var me = this;
 
         me.deletePositionsButton = Ext.create('Ext.button.Button', {
-            iconCls:'sprite-minus-circle-frame',
-            text:me.snippets.remove,
-            disabled:true,
-            action:'deletePosition',
+            iconCls: 'sprite-minus-circle-frame',
+            text: me.snippets.remove,
+            disabled: true,
+            action: 'deletePosition',
             handler: function() {
                 me.fireEvent('deleteMultiplePositions', me.record, me.orderPositionGrid, {
                     callback: function(order) {
@@ -511,21 +508,21 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
         });
 
         me.addPositionButton = Ext.create('Ext.button.Button', {
-            iconCls:'sprite-plus-circle-frame',
-            text:me.snippets.add,
-            action:'addPosition',
+            iconCls: 'sprite-plus-circle-frame',
+            text: me.snippets.add,
+            action: 'addPosition',
             handler: function() {
                 me.fireEvent('addPosition', me.record, me.orderPositionGrid, me.rowEditor)
             }
         });
 
         return Ext.create('Ext.toolbar.Toolbar', {
-            dock:'top',
+            dock: 'top',
             ui: 'shopware-ui',
-            items:[
+            items: [
                 me.addPositionButton,
                 /*{if {acl_is_allowed privilege=save}}*/
-                    me.deletePositionsButton
+                me.deletePositionsButton
                 /*{/if}*/
             ]
         });
@@ -536,13 +533,13 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
      *
      * @return [Ext.selection.CheckboxModel] grid selection model
      */
-    getGridSelModel:function () {
+    getGridSelModel: function () {
         var me = this;
 
         var selModel = Ext.create('Ext.selection.CheckboxModel', {
-            listeners:{
+            listeners: {
                 // Unlocks the save button if the user has checked at least one checkbox
-                selectionchange:function (sm, selections) {
+                selectionchange: function (sm, selections) {
                     me.deletePositionsButton.setDisabled(selections.length === 0);
                 }
             }
@@ -551,28 +548,17 @@ Ext.define('Shopware.apps.Order.view.detail.Position', {
     },
 
     /**
-     * Render function for the tax column. The function parameter contains the tax id which is used
-     * to get the tax record of the grid tax store.
+     * Render function for the tax column.
      *
      * @param value
+     * @param metaData
+     * @param rowRecord
      * @return string
      */
     taxColumn: function(value, metaData, rowRecord) {
-        var me = this;
+        var orderDetailTaxRate = rowRecord.get('taxRate').toString();
 
-        if (value === Ext.undefined) {
-            return value;
-        }
-        var record =  me.taxStore.getById(value);
-        if (record instanceof Ext.data.Model) {
-            return record.get('name');
-        } else {
-            // SW-3289);
-            if(value == 0 || value == null) {
-                return rowRecord.get('taxRate')+'%';
-            }
-            return value;
-        }
+        return orderDetailTaxRate.replace(/[.,]/, Ext.util.Format.decimalSeparator) + '%';
     },
 
     /**

@@ -1,30 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\AbstractQuery;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Password\Manager;
 use Shopware\Models\User\Privilege;
+use Shopware\Models\User\Repository;
 use Shopware\Models\User\Resource;
 use Shopware\Models\User\Role;
 use Shopware\Models\User\Rule;
@@ -33,7 +36,7 @@ use Shopware\Models\User\User;
 class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Backend_ExtJs
 {
     /**
-     * @var \Shopware\Models\User\Repository
+     * @var Repository
      */
     protected $userRepository;
 
@@ -75,12 +78,11 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
 
         $calledAction = $this->Request()->getActionName();
 
-        if (
-            Shopware()->Plugins()->Backend()->Auth()->shouldAuth()
+        if (Shopware()->Plugins()->Backend()->Auth()->shouldAuth()
             && $this->isPasswordConfirmProtectedAction($calledAction)
             && !$this->container->get('backendsession')->offsetGet('passwordVerified')
         ) {
-            return $this->forward('passwordConfirmationRequired');
+            $this->forward('passwordConfirmationRequired');
         }
     }
 
@@ -134,7 +136,7 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
         }
         $data = $this->getUserRepository()
             ->getUserDetailQuery($id)
-            ->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+            ->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
         if (!$this->_isAllowed('create') && !$this->_isAllowed('update')) {
             unset($data['apiKey'], $data['sessionId']);
@@ -224,7 +226,7 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
             $params['enabled'] = false;
         }
 
-        if ($params['admin'] === 'on' || $params['admin'] === true || $params['admin'] === 1) {
+        if (isset($params['admin']) && ($params['admin'] === 'on' || $params['admin'] === true || $params['admin'] === 1)) {
             $params['admin'] = true;
         } else {
             $params['admin'] = false;
@@ -279,14 +281,14 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
         } else {
             $query = $this->getUserRepository()
                 ->getRolesQuery($offset, $limit);
-            $count = Shopware()->Models()->getQueryCount($query);
+            $count = $this->get('models')->getQueryCount($query);
         }
 
         $roles = $query->getArrayResult();
 
         // Strip roles with parent id set
         foreach ($roles as &$role) {
-            if ($role['parentID'] != null) {
+            if (!empty($role['parentID'])) {
                 unset($role);
             }
         }
@@ -355,7 +357,7 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
         $userId = (int) $this->Request()->getParam('userId');
 
         try {
-            $connection = $this->container->get(\Doctrine\DBAL\Connection::class);
+            $connection = $this->container->get(Connection::class);
             $connection->executeQuery('UPDATE s_core_auth SET lockedUntil = NOW(), failedLogins = 0 WHERE id = ?', [$userId]);
         } catch (Exception $e) {
             $this->View()->assign('success', false);
@@ -374,15 +376,25 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
     public function deleteUserAction()
     {
         // Get posted user
-        $userID = $this->Request()->getParam('id');
+        $userID = (int) $this->Request()->getParam('id');
         $getCurrentIdentity = $this->get('auth')->getIdentity();
 
         // Backend users shall not delete their current login
-        if ($userID == $getCurrentIdentity->id) {
+        if ($userID === (int) $getCurrentIdentity->id) {
             throw new Exception('You can not delete your current account');
         }
 
         $entity = $this->getUserRepository()->find($userID);
+        if (!$entity instanceof User) {
+            $this->View()->assign([
+                'success' => false,
+                'data' => $this->Request()->getParams(),
+                'message' => \sprintf('User with ID "%s" not found', $userID),
+            ]);
+
+            return;
+        }
+
         $this->modelManager->remove($entity);
 
         // Performs all of the collected actions.
@@ -410,7 +422,7 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
         $role = $this->Request()->getParam('role');
         $resourceAdmins = [];
 
-        /** @var \Shopware\Models\User\Role|int $role */
+        /** @var Role|int $role */
         if ($role !== null && is_numeric($role)) {
             $role = $this->modelManager->find(Role::class, $role);
 
@@ -438,7 +450,7 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
         $this->View()->assign([
             'success' => true,
             'data' => $data,
-            'count' => count($data),
+            'count' => \count($data),
         ]);
     }
 
@@ -608,7 +620,7 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
         }
 
         // Check if role exist
-        /** @var \Shopware\Models\User\Role|null $role */
+        /** @var Role|null $role */
         $role = $this->modelManager->find(Role::class, $id);
 
         if ($role === null) {
@@ -629,13 +641,12 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
             $rule->setRole($role);
 
             if (isset($newRule['resourceId'])) {
-                /** @var \Shopware\Models\User\Resource $resource */
-                $resource = Shopware()->Models()->find(Resource::class, $newRule['resourceId']);
+                $resource = $this->get('models')->find(Resource::class, $newRule['resourceId']);
                 $rule->setResource($resource);
             }
             if (isset($newRule['privilegeId'])) {
-                /** @var \Shopware\Models\User\Privilege $privilege */
-                $privilege = Shopware()->Models()->find(Privilege::class, $newRule['privilegeId']);
+                /** @var Privilege $privilege */
+                $privilege = $this->get('models')->find(Privilege::class, $newRule['privilegeId']);
                 $rule->setPrivilege($privilege);
             } else {
                 $rule->setPrivilege(null);
@@ -681,22 +692,18 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
 
     /**
      * Verifies if an action name must be password confirm protected
-     *
-     * @param string $name
-     *
-     * @return bool
      */
-    private function isPasswordConfirmProtectedAction($name)
+    private function isPasswordConfirmProtectedAction(string $name): bool
     {
-        return in_array(strtolower($name), $this->getPasswordConfirmProtectedActions(), true);
+        return \in_array(strtolower($name), $this->getPasswordConfirmProtectedActions(), true);
     }
 
     /**
      * Returns an array of actions which must be password confirmed.
      *
-     * @return array
+     * @return string[]
      */
-    private function getPasswordConfirmProtectedActions()
+    private function getPasswordConfirmProtectedActions(): array
     {
         return [
             'deleterole',
@@ -712,10 +719,8 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
 
     /**
      * Helper function to get access to the user repository.
-     *
-     * @return \Shopware\Models\User\Repository
      */
-    private function getUserRepository()
+    private function getUserRepository(): Repository
     {
         if ($this->userRepository === null) {
             $this->userRepository = $this->modelManager->getRepository(User::class);
@@ -727,9 +732,9 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
     /**
      * Returns all resource ids for the passed role where a rule with privilege NULL exists.
      *
-     * @return array
+     * @return int[]
      */
-    private function getResourceAdminRules(int $roleId)
+    private function getResourceAdminRules(int $roleId): array
     {
         $resources = $this->getUserRepository()
             ->getResourcesWithAdminRuleQuery($roleId)
@@ -747,9 +752,9 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
      * Internal helper function which converts a resource shopware model
      * to an tree panel node with checkboxes.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    private function getResourceNode(?Resource $resource, ?Role $role, array $resourceAdmins)
+    private function getResourceNode(?Resource $resource, ?Role $role, array $resourceAdmins): array
     {
         if (!$resource) {
             return [];
@@ -767,13 +772,13 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
         ];
 
         if ($role) {
-            if (array_key_exists($resource->getId(), $resourceAdmins) || $role->getAdmin() === 1) {
+            if (\array_key_exists($resource->getId(), $resourceAdmins) || $role->getAdmin() === 1) {
                 $resourceNode['checked'] = true;
                 $resourceNode['expanded'] = true;
             }
         }
 
-        if (count($resource->getPrivileges()) > 0) {
+        if (\count($resource->getPrivileges()) > 0) {
             $children = [];
             foreach ($resource->getPrivileges() as $privilege) {
                 $children[] = $this->getPrivilegeNode($resourceNode, $privilege, $role);
@@ -792,9 +797,9 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
      * Internal helper function which converts a privilege shopware model
      * to an tree panel node with checkboxes.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    private function getPrivilegeNode(array &$resourceNode, ?Privilege $privilege, ?Role $role)
+    private function getPrivilegeNode(array &$resourceNode, ?Privilege $privilege, ?Role $role): array
     {
         if (!$privilege) {
             return [];
@@ -812,7 +817,7 @@ class Shopware_Controllers_Backend_UserManager extends Shopware_Controllers_Back
             'requirements' => [],
         ];
 
-        if (count($privilege->getRequirements()) > 0) {
+        if (\count($privilege->getRequirements()) > 0) {
             $requirements = [];
             foreach ($privilege->getRequirements() as $requirement) {
                 $requirements[] = $requirement->getId();

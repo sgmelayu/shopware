@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/article_list/main"}
@@ -114,13 +113,12 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Grid', {
                 text: '{s name="add"}Add{/s}',
                 action: 'addSimpleFilter',
                 name: 'addSimpleFilter',
-                iconCls:'sprite-plus-circle-frame',
+                iconCls: 'sprite-plus-circle-frame',
                 handler: function() {
                     me.fireEvent('addSimpleFilter');
                 }
             })
         );
-
 
         buttons.push('->');
 
@@ -182,7 +180,7 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Grid', {
                 editable: false,
                 queryMode: 'local',
                 listeners: {
-                    'select': { fn:function(combo, records, e) {
+                    'select': { fn: function(combo, records, e) {
                         me.fireEvent('setEditor', me.columns, records[0], 'column');
 
                         me.setOperatorsForCurrentRecord(records[0], me.operatorStore);
@@ -192,14 +190,14 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Grid', {
             dataIndex: 'column',
             menuDisabled: true,
             sortable: false
-        },{
+        }, {
             flex: 1,
             header: 'Operator',
             editor: me.getDefaultOperatorEditor(),
             dataIndex: 'operator',
             menuDisabled: true,
             sortable: false
-        },{
+        }, {
             flex: 1,
             editor: me.getDefaultValueEditor(),
             header: 'Value',
@@ -242,7 +240,7 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Grid', {
             displayField: 'name',
             forceSelection: true,
             listeners: {
-                'select': { fn:function(combo, records, e) {
+                'select': { fn: function(combo, records, e) {
                     me.fireEvent('setEditor', me.columns, records[0], 'operator');
                 }, scope: this }
             }
@@ -261,8 +259,8 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Grid', {
             extend: 'Ext.data.Model',
             fields: [
                 { name: 'id' },
-                { name: 'title'},
-                { name: 'addQuotes', defaultValue: false}
+                { name: 'title' },
+                { name: 'addQuotes', defaultValue: false }
             ]
         });
 
@@ -275,7 +273,7 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Grid', {
                 url: '{url controller="ArticleList" action="getValues"}',
                 reader: {
                     type: 'json',
-                    root:'data',
+                    root: 'data',
                     totalProperty: 'total'
                 }
             }
@@ -294,7 +292,7 @@ Ext.define('Shopware.apps.ArticleList.view.AddFilter.Grid', {
                     var attribute = e.combo.ownerCt.form._fields.items[0].rawValue;
                     var operator = e.combo.ownerCt.form._fields.items[1].rawValue;
 
-                    e.combo.store.getProxy().extraParams = { resource: 'product', attribute: attribute, operator: operator};
+                    e.combo.store.getProxy().extraParams = { resource: 'product', attribute: attribute, operator: operator };
                 }
             }
         });

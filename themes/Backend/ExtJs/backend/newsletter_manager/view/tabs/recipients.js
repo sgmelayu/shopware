@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    NewsletterManager
@@ -42,8 +41,8 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
 
     border: false,
 
-    snippets : {
-        columns : {
+    snippets: {
+        columns: {
             mail: '{s name="columns/mailAddress"}Mail address{/s}',
             group: '{s name="columns/group"}Group{/s}',
             actions: '{s name="columns/actions"}Actions{/s}',
@@ -55,10 +54,10 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
 
     plugins: [
         Ext.create('Ext.grid.plugin.RowEditing', {
-           clicksToEdit: 2,
+            clicksToEdit: 2,
             autoCancel: true
         }
-    )
+        )
     ],
 
     /**
@@ -87,14 +86,12 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
              */
             'deleteRecipient',
 
-
             /**
              * Fired when the user double clicks a recipient row, edits the data and clicks "update"
              * @param editor
              * @param event
              */
             'saveRecipient',
-
 
             /**
              * Fired when the user double clicks a row in order to edit it
@@ -138,8 +135,8 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
         });
         me.on('validateedit', function(editor, event) {
             var newGroupId = event.newValues['address.groupId'],
-            newMail = event.newValues['address.email'];
-            if(newMail == "" || newGroupId == null) {
+                newMail = event.newValues['address.email'];
+            if (newMail == "" || newGroupId == null) {
                 event.cancel = true;
                 return false;
             }
@@ -155,18 +152,17 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
      *
      * @return Ext.selection.CheckboxModel
      */
-    getGridSelModel : function() {
+    getGridSelModel: function() {
         var me = this;
         return Ext.create('Ext.selection.CheckboxModel', {
-            listeners:{
+            listeners: {
                 // Unlocks the delete button if the user has checked at least one checkbox
-                selectionchange:function (sm, selections) {
+                selectionchange: function (sm, selections) {
                     me.deleteRecipientButton.setDisabled(selections.length == 0);
                 }
             }
         });
     },
-
 
     /**
      * Creates the grid columns
@@ -207,7 +203,7 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
                     allowBlank: true,
                     valueField: 'id',
                     displayField: 'name',
-                    store : me.newsletterGroupStore,
+                    store: me.newsletterGroupStore,
                     editable: false
 
                 }
@@ -250,13 +246,12 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
             },
             {
                 header: me.snippets.columns.actions,
-                xtype : 'actioncolumn',
-                width : 60,
-                items : me.getActionColumn()
+                xtype: 'actioncolumn',
+                width: 60,
+                items: me.getActionColumn()
             }
         ];
     },
-
 
     /**
      * Returns the subject of the last read mail
@@ -271,7 +266,7 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
             lastNewsletterId = record.get('lastNewsletterId');
 
         lastNewsletter = me.mailingStore.getById(lastNewsletterId);
-        if(lastNewsletter instanceof Ext.data.Model) {
+        if (lastNewsletter instanceof Ext.data.Model) {
             return lastNewsletter.get('subject');
         }
 
@@ -297,23 +292,23 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
         }
 
         // Recipient is a customer
-        if(customer !== null && customer.first() instanceof Ext.data.Model) {
+        if (customer !== null && customer.first() instanceof Ext.data.Model) {
             return "<strong>" + customer.first().get('groupKey') + '{s name="customerGroup"} (Customer group){/s}</strong>' ;
         }
 
         //  Non-Customer recipient
         group = me.newsletterGroupStore.findRecord('id', record.get('groupId'));
-        if(group !== null) {
+        if (group !== null) {
             return group.get('name');
         }
 
-        if(group !== null && group.first() instanceof Ext.data.Model) {
+        if (group !== null && group.first() instanceof Ext.data.Model) {
             return group.first().get('name');
-//            return group.first().get('id');
+            //            return group.first().get('id');
         }
 
         // If the customer wasn't found, print this in order to prevent confusion.
-        if(isCustomer && !customer) {
+        if (isCustomer && !customer) {
             return 'Customer not found';
         }
 
@@ -326,21 +321,21 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
      *
      * @return Array of buttons
      */
-    getActionColumn : function() {
+    getActionColumn: function() {
         var me = this;
 
         return [
             {
-                iconCls:'sprite-user--plus',
-                action:'view',
-                tooltip:'{s name="action/showCustomer"}Show customer{/s}',
+                iconCls: 'sprite-user--plus',
+                action: 'view',
+                tooltip: '{s name="action/showCustomer"}Show customer{/s}',
                 handler: function (view, rowIndex, colIndex, item, opts, record) {
                     me.fireEvent('showCustomer', record);
                 },
                 // Hide the "view customer" button if the current row does not contain a valid customer
                 getClass: function(value, metaData, record) {
                     var customer = record.getCustomer();
-                    if(customer === Ext.undefined || customer.first() === Ext.undefined) {
+                    if (customer === Ext.undefined || customer.first() === Ext.undefined) {
                         return 'x-hide-display';
                     }
                 }
@@ -391,8 +386,8 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.Recipients', {
                 me.deleteRecipientButton,
                 '->',
                 {
-                    xtype    : 'textfield',
-                    name     : 'searchfield',
+                    xtype: 'textfield',
+                    name: 'searchfield',
                     emptyText: '{s name="searchfield"}Search{/s}',
                     cls: 'searchfield',
                     checkChangeBuffer: 700,

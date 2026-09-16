@@ -1,34 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Common\DependencyInjection;
 
+use InvalidArgumentException;
+use ServiceCircularReferenceException;
+use ServiceNotFoundException;
+
 interface ContainerInterface
 {
-    const EXCEPTION_ON_INVALID_REFERENCE = 1;
-    const NULL_ON_INVALID_REFERENCE = 2;
-    const IGNORE_ON_INVALID_REFERENCE = 3;
+    public const EXCEPTION_ON_INVALID_REFERENCE = 1;
+    public const NULL_ON_INVALID_REFERENCE = 2;
+    public const IGNORE_ON_INVALID_REFERENCE = 3;
 
     /**
      * Sets a service.
@@ -46,9 +50,9 @@ interface ContainerInterface
      * @param string $id              The service identifier
      * @param int    $invalidBehavior The behavior when the service does not exist
      *
-     * @throws \InvalidArgumentException          if the service is not defined
-     * @throws \ServiceCircularReferenceException When a circular reference is detected
-     * @throws \ServiceNotFoundException          When the service is not defined
+     * @throws InvalidArgumentException          if the service is not defined
+     * @throws ServiceCircularReferenceException When a circular reference is detected
+     * @throws ServiceNotFoundException          When the service is not defined
      *
      * @return object The associated service
      *
@@ -74,7 +78,7 @@ interface ContainerInterface
      *
      * @param string $name The parameter name
      *
-     * @throws \InvalidArgumentException if the parameter is not defined
+     * @throws InvalidArgumentException if the parameter is not defined
      *
      * @return mixed The parameter value
      *

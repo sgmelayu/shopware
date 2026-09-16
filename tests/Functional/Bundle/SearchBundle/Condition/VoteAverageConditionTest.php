@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\SearchBundle\Condition;
@@ -27,6 +28,8 @@ namespace Shopware\Tests\Functional\Bundle\SearchBundle\Condition;
 use Shopware\Bundle\SearchBundle\Condition\VoteAverageCondition;
 use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
+use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Article\Article;
 use Shopware\Models\Category\Category;
 use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestCase;
 
@@ -35,10 +38,10 @@ use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestCase;
  */
 class VoteAverageConditionTest extends TestCase
 {
-    public function testVoteAverageCondition()
+    public function testVoteAverageCondition(): void
     {
         $condition = new VoteAverageCondition(3);
-        $context = $this->getContext(1);
+        $context = $this->getContext();
 
         $this->search(
             [
@@ -60,7 +63,7 @@ class VoteAverageConditionTest extends TestCase
         );
     }
 
-    public function testSubShopVotes()
+    public function testSubShopVotes(): void
     {
         $condition = new VoteAverageCondition(3);
         $context = $this->getContext(2);
@@ -68,16 +71,16 @@ class VoteAverageConditionTest extends TestCase
         $this->search(
             [
                 'first' => [
-                    1 => [1],   //shop = 1   1x vote with 1 point
-                    2 => [3],    //shop = 2   1x vote with 3 point
+                    1 => [1],   // shop = 1   1x vote with 1 point
+                    2 => [3],    // shop = 2   1x vote with 3 point
                 ],
                 'second' => [
-                    1 => [4],   //shop = 1   1x vote with 4 points
-                    2 => [4],    //shop = 2   1x vote with 4 points
+                    1 => [4],   // shop = 1   1x vote with 4 points
+                    2 => [4],    // shop = 2   1x vote with 4 points
                 ],
                 'third' => [
-                    1 => [4],   //shop = 1   1x vote with 4 points
-                    2 => [2],    //shop = 2   1x vote with 2 points
+                    1 => [4],   // shop = 1   1x vote with 4 points
+                    2 => [2],    // shop = 2   1x vote with 2 points
                 ],
             ],
             ['first', 'second'],
@@ -90,25 +93,25 @@ class VoteAverageConditionTest extends TestCase
         );
     }
 
-    public function testMixedVotes()
+    public function testMixedVotes(): void
     {
         $condition = new VoteAverageCondition(4.5);
         $context = $this->getContext(2);
         $this->search(
             [
                 'first' => [
-                    null => [5], //no assignment to shop
-                    1 => [1],   //shop = 1   1x vote with 1 point
-                    2 => [4],    //shop = 2   1x vote with 4 point
+                    null => [5], // no assignment to shop
+                    1 => [1],   // shop = 1   1x vote with 1 point
+                    2 => [4],    // shop = 2   1x vote with 4 point
                 ],
                 'second' => [
                     null => [5],
-                    1 => [4],   //shop = 1   1x vote with 4 points
-                    2 => [3],    //shop = 2   1x vote with 2 points
+                    1 => [4],   // shop = 1   1x vote with 4 points
+                    2 => [3],    // shop = 2   1x vote with 2 points
                 ],
                 'third' => [
-                    1 => [4],   //shop = 1   1x vote with 4 points
-                    2 => [5],    //shop = 2   1x vote with 2 points
+                    1 => [4],   // shop = 1   1x vote with 4 points
+                    2 => [5],    // shop = 2   1x vote with 2 points
                 ],
             ],
             ['first', 'third'],
@@ -121,25 +124,25 @@ class VoteAverageConditionTest extends TestCase
         );
     }
 
-    public function testMixedVotesWithDisabledConfig()
+    public function testMixedVotesWithDisabledConfig(): void
     {
         $condition = new VoteAverageCondition(4);
         $context = $this->getContext(2);
         $this->search(
             [
                 'first' => [
-                    null => [5], //no assignment to shop
-                    1 => [1],   //shop = 1   1x vote with 1 point
-                    2 => [4],    //shop = 2   1x vote with 4 point
+                    null => [5], // no assignment to shop
+                    1 => [1],   // shop = 1   1x vote with 1 point
+                    2 => [4],    // shop = 2   1x vote with 4 point
                 ],
                 'second' => [
                     null => [5],
-                    1 => [4],   //shop = 1   1x vote with 4 points
-                    2 => [3],    //shop = 2   1x vote with 2 points
+                    1 => [4],   // shop = 1   1x vote with 4 points
+                    2 => [3],    // shop = 2   1x vote with 2 points
                 ],
                 'third' => [
-                    1 => [4],   //shop = 1   1x vote with 4 points
-                    2 => [5],    //shop = 2   1x vote with 2 points
+                    1 => [4],   // shop = 1   1x vote with 4 points
+                    2 => [5],    // shop = 2   1x vote with 2 points
                 ],
             ],
             ['second', 'third'],
@@ -152,12 +155,15 @@ class VoteAverageConditionTest extends TestCase
         );
     }
 
+    /**
+     * @param array<string, array<int>> $additionally
+     */
     protected function createProduct(
-        $number,
+        string $number,
         ShopContext $context,
         Category $category,
         $additionally
-    ) {
+    ): Article {
         $article = parent::createProduct(
             $number,
             $context,
@@ -168,6 +174,8 @@ class VoteAverageConditionTest extends TestCase
         foreach ($additionally as $shopId => $votes) {
             if (empty($shopId)) {
                 $shopId = null;
+            } else {
+                $shopId = (int) $shopId;
             }
             $this->helper->createVotes($article->getId(), $votes, $shopId);
         }
@@ -175,13 +183,10 @@ class VoteAverageConditionTest extends TestCase
         return $article;
     }
 
-    /**
-     * @return Category
-     */
-    private function createCategory(Shop $shop)
+    private function createCategory(Shop $shop): Category
     {
-        $em = Shopware()->Container()->get(\Shopware\Components\Model\ModelManager::class);
-        $category = $em->find(Category::class, $shop->getCategory()->getId());
+        $category = $this->getContainer()->get(ModelManager::class)
+            ->find(Category::class, $shop->getCategory()->getId());
 
         return $this->helper->createCategory(['parent' => $category]);
     }

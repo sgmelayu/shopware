@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    ProductStream
@@ -94,8 +93,8 @@ Ext.define('Shopware.apps.ProductStream.controller.Main', {
         var formPanel = me.getFormPanel();
 
         var valid = (
-            conditionPanel.getForm().isValid() == true
-            && formPanel.getForm().isValid() == true
+            conditionPanel.getForm().isValid() == true &&
+            formPanel.getForm().isValid() == true
         );
 
         if (!valid) {
@@ -114,7 +113,7 @@ Ext.define('Shopware.apps.ProductStream.controller.Main', {
         record.save({
             callback: function() {
                 var productGrid = me.getProductStreamGrid(),
-                        store = productGrid.store;
+                    store = productGrid.store;
 
                 me.saveAttributes(record);
 
@@ -124,8 +123,8 @@ Ext.define('Shopware.apps.ProductStream.controller.Main', {
                     }
                 });
                 Shopware.Notification.createGrowlMessage(
-                        '{s name="stream_saved_title"}Product stream{/s}',
-                        '{s name="stream_saved_description"}Stream saved{/s}'
+                    '{s name="stream_saved_title"}Product stream{/s}',
+                    '{s name="stream_saved_description"}Stream saved{/s}'
                 );
             }
         });
@@ -171,8 +170,8 @@ Ext.define('Shopware.apps.ProductStream.controller.Main', {
                     }
                 });
                 Shopware.Notification.createGrowlMessage(
-                        '{s name="stream_saved_title"}Product stream{/s}',
-                        '{s name="stream_saved_description"}Stream saved{/s}'
+                    '{s name="stream_saved_title"}Product stream{/s}',
+                    '{s name="stream_saved_description"}Stream saved{/s}'
                 );
             }
         });
@@ -255,8 +254,8 @@ Ext.define('Shopware.apps.ProductStream.controller.Main', {
     onDuplicateItem: function(grid, record) {
         var showNotificationAndRefresh = function() {
             Shopware.Notification.createGrowlMessage(
-                    '{s name="stream_saved_title"}Product stream{/s}',
-                    '{s name="stream_saved_description"}Stream saved{/s}'
+                '{s name="stream_saved_title"}Product stream{/s}',
+                '{s name="stream_saved_description"}Stream saved{/s}'
             );
             grid.getStore().load();
         };

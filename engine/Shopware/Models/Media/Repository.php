@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Media;
 
+use Doctrine\ORM\Query;
+use Doctrine\ORM\Query\Expr\OrderBy;
 use Shopware\Components\Model\ModelRepository;
 use Shopware\Components\Model\QueryBuilder;
 
@@ -31,6 +33,8 @@ use Shopware\Components\Model\QueryBuilder;
  * The media repository used for the media manager backend module.
  *
  * The repository is responsible to load the media data into the models.
+ *
+ * @extends ModelRepository<Media>
  */
 class Repository extends ModelRepository
 {
@@ -42,7 +46,7 @@ class Repository extends ModelRepository
      * @param int|null   $offset
      * @param int|null   $limit
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Media>
      */
     public function getMediaListQuery($filter = null, $orderBy = null, $limit = null, $offset = null)
     {
@@ -59,17 +63,17 @@ class Repository extends ModelRepository
      * Helper function to create the query builder for the "getMediaListQuery" function.
      * This function can be hooked to modify the query builder of the query object.
      *
-     * @param array $filter
-     * @param array $orderBy
+     * @param array<string, string>|array<array{property: string, value: mixed, expression?: string}>|null $filter
+     * @param string|array<array{property: string, direction: string}>|null                                $orderBy
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getMediaListQueryBuilder($filter, $orderBy)
     {
         /** @var QueryBuilder $builder */
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select('media', 'attribute')
-                ->from(\Shopware\Models\Media\Media::class, 'media')
+                ->from(Media::class, 'media')
                 ->leftJoin('media.attribute', 'attribute');
         if ($filter) {
             $builder->addFilter($filter);
@@ -85,14 +89,14 @@ class Repository extends ModelRepository
      * Returns an instance of the \Doctrine\ORM\Query object which select the media of the passed album id.
      * Used for the backend media manager listing of the media.
      *
-     * @param int                                                $albumId
-     * @param string|null                                        $filter
-     * @param array|string|\Doctrine\ORM\Query\Expr\OrderBy|null $orderBy
-     * @param int|null                                           $offset
-     * @param int|null                                           $limit
-     * @param array|null                                         $validTypes
+     * @param int                       $albumId
+     * @param string|null               $filter
+     * @param array|string|OrderBy|null $orderBy
+     * @param int|null                  $offset
+     * @param int|null                  $limit
+     * @param array|null                $validTypes
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Media>
      */
     public function getAlbumMediaQuery($albumId, $filter = null, $orderBy = null, $offset = null, $limit = null, $validTypes = null)
     {
@@ -109,19 +113,19 @@ class Repository extends ModelRepository
      * Helper function to create the query builder for the "getAlbumMediaQuery" function.
      * This function can be hooked to modify the query builder of the query object.
      *
-     * @param int                                          $albumId
-     * @param string|null                                  $filter
-     * @param string|\Doctrine\ORM\Query\Expr\OrderBy|null $orderBy
-     * @param array|null                                   $validTypes
+     * @param int                 $albumId
+     * @param string|null         $filter
+     * @param string|OrderBy|null $orderBy
+     * @param array|null          $validTypes
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getAlbumMediaQueryBuilder($albumId, $filter = null, $orderBy = null, $validTypes = null)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
 
         $builder->select('media')
-                ->from(\Shopware\Models\Media\Media::class, 'media');
+                ->from(Media::class, 'media');
         if (!empty($albumId)) {
             $builder->where('media.albumId = :albumId')->setParameter('albumId', $albumId);
         }
@@ -132,7 +136,7 @@ class Repository extends ModelRepository
         }
 
         // Filter for file types
-        if ($validTypes !== null && is_array($validTypes) && !empty($validTypes)) {
+        if ($validTypes !== null && \is_array($validTypes) && !empty($validTypes) && !empty(array_filter($validTypes))) {
             $builder->andWhere('media.extension IN (?2)');
             $builder->setParameter(2, $validTypes);
         }
@@ -150,7 +154,7 @@ class Repository extends ModelRepository
      *
      * @param int $albumId
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Album>
      */
     public function getAlbumWithSettingsQuery($albumId)
     {
@@ -165,13 +169,13 @@ class Repository extends ModelRepository
      *
      * @param int $albumId
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getAlbumWithSettingsQueryBuilder($albumId)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select(['album', 'settings'])
-                ->from(\Shopware\Models\Media\Album::class, 'album')
+                ->from(Album::class, 'album')
                 ->leftJoin('album.settings', 'settings')
                 ->where('album.id = ?1')
                 ->setParameter(1, $albumId);
@@ -184,7 +188,7 @@ class Repository extends ModelRepository
      *
      * @param string $path
      *
-     * @return \Doctrine\ORM\Query
+     * @return Query<Media>
      */
     public function getMediaByPathQuery($path)
     {
@@ -199,13 +203,13 @@ class Repository extends ModelRepository
      *
      * @param string $path
      *
-     * @return \Doctrine\ORM\QueryBuilder
+     * @return QueryBuilder
      */
     public function getMediaByPathQueryBuilder($path)
     {
         $builder = $this->getEntityManager()->createQueryBuilder();
         $builder->select(['media']);
-        $builder->from(\Shopware\Models\Media\Media::class, 'media')
+        $builder->from(Media::class, 'media')
                 ->where('media.path = ?1')
                 ->setParameter(1, $path);
 

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -39,13 +38,13 @@ Ext.define('Shopware.apps.Article.view.category.List', {
      * Define that the category list is an extension of the Ext.grid.Panel
      * @string
      */
-    extend:'Ext.grid.Panel',
+    extend: 'Ext.grid.Panel',
 
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.article-category-list',
+    alias: 'widget.article-category-list',
 
     /**
      * Set css class for this component
@@ -57,7 +56,7 @@ Ext.define('Shopware.apps.Article.view.category.List', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         title: '{s name="category/list/title"}Assigned categories{/s}',
         name: '{s name="category/list/name_column"}Category name{/s}',
         delete: '{s name="category/list/delete_tooltip"}Remove entry{/s}',
@@ -77,7 +76,7 @@ Ext.define('Shopware.apps.Article.view.category.List', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         me.store = me.article.getCategory();
@@ -114,13 +113,13 @@ Ext.define('Shopware.apps.Article.view.category.List', {
      *
      * @return [Ext.selection.CheckboxModel] grid selection model
      */
-    getGridSelModel:function () {
+    getGridSelModel: function () {
         var me = this;
 
         return Ext.create('Ext.selection.CheckboxModel', {
-            listeners:{
+            listeners: {
                 // Unlocks the save button if the user has checked at least one checkbox
-                selectionchange:function (sm, selections) {
+                selectionchange: function (sm, selections) {
                     if (me.deleteButton === null) {
                         return;
                     }
@@ -138,9 +137,9 @@ Ext.define('Shopware.apps.Article.view.category.List', {
         var me = this;
 
         me.deleteButton = Ext.create('Ext.button.Button', {
-            iconCls:'sprite-minus-circle-frame',
-            text:me.snippets.toolbar.delete,
-            disabled:true,
+            iconCls: 'sprite-minus-circle-frame',
+            text: me.snippets.toolbar.delete,
+            disabled: true,
             handler: function() {
                 var records = me.selModel.getSelection();
                 me.fireEvent('removeCategories', records);
@@ -148,8 +147,8 @@ Ext.define('Shopware.apps.Article.view.category.List', {
         });
 
         return Ext.create('Ext.toolbar.Toolbar', {
-            dock:'top',
-            items:[
+            dock: 'top',
+            items: [
                 me.deleteButton
             ]
         });
@@ -160,7 +159,7 @@ Ext.define('Shopware.apps.Article.view.category.List', {
      * @return array
      */
     getColumns: function() {
-       var me = this;
+        var me = this;
 
         return [
             {

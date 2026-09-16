@@ -1,37 +1,48 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Media;
 
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\Mapping as ORM;
+use Exception;
+use PDO;
+use RuntimeException;
 use Shopware\Bundle\MediaBundle\Exception\MediaFileExtensionIsBlacklistedException;
 use Shopware\Bundle\MediaBundle\Exception\MediaFileExtensionNotAllowedException;
+use Shopware\Bundle\MediaBundle\MediaExtensionMappingServiceInterface;
+use Shopware\Bundle\MediaBundle\MediaServiceInterface;
 use Shopware\Components\Model\ModelEntity;
 use Shopware\Components\Random;
+use Shopware\Components\Thumbnail\Manager;
+use Shopware\Models\Article\Image;
 use Shopware\Models\Attribute\Media as MediaAttribute;
+use Shopware\Models\Blog\Media as BlogMedia;
+use Shopware\Models\Property\Value;
+use Shopware_Controllers_Backend_MediaManager;
 use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
@@ -59,42 +70,42 @@ class Media extends ModelEntity
     /**
      * Flag for an image media
      */
-    const TYPE_IMAGE = 'IMAGE';
+    public const TYPE_IMAGE = 'IMAGE';
 
     /**
      * Flag for a vector media
      */
-    const TYPE_VECTOR = 'VECTOR';
+    public const TYPE_VECTOR = 'VECTOR';
 
     /**
      * Flag for a video media
      */
-    const TYPE_VIDEO = 'VIDEO';
+    public const TYPE_VIDEO = 'VIDEO';
 
     /**
      * Flag for a music media
      */
-    const TYPE_MUSIC = 'MUSIC';
+    public const TYPE_MUSIC = 'MUSIC';
 
     /**
      * Flag for an archive media
      */
-    const TYPE_ARCHIVE = 'ARCHIVE';
+    public const TYPE_ARCHIVE = 'ARCHIVE';
 
     /**
      * Flag for a pdf media
      */
-    const TYPE_PDF = 'PDF';
+    public const TYPE_PDF = 'PDF';
 
     /**
      * Flag for a 3D model media
      */
-    const TYPE_MODEL = 'MODEL';
+    public const TYPE_MODEL = 'MODEL';
 
     /**
      * Flag for an unknown media
      */
-    const TYPE_UNKNOWN = 'UNKNOWN';
+    public const TYPE_UNKNOWN = 'UNKNOWN';
 
     /**
      * INVERSE SIDE
@@ -106,7 +117,7 @@ class Media extends ModelEntity
     protected $attribute;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Article\Image>
+     * @var ArrayCollection<Image>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Article\Image", mappedBy="media")
      */
@@ -115,14 +126,14 @@ class Media extends ModelEntity
     /**
      * INVERSE SIDE
      *
-     * @var ArrayCollection<\Shopware\Models\Blog\Media>
+     * @var ArrayCollection<BlogMedia>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Blog\Media", mappedBy="media", orphanRemoval=true, cascade={"persist"})
      */
     protected $blogMedia;
 
     /**
-     * @var ArrayCollection<\Shopware\Models\Property\Value>
+     * @var ArrayCollection<Value>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Property\Value", mappedBy="media")
      */
@@ -130,12 +141,8 @@ class Media extends ModelEntity
 
     /**
      * Contains the default thumbnail sizes which used for backend modules.
-     *
-     * @var array
      */
-    private $defaultThumbnails = [
-        [140, 140],
-    ];
+    private array $defaultThumbnails = [[140, 140]];
 
     /**
      * Unique identifier
@@ -214,7 +221,7 @@ class Media extends ModelEntity
     /**
      * Creation date of the media
      *
-     * @var \DateTimeInterface
+     * @var DateTimeInterface
      *
      * @ORM\Column(name="created", type="date", nullable=false)
      */
@@ -223,7 +230,7 @@ class Media extends ModelEntity
     /**
      * Internal container for the uploaded file.
      *
-     * @var UploadedFile
+     * @var File
      */
     private $file;
 
@@ -261,7 +268,7 @@ class Media extends ModelEntity
      * @var Album
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\Media\Album", inversedBy="media")
-     * @ORM\JoinColumn(name="albumID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="albumID", referencedColumnName="id", nullable=false)
      */
     private $album;
 
@@ -280,13 +287,7 @@ class Media extends ModelEntity
      */
     private $highDpiThumbnails;
 
-    /****************************************************************
-     *                  Property Getter & Setter                    *
-     ****************************************************************/
-
     /**
-     * Returns the identifier "id"
-     *
      * @return int
      */
     public function getId()
@@ -465,7 +466,7 @@ class Media extends ModelEntity
     /**
      * Sets the creation date of the media.
      *
-     * @param \DateTimeInterface $created
+     * @param DateTimeInterface $created
      *
      * @return Media
      */
@@ -479,7 +480,7 @@ class Media extends ModelEntity
     /**
      * Returns the creation date of the media.
      *
-     * @return \DateTimeInterface
+     * @return DateTimeInterface
      */
     public function getCreated()
     {
@@ -534,7 +535,7 @@ class Media extends ModelEntity
     /**
      * Returns the instance of the assigned album
      *
-     * @return Album|null
+     * @return Album
      */
     public function getAlbum()
     {
@@ -566,8 +567,6 @@ class Media extends ModelEntity
     /**
      * Setter method for the file property. If the file is set, the file information will be extracted
      * and set into the internal properties.
-     *
-     * @param UploadedFile $file
      *
      * @return Media
      */
@@ -683,7 +682,7 @@ class Media extends ModelEntity
 
         // Name changed? Then rename the file and set the new path
         if ($isNameChanged) {
-            $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+            $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
             $newName = $this->getFileName();
             $newPath = $this->getUploadDir() . $newName;
 
@@ -714,8 +713,8 @@ class Media extends ModelEntity
      */
     public function onRemove()
     {
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
-        //check if file exist and remove it
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
+        // check if file exist and remove it
         if ($mediaService->has($this->path)) {
             $mediaService->delete($this->path);
         }
@@ -769,8 +768,6 @@ class Media extends ModelEntity
             if (!is_numeric($data['width'])) {
                 continue;
             }
-            // If no height configured, set 0
-            $data['height'] = isset($data['height']) ? $data['height'] : 0;
 
             // Create thumbnail with the configured size
             $this->createThumbnail((int) $data['width'], (int) $data['height']);
@@ -794,7 +791,7 @@ class Media extends ModelEntity
             return;
         }
 
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
         foreach ($thumbnailSizes as $size) {
             if (strpos($size, 'x') === false) {
@@ -823,7 +820,7 @@ class Media extends ModelEntity
     /**
      * Returns the converted file name.
      *
-     * @return bool|string
+     * @return string
      */
     public function getFileName()
     {
@@ -831,7 +828,6 @@ class Media extends ModelEntity
             return $this->removeSpecialCharacters($this->name) . '.' . $this->extension;
         }
 
-        // Do whatever you want to generate a unique name
         return Random::getAlphanumericString(13) . '.' . $this->extension;
     }
 
@@ -845,7 +841,7 @@ class Media extends ModelEntity
     public function loadThumbnails($highDpi = false)
     {
         $thumbnails = $this->getThumbnailFilePaths($highDpi);
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
         if (!$mediaService->has($this->getPath())) {
             return $thumbnails;
@@ -857,7 +853,7 @@ class Media extends ModelEntity
             if (!$mediaService->has($thumbnail)) {
                 try {
                     $this->createThumbnail((int) $size[0], (int) $size[1]);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     // Ignore for now
                     // Exception might be thrown when thumbnails can not
                     // be generated due to invalid image files
@@ -884,7 +880,7 @@ class Media extends ModelEntity
 
         // Concat default sizes
         foreach ($this->defaultThumbnails as $size) {
-            if (count($size) === 1) {
+            if (\count($size) === 1) {
                 $sizes[] = $size . 'x' . $size;
             } else {
                 $sizes[] = $size[0] . 'x' . $size[1];
@@ -1027,7 +1023,7 @@ class Media extends ModelEntity
      */
     private function updateAssociations()
     {
-        /** @var \Shopware\Models\Article\Image $article */
+        /** @var Image $article */
         foreach ($this->articles as $article) {
             $article->setPath($this->getName());
             Shopware()->Models()->persist($article);
@@ -1046,8 +1042,12 @@ class Media extends ModelEntity
      */
     private function uploadFile()
     {
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
         $projectDir = Shopware()->Container()->getParameter('shopware.app.rootDir');
+
+        if (!\is_string($projectDir)) {
+            throw new RuntimeException('Parameter shopware.app.rootDir has to be an string');
+        }
 
         // Move the file to the upload directory
         if ($this->file !== null) {
@@ -1085,8 +1085,8 @@ class Media extends ModelEntity
             return;
         }
 
-        /** @var \Shopware\Components\Thumbnail\Manager $generator */
-        $generator = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
+        /** @var Manager $generator */
+        $generator = Shopware()->Container()->get(Manager::class);
 
         $generator->createMediaThumbnail($this, $this->defaultThumbnails, true);
     }
@@ -1103,10 +1103,10 @@ class Media extends ModelEntity
             return;
         }
 
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
 
         foreach ($this->defaultThumbnails as $size) {
-            if (count($size) === 1) {
+            if (\count($size) === 1) {
                 $sizeString = $size . 'x' . $size;
             } else {
                 $sizeString = $size[0] . 'x' . $size[1];
@@ -1141,6 +1141,10 @@ class Media extends ModelEntity
         // The absolute directory path where uploaded documents should be saved
         $projectDir = Shopware()->Container()->getParameter('shopware.app.rootDir');
 
+        if (!\is_string($projectDir)) {
+            throw new RuntimeException('Parameter shopware.app.rootDir has to be an string');
+        }
+
         return $projectDir . 'media' . DIRECTORY_SEPARATOR . strtolower($this->type) . DIRECTORY_SEPARATOR;
     }
 
@@ -1151,7 +1155,7 @@ class Media extends ModelEntity
      */
     private function getThumbnailDir()
     {
-        $mediaService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaServiceInterface::class);
+        $mediaService = Shopware()->Container()->get(MediaServiceInterface::class);
         $path = $this->getUploadDir() . 'thumbnail' . DIRECTORY_SEPARATOR;
         $path = $mediaService->normalize($path);
 
@@ -1171,8 +1175,8 @@ class Media extends ModelEntity
             return;
         }
 
-        /** @var \Shopware\Components\Thumbnail\Manager $manager */
-        $manager = Shopware()->Container()->get(\Shopware\Components\Thumbnail\Manager::class);
+        /** @var Manager $manager */
+        $manager = Shopware()->Container()->get(Manager::class);
 
         $newSize = [
             'width' => $width,
@@ -1215,7 +1219,7 @@ class Media extends ModelEntity
             return;
         }
 
-        $extension = $this->file->guessExtension();
+        $extension = (string) $this->file->guessExtension();
         $name = $this->file->getBasename();
 
         if ($this->file instanceof UploadedFile) {
@@ -1232,13 +1236,13 @@ class Media extends ModelEntity
 
         // Validate extension
         // #1 - whitelist
-        $mappingService = Shopware()->Container()->get(\Shopware\Bundle\MediaBundle\MediaExtensionMappingServiceInterface::class);
+        $mappingService = Shopware()->Container()->get(MediaExtensionMappingServiceInterface::class);
         if (!$mappingService->isAllowed($extension)) {
             throw new MediaFileExtensionNotAllowedException($extension);
         }
 
         // #2 - blacklist
-        if (in_array($extension, \Shopware_Controllers_Backend_MediaManager::$fileUploadBlacklist, true)) {
+        if (\in_array($extension, Shopware_Controllers_Backend_MediaManager::$fileUploadBlacklist, true)) {
             throw new MediaFileExtensionIsBlacklistedException($extension);
         }
 
@@ -1257,6 +1261,10 @@ class Media extends ModelEntity
         $this->extension = str_replace('jpeg', 'jpg', $extension);
 
         $projectDir = Shopware()->Container()->getParameter('shopware.app.rootDir');
+        if (!\is_string($projectDir)) {
+            throw new RuntimeException('Parameter shopware.app.rootDir has to be an string');
+        }
+
         $this->path = str_replace($projectDir, '', $this->getUploadDir() . $this->getFileName());
 
         if (DIRECTORY_SEPARATOR !== '/') {
@@ -1264,16 +1272,11 @@ class Media extends ModelEntity
         }
     }
 
-    /**
-     * @param string $name
-     *
-     * @return string
-     */
-    private function removeSpecialCharacters($name)
+    private function removeSpecialCharacters(string $name): string
     {
         $name = iconv('utf-8', 'ascii//translit', $name);
         $name = preg_replace('#[^A-Za-z0-9\-_]#', '-', $name);
-        $name = preg_replace('#-{2,}#', '-', $name);
+        $name = (string) preg_replace('#-{2,}#', '-', $name);
         $name = trim($name, '-');
 
         return mb_substr($name, 0, 180);
@@ -1281,23 +1284,16 @@ class Media extends ModelEntity
 
     /**
      * Searches all album settings for thumbnail sizes
-     *
-     * @return array
      */
-    private function getAllThumbnailSizes()
+    private function getAllThumbnailSizes(): array
     {
-        /** @var Connection $connection */
-        $connection = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class);
-        $joinedSizes = $connection
-            ->query('SELECT DISTINCT thumbnail_size FROM s_media_album_settings WHERE thumbnail_size != ""')
-            ->fetchAll(\PDO::FETCH_COLUMN);
+        $joinedSizes = Shopware()->Container()->get(Connection::class)
+            ->executeQuery('SELECT DISTINCT thumbnail_size FROM s_media_album_settings WHERE thumbnail_size != ""')
+            ->fetchAll(PDO::FETCH_COLUMN);
 
         $sizes = [];
         foreach ($joinedSizes as $sizeItem) {
             $explodedSizes = explode(';', $sizeItem);
-            if (empty($explodedSizes)) {
-                continue;
-            }
 
             $sizes = array_merge($sizes, array_flip($explodedSizes));
         }

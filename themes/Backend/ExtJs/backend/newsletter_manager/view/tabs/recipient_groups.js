@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    NewsletterManager
@@ -42,8 +41,8 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.RecipientGroups', {
 
     border: false,
 
-    snippets : {
-        columns : {
+    snippets: {
+        columns: {
             groupName: '{s name="columns/groupName"}Group name{/s}',
             recipients: '{s name="columns/recipients"}# Recipients{/s}',
             groupId: '{s name="columns/id"}ID{/s}',
@@ -98,9 +97,9 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.RecipientGroups', {
                 '<span>&nbsp;({ rows.length } ' + me.snippets.numberOfGroups + ')</span>',
                 {
                     formatHeader: function(field) {
-                        if(field === false) {
+                        if (field === false) {
                             return '{s name="ownNewsletterGroups"}Own recipient groups{/s}';
-                        }else{
+                        } else {
                             return '{s name="customerGroups"}Customer groups{/s}';
                         }
                     }
@@ -114,26 +113,25 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.RecipientGroups', {
      *
      * @return Ext.selection.CheckboxModel
      */
-    getGridSelModel : function() {
+    getGridSelModel: function() {
         var me = this;
         return Ext.create('Ext.selection.CheckboxModel', {
-            listeners:{
+            listeners: {
                 // Unlocks the delete button if the user has checked at least one checkbox
-                selectionchange:function (sm, selections) {
+                selectionchange: function (sm, selections) {
                     var changed = 0;
                     Ext.each(selections, function(record){
-                        if(record.get('isCustomerGroup') == true){
+                        if (record.get('isCustomerGroup') == true){
                             sm.deselect(record);
                             changed++;
                         }
                     });
 
-                    me.deleteSelected.setDisabled(selections.length-changed == 0);
+                    me.deleteSelected.setDisabled(selections.length - changed == 0);
                 }
             }
         });
     },
-
 
     /**
      * Creates the grid columns
@@ -163,34 +161,33 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.RecipientGroups', {
             },
             {
                 header: me.snippets.columns.actions,
-                xtype : 'actioncolumn',
-                width : 80,
-                items : me.getActionColumn()
+                xtype: 'actioncolumn',
+                width: 80,
+                items: me.getActionColumn()
             }
         ];
     },
-
 
     /**
      * Returns an array of icons for the action column
      *
      * @return Array of buttons
      */
-    getActionColumn : function() {
+    getActionColumn: function() {
         var me = this;
 
         return [
             /*{if {acl_is_allowed privilege=delete}}*/
             {
-                iconCls:'sprite-minus-circle-frame',
-                action:'delete',
-                tooltip:'{s name="action/delete"}Delete{/s}',
+                iconCls: 'sprite-minus-circle-frame',
+                action: 'delete',
+                tooltip: '{s name="action/delete"}Delete{/s}',
                 handler: function (view, rowIndex, colIndex, item, opts, record) {
                     me.fireEvent('deleteSelected', [record]);
                 },
                 // Hide the "delete" button if the current row does not contain a valid customer
                 getClass: function(value, metaData, record) {
-                    if(record.get('isCustomerGroup') == true) {
+                    if (record.get('isCustomerGroup') == true) {
                         return 'x-hide-display';
                     }
                 }
@@ -208,7 +205,7 @@ Ext.define('Shopware.apps.NewsletterManager.view.tabs.RecipientGroups', {
     getToolbar: function() {
         var me = this;
 
-        me.deleteSelected = Ext.create('Ext.button.Button',{
+        me.deleteSelected = Ext.create('Ext.button.Button', {
             text: '{s name="deleteSelected"}Delete selected{/s}',
             iconCls: 'sprite-minus-circle',
             disabled: true,

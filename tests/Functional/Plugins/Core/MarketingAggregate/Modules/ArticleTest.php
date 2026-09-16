@@ -1,39 +1,40 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Plugins\Core\MarketingAggregate\Modules;
 
+use sArticles;
 use Shopware\Tests\Functional\Plugins\Core\MarketingAggregate\AbstractMarketing;
 
 class ArticleTest extends AbstractMarketing
 {
-    /**
-     * @var \sArticles
-     */
-    protected $module;
+    protected sArticles $module;
 
-    protected $category = null;
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $category;
 
     /**
      * Set up function for this test case.
@@ -49,7 +50,7 @@ class ArticleTest extends AbstractMarketing
      *
      * @group skipElasticSearch
      */
-    public function testTopSellerSelection()
+    public function testTopSellerSelection(): void
     {
         $this->removeDemoData();
         $this->insertDemoData();
@@ -61,8 +62,8 @@ class ArticleTest extends AbstractMarketing
 
         $topSeller = array_values($topSeller);
 
-        //the article "2" pseudo sales are set to 1000 so we expect that this will be the first article
-        //in the top seller slider.
+        // the article "2" pseudo sales are set to 1000 so we expect that this will be the first article
+        // in the top seller slider.
         static::assertEquals(4, $topSeller[0]['articleID']);
         static::assertEquals(3, $topSeller[1]['articleID']);
 
@@ -73,7 +74,7 @@ class ArticleTest extends AbstractMarketing
      * Helper function to initial the test case
      * demo data.
      */
-    protected function insertDemoData()
+    protected function insertDemoData(): void
     {
         $category = [
             'parent' => '3',
@@ -109,7 +110,7 @@ class ArticleTest extends AbstractMarketing
     /**
      * Helper function to clean up the test case demo data.
      */
-    protected function removeDemoData()
+    protected function removeDemoData(): void
     {
         $category = $this->getDemoCategory();
 
@@ -128,10 +129,15 @@ class ArticleTest extends AbstractMarketing
     /**
      * Helper function to get the test case demo category.
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected function getDemoCategory()
+    protected function getDemoCategory(): array
     {
-        return $this->Db()->fetchRow("SELECT * FROM s_categories WHERE description = 'TopSellerTest' LIMIT 1");
+        $category = $this->Db()->fetchRow("SELECT * FROM s_categories WHERE description = 'TopSellerTest' LIMIT 1");
+        if ($category === false) {
+            return [];
+        }
+
+        return $category;
     }
 }

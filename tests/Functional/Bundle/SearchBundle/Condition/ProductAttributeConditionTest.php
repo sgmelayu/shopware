@@ -1,30 +1,32 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\SearchBundle\Condition;
 
 use Shopware\Bundle\SearchBundle\Condition\ProductAttributeCondition;
+use Shopware\Bundle\SearchBundle\ConditionInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Models\Category\Category;
 use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestCase;
@@ -34,11 +36,11 @@ use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestCase;
  */
 class ProductAttributeConditionTest extends TestCase
 {
-    public function testEquals()
+    public function testEquals(): void
     {
         $condition = new ProductAttributeCondition(
             'attr1',
-            ProductAttributeCondition::OPERATOR_EQ,
+            ConditionInterface::OPERATOR_EQ,
             10
         );
 
@@ -53,11 +55,11 @@ class ProductAttributeConditionTest extends TestCase
         );
     }
 
-    public function testContains()
+    public function testContains(): void
     {
         $condition = new ProductAttributeCondition(
             'attr1',
-            ProductAttributeCondition::OPERATOR_CONTAINS,
+            ConditionInterface::OPERATOR_CONTAINS,
             'Rot'
         );
 
@@ -73,11 +75,11 @@ class ProductAttributeConditionTest extends TestCase
         );
     }
 
-    public function testEndsWith()
+    public function testEndsWith(): void
     {
         $condition = new ProductAttributeCondition(
             'attr1',
-            ProductAttributeCondition::OPERATOR_ENDS_WITH,
+            ConditionInterface::OPERATOR_ENDS_WITH,
             'Grün'
         );
 
@@ -94,11 +96,11 @@ class ProductAttributeConditionTest extends TestCase
         );
     }
 
-    public function testStartsWith()
+    public function testStartsWith(): void
     {
         $condition = new ProductAttributeCondition(
             'attr1',
-            ProductAttributeCondition::OPERATOR_STARTS_WITH,
+            ConditionInterface::OPERATOR_STARTS_WITH,
             'Grün'
         );
 
@@ -115,11 +117,11 @@ class ProductAttributeConditionTest extends TestCase
         );
     }
 
-    public function testInOperator()
+    public function testInOperator(): void
     {
         $condition = new ProductAttributeCondition(
             'attr1',
-            ProductAttributeCondition::OPERATOR_IN,
+            ConditionInterface::OPERATOR_IN,
             ['Grün', 'Rot']
         );
 
@@ -136,11 +138,11 @@ class ProductAttributeConditionTest extends TestCase
         );
     }
 
-    public function testNull()
+    public function testNull(): void
     {
         $condition = new ProductAttributeCondition(
             'attr1',
-            ProductAttributeCondition::OPERATOR_EQ,
+            ConditionInterface::OPERATOR_EQ,
             null
         );
 
@@ -157,11 +159,11 @@ class ProductAttributeConditionTest extends TestCase
         );
     }
 
-    public function testNotNull()
+    public function testNotNull(): void
     {
         $condition = new ProductAttributeCondition(
             'attr1',
-            ProductAttributeCondition::OPERATOR_NEQ,
+            ConditionInterface::OPERATOR_NEQ,
             null
         );
 
@@ -179,11 +181,11 @@ class ProductAttributeConditionTest extends TestCase
     }
 
     protected function getProduct(
-        $number,
+        string $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $attribute = ['attr1' => 10]
-    ) {
+    ): array {
         $product = parent::getProduct($number, $context, $category);
         $product['mainDetail']['attribute'] = $attribute;
 

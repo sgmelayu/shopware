@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\ESIndexingBundle;
 
 use Elasticsearch\Client;
+use RuntimeException;
 use Shopware\Bundle\ESIndexingBundle\Console\EvaluationHelperInterface;
 use Shopware\Bundle\ESIndexingBundle\Console\ProgressHelperInterface;
 use Shopware\Bundle\ESIndexingBundle\Struct\IndexConfiguration;
@@ -33,50 +34,30 @@ use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
 
 class ShopIndexer implements ShopIndexerInterface
 {
-    /**
-     * @var Client
-     */
-    private $client;
+    private Client $client;
 
-    /**
-     * @var BacklogReaderInterface
-     */
-    private $backlogReader;
+    private BacklogReaderInterface $backlogReader;
 
     /**
      * @var MappingInterface[]
      */
-    private $mappings;
+    private array $mappings;
 
     /**
      * @var DataIndexerInterface[]
      */
-    private $indexer;
+    private array $indexer;
 
     /**
      * @var SettingsInterface[]
      */
-    private $settings;
+    private array $settings;
 
-    /**
-     * @var IndexFactoryInterface
-     */
-    private $indexFactory;
+    private IndexFactoryInterface $indexFactory;
 
-    /**
-     * @var EvaluationHelperInterface
-     */
-    private $evaluation;
+    private EvaluationHelperInterface $evaluation;
 
-    /**
-     * @var BacklogProcessorInterface
-     */
-    private $backlogProcessor;
-
-    /**
-     * @var string
-     */
-    private $esVersion;
+    private BacklogProcessorInterface $backlogProcessor;
 
     /**
      * @param DataIndexerInterface[] $indexer
@@ -91,8 +72,7 @@ class ShopIndexer implements ShopIndexerInterface
         EvaluationHelperInterface $evaluation,
         array $indexer,
         array $mappings,
-        array $settings,
-        string $esVersion
+        array $settings
     ) {
         $this->client = $client;
         $this->backlogReader = $backlogReader;
@@ -102,20 +82,19 @@ class ShopIndexer implements ShopIndexerInterface
         $this->mappings = $mappings;
         $this->settings = $settings;
         $this->evaluation = $evaluation;
-        $this->esVersion = $esVersion;
     }
 
     /**
      * {@inheritdoc}
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
-    public function index(Shop $shop, ProgressHelperInterface $helper, array $indexNames = null)
+    public function index(Shop $shop, ProgressHelperInterface $helper, ?array $indexNames = null)
     {
         $lastBacklogId = $this->backlogReader->getLastBacklogId();
 
         foreach ($this->mappings as $mapping) {
-            if (!empty($indexNames) && !in_array($mapping->getType(), $indexNames)) {
+            if (!empty($indexNames) && !\in_array($mapping->getType(), $indexNames)) {
                 continue;
             }
 
@@ -149,13 +128,13 @@ class ShopIndexer implements ShopIndexerInterface
     }
 
     /**
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     private function createIndex(IndexConfiguration $configuration, ShopIndex $index)
     {
         $exist = $this->client->indices()->exists(['index' => $configuration->getName()]);
         if ($exist) {
-            throw new \RuntimeException(sprintf('ElasticSearch index %s already exist.', $configuration->getName()));
+            throw new RuntimeException(\sprintf('ElasticSearch index %s already exist.', $configuration->getName()));
         }
 
         $mergedSettings = [
@@ -182,9 +161,7 @@ class ShopIndexer implements ShopIndexerInterface
     {
         $arguments = [
             'index' => $index->getName(),
-            'type' => $mapping->getType(),
             'body' => $mapping->get($index->getShop()),
-            'include_type_name' => true,
         ];
 
         $this->client->indices()->putMapping(

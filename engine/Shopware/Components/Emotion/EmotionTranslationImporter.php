@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Emotion;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 use Shopware\Components\Emotion\Exception\MappingRequiredException;
 use Shopware_Components_Translation;
 
@@ -40,10 +41,10 @@ class EmotionTranslationImporter
      */
     private $translator;
 
-    public function __construct(Connection $connection, Shopware_Components_Translation $translationComponent = null)
+    public function __construct(Connection $connection, ?Shopware_Components_Translation $translationComponent = null)
     {
         $this->connection = $connection;
-        $this->translator = $translationComponent ?: Shopware()->Container()->get(\Shopware_Components_Translation::class);
+        $this->translator = $translationComponent ?: Shopware()->Container()->get(Shopware_Components_Translation::class);
     }
 
     /**
@@ -69,7 +70,7 @@ class EmotionTranslationImporter
             ->from('s_core_shops', 'shop')
             ->leftJoin('shop', 's_core_locales', 'locale', 'locale.id = shop.locale_id')
             ->execute()
-            ->fetchAll(\PDO::FETCH_GROUP);
+            ->fetchAll(PDO::FETCH_GROUP);
 
         foreach ($shops as $key => $shopData) {
             $shops[$key] = array_combine(array_column($shopData, 'name'), array_column($shopData, 'id'));
@@ -92,7 +93,7 @@ class EmotionTranslationImporter
             ->where('e.emotionID = :id')
             ->setParameter('id', $emotionId)
             ->execute()
-            ->fetchAll(\PDO::FETCH_COLUMN);
+            ->fetchAll(PDO::FETCH_COLUMN);
 
         foreach ($translations as &$translation) {
             $translation['objectdata'] = unserialize($translation['objectdata'], ['allowed_classes' => false]);

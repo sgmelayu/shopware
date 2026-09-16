@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Emotion\Library;
@@ -33,6 +33,9 @@ use Shopware\Components\Model\ModelEntity;
  */
 class Field extends ModelEntity
 {
+    public const VALUE_TYPE_JSON = 'json';
+    public const VALUE_TYPE_STRING = 'string';
+
     /**
      * Unique identifier field of the element model.
      *
@@ -166,9 +169,9 @@ class Field extends ModelEntity
     private $translatable;
 
     /**
-     * @var int
+     * @var int|null
      *
-     * @ORM\Column(name="position", type="integer", nullable=false)
+     * @ORM\Column(name="position", type="integer", nullable=true)
      */
     private $position;
 
@@ -177,10 +180,10 @@ class Field extends ModelEntity
      * which can be configured in the backend emotion module.
      * The assigned library component contains the data definition for the grid element.
      *
-     * @var \Shopware\Models\Emotion\Library\Component
+     * @var Component
      *
      * @ORM\ManyToOne(targetEntity="\Shopware\Models\Emotion\Library\Component", inversedBy="fields")
-     * @ORM\JoinColumn(name="componentID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="componentID", referencedColumnName="id", nullable=false)
      */
     private $component;
 
@@ -301,7 +304,7 @@ class Field extends ModelEntity
      * which can be configured in the backend emotion module.
      * The assigned library component contains the data definition for the grid element.
      *
-     * @return \Shopware\Models\Emotion\Library\Component
+     * @return Component
      */
     public function getComponent()
     {
@@ -313,7 +316,7 @@ class Field extends ModelEntity
      * which can be configured in the backend emotion module.
      * The assigned library component contains the data definition for the grid element.
      *
-     * @param \Shopware\Models\Emotion\Library\Component $component
+     * @param Component $component
      */
     public function setComponent($component)
     {
@@ -449,7 +452,7 @@ class Field extends ModelEntity
     }
 
     /**
-     * @param int $position
+     * @param int|null $position
      */
     public function setPosition($position)
     {
@@ -457,7 +460,7 @@ class Field extends ModelEntity
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getPosition()
     {

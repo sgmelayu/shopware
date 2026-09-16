@@ -18,6 +18,10 @@ Thumbs.db
 /composer.phar
 /vendor/*
 !/vendor/.htaccess
+/vendor-bin/*
+!/vendor-bin/.htaccess
+!/vendor-bin/*/composer.json
+!/vendor-bin/*/composer.lock
 
 # User installed plugins
 /engine/Shopware/Plugins/Community/Backend/*
@@ -41,6 +45,8 @@ Thumbs.db
 
 /.env.*
 !/.env.dist
+
+.htaccess
 
 # Caches/Proxies
 /tests/Shopware/TempFiles/*
@@ -70,6 +76,10 @@ Thumbs.db
 /files/documents/*
 !/files/documents/.htaccess
 /files/downloads/*
+/files/import_cron
+/files/import_export
+/files/552211cce724117c3178e3d22bec532ec/
+/files/backup/multi_edit/*
 
 # Snippet exports
 /snippetsExport/
@@ -90,7 +100,13 @@ Thumbs.db
 /tests/.phpunit.result.cache
 /php-cs-fixer.xml
 .phpunit.result.cache
+tests/phpunit-full-coverage.xml
 
 # scripts
 !/build/composer-post-install-cmd.sh
 !/build/composer-post-update-cmd.sh
+
+# Devenv
+.devenv*
+devenv.local.nix
+

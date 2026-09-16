@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Category
@@ -41,7 +40,7 @@ Ext.define('Shopware.apps.Performance.view.tabs.settings.elements.Tree', {
      * Register the alias for this class.
      * @string
      */
-    alias : 'widget.performance-tabs-settings-tree',
+    alias: 'widget.performance-tabs-settings-tree',
 
     /**
      * True to make the panel collapsible and have an expand/collapse toggle
@@ -52,7 +51,7 @@ Ext.define('Shopware.apps.Performance.view.tabs.settings.elements.Tree', {
      */
     collapsible: false,
 
-    region   : 'west',
+    region: 'west',
 
     /**
      * False to hide the root node.
@@ -71,26 +70,24 @@ Ext.define('Shopware.apps.Performance.view.tabs.settings.elements.Tree', {
      * @integer
      */
     width: 220,
-    rootNodeName : 'Shopware',
+    rootNodeName: 'Shopware',
 
-     /**
+    /**
      * Initialize the controller and defines the necessary default configuration
      */
-    initComponent : function() {
+    initComponent: function() {
         var me = this;
 
         me.selModel = Ext.create('Ext.selection.RowModel', {
         });
 
-
-         me.columns = [{
-             xtype: 'treecolumn',
-             text: 'test',
-             flex: 2,
-             sortable: false,
-             dataIndex: 'name'
-         }];
-
+        me.columns = [{
+            xtype: 'treecolumn',
+            text: 'test',
+            flex: 2,
+            sortable: false,
+            dataIndex: 'name'
+        }];
 
         me.callParent(arguments);
 

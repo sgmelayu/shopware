@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -50,8 +49,8 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
      */
     layout: {
         type: 'vbox',
-        align : 'stretch',
-        pack  : 'start'
+        align: 'stretch',
+        pack: 'start'
     },
 
     /**
@@ -72,13 +71,13 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
-        title:'{s name="detail/properties/title"}Properties{/s}',
-        notice:'{s name="detail/properties/notice"}To configure an article property, please select a suitable property group via the selection box. Hereafter, a grid with all property values will be displayed. To change the values as well, you can click on the second grid column and modify the value via combo box (multiple selection possible).{/s}',
-        property:'{s name="detail/properties/property"}Select property{/s}',
-        name:'{s name="detail/properties/name_column"}Property{/s}',
-        value:'{s name="detail/properties/value_column"}Values{/s}',
-        empty:'{s name="empty"}Please select...{/s}',
+    snippets: {
+        title: '{s name="detail/properties/title"}Properties{/s}',
+        notice: '{s name="detail/properties/notice"}To configure an article property, please select a suitable property group via the selection box. Hereafter, a grid with all property values will be displayed. To change the values as well, you can click on the second grid column and modify the value via combo box (multiple selection possible).{/s}',
+        property: '{s name="detail/properties/property"}Select property{/s}',
+        name: '{s name="detail/properties/name_column"}Property{/s}',
+        value: '{s name="detail/properties/value_column"}Values{/s}',
+        empty: '{s name="empty"}Please select...{/s}',
         comboset_label: '{s name="detail/properties/comboset_label"}Choose set{/s}',
         combogroup_label: '{s name="detail/properties/combogroup_label"}Assign properties{/s}',
         button_text: '{s name="detail/properties/button_text"}Create{/s}',
@@ -104,7 +103,7 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this,
             mainWindow = me.subApp.articleWindow;
 
@@ -188,7 +187,7 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
                     field.getStore().load();
                 },
                 specialkey: function(field, event) {
-                    if(event.getKey() === Ext.EventObject.ENTER && event.ctrlKey === true) {
+                    if (event.getKey() === Ext.EventObject.ENTER && event.ctrlKey === true) {
                         event.stopEvent();
                         me.assignValuesToStore();
                     }
@@ -383,7 +382,7 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
                     header: me.snippets.name,
                     dataIndex: 'name',
                     width: 155
-                } , {
+                }, {
                     header: me.snippets.value,
                     dataIndex: 'value',
                     flex: 1,
@@ -408,7 +407,7 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
             result = [ Ext.String.format('<ul class="[0]item-bubble-list">', Ext.baseCSSPrefix) ];
 
         Ext.each(values, function(value) {
-            if(!value) {
+            if (!value) {
                 return;
             }
 
@@ -462,7 +461,6 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
             }
         });
 
-
         if (me.article.get('filterGroupId')) {
             me.propertySetStore.load({
                 id: me.article.get('filterGroupId')
@@ -498,7 +496,7 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
             notFound = false;
         }
 
-        if(notFound) {
+        if (notFound) {
             return;
         }
 
@@ -509,20 +507,20 @@ Ext.define('Shopware.apps.Article.view.detail.Properties', {
         valueId = ~~(1 * element.getAttribute('data-value-id'));
         rowId = ~~(1 * element.getAttribute('data-row-id'));
 
-        if(!valueId) {
-            for(var i in element.dom.attributes) {
+        if (!valueId) {
+            for (var i in element.dom.attributes) {
                 var attr = element.dom.attributes[i];
-                if(attr.name == 'data-value-id') {
+                if (attr.name == 'data-value-id') {
                     valueId = parseInt(attr.value, 10);
                     break;
                 }
             }
         }
 
-        if(!rowId) {
-            for(var i in element.dom.attributes) {
+        if (!rowId) {
+            for (var i in element.dom.attributes) {
                 var attr = element.dom.attributes[i];
-                if(attr.name == 'data-row-id') {
+                if (attr.name == 'data-row-id') {
                     rowId = parseInt(attr.value, 10);
                     break;
                 }

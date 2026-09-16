@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -49,7 +48,7 @@ Ext.define('Shopware.apps.ArticleList.controller.SplitView', {
     },
 
     refs: [
-        { ref:'sidebar', selector:'multi-edit-sidebar' },
+        { ref: 'sidebar', selector: 'multi-edit-sidebar' },
     ],
 
     /**
@@ -104,18 +103,18 @@ Ext.define('Shopware.apps.ArticleList.controller.SplitView', {
                 y: tmpPosition[1] - 40
             };
 
-        if(!record) {
+        if (!record) {
             return;
         }
 
         // Is a split view already been up and running...
-        if(me.splitViewMode) {
+        if (me.splitViewMode) {
             Ext.MessageBox.alert('{s name="splitview_title"}Split-View{/s}', '{s name="split_view_already_active"}The split view mode has already been activated. Please close the product mask window and start a new instance of the split view.{/s}');
             return false;
         }
 
         // Add inidicator to the class that the split view mode is up and running...
-        if(!me.hasOwnProperty('splitViewMode') || !me.splitViewMode) {
+        if (!me.hasOwnProperty('splitViewMode') || !me.splitViewMode) {
             me.splitViewMode = true;
         }
 
@@ -127,7 +126,7 @@ Ext.define('Shopware.apps.ArticleList.controller.SplitView', {
 
         // Prepare the article list
         me.getSidebar().collapse();
-        mainWindow.setPosition(0,0);
+        mainWindow.setPosition(0, 0);
         mainWindow.setSize(Ext.Element.getViewportWidth() / 2, Ext.Element.getViewportHeight() - 90);
 
         // Open the product module and set it up for the splitview mode
@@ -153,7 +152,7 @@ Ext.define('Shopware.apps.ArticleList.controller.SplitView', {
             record = selection[0];
 
         // No record was selected...
-        if(!record) {
+        if (!record) {
             return false;
         }
 

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Shopware_Config
@@ -32,24 +31,24 @@
  */
 //{block name="backend/config/model/form/shop"}
 Ext.define('Shopware.apps.Config.model.form.Shop', {
-    extend:'Ext.data.Model',
+    extend: 'Ext.data.Model',
 
     fields: [
         //{block name="backend/config/model/form/shop/fields"}{/block}
-        { name: 'id', type:'int', useNull: true, defaultValue: null },
+        { name: 'id', type: 'int', useNull: true, defaultValue: null },
         { name: 'typeSwitch',  persist: false, convert: function(v, record) {
 
             // The default value determines if a newly created shop is either a subshop (sub) or a language shop (lang).
             // record.phantom is set automatically on new, unsaved records by ExtJs.
             //{block name="backend/config/model/form/shop/fields/typeSwitch/defaultValue"}
-            if(record.phantom){
+            if (record.phantom){
                 return 'lang';
             }
             //{/block}
 
             // The shop type is internally determined by the presence/absence of the mainId
             return record.raw && record.raw.main && record.raw.main.id ? 'lang' : 'sub';
-        }},
+        } },
         { name: 'name', type: 'string' },
         { name: 'title', type: 'string', useNull: true },
         { name: 'position', type: 'int' },

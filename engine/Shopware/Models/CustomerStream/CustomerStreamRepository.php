@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\CustomerStream;
@@ -32,7 +32,7 @@ use PDO;
 
 class CustomerStreamRepository implements CustomerStreamRepositoryInterface
 {
-    const INDEXING_LIMIT = 250;
+    public const INDEXING_LIMIT = 250;
 
     /**
      * @var Connection
@@ -50,10 +50,10 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
     public function hasCustomerStreamEmotions($categoryId)
     {
         return $this->connection->fetchColumn(
-            'SELECT emotion.id 
-            FROM s_emotion emotion 
-            INNER JOIN s_emotion_categories categories 
-                ON categories.emotion_id = emotion.id 
+            'SELECT emotion.id
+            FROM s_emotion emotion
+            INNER JOIN s_emotion_categories categories
+                ON categories.emotion_id = emotion.id
                 AND categories.category_id = :id
             WHERE emotion.customer_stream_ids IS NOT NULL AND emotion.active = 1
             LIMIT 1',
@@ -68,7 +68,6 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
     {
         $streams = $this->fetchStreamsForCustomers($ids);
 
-        /** @var \Doctrine\DBAL\Query\QueryBuilder $query */
         $query = $this->connection->createQueryBuilder();
         $query->select('*');
         $query->from('s_customer_search_index', 'search_index');
@@ -85,7 +84,7 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
             $data['interests'] = json_decode($data['interests'], true);
 
             $data['streams'] = [];
-            if (array_key_exists($id, $streams)) {
+            if (\array_key_exists($id, $streams)) {
                 $data['streams'] = $streams[$id];
             }
 
@@ -128,7 +127,7 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
             'SELECT COUNT(customers.id)
              FROM s_user customers
              WHERE customers.id NOT IN (
-                 SELECT search_index.id 
+                 SELECT search_index.id
                  FROM s_customer_search_index search_index
                  WHERE search_index.index_time >= :indexTime
              )',
@@ -161,7 +160,7 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
         } else {
             $query->andWhere(
                 'user.id NOT IN (
-                SELECT search_index.id 
+                SELECT search_index.id
                 FROM s_customer_search_index search_index
                 WHERE search_index.index_time >= :indexTime)'
             );
@@ -193,7 +192,7 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
             $month = $date->add(new DateInterval('P' . 1 . 'M'));
             $format = $month->format('Y-m');
 
-            if (array_key_exists($format, $data)) {
+            if (\array_key_exists($format, $data)) {
                 $chart[] = $data[$format];
             } else {
                 $chart[] = [
@@ -224,7 +223,7 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
             ->from('s_customer_streams')
             ->execute()->fetchAll(PDO::FETCH_KEY_PAIR);
 
-        $date = (new \DateTime())->sub(new \DateInterval('P' . (int) 12 . 'M'));
+        $date = (new DateTime())->sub(new DateInterval('P' . (int) 12 . 'M'));
 
         $query = $this->createAmountPerMonthQuery($date);
         $query->addSelect('stream_mapping.stream_id as stream');
@@ -252,7 +251,7 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
 
             $chart[$format] = array_merge(['yearMonth' => $format], $default);
 
-            if (array_key_exists($format, $amount)) {
+            if (\array_key_exists($format, $amount)) {
                 $chart[$format]['unassigned'] = (float) $amount[$format];
             }
 
@@ -339,7 +338,7 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
         $query->andWhere('orders.ordertime >= :orderTime');
         $query->andWhere('orders.ordernumber != 0');
         $query->setParameter(':cancelStatus', -1);
-        $query->setParameter(':orderTime', $date->format('Y-m'));
+        $query->setParameter(':orderTime', $date->format('Y-m-01'));
         $query->addGroupBy($format);
 
         return $query;
@@ -352,7 +351,6 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
      */
     private function createStreamAmountQuery(DateTime $date, $streamId = null)
     {
-        /** @var \Doctrine\DBAL\Query\QueryBuilder $query */
         $query = $this->connection->createQueryBuilder();
         $query->select([
             "DATE_FORMAT(orders.ordertime, '%Y-%m')",
@@ -371,7 +369,7 @@ class CustomerStreamRepository implements CustomerStreamRepositoryInterface
         $query->andWhere('orders.ordertime >= :orderTime');
         $query->andWhere('orders.ordernumber != 0');
         $query->setParameter(':cancelStatus', -1);
-        $query->setParameter(':orderTime', $date->format('Y-m'));
+        $query->setParameter(':orderTime', $date->format('Y-m-01'));
         $query->groupBy("DATE_FORMAT(orders.ordertime,'%Y-%m')");
 
         if ($streamId) {

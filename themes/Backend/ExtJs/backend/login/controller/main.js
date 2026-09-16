@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Login
@@ -58,7 +57,7 @@ Ext.define('Shopware.apps.Login.controller.Main', {
                     var form = field.up('form'),
                         btn = form.down('button');
 
-                    if(event.getKey() !== event.ENTER) {
+                    if (event.getKey() !== event.ENTER) {
                         return false;
                     }
                     me.onLogin(btn);
@@ -89,7 +88,7 @@ Ext.define('Shopware.apps.Login.controller.Main', {
             form = formPnl.getForm(),
             values = form.getValues();
 
-        if(!form.isValid() || !values.password.length || !values.username.length) {
+        if (!form.isValid() || !values.password.length || !values.username.length) {
             return false;
         }
         form.submit({
@@ -100,7 +99,7 @@ Ext.define('Shopware.apps.Login.controller.Main', {
             },
             failure: function(form, action) {
                 var lockedUntil, message;
-                if(action.result.lockedUntil) {
+                if (action.result.lockedUntil) {
                     action.result.lockedUntil = new Date(action.result.lockedUntil);
                     message = '{"failure/locked_message"|snippet|escape}';
                     message = new Ext.Template(message);

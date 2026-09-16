@@ -1,40 +1,59 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\AbstractQuery;
 use Shopware\Components\CSRFWhitelistAware;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Model\QueryBuilder;
+use Shopware\Components\Password\Encoder\PasswordEncoderInterface;
 use Shopware\Components\StateTranslatorService;
+use Shopware\Components\StateTranslatorServiceInterface;
+use Shopware\Components\Theme\Service;
+use Shopware\Components\Validator\EmailValidator;
+use Shopware\Components\Validator\EmailValidatorInterface;
+use Shopware\Models\Article\Article;
+use Shopware\Models\Article\Supplier;
 use Shopware\Models\Blog\Blog;
 use Shopware\Models\Category\Category;
-use Shopware\Models\Category\Repository;
+use Shopware\Models\Config\Element;
+use Shopware\Models\Country\Area;
+use Shopware\Models\Country\Country;
+use Shopware\Models\Country\State;
+use Shopware\Models\Customer\Group;
+use Shopware\Models\Dispatch\Dispatch;
 use Shopware\Models\Document\Document;
 use Shopware\Models\Emotion\Emotion;
+use Shopware\Models\Order\Order;
+use Shopware\Models\Payment\Payment;
+use Shopware\Models\Shop\Currency;
 use Shopware\Models\Shop\Locale;
+use Shopware\Models\Shop\Shop;
+use Shopware\Models\Shop\Template;
 use Shopware\Models\Site\Site;
 use Shopware\Models\Tax\Tax;
+use Shopware\Models\User\User;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -54,6 +73,8 @@ use Symfony\Component\HttpFoundation\Request;
  */
 class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_ExtJs implements CSRFWhitelistAware
 {
+    private const AS_STRING = ' as ';
+
     /**
      * Initials the script renderer and handles the json request.
      * If the internal customer repository isn't initialed the
@@ -64,7 +85,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function init()
     {
         if (!$this->Request()->getActionName()
-            || in_array($this->Request()->getActionName(), ['index', 'load'])
+            || \in_array($this->Request()->getActionName(), ['index', 'load'])
         ) {
             $this->View()->addTemplateDir('.');
             $this->Front()->Plugins()->ScriptRenderer()->setRender();
@@ -90,8 +111,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
      */
     public function getDetailStatusAction()
     {
-        /** @var \Shopware\Models\Order\Repository $repository */
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Order\Order::class);
+        $repository = $this->get('models')->getRepository(Order::class);
         $data = $repository->getDetailStatusQuery()->getArrayResult();
         $this->View()->assign(['success' => true, 'data' => $data]);
     }
@@ -107,8 +127,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
      */
     public function getTaxesAction()
     {
-        /** @var \Shopware\Models\Tax\Repository $repository */
-        $repository = Shopware()->Models()->getRepository(Tax::class);
+        $repository = $this->get('models')->getRepository(Tax::class);
 
         $query = $repository->getTaxQuery(
             $this->Request()->getParam('filter', []),
@@ -118,7 +137,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         );
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -141,10 +160,9 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getPaymentsAction()
     {
         // Load shop repository
-        /** @var \Shopware\Models\Payment\Repository $repository */
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Payment\Payment::class);
+        $repository = $this->get('models')->getRepository(Payment::class);
         $filter = $this->Request()->getParam('filter', []);
-        $hasActiveFilter = in_array('active', array_column($filter, 'property'), true);
+        $hasActiveFilter = \in_array('active', array_column($filter, 'property'), true);
 
         if (!$hasActiveFilter) {
             $filter[] = [
@@ -161,14 +179,14 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         );
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
 
         // Translate payments
-        /** @var \Shopware_Components_Translation $translationComponent */
-        $translationComponent = $this->get(\Shopware_Components_Translation::class);
+        /** @var Shopware_Components_Translation $translationComponent */
+        $translationComponent = $this->get(Shopware_Components_Translation::class);
         $data = $translationComponent->translatePaymentMethods($data);
 
         // Return the data and total count
@@ -190,7 +208,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getCustomerGroupsAction()
     {
         // Load shop repository
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Customer\Group::class);
+        $repository = $this->get('models')->getRepository(Group::class);
 
         $builder = $repository->createQueryBuilder('groups');
         $builder->select([
@@ -231,7 +249,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $query = $builder->getQuery();
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -253,8 +271,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
      */
     public function getCategoriesAction()
     {
-        /** @var Repository $repository */
-        $repository = Shopware()->Models()->getRepository(Category::class);
+        $repository = $this->get('models')->getRepository(Category::class);
 
         $query = $repository->getListQuery(
             $this->Request()->getParam('filter', []),
@@ -264,7 +281,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         );
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -288,7 +305,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getDispatchesAction()
     {
         // Load shop repository
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Dispatch\Dispatch::class);
+        $repository = $this->get('models')->getRepository(Dispatch::class);
 
         $query = $repository->getDispatchesQuery(
             $this->Request()->getParam('filter', []),
@@ -298,14 +315,14 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         );
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
 
         // Translate dispatch methods
-        /** @var \Shopware_Components_Translation $translationComponent */
-        $translationComponent = $this->get(\Shopware_Components_Translation::class);
+        /** @var Shopware_Components_Translation $translationComponent */
+        $translationComponent = $this->get(Shopware_Components_Translation::class);
         $data = $translationComponent->translateDispatchMethods($data);
 
         // Return the data and total count
@@ -326,7 +343,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getSuppliersAction()
     {
         // Load shop repository
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Article\Supplier::class);
+        $repository = $this->get('models')->getRepository(Supplier::class);
 
         $builder = $repository->createQueryBuilder('s');
         $builder->select([
@@ -354,7 +371,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $query = $builder->getQuery();
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -374,7 +391,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getPaymentStatusAction()
     {
         // Load shop repository
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Order\Order::class);
+        $repository = $this->get('models')->getRepository(Order::class);
 
         $query = $repository->getPaymentStatusQuery(
             $this->Request()->getParam('filter'),
@@ -384,12 +401,12 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         );
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
 
-        /** @var \Shopware\Components\StateTranslatorServiceInterface $stateTranslator */
+        /** @var StateTranslatorServiceInterface $stateTranslator */
         $stateTranslator = $this->get('shopware.components.state_translator');
         $data = array_map(function ($paymentStateItem) use ($stateTranslator) {
             $paymentStateItem = $stateTranslator->translateState(StateTranslatorService::STATE_PAYMENT, $paymentStateItem);
@@ -412,7 +429,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getOrderStatusAction()
     {
         // Load shop repository
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Order\Order::class);
+        $repository = $this->get('models')->getRepository(Order::class);
         $query = $repository->getOrderStatusQuery(
             $this->Request()->getParam('filter', []),
             $this->Request()->getParam('sort', []),
@@ -421,12 +438,12 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         );
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
 
-        /** @var \Shopware\Components\StateTranslatorServiceInterface $stateTranslator */
+        /** @var StateTranslatorServiceInterface $stateTranslator */
         $stateTranslator = $this->get('shopware.components.state_translator');
         $data = array_map(function ($orderStateItem) use ($stateTranslator) {
             $orderStateItem = $stateTranslator->translateState(StateTranslatorService::STATE_ORDER, $orderStateItem);
@@ -452,7 +469,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getCountriesAction()
     {
         // Load shop repository
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Country\Country::class);
+        $repository = $this->get('models')->getRepository(Country::class);
         $query = $repository->getCountriesQuery(
             $this->Request()->getParam('filter', []),
             $this->Request()->getParam('sort', []),
@@ -461,7 +478,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         );
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -489,7 +506,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getArticlesAction()
     {
         // Load shop repository
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Article\Article::class);
+        $repository = $this->get('models')->getRepository(Article::class);
 
         $builder = $repository->createQueryBuilder('articles');
 
@@ -558,13 +575,13 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
         $query = $builder->getQuery();
 
-        $paginator = Shopware()->Models()->createPaginator($query);
+        $paginator = $this->get('models')->createPaginator($query);
 
         // Get total result of the query
         $total = $paginator->count();
 
         // Select all shop as array
-        $data = $paginator->getIterator()->getArrayCopy();
+        $data = iterator_to_array($paginator);
 
         // Return the data and total count
         $this->View()->assign(['success' => true, 'data' => $data, 'total' => $total]);
@@ -590,7 +607,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
      */
     public function getVariantsAction()
     {
-        $builder = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->createQueryBuilder();
+        $builder = Shopware()->Container()->get(Connection::class)->createQueryBuilder();
 
         $fields = [
             'details.id',
@@ -603,12 +620,17 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
             'supplier.name as supplierName',
             'supplier.id as supplierId',
             'details.additionalText',
+            'prices.price',
+            'taxes.tax',
         ];
 
         $builder->select($fields);
         $builder->from('s_articles_details', 'details');
         $builder->innerJoin('details', 's_articles', 'articles', 'details.articleID = articles.id');
+        $builder->innerJoin('articles', 's_core_tax', 'taxes', 'articles.taxID = taxes.id');
         $builder->innerJoin('articles', 's_articles_supplier', 'supplier', 'supplier.id = articles.supplierID');
+        $builder->innerJoin('details', 's_articles_prices', 'prices', 'details.id = prices.articledetailsID');
+        $builder->where('prices.pricegroup = "EK"');
 
         $filters = $this->Request()->getParam('filter', []);
         foreach ($filters as $filter) {
@@ -632,15 +654,18 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         }
 
         $builder->setFirstResult($this->Request()->getParam('start'))
-            ->setMaxResults($this->Request()->getParam('limit'));
+            ->setMaxResults($this->Request()->getParam('limit'))
+            ->orderBy('details.id', 'ASC');
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $builder->execute();
-        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $result = $builder->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         $total = (int) $builder->getConnection()->fetchColumn('SELECT FOUND_ROWS()');
 
         $result = $this->addAdditionalTextForVariant($result);
+
+        foreach ($result as $index => $variant) {
+            $result[$index]['price'] = round($variant['price'] / 100 * (100 + $variant['tax']), 2);
+        }
 
         $this->View()->assign(['success' => true, 'data' => $result, 'total' => $total]);
     }
@@ -650,11 +675,11 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
      * Each user has the following fields:
      * <code>
      *    [int]      id
-     *    [int]        roleId
+     *    [int]      roleId
      *    [string]   username
      *    [string]   password
      *    [int]      localeId
-     *       [string]   sessionId
+     *    [string]   sessionId
      *    [date]     lastLogin
      *    [string]   name
      *    [string]   email
@@ -666,7 +691,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     public function getUsersAction()
     {
         // Load user repository
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\User\User::class);
+        $repository = $this->get('models')->getRepository(User::class);
         $builder = $repository->createQueryBuilder('user');
         $fields = [
             'id' => 'user.id',
@@ -693,7 +718,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $query = $builder->getQuery();
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -704,8 +729,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
     public function getShopsAction()
     {
-        /** @var \Shopware\Models\Shop\Repository $repository */
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Shop\Shop::class);
+        $repository = $this->get('models')->getRepository(Shop::class);
 
         $request = $this->Request();
         $filter = $request->getParam('filter', []);
@@ -727,7 +751,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
             true
         );
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -742,8 +766,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
      */
     public function getShopsWithThemesAction()
     {
-        /** @var \Shopware\Models\Shop\Repository $repository */
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Shop\Shop::class);
+        $repository = $this->get('models')->getRepository(Shop::class);
 
         $shopId = $this->Request()->getParam('shopId');
         $filter = $this->Request()->getParam('filter', []);
@@ -764,7 +787,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         );
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -775,8 +798,8 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
     public function getTemplatesAction()
     {
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Shop\Template::class);
-        /** @var \Shopware\Models\Shop\Template[] $templates */
+        $repository = $this->get('models')->getRepository(Template::class);
+        /** @var Template[] $templates */
         $templates = $repository->findAll();
 
         $result = [];
@@ -787,7 +810,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
                 'template' => $template->getTemplate(),
             ];
 
-            $data = $this->get(\Shopware\Components\Theme\Service::class)->translateTheme(
+            $data = $this->get(Service::class)->translateTheme(
                 $template,
                 $data
             );
@@ -800,7 +823,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
     public function getCurrenciesAction()
     {
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Shop\Currency::class);
+        $repository = $this->get('models')->getRepository(Currency::class);
 
         /** @var QueryBuilder $builder */
         $builder = $repository->createQueryBuilder('c');
@@ -819,7 +842,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $query = $builder->getQuery();
 
         // Get total result of the query
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
 
         // Select all shop as array
         $data = $query->getArrayResult();
@@ -843,7 +866,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $builder->addFilter((array) $this->Request()->getParam('filter', []));
 
         $sort = $this->Request()->getParam('sort', []);
-        if (is_array($sort) && count($sort) === 0) {
+        if (\is_array($sort) && \count($sort) === 0) {
             $builder->addOrderBy('l.language');
             $builder->addOrderBy('l.territory');
         }
@@ -864,7 +887,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
     public function getCountryAreasAction()
     {
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Country\Area::class);
+        $repository = $this->get('models')->getRepository(Area::class);
 
         /** @var QueryBuilder $builder */
         $builder = $repository->createQueryBuilder('area');
@@ -880,7 +903,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
         $query = $builder->getQuery();
 
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
         $data = $query->getArrayResult();
 
         $this->View()->assign(['success' => true, 'data' => $data, 'total' => $total]);
@@ -890,7 +913,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     {
         $countryId = $this->Request()->getParam('countryId');
 
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Country\State::class);
+        $repository = $this->get('models')->getRepository(State::class);
 
         /** @var QueryBuilder $builder */
         $builder = $repository->createQueryBuilder('state');
@@ -910,7 +933,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
         $query = $builder->getQuery();
 
-        $total = Shopware()->Models()->getQueryCount($query);
+        $total = $this->get('models')->getQueryCount($query);
         $data = $query->getArrayResult();
 
         $this->View()->assign(['success' => true, 'data' => $data, 'total' => $total]);
@@ -918,7 +941,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
     public function getAvailableHashesAction()
     {
-        /** @var \Shopware\Components\Password\Encoder\PasswordEncoderInterface[] $hashes */
+        /** @var PasswordEncoderInterface[] $hashes */
         $hashes = Shopware()->PasswordEncoder()->getCompatibleEncoders();
 
         $result = [];
@@ -928,7 +951,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $blacklist = ['prehashed', 'legacybackendmd5'];
 
         foreach ($hashes as $hash) {
-            if (in_array(strtolower($hash->getName()), $blacklist)) {
+            if (\in_array(strtolower($hash->getName()), $blacklist)) {
                 continue;
             }
 
@@ -937,7 +960,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
             ];
         }
 
-        $totalResult = count($hashes);
+        $totalResult = \count($hashes);
 
         $this->View()->assign([
             'success' => true,
@@ -946,13 +969,13 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function getAvailableCaptchasAction()
     {
-        /** @var \Shopware\Components\Captcha\CaptchaRepository $captchaRepository */
         $captchaRepository = $this->get('shopware.captcha.repository');
-        /** @var Enlight_Components_Snippet_Namespace $namespace */
-        $namespace = $namespace = Shopware()->Snippets()->getNamespace('backend/captcha/display_names');
-        /** @var \Shopware\Components\Captcha\CaptchaInterface[] $availableCaptchas */
+        $namespace = Shopware()->Snippets()->getNamespace('backend/captcha/display_names');
         $availableCaptchas = $captchaRepository->getList();
         $result = [];
 
@@ -963,7 +986,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
             ];
         }
 
-        $totalResult = count($availableCaptchas);
+        $totalResult = \count($availableCaptchas);
 
         $this->View()->assign([
             'success' => true,
@@ -984,9 +1007,9 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
 
         $namespace = Shopware()->Snippets()->getNamespace('backend/base/page_not_found_destination_options');
 
-        $query = Shopware()->Models()->getRepository(\Shopware\Models\Emotion\Emotion::class)
+        $query = $this->get('models')->getRepository(Emotion::class)
             ->getNameListQuery(true, $sort, $offset, $limit);
-        $count = Shopware()->Models()->getQueryCount($query);
+        $count = $this->get('models')->getQueryCount($query);
         $emotions = $query->getArrayResult();
         foreach ($emotions as &$emotion) {
             $emotion['name'] = $namespace->get('emotion_page_prefix', 'Shopping world') . ': ' . $emotion['name'];
@@ -1023,15 +1046,20 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $this->Front()->Plugins()->ViewRenderer()->setNoRender();
         $this->Front()->Plugins()->Json()->setRenderer(false);
 
-        $email = $this->Request()->getParam('value');
+        $emails = array_map('trim', explode(',', (string) $this->Request()->getParam('value', '')));
 
-        /** @var \Shopware\Components\Validator\EmailValidatorInterface $emailValidator */
-        $emailValidator = $this->container->get(\Shopware\Components\Validator\EmailValidator::class);
-        if ($emailValidator->isValid($email)) {
-            $this->Response()->setContent(1);
-        } else {
-            $this->Response()->setContent('');
+        /** @var EmailValidatorInterface $emailValidator */
+        $emailValidator = $this->container->get(EmailValidator::class);
+
+        foreach ($emails as $email) {
+            if (!$emailValidator->isValid($email)) {
+                $this->Response()->setContent('');
+
+                return;
+            }
         }
+
+        $this->Response()->setContent(1);
     }
 
     public function getSalutationsAction()
@@ -1043,7 +1071,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         if (!empty($whitelist)) {
             $whitelist = json_decode($whitelist, true);
             $value = array_filter($value, function ($key) use ($whitelist) {
-                return in_array($key, $whitelist, true);
+                return \in_array($key, $whitelist, true);
             });
         }
 
@@ -1094,8 +1122,8 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $data = $query->getArrayResult();
 
         // translate the document names
-        /** @var \Shopware_Components_Translation $translationComponent */
-        $translationComponent = $this->get(\Shopware_Components_Translation::class);
+        /** @var Shopware_Components_Translation $translationComponent */
+        $translationComponent = $this->get(Shopware_Components_Translation::class);
         $data = $translationComponent->translateDocuments($data);
 
         $this->View()->assign(['success' => true, 'data' => $data, 'total' => $total]);
@@ -1163,61 +1191,11 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
     }
 
     /**
-     * Add the table alias to the passed filter and sort parameters.
-     *
-     * @return array
-     */
-    private function prepareParam(array $properties, array $fields)
-    {
-        if (empty($properties)) {
-            return $properties;
-        }
-
-        foreach ($properties as $key => $property) {
-            if (array_key_exists($property['property'], $fields)) {
-                $property['property'] = $fields[$property['property']];
-            }
-            $properties[$key] = $property;
-        }
-
-        return $properties;
-    }
-
-    /**
-     * Prepares the sort params for the variant search
-     *
-     * @return array
-     */
-    private function prepareVariantParam(array $properties, array $fields)
-    {
-        // Maps the fields to the correct table
-        foreach ($properties as $key => $property) {
-            foreach ($fields as $field) {
-                $asStr = ' as ';
-                $dotPos = strpos($field, '.');
-                $asPos = strpos($field, $asStr, 1);
-
-                if ($asPos) {
-                    $fieldName = substr($field, $asPos + strlen($asStr));
-                } else {
-                    $fieldName = substr($field, $dotPos + 1);
-                }
-
-                if ($fieldName == $property['property']) {
-                    $properties[$key]['property'] = $field;
-                }
-            }
-        }
-
-        return $properties;
-    }
-
-    /**
      * Adds the additional text for variants
      *
      * @param array $data
      */
-    private function addAdditionalTextForVariant($data)
+    protected function addAdditionalTextForVariant($data)
     {
         $variantIds = [];
         $tmpVariant = [];
@@ -1237,7 +1215,7 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
             return $data;
         }
 
-        $builder = Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->createQueryBuilder();
+        $builder = Shopware()->Container()->get(Connection::class)->createQueryBuilder();
 
         $builder->select([
             'details.id',
@@ -1254,26 +1232,66 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         $builder->where('details.id IN (:detailsId)');
         $builder->setParameter('detailsId', $variantIds, Connection::PARAM_INT_ARRAY);
 
-        $statement = $builder->execute();
-        $result = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $result = $builder->execute()->fetchAllAssociative();
 
         $tmpVariant = $this->buildDynamicText($tmpVariant, $result);
 
-        // Maps the associative data array back to an normal indexed array
-        $data = [];
-        foreach ($tmpVariant as $variant) {
-            $data[] = $variant;
+        // Maps the associative data array back to a normal indexed array
+        return array_values($tmpVariant);
+    }
+
+    /**
+     * Prepares the sort params for the variant search
+     */
+    private function prepareVariantParam(array $properties, array $fields): array
+    {
+        // Maps the fields to the correct table
+        foreach ($properties as $key => $property) {
+            foreach ($fields as $field) {
+                $asStr = self::AS_STRING;
+                $dotPos = strpos($field, '.');
+                $asPos = strpos($field, $asStr, 1);
+
+                if ($asPos) {
+                    $fieldName = substr($field, $asPos + \strlen($asStr));
+                } else {
+                    $fieldName = substr($field, $dotPos + 1);
+                }
+
+                if ($fieldName == $property['property']) {
+                    $properties[$key]['property'] = $field;
+                }
+            }
         }
 
-        return $data;
+        return $properties;
+    }
+
+    /**
+     * Add the table alias to the passed filter and sort parameters.
+     *
+     * @return array
+     */
+    private function prepareParam(array $properties, array $fields)
+    {
+        if (empty($properties)) {
+            return $properties;
+        }
+
+        foreach ($properties as $key => $property) {
+            if (\array_key_exists($property['property'], $fields)) {
+                $property['property'] = $fields[$property['property']];
+            }
+            $properties[$key] = $property;
+        }
+
+        return $properties;
     }
 
     /**
      * Helper function to generate the additional text dynamically
-     *
-     * @return array
      */
-    private function buildDynamicText(array $data, array $variantsWithoutAdditionalText)
+    private function buildDynamicText(array $data, array $variantsWithoutAdditionalText): array
     {
         foreach ($variantsWithoutAdditionalText as $variantWithoutAdditionalText) {
             $variantData = &$data[$variantWithoutAdditionalText['id']];
@@ -1290,19 +1308,16 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         return $data;
     }
 
-    /**
-     * @return array
-     */
-    private function getAvailableSalutationKeys()
+    private function getAvailableSalutationKeys(): array
     {
         $builder = Shopware()->Container()->get(ModelManager::class)->createQueryBuilder();
         $builder->select(['element', 'values'])
-            ->from(\Shopware\Models\Config\Element::class, 'element')
+            ->from(Element::class, 'element')
             ->leftJoin('element.values', 'values')
             ->where('element.name = :name')
             ->setParameter('name', 'shopsalutations');
 
-        $data = $builder->getQuery()->getOneOrNullResult(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+        $data = $builder->getQuery()->getOneOrNullResult(AbstractQuery::HYDRATE_ARRAY);
 
         $value = explode(',', $data['value']);
         if (!empty($data['values'])) {
@@ -1312,19 +1327,16 @@ class Shopware_Controllers_Backend_Base extends Shopware_Controllers_Backend_Ext
         foreach ($data['values'] as $shopValue) {
             $value = array_merge($value, explode(',', $shopValue['value']));
         }
-        $value = array_unique(array_filter($value));
 
-        return $value;
+        return array_unique(array_filter($value));
     }
 
     /**
      * Replaces the locales with the snippets data
      *
-     * @param array $data
-     *
      * @return array $data
      */
-    private function getSnippetsForLocales($data)
+    private function getSnippetsForLocales(array $data): array
     {
         $snippets = $this->container->get('snippets');
         foreach ($data as &$locale) {

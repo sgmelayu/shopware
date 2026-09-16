@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Plugin\XmlReader;
@@ -28,34 +28,41 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use DOMNodeList;
+use Exception;
 use InvalidArgumentException;
+use RuntimeException;
 use Shopware\Components\Plugin\XmlReader\StoreValueParser\StoreValueParserFactory;
-use Shopware\Components\Plugin\XmlReader\StoreValueParser\StoreValueParserInterface;
 use Symfony\Component\Config\Util\XmlUtils;
 
 abstract class XmlReaderBase implements XmlReaderInterface
 {
-    const SCOPE_LOCALE = 0;
-    const SCOPE_SHOP = 1;
+    public const SCOPE_LOCALE = 0;
+    public const SCOPE_SHOP = 1;
 
-    const DEFAULT_LANG = 'en';
+    public const DEFAULT_LANG = 'en';
 
     /**
      * @var string should be set in instance that extends this class
      */
     protected $xsdFile;
 
+    protected static string $xmlFile = '';
+
     public function read(string $xmlFile): array
     {
+        static::$xmlFile = $xmlFile;
         try {
             $dom = XmlUtils::loadFile($xmlFile, $this->xsdFile);
-        } catch (\Exception $e) {
-            throw new \InvalidArgumentException(sprintf('Unable to parse file "%s". Message: %s', $xmlFile, $e->getMessage()), $e->getCode(), $e);
+        } catch (Exception $e) {
+            throw new InvalidArgumentException(\sprintf('Unable to parse file "%s". Message: %s', $xmlFile, $e->getMessage()), $e->getCode(), $e);
         }
 
         return $this->parseFile($dom);
     }
 
+    /**
+     * @return array<string, string>|null
+     */
     public static function parseTranslatableNodeList(DOMNodeList $list): ?array
     {
         if ($list->length === 0) {
@@ -64,42 +71,52 @@ abstract class XmlReaderBase implements XmlReaderInterface
 
         $translations = [];
 
-        /** @var DOMElement $item */
         foreach ($list as $item) {
             $language = $item->getAttribute('lang') ?: self::DEFAULT_LANG;
+            if (!\is_string($language)) {
+                throw new RuntimeException(\sprintf('Attribute "lang" needs to be a string in file "%s"', static::$xmlFile));
+            }
 
             // XSD Requires en-GB, Zend uses en_GB
             $language = str_replace('-', '_', $language);
 
-            $translations[$language] = trim($item->nodeValue);
+            $translations[$language] = trim((string) $item->nodeValue);
         }
 
         return $translations;
     }
 
+    /**
+     * @return array<string, string>|null
+     */
     public static function parseTranslatableElement(DOMNode $element, string $name): ?array
     {
         $list = self::getChildren($element, $name);
 
-        if (count($list) === 0) {
+        if (\count($list) === 0) {
             return null;
         }
 
         $translations = [];
 
-        /** @var DOMElement $item */
         foreach ($list as $item) {
             $language = $item->getAttribute('lang') ?: self::DEFAULT_LANG;
+            if (!\is_string($language)) {
+                throw new RuntimeException(\sprintf('Attribute "lang" needs to be a string in file "%s"', static::$xmlFile));
+            }
 
             // XSD Requires en-GB, Zend uses en_GB
             $language = str_replace('-', '_', $language);
 
-            $translations[$language] = trim($item->nodeValue);
+            $translations[$language] = trim((string) $item->nodeValue);
         }
 
         return $translations;
     }
 
+    /**
+     * @return array<DOMElement>
+     */
     public static function getChildren(DOMNode $node, string $name): array
     {
         $children = [];
@@ -116,7 +133,7 @@ abstract class XmlReaderBase implements XmlReaderInterface
     {
         $children = self::getChildren($list, $name);
 
-        if (count($children) === 0) {
+        if (\count($children) === 0) {
             return null;
         }
 
@@ -146,15 +163,14 @@ abstract class XmlReaderBase implements XmlReaderInterface
             return null;
         }
 
-        /** @var DOMElement $storeItem */
         $storeItem = $list->item(0);
+        if (!$storeItem instanceof DOMElement) {
+            return null;
+        }
 
         $type = $storeItem->getAttribute('type') ?: 'xml';
 
-        /** @var StoreValueParserInterface $parser */
-        $parser = StoreValueParserFactory::create($type);
-
-        return $parser->parse($storeItem);
+        return StoreValueParserFactory::create($type)->parse($storeItem);
     }
 
     public static function parseOptionsNodeList(DOMNodeList $optionsList): ?array
@@ -171,7 +187,6 @@ abstract class XmlReaderBase implements XmlReaderInterface
 
         $options = [];
 
-        /** @var DOMElement $option */
         foreach ($optionList as $option) {
             if ($option instanceof DOMElement) {
                 $options[$option->nodeName] = XmlUtils::phpize($option->nodeValue);
@@ -185,9 +200,13 @@ abstract class XmlReaderBase implements XmlReaderInterface
     {
         $children = self::getChildren($element, $name);
 
-        if (count($children) === 0) {
+        if (\count($children) > 1) {
+            throw new InvalidArgumentException(\sprintf('Element with name "%s" found multiple times in file "%s", but expected to be there only once', $name, static::$xmlFile));
+        }
+
+        if (\count($children) === 0) {
             if ($throwException) {
-                throw new InvalidArgumentException(sprintf('Element with %s not found', $name));
+                throw new InvalidArgumentException(\sprintf('Element with name "%s" not found in file "%s"', $name, static::$xmlFile));
             }
 
             return null;

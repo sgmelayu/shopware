@@ -1,27 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\DBAL\Connection;
+use Shopware\Components\Privacy\IpAnonymizerInterface;
+use Shopware\Models\Config\Element;
+use Shopware\Models\Tracking\ArticleImpression;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -44,7 +48,7 @@ class Shopware_Plugins_Frontend_Statistics_Bootstrap extends Shopware_Components
 
         $form->setElement('text', 'blockIp', [
             'label' => 'IP von Statistiken ausschließen', 'value' => null,
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+            'scope' => Element::SCOPE_SHOP,
         ]);
 
         $form->setElement('textarea', 'botBlackList', [
@@ -63,7 +67,7 @@ havindex;hometown;htmlgobble;hyperdecontextualizer;iajabot;ibm;iconoclast;ilse;i
 incywincy;informant;infoseek;infoseeksidewinder;infospider;inspectorwww;intelliagent;irobot;
 israelisearch;javabee;jbot;jcrawler;jobo;jobot;joebot;jubii;jumpstation;katipo;kdd;kilroy;
 ko_yappo_robot;labelgrabber.txt;larbin;linkidator;linkscan;lockon;logo_gif;macworm;
-magpie;marvin;mattie;mediafox;merzscope;meshexplorer;mindcrawler;momspider;monster;motor;
+magpie;marvin;mattie;mediafox;merzscope;meshexplorer;mindcrawler;momspider;monster;
 mwdsearch;netcarta;netmechanic;netscoop;newscan-online;nhse;northstar;occam;octopus;openfind;
 orb_search;packrat;pageboy;parasite;patric;pegasus;perignator;perlcrawler;phantom;piltdownman;
 pimptrain;pioneer;pitkow;pjspider;pka;plumtreewebaccessor;poppi;portalb;puu;python;raven;rbse;
@@ -78,16 +82,13 @@ webvac;webwalk;webwalker;webwatch;whatuseek;whowhere;wired-digital;wmir;wolp;wom
 wz101;xget;awbot;bobby;boris;bumblebee;cscrawler;daviesbot;ezresult;gigabot;gnodspider;internetseer;
 justview;linkbot;linkchecker;nederland.zoek;perman;pompos;pooodle;redalert;shoutcast;slysearch;
 ultraseek;webcompass;yandex;robot;yahoo;bot;psbot;crawl;RSS;larbin;ichiro;Slurp;msnbot;bot;Googlebot;
-ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;spider;HTTPClient',
-            'scope' => \Shopware\Models\Config\Element::SCOPE_SHOP,
+ShopWiki;Bot;WebAlta;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;spider;HTTPClient',
+            'scope' => Element::SCOPE_SHOP,
         ]);
 
         return true;
     }
 
-    /**
-     * @return array
-     */
     public function getInfo()
     {
         return [
@@ -109,9 +110,9 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
             return false;
         }
         $result = false;
-        $bots = preg_replace('/[^a-z;]/', '', strtolower($this->Config()->get('botBlackList')));
+        $bots = (string) preg_replace('/[^a-z;]/', '', strtolower($this->Config()->get('botBlackList')));
         $bots = explode(';', $bots);
-        if (!empty($userAgent) && str_replace($bots, '', $userAgent) != $userAgent) {
+        if (str_replace($bots, '', $userAgent) !== $userAgent) {
             $result = true;
         }
 
@@ -122,7 +123,7 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
      * @param Enlight_Controller_Request_Request       $request
      * @param Enlight_Controller_Response_ResponseHttp $response
      *
-     * @throws \Exception
+     * @return void
      */
     public function updateLog($request, $response)
     {
@@ -140,6 +141,8 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
 
     /**
      * @param Enlight_Controller_Request_Request $request
+     *
+     * @return void
      */
     public function refreshBasket(Enlight_Controller_Request_RequestHttp $request)
     {
@@ -164,14 +167,12 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
     }
 
     /**
-     * @param \Enlight_Controller_Request_Request $request
-     *
      * @return bool
      */
     public function shouldRefreshLog(Enlight_Controller_Request_Request $request)
     {
         if ($request->getClientIp() === null
-            || !empty(Shopware()->Session()->Bot)
+            || !empty(Shopware()->Session()->get('Bot'))
         ) {
             return false;
         }
@@ -186,6 +187,8 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
 
     /**
      * Cleanup statistic
+     *
+     * @return void
      */
     public function cleanupStatistic()
     {
@@ -198,10 +201,10 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
     /**
      * Refresh current users
      *
-     * @param \Enlight_Controller_Request_Request $request
+     * @throws Exception
+     * @throws Zend_Db_Adapter_Exception
      *
-     * @throws \Exception
-     * @throws \Zend_Db_Adapter_Exception
+     * @return void
      */
     public function refreshCurrentUsers(Enlight_Controller_Request_Request $request)
     {
@@ -209,12 +212,12 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
         INSERT INTO s_statistics_currentusers (remoteaddr, page, `time`, userID, deviceType)
         VALUES (?, ?, NOW(), ?, ?)';
 
-        $ip = $this->get(\Shopware\Components\Privacy\IpAnonymizerInterface::class)->anonymize($request->getClientIp());
+        $ip = $this->get(IpAnonymizerInterface::class)->anonymize($request->getClientIp());
 
         Shopware()->Db()->query($sql, [
             $ip,
             $request->getParam('requestPage', $request->getRequestUri()),
-            empty(Shopware()->Session()->sUserId) ? 0 : (int) Shopware()->Session()->sUserId,
+            empty(Shopware()->Session()->get('sUserId')) ? 0 : (int) Shopware()->Session()->get('sUserId'),
             $request->getDeviceType(),
         ]);
     }
@@ -222,7 +225,9 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
     /**
      * Refresh visitor log
      *
-     * @throws \Exception
+     * @throws Exception
+     *
+     * @return void
      */
     public function refreshLog(Enlight_Controller_Request_Request $request)
     {
@@ -280,7 +285,9 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
     /**
      * Refresh referrer log
      *
-     * @param \Enlight_Controller_Request_Request $request
+     * @param Enlight_Controller_Request_Request $request
+     *
+     * @return void
      */
     public function refreshReferer($request)
     {
@@ -290,12 +297,12 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
         if (empty($referer)
             || strpos($referer, 'http') !== 0
             || strpos($referer, $request->getHttpHost()) !== false
-            || !empty(Shopware()->Session()->Admin)
+            || !empty(Shopware()->Session()->get('Admin'))
         ) {
             return;
         }
 
-        Shopware()->Session()->sReferer = $referer;
+        Shopware()->Session()->set('sReferer', $referer);
 
         if ($partner !== null) {
             $referer .= '$' . $partner;
@@ -308,7 +315,9 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
     /**
      * Refresh article impressions
      *
-     * @param \Enlight_Controller_Request_Request $request
+     * @param Enlight_Controller_Request_Request $request
+     *
+     * @return void
      */
     public function refreshArticleImpression($request)
     {
@@ -318,15 +327,13 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
             return;
         }
         $shopId = Shopware()->Shop()->getId();
-        /** @var \Shopware\Models\Tracking\Repository $repository */
-        $repository = Shopware()->Models()->getRepository(\Shopware\Models\Tracking\ArticleImpression::class);
+        $repository = Shopware()->Models()->getRepository(ArticleImpression::class);
         $articleImpressionQuery = $repository->getArticleImpressionQuery($articleId, $shopId, null, $deviceType);
-        /** @var \Shopware\Models\Tracking\ArticleImpression $articleImpression */
         $articleImpression = $articleImpressionQuery->getOneOrNullResult();
 
         // If no Entry for this day exists - create a new one
         if ($articleImpression === null) {
-            $articleImpression = new \Shopware\Models\Tracking\ArticleImpression($articleId, $shopId, null, 1, $deviceType);
+            $articleImpression = new ArticleImpression($articleId, $shopId, null, 1, $deviceType);
             Shopware()->Models()->persist($articleImpression);
         } else {
             $articleImpression->increaseImpressions();
@@ -337,8 +344,10 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
     /**
      * Refresh partner log
      *
-     * @param \Enlight_Controller_Request_Request       $request
-     * @param \Enlight_Controller_Response_ResponseHttp $response
+     * @param Enlight_Controller_Request_Request       $request
+     * @param Enlight_Controller_Response_ResponseHttp $response
+     *
+     * @return void
      */
     public function refreshPartner($request, $response)
     {
@@ -347,7 +356,7 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
             if (strpos($partner, 'sCampaign') === 0) {
                 $campaignID = (int) str_replace('sCampaign', '', $partner);
                 if (!empty($campaignID)) {
-                    Shopware()->Session()->sPartner = 'sCampaign' . $campaignID;
+                    Shopware()->Session()->set('sPartner', 'sCampaign' . $campaignID);
                     $sql = '
                         UPDATE s_campaigns_mailings
                         SET clicked = clicked + 1
@@ -372,33 +381,33 @@ ShopWiki;Bot;WebAlta;;abachobot;architext;ask jeeves;frooglebot;googlebot;lycos;
                         new Cookie('partner', $row['idcode'], $valid, $basePath, null, $request->isSecure())
                     );
                 }
-                Shopware()->Session()->sPartner = $partner;
+                Shopware()->Session()->set('sPartner', $partner);
             }
         } elseif ($request->getCookie('partner') !== null) {
             $sql = 'SELECT idcode FROM s_emarketing_partner WHERE active=1 AND idcode=?';
             $partner = Shopware()->Db()->fetchOne($sql, [$request->getCookie('partner')]);
             if (empty($partner)) {
-                unset(Shopware()->Session()->sPartner);
+                Shopware()->Session()->offsetUnset('sPartner');
             } else {
-                Shopware()->Session()->sPartner = $partner;
+                Shopware()->Session()->set('sPartner', $partner);
             }
         }
     }
 
-    private function refreshBlog(Request $request)
+    private function refreshBlog(Request $request): void
     {
         $blogArticleId = $request->query->getInt('blogId');
         if (empty($blogArticleId)) {
             return;
         }
-        /** @var \Doctrine\DBAL\Connection $connection */
+        /** @var Connection $connection */
         $connection = $this->get('dbal_connection');
         /** @var Enlight_Components_Session_Namespace $session */
         $session = $this->get('session');
 
         // Count the views of this blog item
-        $visitedBlogItems = $session->get('visitedBlogItems');
-        if (in_array($blogArticleId, $visitedBlogItems, true)) {
+        $visitedBlogItems = $session->get('visitedBlogItems', []);
+        if (\in_array($blogArticleId, $visitedBlogItems, true)) {
             return;
         }
         // Use plain sql, because the http cache should no be cleared

@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Article\Configurator\Template;
@@ -38,10 +38,10 @@ class Price extends LazyFetchModelEntity
     /**
      * OWNING SIDE
      *
-     * @var Template
+     * @var Template|null
      *
      * @ORM\ManyToOne(targetEntity="Shopware\Models\Article\Configurator\Template\Template", inversedBy="prices")
-     * @ORM\JoinColumn(name="template_id", referencedColumnName="id")
+     * @ORM\JoinColumn(name="template_id", referencedColumnName="id", nullable=true)
      * @ORM\OrderBy({"customerGroupKey" = "ASC", "from" = "ASC"})
      */
     protected $template;
@@ -65,17 +65,18 @@ class Price extends LazyFetchModelEntity
     private $id;
 
     /**
-     * @var int
+     * @var int|null
      *
-     * @ORM\Column(name="template_id", type="integer", nullable=false)
+     * @ORM\Column(name="template_id", type="integer", nullable=true)
      */
     private $templateId;
 
     /**
-     * @var string
-     * @ORM\Column(name="customer_group_key", type="string", length=15, nullable=false)
+     * @var string|null
+     *
+     * @ORM\Column(name="customer_group_key", type="string", length=15, nullable=true)
      */
-    private $customerGroupKey = '';
+    private $customerGroupKey;
 
     /**
      * @var int
@@ -85,9 +86,9 @@ class Price extends LazyFetchModelEntity
     private $from;
 
     /**
-     * @var int|string|null
+     * @var string
      *
-     * @ORM\Column(name="`to`", type="string", nullable=true)
+     * @ORM\Column(name="`to`", type="string", nullable=false)
      */
     private $to = 'beliebig';
 
@@ -96,27 +97,32 @@ class Price extends LazyFetchModelEntity
      *
      * @ORM\Column(name="price", type="float", nullable=false)
      */
-    private $price = 0;
+    private $price = 0.0;
 
     /**
-     * @var float
+     * @var float|null
      *
-     * @ORM\Column(name="pseudoprice", type="float", nullable=false)
+     * @ORM\Column(name="pseudoprice", type="float", nullable=true)
      */
-    private $pseudoPrice = 0;
+    private $pseudoPrice = 0.0;
 
     /**
-     * @var float
+     * @ORM\Column(name="regulation_price", type="float", nullable=true)
+     */
+    private ?float $regulationPrice = null;
+
+    /**
+     * @var string|null
      *
-     * @ORM\Column(name="percent", type="float", nullable=false)
+     * @ORM\Column(name="percent", type="decimal", precision=10, scale=2, nullable=true)
      */
-    private $percent = 0;
+    private $percent = '0.0';
 
     /**
-     * @var CustomerGroup
+     * @var CustomerGroup|null
      *
      * @ORM\OneToOne(targetEntity="\Shopware\Models\Customer\Group")
-     * @ORM\JoinColumn(name="customer_group_key", referencedColumnName="groupkey")
+     * @ORM\JoinColumn(name="customer_group_key", referencedColumnName="groupkey", nullable=true)
      */
     private $customerGroup;
 
@@ -129,7 +135,7 @@ class Price extends LazyFetchModelEntity
     }
 
     /**
-     * @param CustomerGroup $customerGroup
+     * @param CustomerGroup|null $customerGroup
      *
      * @return Price
      */
@@ -141,14 +147,11 @@ class Price extends LazyFetchModelEntity
     }
 
     /**
-     * @return CustomerGroup
+     * @return CustomerGroup|null
      */
     public function getCustomerGroup()
     {
-        /** @var CustomerGroup $return */
-        $return = $this->fetchLazy($this->customerGroup, ['key' => $this->customerGroupKey]);
-
-        return $return;
+        return $this->fetchLazy($this->customerGroup, ['key' => $this->customerGroupKey]);
     }
 
     /**
@@ -181,13 +184,13 @@ class Price extends LazyFetchModelEntity
         if ($to === null) {
             $to = 'beliebig';
         }
-        $this->to = $to;
+        $this->to = (string) $to;
 
         return $this;
     }
 
     /**
-     * @return int|string|null
+     * @return string|null
      */
     public function getTo()
     {
@@ -215,7 +218,7 @@ class Price extends LazyFetchModelEntity
     }
 
     /**
-     * @param float $pseudoPrice
+     * @param float|null $pseudoPrice
      *
      * @return Price
      */
@@ -227,7 +230,7 @@ class Price extends LazyFetchModelEntity
     }
 
     /**
-     * @return float
+     * @return float|null
      */
     public function getPseudoPrice()
     {
@@ -235,7 +238,7 @@ class Price extends LazyFetchModelEntity
     }
 
     /**
-     * @param float $percent
+     * @param string|null $percent
      *
      * @return Price
      */
@@ -247,7 +250,7 @@ class Price extends LazyFetchModelEntity
     }
 
     /**
-     * @return float
+     * @return string|null
      */
     public function getPercent()
     {
@@ -273,7 +276,7 @@ class Price extends LazyFetchModelEntity
     }
 
     /**
-     * @return Template
+     * @return Template|null
      */
     public function getTemplate()
     {
@@ -281,10 +284,20 @@ class Price extends LazyFetchModelEntity
     }
 
     /**
-     * @param Template $template
+     * @param Template|null $template
      */
     public function setTemplate($template)
     {
         $this->template = $template;
+    }
+
+    public function getRegulationPrice(): ?float
+    {
+        return $this->regulationPrice;
+    }
+
+    public function setRegulationPrice(?float $regulationPrice): void
+    {
+        $this->regulationPrice = $regulationPrice;
     }
 }

@@ -1,30 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\PluginInstallerBundle\Service;
 
-use GuzzleHttp\ClientInterface;
+use Exception;
 use Shopware\Bundle\PluginInstallerBundle\Exception\StoreException;
 use Shopware\Bundle\PluginInstallerBundle\StoreClient;
 use Shopware\Bundle\PluginInstallerBundle\Struct\AccessTokenStruct;
@@ -32,36 +32,22 @@ use Shopware\Bundle\PluginInstallerBundle\Struct\LocaleStruct;
 use Shopware\Bundle\PluginInstallerBundle\Struct\StructHydrator;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Shop\Shop;
+use Shopware_Components_Snippet_Manager;
 
 class AccountManagerService
 {
-    /**
-     * @var StoreClient
-     */
-    private $storeClient;
+    private StoreClient $storeClient;
 
-    /**
-     * @var StructHydrator
-     */
-    private $hydrator;
+    private StructHydrator $hydrator;
 
-    /**
-     * @var \Shopware_Components_Snippet_Manager
-     */
-    private $snippetManager;
+    private Shopware_Components_Snippet_Manager $snippetManager;
 
-    /**
-     * @var ModelManager
-     */
-    private $entityManager;
+    private ModelManager $entityManager;
 
-    /**
-     * @internal param ClientInterface $guzzleHttpClient
-     */
     public function __construct(
         StoreClient $storeClient,
         StructHydrator $structHydrator,
-        \Shopware_Components_Snippet_Manager $snippetManager,
+        Shopware_Components_Snippet_Manager $snippetManager,
         ModelManager $entityManager
     ) {
         $this->storeClient = $storeClient;
@@ -75,17 +61,15 @@ class AccountManagerService
      */
     public function getDomain()
     {
-        $repo = $this->entityManager->getRepository(Shop::class);
+        $default = $this->entityManager->getRepository(Shop::class)->getActiveDefault();
 
-        $default = $repo->getActiveDefault();
-
-        return $default->getHost();
+        return (string) $default->getHost();
     }
 
     /**
      * Pings SBP to see if a connection is available and the service is up
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return bool
      */
@@ -93,24 +77,26 @@ class AccountManagerService
     {
         try {
             return $this->storeClient->doPing();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $snippet = $this->snippetManager
                 ->getNamespace('backend/plugin_manager/exceptions')
                 ->get('timeout', 'The connection with SBP timed out');
 
-            throw new \Exception($snippet, $e->getCode(), $e);
+            throw new Exception($snippet, $e->getCode(), $e);
         }
     }
 
     /**
      * Requests the creation of a new Shopware ID anc account (registration action)
      *
+     * @deprecated since 5.7.8, will be removed in 5.8 without replacement.
+     *
      * @param string $shopwareId
      * @param string $email
      * @param string $password
      * @param int    $localeId
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array
      */
@@ -133,7 +119,7 @@ class AccountManagerService
     /**
      * Gets a list of locales supported by the SBP
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return LocaleStruct[] array of locale details
      */
@@ -151,7 +137,7 @@ class AccountManagerService
     /**
      * Get the list of shops (and details) associated to the given user
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array Array of shop details
      */
@@ -172,7 +158,7 @@ class AccountManagerService
      *
      * @param string $domain
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array Filename and domain hash of the domain validation file
      */
@@ -193,7 +179,7 @@ class AccountManagerService
      * @param string $domain
      * @param string $shopwareVersion Current Shopware version
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return array Result of the validation operation (empty if successful)
      */
@@ -218,7 +204,7 @@ class AccountManagerService
      * @param string $shopwareId
      * @param string $password
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return AccessTokenStruct Token to access the API
      */
@@ -231,10 +217,7 @@ class AccountManagerService
         }
     }
 
-    /**
-     * @return \Exception
-     */
-    private function translateExceptionMessage(StoreException $exception)
+    private function translateExceptionMessage(StoreException $exception): Exception
     {
         $namespace = $this->snippetManager
             ->getNamespace('backend/plugin_manager/exceptions');
@@ -247,6 +230,6 @@ class AccountManagerService
 
         $snippet .= '<br><br>Error code: ' . $exception->getSbpCode();
 
-        return new \Exception($snippet, $exception->getCode(), $exception);
+        return new Exception($snippet, $exception->getCode(), $exception);
     }
 }

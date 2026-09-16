@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/article_list/main"}
@@ -84,8 +83,8 @@ Ext.define('Shopware.apps.ArticleList.view.main.CategoryTree', {
                     listeners: {
                         'change': function (field, newValue) {
                             var tree = me.up().down('treepanel'),
-                                    selection = tree.getSelectionModel(),
-                                    categoryId;
+                                selection = tree.getSelectionModel(),
+                                categoryId;
 
                             if (selection.selected.items.length <= 0) {
                                 categoryId = 0;
@@ -101,7 +100,6 @@ Ext.define('Shopware.apps.ArticleList.view.main.CategoryTree', {
             ]
         });
 
-
     },
 
     /**
@@ -111,7 +109,7 @@ Ext.define('Shopware.apps.ArticleList.view.main.CategoryTree', {
      */
     createTree: function () {
         var me = this,
-                tree;
+            tree;
 
         me.categoryStore = Ext.create('Shopware.store.CategoryTree');
 
@@ -131,8 +129,8 @@ Ext.define('Shopware.apps.ArticleList.view.main.CategoryTree', {
                 itemclick: {
                     fn: function (view, record) {
                         var me = this,
-                                showVariants,
-                                categoryId = record.get('id') === 'root' ? 0 : record.get('id');
+                            showVariants,
+                            categoryId = record.get('id') === 'root' ? 0 : record.get('id');
 
                         showVariants = me.up().down('checkbox').getValue();
 

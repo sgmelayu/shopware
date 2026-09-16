@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Notification
@@ -38,13 +37,13 @@
 Ext.define('Shopware.apps.Notification.view.notification.Customer', {
     extend: 'Ext.grid.Panel',
     alias: 'widget.notification-notification-customer',
-    autoScroll:true,
-    ui:'shopware-ui',
+    autoScroll: true,
+    ui: 'shopware-ui',
     /**
      * Initialize the Shopware.apps.Customer.view.main.List and defines the necessary
      * default configuration
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         me.registerEvents();
@@ -61,20 +60,20 @@ Ext.define('Shopware.apps.Notification.view.notification.Customer', {
      *
      * @return void
      */
-    registerEvents:function () {
+    registerEvents: function () {
         this.addEvents(
 
-                /**
-                 * Event will be fired when the user clicks the customer icon in the
-                 * action column
-                 *
-                 * @event deleteColumn
-                 * @param [object] View - Associated Ext.view.Table
-                 * @param [integer] rowIndex - Row index
-                 * @param [integer] colIndex - Column index
-                 * @param [object] item - Associated HTML DOM node
-                 */
-                'openCustomerAccount'
+            /**
+             * Event will be fired when the user clicks the customer icon in the
+             * action column
+             *
+             * @event deleteColumn
+             * @param [object] View - Associated Ext.view.Table
+             * @param [integer] rowIndex - Row index
+             * @param [integer] colIndex - Column index
+             * @param [object] item - Associated HTML DOM node
+             */
+            'openCustomerAccount'
         );
 
         return true;
@@ -84,7 +83,7 @@ Ext.define('Shopware.apps.Notification.view.notification.Customer', {
      *
      * @return [array] grid columns
      */
-    getColumns:function () {
+    getColumns: function () {
         var me = this;
 
         var columnsData = [
@@ -112,19 +111,19 @@ Ext.define('Shopware.apps.Notification.view.notification.Customer', {
                 flex: 1
             },
             {
-                xtype:'actioncolumn',
-                width:30,
-                align:'center',
-                items:[{
-                    iconCls:'x-action-col-icon sprite-user--pencil',
-                    cls:'sprite-user--pencil',
-                    tooltip:'{s name="list/action_column/link_customer"}To customer account{/s}',
+                xtype: 'actioncolumn',
+                width: 30,
+                align: 'center',
+                items: [{
+                    iconCls: 'x-action-col-icon sprite-user--pencil',
+                    cls: 'sprite-user--pencil',
+                    tooltip: '{s name="list/action_column/link_customer"}To customer account{/s}',
                     getClass: function(value, metadata, record) {
                         if (!record.get("customerId")) {
                             return 'x-hidden';
                         }
                     },
-                    handler:function (view, rowIndex, colIndex, item) {
+                    handler: function (view, rowIndex, colIndex, item) {
                         me.fireEvent('openCustomerAccount', view, rowIndex, colIndex, item);
                     }
                 }]
@@ -133,32 +132,31 @@ Ext.define('Shopware.apps.Notification.view.notification.Customer', {
         return columnsData;
     },
 
-
     /**
      * Creates the grid toolbar with search field
      *
      * @return [Ext.toolbar.Toolbar] grid toolbar
      */
-    getToolbar:function () {
+    getToolbar: function () {
         return Ext.create('Ext.toolbar.Toolbar',
-                {
-                    dock:'top',
-                    ui:'shopware-ui',
-                    items:[
-                        '->',
-                        {
-                            xtype:'textfield',
-                            name:'searchField',
-                            action:'searchCustomer',
-                            width:170,
-                            cls:'searchfield',
-                            enableKeyEvents:true,
-                            checkChangeBuffer:500,
-                            emptyText:'{s name="list/field/search_customer"}Search...{/s}'
-                        },
-                        { xtype:'tbspacer', width:6 }
-                    ]
-                });
+            {
+                dock: 'top',
+                ui: 'shopware-ui',
+                items: [
+                    '->',
+                    {
+                        xtype: 'textfield',
+                        name: 'searchField',
+                        action: 'searchCustomer',
+                        width: 170,
+                        cls: 'searchfield',
+                        enableKeyEvents: true,
+                        checkChangeBuffer: 500,
+                        emptyText: '{s name="list/field/search_customer"}Search...{/s}'
+                    },
+                    { xtype: 'tbspacer', width: 6 }
+                ]
+            });
     },
     /**
      * Creates the paging toolbar for the grid to allow
@@ -169,9 +167,9 @@ Ext.define('Shopware.apps.Notification.view.notification.Customer', {
     getPagingBar: function () {
         var me = this;
         return Ext.create('Ext.toolbar.Paging', {
-            store:me.customerStore,
-            dock:'bottom',
-            displayInfo:true
+            store: me.customerStore,
+            dock: 'bottom',
+            displayInfo: true
         });
 
     },
@@ -180,8 +178,8 @@ Ext.define('Shopware.apps.Notification.view.notification.Customer', {
      *
      * @param value
      */
-    notifiedRenderer:function (value, p, r) {
-        if(value!=1){
+    notifiedRenderer: function (value, p, r) {
+        if (value != 1){
             return '<span style="color:red;">{s name="list/render_value/notified/no"}No{/s}</span>';
         }
         return '<span style="color:green;">{s name="list/render_value/notified/yes"}Yes{/s}</span>';
@@ -193,7 +191,7 @@ Ext.define('Shopware.apps.Notification.view.notification.Customer', {
      * @param [string] - The register time value
      * @return [string] - The passed value, formatted with Ext.util.Format.date()
      */
-    dateColumn:function (value, metaData, record) {
+    dateColumn: function (value, metaData, record) {
         if ( value === Ext.undefined ) {
             return value;
         }

@@ -1,31 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Unit\Components;
 
+use Enlight_Controller_Request_RequestTestCase;
 use PHPUnit\Framework\TestCase;
 use Shopware\Components\QueryAliasMapper;
+use Shopware_Components_Config;
 
 class QueryAliasMapperTest extends TestCase
 {
@@ -61,7 +63,7 @@ class QueryAliasMapperTest extends TestCase
         ];
 
         $mock = $this->createConfiguredMock(
-            \Shopware_Components_Config::class,
+            Shopware_Components_Config::class,
             ['get' => 'foo=bar,omg=baz']
         );
 
@@ -81,7 +83,7 @@ class QueryAliasMapperTest extends TestCase
 
         static::assertEquals('q', $mapper->getShortAlias('sSearch'));
         static::assertEquals('p', $mapper->getShortAlias('sPage'));
-        static::assertEquals(null, $mapper->getShortAlias('somefoo'));
+        static::assertNull($mapper->getShortAlias('somefoo'));
     }
 
     public function testLongParamsGettingReplaced()
@@ -138,7 +140,7 @@ class QueryAliasMapperTest extends TestCase
 
     public function testRequestQueriesGettingReplacd()
     {
-        $request = new \Enlight_Controller_Request_RequestTestCase();
+        $request = new Enlight_Controller_Request_RequestTestCase();
         $request->setQuery('q', 'someValue');
         $request->setQuery('p', 'someOtherValue');
         $request->setQuery('someParam', 'someValue');

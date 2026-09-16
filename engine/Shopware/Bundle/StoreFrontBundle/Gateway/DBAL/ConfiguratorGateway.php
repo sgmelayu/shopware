@@ -1,40 +1,41 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
-use Shopware\Bundle\StoreFrontBundle\Gateway;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\ConfiguratorGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\ConfiguratorHydrator;
+use Shopware\Bundle\StoreFrontBundle\Gateway\MediaGatewayInterface;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
+class ConfiguratorGateway implements ConfiguratorGatewayInterface
 {
-    /**
-     * @var Hydrator\ConfiguratorHydrator
-     */
-    private $configuratorHydrator;
+    private ConfiguratorHydrator $configuratorHydrator;
 
     /**
      * The FieldHelper class is used for the
@@ -46,29 +47,18 @@ class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
      * Additionally the field helper reduce the work, to
      * select in a second step the different required
      * attribute tables for a parent table.
-     *
-     * @var FieldHelper
      */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var \Shopware\Bundle\StoreFrontBundle\Gateway\MediaGatewayInterface
-     */
-    private $mediaGateway;
+    private MediaGatewayInterface $mediaGateway;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Gateway\MediaGatewayInterface $mediaGateway
-     */
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\ConfiguratorHydrator $configuratorHydrator,
-        Gateway\MediaGatewayInterface $mediaGateway
+        ConfiguratorHydrator $configuratorHydrator,
+        MediaGatewayInterface $mediaGateway
     ) {
         $this->connection = $connection;
         $this->configuratorHydrator = $configuratorHydrator;
@@ -79,7 +69,7 @@ class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function get(Struct\BaseProduct $product, Struct\ShopContextInterface $context)
+    public function get(BaseProduct $product, ShopContextInterface $context)
     {
         $query = $this->getQuery();
         $query->addSelect($this->fieldHelper->getConfiguratorSetFields())
@@ -93,10 +83,7 @@ class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
         $query->where('products.id = :id')
             ->setParameter(':id', $product->getId());
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_ASSOC);
+        $data = $query->execute()->fetchAll(PDO::FETCH_ASSOC);
 
         return $this->configuratorHydrator->hydrate($data);
     }
@@ -104,7 +91,7 @@ class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getConfiguratorMedia(Struct\BaseProduct $product, Struct\ShopContextInterface $context)
+    public function getConfiguratorMedia(BaseProduct $product, ShopContextInterface $context)
     {
         $subQuery = $this->connection->createQueryBuilder();
 
@@ -131,10 +118,7 @@ class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
             ->groupBy('optionRelation.option_id')
             ->setParameter(':articleId', $product->getId());
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $data = $query->execute()->fetchAll(PDO::FETCH_KEY_PAIR);
         $data = array_filter($data);
 
         $media = $this->mediaGateway->getList($data, $context);
@@ -153,7 +137,7 @@ class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
     /**
      * {@inheritdoc}
      */
-    public function getProductCombinations(Struct\BaseProduct $product)
+    public function getProductCombinations(BaseProduct $product)
     {
         $query = $this->connection->createQueryBuilder();
 
@@ -176,10 +160,7 @@ class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
             ->groupBy('relations.option_id')
             ->setParameter(':articleId', $product->getId());
 
-        /** @var \Doctrine\DBAL\Driver\ResultStatement $statement */
-        $statement = $query->execute();
-
-        $data = $statement->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $data = $query->execute()->fetchAll(PDO::FETCH_KEY_PAIR);
 
         foreach ($data as &$row) {
             $row = explode('|', $row);
@@ -188,10 +169,46 @@ class ConfiguratorGateway implements Gateway\ConfiguratorGatewayInterface
         return $data;
     }
 
-    /**
-     * @return QueryBuilder
-     */
-    private function getQuery()
+    public function getAvailableConfigurations(BaseProduct $product): array
+    {
+        $query = $this->connection->createQueryBuilder();
+
+        $query->select([
+            "GROUP_CONCAT(DISTINCT relations.option_id, '' SEPARATOR '|') as combinations",
+        ]);
+
+        $query->from('s_articles_details', 'variant')
+            ->innerJoin(
+                'variant',
+                's_articles',
+                'product',
+                'product.id = variant.articleID AND product.id = :productId AND (
+                    (variant.laststock * variant.instock) >= (variant.laststock * variant.minpurchase)
+                )'
+            )
+            ->leftJoin('variant', 's_article_configurator_option_relations', 'relations', 'variant.id = relations.article_id')
+            ->where('variant.active = 1')
+            ->groupBy('variant.id')
+            ->setParameter(':productId', $product->getId());
+
+        $data = $query->execute()->fetchAll(PDO::FETCH_COLUMN);
+
+        $result = [];
+        foreach ($data as $row) {
+            if (empty($row)) {
+                continue;
+            }
+            $rowIds = array_map('\intval', explode('|', $row));
+
+            foreach ($rowIds as $optionId) {
+                $result[$optionId][] = $rowIds;
+            }
+        }
+
+        return $result;
+    }
+
+    private function getQuery(): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
 

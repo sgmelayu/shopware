@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Form
@@ -48,9 +47,9 @@ Ext.define('Shopware.apps.Form.model.Form', {
         Ext.Ajax.request({
             url: '{url controller="form" action="copyForm"}',
             method: 'POST',
-            params : { id : this.data.id },
+            params: { id: this.data.id },
             success: function(response, opts) {
-                if(typeof callback !== 'function') {
+                if (typeof callback !== 'function') {
                     return false;
                 }
 
@@ -64,31 +63,32 @@ Ext.define('Shopware.apps.Form.model.Form', {
      *
      * @array
      */
-    fields : [
+    fields: [
         //{block name="backend/form/model/form/fields"}{/block}
-        { name : 'id',    type : 'int' },
-        { name : 'active', type: 'boolean', defaultValue: true },
-        { name : 'name',  type : 'string' },
-        { name : 'email', type : 'email' },
-        { name : 'emailSubject', type : 'string' },
-        { name : 'emailTemplate', type : 'string' },
-        { name : 'text', type : 'string' },
-        { name : 'text2', type : 'string' },
-        { name : 'shopIds' },
-        { name : 'metaTitle', type : 'string' },
-        { name : 'metaKeywords', type : 'string' },
-        { name : 'metaDescription', type : 'string' }
+        { name: 'id',    type: 'int' },
+        { name: 'active', type: 'boolean', defaultValue: true },
+        { name: 'name',  type: 'string' },
+        { name: 'email', type: 'email' },
+        { name: 'emailSubject', type: 'string' },
+        { name: 'emailTemplate', type: 'string' },
+        { name: 'text', type: 'string' },
+        { name: 'text2', type: 'string' },
+        { name: 'nourl', type: 'string' },
+        { name: 'shopIds' },
+        { name: 'metaTitle', type: 'string' },
+        { name: 'metaKeywords', type: 'string' },
+        { name: 'metaDescription', type: 'string' }
     ],
 
     validations: [
-        { field: 'name',  type: 'presence'},
-        { field: 'email',  type: 'presence'},
-        { field: 'emailSubject',  type: 'presence'},
-        { field: 'emailTemplate', type: 'presence'}
+        { field: 'name',  type: 'presence' },
+        { field: 'email',  type: 'presence' },
+        { field: 'emailSubject',  type: 'presence' },
+        { field: 'emailTemplate', type: 'presence' }
     ],
 
     associations: [
-        { type: 'hasMany', model: 'Shopware.apps.Form.model.Field', name: 'getFields', associationKey: 'fields'}
+        { type: 'hasMany', model: 'Shopware.apps.Form.model.Field', name: 'getFields', associationKey: 'fields' }
     ],
 
     /**

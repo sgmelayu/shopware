@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundle\CriteriaRequestHandler;
@@ -33,10 +33,7 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class PropertyCriteriaRequestHandler implements CriteriaRequestHandlerInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(Connection $connection)
     {
@@ -48,7 +45,7 @@ class PropertyCriteriaRequestHandler implements CriteriaRequestHandlerInterface
         $this->addPropertyCondition($request, $criteria);
     }
 
-    private function addPropertyCondition(Request $request, Criteria $criteria)
+    private function addPropertyCondition(Request $request, Criteria $criteria): void
     {
         $filters = $request->getParam('sFilterProperties', []);
         if (empty($filters)) {
@@ -98,12 +95,11 @@ class PropertyCriteriaRequestHandler implements CriteriaRequestHandlerInterface
         $result = [];
         foreach ($data as $value) {
             $optionId = $value['optionID'];
-            $valueIds = explode('|', $value['valueIds']);
-
-            if (empty($valueIds)) {
+            if (!\is_string($value['valueIds']) || $value['valueIds'] === '') {
                 continue;
             }
-            $result[$optionId] = $valueIds;
+
+            $result[$optionId] = explode('|', $value['valueIds']);
         }
 
         return $result;

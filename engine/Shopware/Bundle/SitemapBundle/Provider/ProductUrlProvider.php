@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SitemapBundle\Provider;
 
+use DateTime;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver\Connection as ConnectionInterface;
 use Shopware\Bundle\SearchBundle\Condition\LastProductIdCondition;
@@ -33,50 +34,30 @@ use Shopware\Bundle\SitemapBundle\Struct\Url;
 use Shopware\Bundle\SitemapBundle\UrlProviderInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
-use Shopware\Components\Routing;
+use Shopware\Components\Routing\Context;
+use Shopware\Components\Routing\RouterInterface;
 use Shopware\Models\Article\Article as Product;
 
 class ProductUrlProvider implements UrlProviderInterface
 {
-    /**
-     * @var Routing\RouterInterface
-     */
-    private $router;
+    private RouterInterface $router;
 
-    /**
-     * @var int|null|null
-     */
-    private $lastId;
+    private ?int $lastId = null;
 
-    /**
-     * @var ProductNumberSearchInterface
-     */
-    private $productNumberSearch;
+    private ProductNumberSearchInterface $productNumberSearch;
 
-    /**
-     * @var StoreFrontCriteriaFactoryInterface
-     */
-    private $storeFrontCriteriaFactory;
+    private StoreFrontCriteriaFactoryInterface $storeFrontCriteriaFactory;
 
-    /**
-     * @var ConnectionInterface
-     */
-    private $connection;
+    private ConnectionInterface $connection;
 
-    /**
-     * @var int
-     */
-    private $batchSize;
+    private int $batchSize;
 
-    /**
-     * @param int $batchSize
-     */
     public function __construct(
-        Routing\RouterInterface $router,
+        RouterInterface $router,
         ProductNumberSearchInterface $productNumberSearch,
         StoreFrontCriteriaFactoryInterface $storeFrontCriteriaFactory,
         ConnectionInterface $connection,
-        $batchSize
+        int $batchSize
     ) {
         $this->router = $router;
         $this->productNumberSearch = $productNumberSearch;
@@ -88,7 +69,7 @@ class ProductUrlProvider implements UrlProviderInterface
     /**
      * {@inheritdoc}
      */
-    public function getUrls(Routing\Context $routingContext, ShopContextInterface $shopContext)
+    public function getUrls(Context $routingContext, ShopContextInterface $shopContext)
     {
         $criteria = $this->storeFrontCriteriaFactory
             ->createBaseCriteria([$shopContext->getShop()->getCategory()->getId()], $shopContext);
@@ -101,7 +82,7 @@ class ProductUrlProvider implements UrlProviderInterface
 
         $productNumberSearchResult = $this->productNumberSearch->search($criteria, $shopContext);
 
-        if (count($productNumberSearchResult->getProducts()) === 0) {
+        if (\count($productNumberSearchResult->getProducts()) === 0) {
             return [];
         }
 
@@ -111,8 +92,8 @@ class ProductUrlProvider implements UrlProviderInterface
         }, array_values($productNumberSearchResult->getProducts()));
         unset($productNumberSearchResult);
 
-        $qb = $this->connection->createQueryBuilder();
-        $statement = $qb->from('s_articles', 'product')
+        $statement = $this->connection->createQueryBuilder()
+            ->from('s_articles', 'product')
             ->select('id, changetime')
             ->where('id IN(:productIds)')
             ->setParameter('productIds', $productIds, Connection::PARAM_INT_ARRAY)
@@ -133,8 +114,8 @@ class ProductUrlProvider implements UrlProviderInterface
         $routes = $this->router->generateList(array_column($products, 'urlParams'), $routingContext);
 
         $urls = [];
-        for ($i = 0, $productCount = count($products); $i < $productCount; ++$i) {
-            $urls[] = new Url($routes[$i], new \DateTime($products[$i]['changetime']), 'weekly', Product::class, $products[$i]['id']);
+        for ($i = 0, $productCount = \count($products); $i < $productCount; ++$i) {
+            $urls[] = new Url($routes[$i], new DateTime($products[$i]['changetime']), 'weekly', Product::class, $products[$i]['id']);
         }
 
         reset($products);

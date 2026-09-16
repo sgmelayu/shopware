@@ -1,36 +1,42 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
-use Shopware\Components\Model\QueryBuilder;
+use Doctrine\DBAL\Connection;
+use Shopware\Bundle\SitemapBundle\Service\LinkFilter;
+use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Emotion\Emotion;
 use Shopware\Models\Shop\DetachedShop;
+use Shopware\Models\Shop\Shop;
 use Shopware\Models\Site\Site;
 
 class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
 {
     /**
      * Shows a category tree
+     *
+     * @return void
      */
     public function indexAction()
     {
@@ -50,7 +56,10 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
     private function getCategoryTree(): array
     {
         $shop = $this->container->get('shop');
-        $categoryTree = $this->container->get('modules')->sCategories()->sGetWholeCategoryTree(null, null, $shop->getId());
+        if (!$shop instanceof Shop) {
+            throw new RuntimeException('Shop is not initialized correctly in DI container');
+        }
+        $categoryTree = $this->container->get('modules')->Categories()->sGetWholeCategoryTree(null, null, $shop->getId());
 
         $categoryTranslations = $this->fetchTranslations('category', $this->getTranslationKeys(
             $categoryTree,
@@ -86,10 +95,8 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
 
     /**
      * Helper function to get additional page trees
-     *
-     * @return array
      */
-    private function getAdditionalTrees()
+    private function getAdditionalTrees(): array
     {
         return [
             $this->getCustomPages(),
@@ -100,10 +107,8 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
 
     /**
      * Helper function to get all custom pages of the shop
-     *
-     * @return array
      */
-    private function getCustomPages()
+    private function getCustomPages(): array
     {
         /** @var DetachedShop $shop */
         $shop = $this->container->get('shop');
@@ -120,44 +125,35 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
             $site = $this->convertSite($site, $translations);
         }
 
-        $staticPages = [
+        return [
             'name' => 'SitemapStaticPages',
             'link' => '',
             'sub' => $sites,
         ];
-
-        return $staticPages;
     }
 
     /**
-     * @param string $keyField
-     * @param string $recursiveField
-     *
      * @return int[]
      */
-    private function getTranslationKeys(array $array, $keyField, $recursiveField)
+    private function getTranslationKeys(array $array, string $keyField, string $recursiveField): array
     {
-        $translationkeys = [];
+        $translationKeys = [];
 
         foreach ($array as $data) {
-            $translationkeys[] = $data[$keyField];
+            $translationKeys[] = $data[$keyField];
 
             if (!empty($data[$recursiveField])) {
-                $translationkeys = array_merge($translationkeys, $this->getTranslationKeys($data[$recursiveField], $keyField, $recursiveField));
+                $translationKeys = array_merge($translationKeys, $this->getTranslationKeys($data[$recursiveField], $keyField, $recursiveField));
             }
         }
 
-        return $translationkeys;
+        return $translationKeys;
     }
 
     /**
      * Helper function to read all static pages of a shop from the database
-     *
-     * @param int $shopId
-     *
-     * @return array
      */
-    private function getSitesByShopId($shopId)
+    private function getSitesByShopId(int $shopId): array
     {
         $sql = '
             SELECT shopGroups.key
@@ -167,11 +163,9 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
             WHERE shopPages.shop_id = ?
         ';
 
-        $statement = $this->container->get('db')->executeQuery($sql, [$shopId]);
-        $keys = $statement->fetchAll(PDO::FETCH_COLUMN);
+        $keys = $this->container->get('db')->executeQuery($sql, [$shopId])->fetchAll(PDO::FETCH_COLUMN);
 
-        /** @var Shopware\Models\Site\Repository $siteRepository */
-        $siteRepository = $this->get(\Shopware\Components\Model\ModelManager::class)->getRepository('Shopware\Models\Site\Site');
+        $siteRepository = $this->get(ModelManager::class)->getRepository(Site::class);
 
         $sites = [];
         foreach ($keys as $key) {
@@ -198,7 +192,7 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
     private function convertSite($site, array $translations)
     {
         $site = array_merge($site, $this->fetchTranslation($site['id'], $translations));
-        $site['hideOnSitemap'] = !$this->filterLink($site['link']);
+        $site['hideOnSitemap'] = !LinkFilter::filterLink($site['link']);
 
         $site = array_merge(
             $site,
@@ -222,14 +216,10 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
     }
 
     /**
-     * @param string $type
-     * @param int[]  $ids
-     *
-     * @return array
+     * @param int[] $ids
      */
-    private function fetchTranslations($type, array $ids)
+    private function fetchTranslations(string $type, array $ids): array
     {
-        /** @var DetachedShop $shop */
         $shop = $this->container->get('shop');
 
         $shopId = $shop->getId();
@@ -240,17 +230,11 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
             $fallbackId = $fallbackShop->getId();
         }
 
-        $translator = $this->container->get(\Shopware_Components_Translation::class);
-
-        return $translator->readBatchWithFallback($shopId, $fallbackId, $type, $ids, false);
+        return $this->container->get(Shopware_Components_Translation::class)
+            ->readBatchWithFallback($shopId, $fallbackId, $type, $ids, false);
     }
 
-    /**
-     * @param int $objectKey
-     *
-     * @return array
-     */
-    private function fetchTranslation($objectKey, array $translations)
+    private function fetchTranslation(int $objectKey, array $translations): array
     {
         foreach ($translations as $translation) {
             if ((int) $translation['objectkey'] === $objectKey) {
@@ -262,37 +246,9 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
     }
 
     /**
-     * Helper function to filter predefined links, which should not be in the sitemap (external links, sitemap links itself)
-     * Returns false, if the link is not allowed
-     *
-     * @param string $link
-     *
-     * @return bool
-     */
-    private function filterLink($link)
-    {
-        if (empty($link)) {
-            return true;
-        }
-
-        $userParams = parse_url($link, PHP_URL_QUERY);
-        parse_str($userParams, $userParams);
-
-        $blacklist = ['', 'sitemap', 'sitemapXml'];
-
-        if (in_array($userParams['sViewport'], $blacklist)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
      * Helper function to get all supplier pages
-     *
-     * @return array
      */
-    private function getSupplierPages()
+    private function getSupplierPages(): array
     {
         $suppliers = $this->getSupplierForSitemap();
 
@@ -309,38 +265,34 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
             );
         }
 
-        $supplierPages = [
+        return [
             'name' => 'SitemapSupplierPages',
             'link' => '',
             'sub' => $suppliers,
         ];
-
-        return $supplierPages;
     }
 
     /**
      * Helper function to get all landing pages
-     *
-     * @return array
      */
-    private function getLandingPages()
+    private function getLandingPages(): array
     {
-        /** @var Shopware\Models\Emotion\Repository $emotionRepository */
-        $emotionRepository = $this->get(\Shopware\Components\Model\ModelManager::class)->getRepository(Emotion::class);
+        $emotionRepository = $this->get(ModelManager::class)->getRepository(Emotion::class);
 
-        /** @var DetachedShop $shop */
         $shop = $this->container->get('shop');
+        if (!$shop instanceof Shop) {
+            throw new RuntimeException('Shop is not initialized correctly in DI container');
+        }
 
-        $builder = $emotionRepository->getCampaignsByShopId($shop->getId());
-        $campaigns = $builder->getQuery()->getArrayResult();
+        $campaigns = $emotionRepository->getCampaignsByShopId($shop->getId())->getQuery()->getArrayResult();
         $translations = $this->fetchTranslations('emotion', array_column($campaigns, 'id'));
 
         foreach ($campaigns as &$campaign) {
             $translation = $this->fetchTranslation($campaign['id'], $translations);
 
-            $translation['seo_title'] = $translation['seoTitle'];
-            $translation['seo_keywords'] = $translation['seoKeywords'];
-            $translation['seo_description'] = $translation['seoDescription'];
+            $translation['seo_title'] = $translation['seoTitle'] ?? null;
+            $translation['seo_keywords'] = $translation['seoKeywords'] ?? null;
+            $translation['seo_description'] = $translation['seoDescription'] ?? null;
 
             $campaign = array_merge($campaign, $translation);
 
@@ -360,25 +312,18 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
             );
         }
 
-        $landingPages = [
+        return [
             'name' => 'SitemapLandingPages',
             'link' => '',
             'sub' => $campaigns,
         ];
-
-        return $landingPages;
     }
 
     /**
      * Helper function to filter emotion campaigns
      * Returns false, if the campaign starts later or is outdated
-     *
-     * @param \DateTimeInterface|null $from
-     * @param \DateTimeInterface|null $to
-     *
-     * @return bool
      */
-    private function filterCampaign($from = null, $to = null)
+    private function filterCampaign(?DateTimeInterface $from = null, ?DateTimeInterface $to = null): bool
     {
         $now = new DateTime();
 
@@ -397,35 +342,29 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
      * Helper function to create a sitemap readable array
      * If $link is an array, it will be used as additional params for link assembling
      *
-     * @param int               $id
-     * @param string            $name
-     * @param string            $viewport
-     * @param string            $idParam
      * @param string|array|null $link
-     *
-     * @return array
      */
-    private function getSitemapArray($id, $name, $viewport, $idParam, $link = null)
+    private function getSitemapArray(int $id, string $name, string $viewport, string $idParam, $link = null): array
     {
-        $userParams = [];
+        $userParamsArray = [];
 
-        if (is_string($link)) {
-            $userParams = parse_url($link, PHP_URL_QUERY);
-            parse_str($userParams, $userParams);
+        if (\is_string($link)) {
+            $userParams = (string) parse_url($link, PHP_URL_QUERY);
+            parse_str($userParams, $userParamsArray);
         }
 
-        if (empty($userParams)) {
-            $userParams = [
+        if (empty($userParamsArray)) {
+            $userParamsArray = [
                 'sViewport' => $viewport,
                 $idParam => $id,
             ];
         }
 
-        if (is_array($link)) {
-            $userParams = array_merge($userParams, $link);
+        if (\is_array($link)) {
+            $userParamsArray = array_merge($userParamsArray, $link);
         }
 
-        $link = $this->Front()->Router()->assemble($userParams);
+        $link = $this->Front()->ensureRouter()->assemble($userParamsArray);
 
         return [
             'id' => $id,
@@ -438,28 +377,19 @@ class Shopware_Controllers_Frontend_Sitemap extends Enlight_Controller_Action
      * Gets all suppliers that have products for the current shop
      *
      * @throws Exception
-     *
-     * @return array
      */
-    private function getSupplierForSitemap()
+    private function getSupplierForSitemap(): array
     {
-        $context = $this->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class)->getShopContext();
-        $categoryId = $context->getShop()->getCategory()->getId();
+        $categoryId = $this->get(ContextServiceInterface::class)->getShopContext()->getShop()->getCategory()->getId();
 
-        /** @var QueryBuilder $query */
-        $query = $this->get(\Doctrine\DBAL\Connection::class)->createQueryBuilder();
-        $query->select(['manufacturer.id', 'manufacturer.name']);
-
-        $query->from('s_articles_supplier', 'manufacturer');
-        $query->innerJoin('manufacturer', 's_articles', 'product', 'product.supplierID = manufacturer.id')
+        return $this->get(Connection::class)->createQueryBuilder()
+            ->select(['manufacturer.id', 'manufacturer.name'])
+            ->from('s_articles_supplier', 'manufacturer')
+            ->innerJoin('manufacturer', 's_articles', 'product', 'product.supplierID = manufacturer.id')
             ->innerJoin('product', 's_articles_categories_ro', 'categories', 'categories.articleID = product.id AND categories.categoryID = :categoryId')
-            ->setParameter(':categoryId', $categoryId);
-
-        $query->groupBy('manufacturer.id');
-
-        /** @var PDOStatement $statement */
-        $statement = $query->execute();
-
-        return $statement->fetchAll(PDO::FETCH_ASSOC);
+            ->setParameter(':categoryId', $categoryId)
+            ->groupBy('manufacturer.id')
+            ->execute()
+            ->fetchAllAssociative();
     }
 }

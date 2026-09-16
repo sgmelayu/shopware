@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/article_list/main"}
@@ -35,9 +34,7 @@ Ext.define('Shopware.apps.ArticleList.view.QueryField', {
 
     border: false,
 
-
     padding: '10 10 0 10',
-
 
     /**
      * Initializes the component, sets up toolbar and pagingbar and and registers some events
@@ -69,16 +66,16 @@ Ext.define('Shopware.apps.ArticleList.view.QueryField', {
         return [{
             xtype: 'fieldset',
             title: '{s name="addFilter/queryTitle"}Your query{/s}',
-            defaults : {
+            defaults: {
                 margin: '0 0 10 0'
             },
             items: [
                 me.getFilterInputField(),
-            {
-                xtype: 'label',
-                name: 'status-label',
-                text: '{s name="queryField/enterQuery"}Enter your Query here:{/s}'
-            }]
+                {
+                    xtype: 'label',
+                    name: 'status-label',
+                    text: '{s name="queryField/enterQuery"}Enter your Query here:{/s}'
+                }]
         }];
 
     },
@@ -143,8 +140,8 @@ Ext.define('Shopware.apps.ArticleList.view.QueryField', {
                 loadingText: 'Searching...',
                 emptyText: 'No matching posts found.',
 
-            pageSize: 10
-        },
+                pageSize: 10
+            },
 
             // override default onSelect to do redirect
             listeners: {
@@ -152,7 +149,7 @@ Ext.define('Shopware.apps.ArticleList.view.QueryField', {
                 'afterrender': { fn: function () {
                     me.combo.inputEl.dom.spellcheck = false;
                 }, scope: this },
-                'focus': { fn: me.comboChangeCallback, scope: this},
+                'focus': { fn: me.comboChangeCallback, scope: this },
                 'change': { fn: me.comboChangeCallback, scope: this }
             }
         });
@@ -173,7 +170,6 @@ Ext.define('Shopware.apps.ArticleList.view.QueryField', {
 
         me.fireEvent('suggest', text, position);
     }
-
 
 });
 //{/block}

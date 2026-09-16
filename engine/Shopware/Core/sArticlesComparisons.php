@@ -1,41 +1,36 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\DependencyInjection\Container;
 
-class sArticlesComparisons implements \Enlight_Hook
+class sArticlesComparisons implements Enlight_Hook
 {
     /**
      * @var sArticles
      */
     private $articleModule;
-
-    /**
-     * @var \sSystem
-     */
-    private $systemModule;
 
     /**
      * @var Enlight_Components_Db_Adapter_Pdo_Mysql
@@ -60,12 +55,11 @@ class sArticlesComparisons implements \Enlight_Hook
     public function __construct(sArticles $articleModule, Container $container)
     {
         $this->articleModule = $articleModule;
-        $this->systemModule = $articleModule->sSYSTEM;
 
         $this->db = $container->get('db');
-        $this->config = $container->get(\Shopware_Components_Config::class);
+        $this->config = $container->get(Shopware_Components_Config::class);
         $this->session = $container->get('session');
-        $this->contextService = $container->get(\Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface::class);
+        $this->contextService = $container->get(ContextServiceInterface::class);
     }
 
     /**
@@ -113,7 +107,7 @@ class sArticlesComparisons implements \Enlight_Hook
         }
 
         // Check if this product is already noted
-        $checkForProduct = $this->db->fetchRow(
+        $checkForProduct = $this->db->fetchOne(
             'SELECT id FROM s_order_comparisons WHERE sessionID=? AND articleID=?',
             [$this->session->offsetGet('sessionId'), $productId]
         );
@@ -128,31 +122,31 @@ class sArticlesComparisons implements \Enlight_Hook
             return 'max_reached';
         }
 
-        if (!$checkForProduct['id']) {
-            $productName = $this->db->fetchOne(
-                'SELECT s_articles.name AS articleName FROM s_articles WHERE id = ?',
-                [$productId]
-            );
+        if ($checkForProduct !== false) {
+            return true;
+        }
 
-            if (!$productName) {
-                return false;
-            }
+        $productName = $this->db->fetchOne(
+            'SELECT s_articles.name AS articleName FROM s_articles WHERE id = ?',
+            [$productId]
+        );
 
-            $sql = '
-            INSERT INTO s_order_comparisons (sessionID, userID, articlename, articleID, datum)
-            VALUES (?,?,?,?,now())
-            ';
+        if (!$productName) {
+            return false;
+        }
 
-            $queryNewPrice = $this->db->executeUpdate($sql, [
-                $this->session->offsetGet('sessionId'),
-                empty($this->session['sUserId']) ? 0 : $this->session['sUserId'],
-                $productName,
-                $productId,
-            ]);
+        $sql = 'INSERT INTO s_order_comparisons (sessionID, userID, articlename, articleID, datum)
+                VALUES (?,?,?,?,now())';
 
-            if (!$queryNewPrice) {
-                throw new Enlight_Exception('sArticles##sAddComparison##01: Error in SQL-query');
-            }
+        $queryNewPrice = $this->db->executeUpdate($sql, [
+            $this->session->offsetGet('sessionId'),
+            empty($this->session['sUserId']) ? 0 : $this->session['sUserId'],
+            $productName,
+            $productId,
+        ]);
+
+        if (!$queryNewPrice) {
+            throw new Enlight_Exception('sArticles##sAddComparison##01: Error in SQL-query');
         }
 
         return true;
@@ -175,7 +169,7 @@ class sArticlesComparisons implements \Enlight_Hook
             [$this->session->offsetGet('sessionId')]
         );
 
-        if (!count($checkForProduct)) {
+        if (!\count($checkForProduct)) {
             return [];
         }
 
@@ -211,13 +205,16 @@ class sArticlesComparisons implements \Enlight_Hook
             [$this->session->offsetGet('sessionId')]
         );
 
-        if (!count($checkForProduct)) {
+        if (!\count($checkForProduct)) {
             return [];
         }
 
         foreach ($checkForProduct as $product) {
             if ($product['articleID']) {
                 $promotion = $this->articleModule->sGetPromotionById('fix', 0, (int) $product['articleID']);
+                if (!\is_array($promotion)) {
+                    continue;
+                }
                 $promotion['linkDetails'] = $promotion['linkVariant'];
                 $products[] = $promotion;
             }
@@ -242,7 +239,7 @@ class sArticlesComparisons implements \Enlight_Hook
         $properties = [];
 
         foreach ($articles as $product) {
-            //get all properties in the right order
+            // get all properties in the right order
             $sql = "SELECT
                       options.id,
                       options.name,
@@ -274,8 +271,8 @@ class sArticlesComparisons implements \Enlight_Hook
             ]);
 
             foreach ($productProperties as $productProperty) {
-                if (!array_key_exists($productProperty['id'], $properties)) {
-                    //the key is not part of the array so add it to the end
+                if (!\array_key_exists($productProperty['id'], $properties)) {
+                    // the key is not part of the array so add it to the end
                     $properties[$productProperty['id']] = $this->extractPropertyTranslation($productProperty);
                 }
             }
@@ -297,7 +294,7 @@ class sArticlesComparisons implements \Enlight_Hook
         foreach ($articles as $productKey => $product) {
             $productProperties = [];
             foreach ($properties as $propertyKey => $property) {
-                if (is_array($product['sProperties']) && array_key_exists($propertyKey, $product['sProperties'])) {
+                if (isset($product['sProperties']) && \is_array($product['sProperties']) && \array_key_exists($propertyKey, $product['sProperties'])) {
                     $productProperties[$propertyKey] = $product['sProperties'][$propertyKey];
                 } else {
                     $productProperties[$propertyKey] = null;
@@ -317,14 +314,23 @@ class sArticlesComparisons implements \Enlight_Hook
     private function extractPropertyTranslation($articleProperty)
     {
         if ($articleProperty['translation']) {
-            $translation = unserialize($articleProperty['translation'], ['allowed_classes' => false]);
+            $translation = @unserialize($articleProperty['translation'], ['allowed_classes' => false]);
+
+            if ($translation === false) {
+                $translation = [];
+            }
             if ($this->containsTranslation($translation)) {
                 return (string) $translation['optionName'];
             }
         }
 
         if ($articleProperty['translationFallback']) {
-            $translation = unserialize($articleProperty['translationFallback'], ['allowed_classes' => false]);
+            $translation = @unserialize($articleProperty['translationFallback'], ['allowed_classes' => false]);
+
+            if ($translation === false) {
+                $translation = [];
+            }
+
             if ($this->containsTranslation($translation)) {
                 return (string) $translation['optionName'];
             }
@@ -340,6 +346,6 @@ class sArticlesComparisons implements \Enlight_Hook
      */
     private function containsTranslation($translation)
     {
-        return is_array($translation) && isset($translation['optionName']) && $translation['optionName'];
+        return \is_array($translation) && isset($translation['optionName']) && $translation['optionName'];
     }
 }

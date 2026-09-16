@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -53,10 +52,10 @@ window.events = (function() {
          */
         subscribe: function(topic, listener) {
             // Create the topic's object if not yet created
-            if(!hOP.call(topics, topic)) topics[topic] = [];
+            if (!hOP.call(topics, topic)) topics[topic] = [];
 
             // Add the listener to queue
-            var index = topics[topic].push(listener) -1;
+            var index = topics[topic].push(listener) - 1;
 
             // Provide handle back for removal of topic
             return {
@@ -79,7 +78,7 @@ window.events = (function() {
          */
         publish: function(topic, info) {
             // If the topic doesn't exist, or there's no listeners in queue, just leave
-            if(!hOP.call(topics, topic)) return;
+            if (!hOP.call(topics, topic)) return;
 
             // Cycle through topics queue, fire!
             topics[topic].forEach(function(item) {
@@ -207,10 +206,9 @@ window.postMessageApi = function (api, win) {
 
             params = params || {};
 
-            if(!componentName) {
+            if (!componentName) {
                 componentName = component || 'main';
             }
-
 
             if (params.async) {
                 this.opts.async = params.async;
@@ -668,7 +666,6 @@ window.postMessageApi = function (api, win) {
 
                 return request;
             },
-
 
             /**
              * Sets the height of the backend window.

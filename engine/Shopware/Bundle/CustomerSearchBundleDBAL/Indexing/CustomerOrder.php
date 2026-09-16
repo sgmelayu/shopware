@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\CustomerSearchBundleDBAL\Indexing;
 
+use DateTime;
 use Shopware\Bundle\StoreFrontBundle\Struct\Extendable;
 
 class CustomerOrder extends Extendable
@@ -54,12 +55,12 @@ class CustomerOrder extends Extendable
     protected $maxAmount;
 
     /**
-     * @var \DateTime|null
+     * @var DateTime|null
      */
     protected $firstOrderTime;
 
     /**
-     * @var \DateTime|null
+     * @var DateTime|null
      */
     protected $lastOrderTime;
 
@@ -194,7 +195,7 @@ class CustomerOrder extends Extendable
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
     public function getFirstOrderTime()
     {
@@ -202,7 +203,7 @@ class CustomerOrder extends Extendable
     }
 
     /**
-     * @param \DateTime|null $firstOrderTime
+     * @param DateTime|null $firstOrderTime
      */
     public function setFirstOrderTime($firstOrderTime)
     {
@@ -210,7 +211,7 @@ class CustomerOrder extends Extendable
     }
 
     /**
-     * @return \DateTime|null
+     * @return DateTime|null
      */
     public function getLastOrderTime()
     {
@@ -218,7 +219,7 @@ class CustomerOrder extends Extendable
     }
 
     /**
-     * @param \DateTime|null $lastOrderTime
+     * @param DateTime|null $lastOrderTime
      */
     public function setLastOrderTime($lastOrderTime)
     {
@@ -346,7 +347,7 @@ class CustomerOrder extends Extendable
     }
 
     /**
-     * @var string[]
+     * @param string[] $products
      */
     public function setProducts($products)
     {
@@ -362,7 +363,7 @@ class CustomerOrder extends Extendable
     }
 
     /**
-     * @var int[]
+     * @param int[] $manufacturers
      */
     public function setManufacturers($manufacturers)
     {
@@ -378,7 +379,7 @@ class CustomerOrder extends Extendable
     }
 
     /**
-     * @var int[]
+     * @param int[] $categories
      */
     public function setCategories($categories)
     {

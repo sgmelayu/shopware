@@ -1,40 +1,43 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\SearchBundle\Sorting;
 
+use Shopware\Bundle\SearchBundle\ProductNumberSearchResult;
 use Shopware\Bundle\SearchBundle\Sorting\PriceSorting;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Models\Category\Category;
 use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestCase;
+use Shopware\Tests\Functional\Bundle\StoreFrontBundle\TestContext;
 
 /**
  * @group elasticSearch
  */
 class PriceSortingTest extends TestCase
 {
-    public function testCurrentCustomerGroupPriceSorting()
+    public function testCurrentCustomerGroupPriceSorting(): void
     {
         $sorting = new PriceSorting();
         $context = $this->getPriceContext(true, 0);
@@ -58,7 +61,7 @@ class PriceSortingTest extends TestCase
         );
     }
 
-    public function testFallbackCustomerGroupPriceSorting()
+    public function testFallbackCustomerGroupPriceSorting(): void
     {
         $sorting = new PriceSorting();
         $context = $this->getPriceContext(true, 0);
@@ -84,7 +87,7 @@ class PriceSortingTest extends TestCase
     /**
      * @group skipElasticSearch
      */
-    public function testFallbackAndCurrentCustomerGroupPriceSorting()
+    public function testFallbackAndCurrentCustomerGroupPriceSorting(): void
     {
         $sorting = new PriceSorting();
         $context = $this->getPriceContext(true, 0);
@@ -111,7 +114,7 @@ class PriceSortingTest extends TestCase
     /**
      * @group skipElasticSearch
      */
-    public function testCustomerGroupDiscount()
+    public function testCustomerGroupDiscount(): void
     {
         $sorting = new PriceSorting();
         $context = $this->getPriceContext(true, 10);
@@ -119,7 +122,7 @@ class PriceSortingTest extends TestCase
         $customerGroup = $context->getCurrentCustomerGroup();
         $fallback = $context->getFallbackCustomerGroup();
 
-        $result = $this->search(
+        $this->search(
             [
                 'first' => [$customerGroup->getKey() => 40, $fallback->getKey() => 1],
                 'second' => [$fallback->getKey() => 10],
@@ -135,9 +138,9 @@ class PriceSortingTest extends TestCase
         );
     }
 
-    protected function getPriceContext($displayGross, $discount = null)
+    protected function getPriceContext($displayGross, $discount = null): TestContext
     {
-        $context = parent::getContext();
+        $context = $this->getContext();
 
         $data = ['key' => 'BAK', 'tax' => $displayGross];
 
@@ -146,25 +149,24 @@ class PriceSortingTest extends TestCase
         );
 
         $context->getCurrentCustomerGroup()->setDisplayGrossPrices($displayGross);
-        $context->getCurrentCustomerGroup()->setUseDiscount(($discount !== null));
+        $context->getCurrentCustomerGroup()->setUseDiscount($discount !== null);
         $context->getCurrentCustomerGroup()->setPercentageDiscount($discount);
 
         return $context;
     }
 
     /**
-     * @param string                             $number
-     * @param \Shopware\Models\Category\Category $category
-     * @param array                              $prices
+     * @param string             $number
+     * @param array<string, int> $prices
      *
-     * @return array
+     * @return array<string, mixed>
      */
     protected function getProduct(
         $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $prices = []
-    ) {
+    ): array {
         $product = parent::getProduct($number, $context, $category);
 
         if (!empty($prices)) {
@@ -182,16 +184,16 @@ class PriceSortingTest extends TestCase
     }
 
     protected function search(
-        $products,
-        $expectedNumbers,
-        $category = null,
-        $conditions = [],
-        $facets = [],
-        $sortings = [],
+        array $products,
+        array $expectedNumbers,
+        ?Category $category = null,
+        array $conditions = [],
+        array $facets = [],
+        array $sortings = [],
         $context = null,
         array $configs = [],
-        $variantSearch = false
-    ) {
+        bool $variantSearch = false
+    ): ProductNumberSearchResult {
         $result = parent::search(
             $products,
             $expectedNumbers,

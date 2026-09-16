@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace ShopwarePlugins\HttpCache;
@@ -27,15 +27,15 @@ namespace ShopwarePlugins\HttpCache;
 use Enlight_Components_Session_Namespace as Session;
 use Enlight_Controller_Request_Request as Request;
 use Enlight_Controller_Response_Response as Response;
+use Enlight_Event_EventManager;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 use Shopware\Components\HttpCache\CacheRouteGenerationService;
 use Shopware\Components\HttpCache\CacheTimeServiceInterface;
 use Shopware\Components\HttpCache\DefaultRouteService;
-use Symfony\Component\HttpFoundation\Cookie;
 
 class CacheControl
 {
-    const AUTO_NO_CACHE_CONTROLLERS = [
+    public const AUTO_NO_CACHE_CONTROLLERS = [
         'frontend/checkout' => ['checkout'],
         'frontend/note' => ['checkout'],
         'frontend/detail' => ['detail'],
@@ -48,12 +48,12 @@ class CacheControl
     private $session;
 
     /**
-     * @var array
+     * @var array<string, mixed>
      */
     private $config;
 
     /**
-     * @var \Enlight_Event_EventManager
+     * @var Enlight_Event_EventManager
      */
     private $eventManager;
 
@@ -72,10 +72,13 @@ class CacheControl
      */
     private $cacheRouteGeneration;
 
+    /**
+     * @param array<string, mixed> $config
+     */
     public function __construct(
         Session $session,
         array $config,
-        \Enlight_Event_EventManager $eventManager,
+        Enlight_Event_EventManager $eventManager,
         DefaultRouteService $defaultRouteService,
         CacheTimeServiceInterface $cacheTimeService,
         CacheRouteGenerationService $cacheRouteGeneration
@@ -109,7 +112,7 @@ class CacheControl
             return false;
         }
 
-        if ($this->session->Admin) {
+        if ($this->session->get('Admin')) {
             return false;
         }
 
@@ -170,12 +173,12 @@ class CacheControl
      *
      * @param int $shopId
      *
-     * @return array
+     * @return array<string>
      */
     public function getNoCacheTagsForRequest(Request $request, $shopId)
     {
         $tags = [];
-        $autoAdmin = $this->config['admin'];
+        $autoAdmin = $this->config['admin'] ?? null;
 
         if (!empty($autoAdmin)) {
             $tags[] = 'admin-' . $shopId;
@@ -184,7 +187,7 @@ class CacheControl
         $configuredNoCacheTags = $this->defaultRouteService->getDefaultNoCacheTags();
         $routeTags = $this->defaultRouteService->findRouteValue($request, $configuredNoCacheTags);
 
-        if (!$routeTags) {
+        if (!\is_array($routeTags)) {
             return $tags;
         }
 
@@ -202,14 +205,14 @@ class CacheControl
     /**
      * Returns a list of tags which has to be added to the no cache cookie
      *
-     * @return \string[]
+     * @return string[]
      */
     public function getTagsForNoCacheCookie(Request $request, ShopContextInterface $context)
     {
         $auto = $this->defaultRouteService->findRouteValue($request, self::AUTO_NO_CACHE_CONTROLLERS);
 
         $tags = [];
-        if ($auto !== null) {
+        if (\is_array($auto)) {
             $tags = $auto;
         }
 
@@ -237,7 +240,7 @@ class CacheControl
     /**
      * Returns a list of tags which has to be deleted from the no cache cookie
      *
-     * @return \string[]
+     * @return string[]
      */
     public function getRemovableCacheTags(Request $request, ShopContextInterface $context)
     {
@@ -272,17 +275,17 @@ class CacheControl
 
         $autoNoCacheControls = $this->defaultRouteService->findRouteValue($request, self::AUTO_NO_CACHE_CONTROLLERS);
 
-        return isset($autoNoCacheControls) && isset($tags[$targetName]) && !empty(array_intersect($autoNoCacheControls, $tags[$targetName]));
+        return isset($autoNoCacheControls, $tags[$targetName])
+            && \is_array($autoNoCacheControls) && !empty(array_intersect($autoNoCacheControls, $tags[$targetName]));
     }
 
+    /**
+     * @return void
+     */
     public function setContextCacheKey(Request $request, ShopContextInterface $context, Response $response)
     {
-        $session = $this->session;
-
-        $customerGroup = $session->offsetGet('sUserGroup');
-
-        //not logged in => reset global context cookie
-        if (!$customerGroup) {
+        // not logged in => reset global context cookie
+        if (!$this->session->offsetGet('sUserGroup')) {
             $this->resetCookies($request, $response);
 
             return;
@@ -316,7 +319,7 @@ class CacheControl
      * )
      * </code>
      *
-     * @return array
+     * @return array<string>
      */
     private function getNoCacheTagsFromCookie(Request $request)
     {
@@ -327,18 +330,15 @@ class CacheControl
         }
 
         $noCacheTags = explode(',', $noCacheCookie);
-        $noCacheTags = array_map('trim', $noCacheTags);
 
-        return $noCacheTags;
+        return array_map('trim', $noCacheTags);
     }
 
     /**
      * Validates if the provided request is a cacheable route which should not be cached if a specify tag is set
      * and the request contains the nocache parameter as get parameter
-     *
-     * @return bool
      */
-    private function hasAllowedNoCacheParameter(Request $request)
+    private function hasAllowedNoCacheParameter(Request $request): bool
     {
         $configuredRoutes = $this->defaultRouteService->getDefaultNoCacheTags();
         $tag = $this->defaultRouteService->findRouteValue($request, $configuredRoutes);
@@ -346,14 +346,12 @@ class CacheControl
         return isset($tag) && $request->getQuery('nocache') !== null;
     }
 
-    private function resetCookies(Request $request, Response $response)
+    private function resetCookies(Request $request, Response $response): void
     {
-        $response->headers->setCookie(
-            new Cookie('x-cache-context-hash', null, strtotime('-1 Year'), $request->getBasePath() . '/')
-        );
+        $response->setCookie('x-cache-context-hash', null, strtotime('-1 Year'), $request->getBasePath() . '/');
     }
 
-    private function setContextCookie(Request $request, ShopContextInterface $context, Response $response)
+    private function setContextCookie(Request $request, ShopContextInterface $context, Response $response): void
     {
         $hash = json_encode($context->getTaxRules()) . json_encode($context->getCurrentCustomerGroup());
 
@@ -364,8 +362,6 @@ class CacheControl
             'response' => $response,
         ]);
 
-        $response->headers->setCookie(
-            new Cookie('x-cache-context-hash', sha1($hash), 0, $request->getBasePath() . '/', null, $request->isSecure())
-        );
+        $response->setCookie('x-cache-context-hash', sha1($hash), 0, $request->getBasePath() . '/', null, $request->isSecure());
     }
 }

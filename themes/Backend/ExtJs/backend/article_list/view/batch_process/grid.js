@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 //{namespace name="backend/article_list/main"}
@@ -26,13 +25,12 @@
 Ext.define('Shopware.apps.ArticleList.view.BatchProcess.Grid', {
     extend: 'Ext.grid.Panel',
 
-
     alias: 'widget.multi-edit-batch-process-grid',
 
     initComponent: function() {
         var me = this;
 
-        me.operatorStore =  Ext.create('Shopware.apps.ArticleList.store.Operator').load({ params: { resource: 'product' }});
+        me.operatorStore =  Ext.create('Shopware.apps.ArticleList.store.Operator').load({ params: { resource: 'product' } });
 
         me.tbar = me.getToolbar();
         me.columns = me.getColumns();
@@ -43,7 +41,6 @@ Ext.define('Shopware.apps.ArticleList.view.BatchProcess.Grid', {
 
         me.callParent(arguments);
     },
-
 
     /**
      * Creates the grid toolbar
@@ -58,7 +55,7 @@ Ext.define('Shopware.apps.ArticleList.view.BatchProcess.Grid', {
                 text: '{s name="add"}Add{/s}',
                 action: 'addRow',
                 name: 'addRow',
-                iconCls:'sprite-plus-circle-frame',
+                iconCls: 'sprite-plus-circle-frame',
                 handler: function() {
                     me.fireEvent('addRow');
                 }
@@ -75,7 +72,7 @@ Ext.define('Shopware.apps.ArticleList.view.BatchProcess.Grid', {
      * Create and configure the RowEditing feature.
      */
     setupRowEditor: function() {
-        var me =this;
+        var me = this;
 
         me.rowEditing = Ext.create('Ext.grid.plugin.RowEditing', {
             clicksToEdit: 1
@@ -125,19 +122,19 @@ Ext.define('Shopware.apps.ArticleList.view.BatchProcess.Grid', {
                 allowEmpty: false,
                 editable: false,
                 listeners: {
-                    'select': { fn:function(combo, records, e) {
+                    'select': { fn: function(combo, records, e) {
                         me.setOperatorsForCurrentRecord(records[0], me.operatorStore);
                         me.fireEvent('setEditor', me.columns[2], records[0]);
                     }, scope: this },
                     beforequery: function(e) {
-                        e.combo.store.getProxy().extraParams = { resource: 'product'};
+                        e.combo.store.getProxy().extraParams = { resource: 'product' };
                     }
                 }
             },
             dataIndex: 'column',
             menuDisabled: true,
             sortable: false
-        },{
+        }, {
             flex: 1,
             header: '{s name="multiEdit/operation"}Operation{/s}',
             editor: {
@@ -154,7 +151,7 @@ Ext.define('Shopware.apps.ArticleList.view.BatchProcess.Grid', {
             dataIndex: 'operator',
             menuDisabled: true,
             sortable: false
-        },{
+        }, {
             flex: 1,
             editor: {
                 xtype: 'textfield'

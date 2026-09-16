@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Mail
@@ -58,7 +57,7 @@ Ext.define('Shopware.apps.Mail.controller.Attachment', {
      * Contains all snippets for the controller
      * @object
      */
-    snippets:{
+    snippets: {
         multipleDeleteTitle: '{s name="message_delete_multiple_title"}Delete selected attachments{/s}',
         multipleDeleteMessage: '{s name="message_delete_multiple_content"}[0] attachments have been selected. Are you sure you want to delete all selected attachments?{/s}',
 
@@ -66,7 +65,7 @@ Ext.define('Shopware.apps.Mail.controller.Attachment', {
         deleteSuccessMessage: '{s name="message_delete_success_title"}Attachments have been removed{/s}',
 
         deleteErrorTitle: '{s name="message_delete_error_title"}Error{/s}',
-        deleteErrorMessage: '{s name="message_delete_error_message"}An error has occurred while deleting.{/s}'  ,
+        deleteErrorMessage: '{s name="message_delete_error_message"}An error has occurred while deleting.{/s}',
 
         singleDeleteTitle: '{s name="message_delete_single_title"}Delete selected attachment{/s}',
         singleDeletMessage: '{s name="message_delete_single_content"}Are you sure that you want to delete the selected attachment?{/s}',
@@ -84,7 +83,7 @@ Ext.define('Shopware.apps.Mail.controller.Attachment', {
 
         me.control({
             'mail-main-attachments': {
-                checkchange:    me.onCheckChange,
+                checkchange: me.onCheckChange,
                 onDeleteSingle: me.onDeleteSingle
             },
 
@@ -96,7 +95,7 @@ Ext.define('Shopware.apps.Mail.controller.Attachment', {
                 drop: me.onDrop
             },
 
-            'mail-main-attachments button[action=main-attachments-delete]' : {
+            'mail-main-attachments button[action=main-attachments-delete]': {
                 click: me.onDelete
             }
         });

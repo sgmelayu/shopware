@@ -1,29 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use DirectoryIterator;
+use Exception;
+use RuntimeException;
 use Shopware\Components\Snippet\SnippetValidator;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
@@ -79,7 +82,12 @@ class SnippetsValidateCommand extends ShopwareCommand implements CompletionAware
         $validator = $this->container->get('shopware.snippet_validator');
 
         if (empty($argument)) {
-            $invalidPaths = $validator->validate($this->container->getParameter('kernel.root_dir') . '/snippets');
+            $rootDir = $this->container->getParameter('kernel.root_dir');
+            if (!\is_string($rootDir)) {
+                throw new RuntimeException('Parameter kernel.root_dir has to be an string');
+            }
+
+            $invalidPaths = $validator->validate($rootDir . '/snippets');
             $invalidPaths = array_merge(
                 $invalidPaths,
                 $this->validatePlugins($validator)
@@ -103,7 +111,7 @@ class SnippetsValidateCommand extends ShopwareCommand implements CompletionAware
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      *
      * @return string[]
      */
@@ -135,7 +143,7 @@ class SnippetsValidateCommand extends ShopwareCommand implements CompletionAware
     {
         $invalidPaths = [];
 
-        foreach (new \DirectoryIterator($pluginBasePath) as $pluginDir) {
+        foreach (new DirectoryIterator($pluginBasePath) as $pluginDir) {
             if ($pluginDir->isDot() || !$pluginDir->isDir()) {
                 continue;
             }

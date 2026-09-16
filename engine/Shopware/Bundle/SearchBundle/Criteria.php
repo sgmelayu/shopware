@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundle;
 
 use Assert\Assertion;
+use ReturnTypeWillChange;
 use Shopware\Bundle\StoreFrontBundle\Struct\Extendable;
 use Shopware\Components\ReflectionAwareInterface;
 
@@ -42,14 +43,14 @@ class Criteria extends Extendable implements ReflectionAwareInterface
     /**
      * Offset for the limitation
      *
-     * @var int
+     * @var int|null
      */
     private $offset;
 
     /**
      * Count of result
      *
-     * @var int
+     * @var int|null
      */
     private $limit;
 
@@ -116,7 +117,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getOffset()
     {
@@ -124,7 +125,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getLimit()
     {
@@ -138,11 +139,11 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      */
     public function hasCondition($name)
     {
-        if (array_key_exists($name, $this->baseConditions)) {
+        if (\array_key_exists($name, $this->baseConditions)) {
             return true;
         }
 
-        return array_key_exists($name, $this->conditions);
+        return \array_key_exists($name, $this->conditions);
     }
 
     /**
@@ -152,7 +153,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      */
     public function hasBaseCondition($name)
     {
-        return array_key_exists($name, $this->baseConditions);
+        return \array_key_exists($name, $this->baseConditions);
     }
 
     /**
@@ -162,7 +163,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      */
     public function hasUserCondition($name)
     {
-        return array_key_exists($name, $this->conditions);
+        return \array_key_exists($name, $this->conditions);
     }
 
     /**
@@ -172,7 +173,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      */
     public function hasSorting($name)
     {
-        return array_key_exists($name, $this->sortings);
+        return \array_key_exists($name, $this->sortings);
     }
 
     /**
@@ -182,7 +183,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      */
     public function hasFacet($name)
     {
-        return array_key_exists($name, $this->facets);
+        return \array_key_exists($name, $this->facets);
     }
 
     /**
@@ -232,11 +233,11 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      */
     public function getCondition($name)
     {
-        if (array_key_exists($name, $this->baseConditions)) {
+        if (\array_key_exists($name, $this->baseConditions)) {
             return $this->baseConditions[$name];
         }
 
-        if (array_key_exists($name, $this->conditions)) {
+        if (\array_key_exists($name, $this->conditions)) {
             return $this->conditions[$name];
         }
 
@@ -288,7 +289,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      *
      * Do not rely on the array key or the order of the returned conditions.
      *
-     * @return \Shopware\Bundle\SearchBundle\ConditionInterface[]
+     * @return ConditionInterface[]
      */
     public function getConditions()
     {
@@ -299,7 +300,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
     }
 
     /**
-     * @return \Shopware\Bundle\SearchBundle\FacetInterface[]
+     * @return FacetInterface[]
      */
     public function getFacets()
     {
@@ -307,7 +308,7 @@ class Criteria extends Extendable implements ReflectionAwareInterface
     }
 
     /**
-     * @return \Shopware\Bundle\SearchBundle\SortingInterface[]
+     * @return SortingInterface[]
      */
     public function getSortings()
     {
@@ -366,10 +367,12 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      * Removes a condition of the current criteria object.
      *
      * @param string $name
+     *
+     * @return void
      */
     public function removeCondition($name)
     {
-        if (array_key_exists($name, $this->conditions)) {
+        if (\array_key_exists($name, $this->conditions)) {
             unset($this->conditions[$name]);
         }
     }
@@ -378,10 +381,12 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      * Removes a base condition of the current criteria object.
      *
      * @param string $name
+     *
+     * @return void
      */
     public function removeBaseCondition($name)
     {
-        if (array_key_exists($name, $this->baseConditions)) {
+        if (\array_key_exists($name, $this->baseConditions)) {
             unset($this->baseConditions[$name]);
         }
     }
@@ -390,10 +395,12 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      * Removes a facet of the current criteria object.
      *
      * @param string $name
+     *
+     * @return void
      */
     public function removeFacet($name)
     {
-        if (array_key_exists($name, $this->facets)) {
+        if (\array_key_exists($name, $this->facets)) {
             unset($this->facets[$name]);
         }
     }
@@ -402,39 +409,44 @@ class Criteria extends Extendable implements ReflectionAwareInterface
      * Removes a sorting of the current criteria object.
      *
      * @param string $name
+     *
+     * @return void
      */
     public function removeSorting($name)
     {
-        if (array_key_exists($name, $this->sortings)) {
+        if (\array_key_exists($name, $this->sortings)) {
             unset($this->sortings[$name]);
         }
     }
 
     /**
-     * {@inheritdoc}
+     * @return array<string, mixed>
+     *
+     * @deprecated - Native return type will be added with Shopware 5.8
      */
+    #[ReturnTypeWillChange]
     public function jsonSerialize()
     {
         $data = get_object_vars($this);
 
         $data['baseConditions'] = [];
         foreach ($this->baseConditions as $object) {
-            $data['baseConditions'][get_class($object)] = $object;
+            $data['baseConditions'][\get_class($object)] = $object;
         }
 
         $data['conditions'] = [];
         foreach ($this->conditions as $object) {
-            $data['conditions'][get_class($object)] = $object;
+            $data['conditions'][\get_class($object)] = $object;
         }
 
         $data['sortings'] = [];
         foreach ($this->sortings as $object) {
-            $data['sortings'][get_class($object)] = $object;
+            $data['sortings'][\get_class($object)] = $object;
         }
 
         $data['facets'] = [];
         foreach ($this->facets as $object) {
-            $data['facets'][get_class($object)] = $object;
+            $data['facets'][\get_class($object)] = $object;
         }
 
         return $data;
@@ -458,6 +470,8 @@ class Criteria extends Extendable implements ReflectionAwareInterface
 
     /**
      * @param bool $generatePartialFacets
+     *
+     * @return void
      */
     public function setGeneratePartialFacets($generatePartialFacets)
     {
@@ -493,7 +507,9 @@ class Criteria extends Extendable implements ReflectionAwareInterface
     }
 
     /**
-     * @param string $class
+     * @template TCondition of ConditionInterface
+     *
+     * @param class-string<TCondition> $class
      *
      * @return bool
      */
@@ -505,9 +521,11 @@ class Criteria extends Extendable implements ReflectionAwareInterface
     }
 
     /**
-     * @param string $class
+     * @template TCondition of ConditionInterface
      *
-     * @return ConditionInterface[]
+     * @param class-string<TCondition> $class
+     *
+     * @return array<TCondition>
      */
     public function getConditionsByClass($class)
     {

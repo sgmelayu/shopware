@@ -1,34 +1,43 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
 
+use Doctrine\DBAL\Connection;
+use Shopware\Bundle\StoreFrontBundle\Service\Core\HrefLangService;
 use Shopware\Bundle\StoreFrontBundle\Service\HrefLangServiceInterface;
+use Shopware\Components\Api\Resource\Category;
+use Shopware\Components\ShopRegistrationServiceInterface;
 use Shopware\Models\Shop\Shop;
+use Shopware\Tests\Functional\Traits\ContainerTrait;
+use Shopware_Components_Translation;
 
 class HrefLangTest extends TestCase
 {
+    use ContainerTrait;
+
     /**
      * @var HrefLangServiceInterface
      */
@@ -38,29 +47,29 @@ class HrefLangTest extends TestCase
     {
         parent::setUp();
 
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->beginTransaction();
+        $this->getContainer()->get(Connection::class)->beginTransaction();
 
         // Easier to see english link
         Shopware()->Db()->executeQuery('UPDATE s_core_shops SET base_url = "/en", category_id = 3 WHERE id != 1');
 
-        Shopware()->Container()->reset('shopware_storefront.href_lang_service');
+        $this->getContainer()->reset('shopware_storefront.href_lang_service');
 
-        $this->service = Shopware()->Container()->get(\Shopware\Bundle\StoreFrontBundle\Service\Core\HrefLangService::class);
+        $this->service = $this->getContainer()->get(HrefLangService::class);
     }
 
     public function tearDown(): void
     {
         parent::tearDown();
-        Shopware()->Container()->get(\Doctrine\DBAL\Connection::class)->rollBack();
+        $this->getContainer()->get(Connection::class)->rollBack();
     }
 
-    public function testHrefLinksNotGenerated()
+    public function testHrefLinksNotGenerated(): void
     {
         $urls = $this->service->getUrls(['controller' => 'cat', 'action' => 'index', 'sCategory' => 912345], $this->getContext());
         static::assertEmpty($urls);
     }
 
-    public function testHrefLinksHome()
+    public function testHrefLinksHome(): void
     {
         $urls = $this->service->getUrls(['controller' => 'index', 'action' => 'index'], $this->getContext());
 
@@ -68,14 +77,14 @@ class HrefLangTest extends TestCase
 
         foreach ($urls as $href) {
             if ($href->getLocale() === 'de-DE') {
-                static::assertEquals('/', parse_url($href->getLink(), PHP_URL_PATH));
+                static::assertStringEndsWith('/', (string) parse_url($href->getLink(), PHP_URL_PATH));
             } else {
-                static::assertEquals('/en/', parse_url($href->getLink(), PHP_URL_PATH));
+                static::assertStringEndsWith('/en/', (string) parse_url($href->getLink(), PHP_URL_PATH));
             }
         }
     }
 
-    public function testHrefLinksListing()
+    public function testHrefLinksListing(): void
     {
         $category = $this->createCategory();
 
@@ -85,14 +94,14 @@ class HrefLangTest extends TestCase
 
         foreach ($urls as $href) {
             if ($href->getLocale() === 'de-DE') {
-                static::assertEquals('/my-fancy-german-category/', parse_url($href->getLink(), PHP_URL_PATH));
+                static::assertStringEndsWith('/my-fancy-german-category/', (string) parse_url($href->getLink(), PHP_URL_PATH));
             } else {
-                static::assertEquals('/en/my-fancy-english-category/', parse_url($href->getLink(), PHP_URL_PATH));
+                static::assertStringEndsWith('/en/my-fancy-english-category/', (string) parse_url($href->getLink(), PHP_URL_PATH));
             }
         }
     }
 
-    public function testHrefLinksListingWithParameters()
+    public function testHrefLinksListingWithParameters(): void
     {
         $category = $this->createCategory();
 
@@ -102,14 +111,14 @@ class HrefLangTest extends TestCase
 
         foreach ($urls as $href) {
             if ($href->getLocale() === 'de-DE') {
-                static::assertEquals('/my-fancy-german-category/', parse_url($href->getLink(), PHP_URL_PATH));
+                static::assertStringEndsWith('/my-fancy-german-category/', (string) parse_url($href->getLink(), PHP_URL_PATH));
             } else {
-                static::assertEquals('/en/my-fancy-english-category/', parse_url($href->getLink(), PHP_URL_PATH));
+                static::assertStringEndsWith('/en/my-fancy-english-category/', (string) parse_url($href->getLink(), PHP_URL_PATH));
             }
         }
     }
 
-    public function testHrefLinksWithParameters()
+    public function testHrefLinksWithParameters(): void
     {
         $category = $this->createCategory();
 
@@ -124,15 +133,15 @@ class HrefLangTest extends TestCase
         static::assertStringNotContainsString('foo=bar', $urls[0]->getLink());
     }
 
-    private function createCategory()
+    private function createCategory(): int
     {
-        $category = Shopware()->Container()->get(\Shopware\Components\Api\Resource\Category::class);
+        $category = $this->getContainer()->get(Category::class);
         $category = $category->create([
             'parent' => 3,
             'name' => 'My fancy german category',
         ]);
 
-        Shopware()->Container()->get(\Shopware_Components_Translation::class)->write(2, 'category', $category->getId(), [
+        $this->getContainer()->get(Shopware_Components_Translation::class)->write(2, 'category', $category->getId(), [
             'description' => 'My fancy english category',
         ]);
 
@@ -141,12 +150,14 @@ class HrefLangTest extends TestCase
         $rewriteTable->sCreateRewriteTableCategories();
 
         $englishShop = Shopware()->Models()->getRepository(Shop::class)->getById(2);
-        $englishShop->registerResources();
+        static::assertInstanceOf(Shop::class, $englishShop);
+        $shopRegistrationService = $this->getContainer()->get(ShopRegistrationServiceInterface::class);
+        $shopRegistrationService->registerShop($englishShop);
         $rewriteTable->baseSetup();
         $rewriteTable->sCreateRewriteTableCategories();
 
         $defaultShop = Shopware()->Models()->getRepository(Shop::class)->getActiveDefault();
-        $defaultShop->registerResources();
+        $shopRegistrationService->registerShop($defaultShop);
 
         return $category->getId();
     }

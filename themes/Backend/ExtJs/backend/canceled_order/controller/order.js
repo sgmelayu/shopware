@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    CanceledOrder
@@ -41,12 +40,12 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
 
     refs: [
         { ref: 'orderGrid', selector: 'canceled-order-tabs-order-orders' },
-        { ref: 'orderPositionGrid', selector:'canceled-order-view-order-position' },
-        { ref: 'detailView', selector : 'canceled-order-view-order-detail' }
+        { ref: 'orderPositionGrid', selector: 'canceled-order-view-order-position' },
+        { ref: 'detailView', selector: 'canceled-order-view-order-detail' }
     ],
 
-    snippets : {
-        deleteOrder : {
+    snippets: {
+        deleteOrder: {
             title: '{s name="deleteOrder/title"}Are you sure?{/s}',
             message: '{s name="deleteOrder/message"}Do you want to delete these order(s)?{/s}'
         },
@@ -82,8 +81,7 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
                 deleteOrder: me.onDeleteOrder,
                 openOrder: me.onOpenOrder,
                 convertOrder: me.onConvertOrder,
-//                itemClicked : me.onShowDetails,
-                selectionchange : me.onSelectionChange
+                selectionchange: me.onSelectionChange
             },
             'canceled-order-view-order-detail': {
                 sendVoucher: me.onSendVoucher,
@@ -182,7 +180,7 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
             record = null;
 
         if (Ext.isArray(selected)) {
-            record = selected[selected.length-1];
+            record = selected[selected.length - 1];
         } else {
             record = selected;
         }
@@ -207,15 +205,15 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
             button = detailView.askReasonButton,
             info = detailView.infoLabel;
 
-        if(comment == "") {
+        if (comment == "") {
             info.setText('{s name="yourOptions"}You can ask your customer for a reason or send him a voucher{/s}');
             combo.show();
             button.show();
-        }else if(comment == "Frage gesendet") {
+        } else if (comment == "Frage gesendet") {
             info.setText('{s name="reasonMailAlreadySent"}{/s}');
             button.hide();
             combo.show();
-        }else {
+        } else {
             button.hide();
             combo.hide();
             info.setText('{s name="voucherAlreadySent"}A voucher was already sent to this customer{/s}');
@@ -266,7 +264,7 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
 
         selectedOrderRecords = selectedOrderRecords[0];
 
-        if(!selectedOrderRecords.getCustomer() || !selectedOrderRecords.getCustomer().first()) {
+        if (!selectedOrderRecords.getCustomer() || !selectedOrderRecords.getCustomer().first()) {
             return;
         }
 
@@ -380,7 +378,7 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
             orderGrid = me.getOrderGrid(),
             store = orderGrid.getStore();
 
-        if(orders.length === 0) {
+        if (orders.length === 0) {
             return;
         }
 
@@ -403,11 +401,10 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
         Shopware.app.Application.addSubApplication({
             name: 'Shopware.apps.Order',
             params: {
-                orderId:record.get('id')
+                orderId: record.get('id')
             }
         });
     },
-
 
     /**
      * Little helper functions that returns the current panel of a tab.
@@ -419,7 +416,7 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
             active = tabPanel.getActiveTab(),
             title = active.internalTitle;
 
-        switch(title) {
+        switch (title) {
             case 'baskets':
                 var tab = active.tabPanel.getActiveTab();
                 return tab ;
@@ -442,7 +439,7 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
             title = active.internalTitle,
             store;
 
-        switch(title) {
+        switch (title) {
             case 'orders':
                 store = me.subApplication.canceledOrderStore;
                 break;
@@ -478,7 +475,7 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
      * @return
      */
     onSearch: function(field){
-        if(!field) {
+        if (!field) {
             return;
         }
 
@@ -488,38 +485,38 @@ Ext.define('Shopware.apps.CanceledOrder.controller.Order', {
             active = me.getCurrentTab(),
             title = active.internalTitle;
 
-            switch(title) {
-                case 'orders':
-                    var store = me.subApplication.canceledOrderStore;
-                    break;
-                case 'statistics':
-                    var store = me.subApplication.canceledOrderStatistic;
-                    break;
-                case 'overview':
-                    var store = me.subApplication.canceledOrderBasket;
-                    break;
-                case 'articles':
-                    var store = me.subApplication.canceledOrderArticles;
-                    break;
-                case 'viewports':
-                    var store = me.subApplication.canceledOrderViewports;
-                    break;
-                case 'default':
-                    return;
-            }
+        switch (title) {
+            case 'orders':
+                var store = me.subApplication.canceledOrderStore;
+                break;
+            case 'statistics':
+                var store = me.subApplication.canceledOrderStatistic;
+                break;
+            case 'overview':
+                var store = me.subApplication.canceledOrderBasket;
+                break;
+            case 'articles':
+                var store = me.subApplication.canceledOrderArticles;
+                break;
+            case 'viewports':
+                var store = me.subApplication.canceledOrderViewports;
+                break;
+            case 'default':
+                return;
+        }
 
-            //scroll the store to first page
-            store.currentPage = 1;
+        //scroll the store to first page
+        store.currentPage = 1;
 
-            //If the search-value is empty, reset the filter
-            if ( searchString.length === 0 ) {
-                store.clearFilter();
-            } else {
-                //This won't reload the store
-                store.filters.clear();
-                //Loads the store with a special filter
-                store.filter('filter', searchString);
-            }
+        //If the search-value is empty, reset the filter
+        if ( searchString.length === 0 ) {
+            store.clearFilter();
+        } else {
+            //This won't reload the store
+            store.filters.clear();
+            //Loads the store with a special filter
+            store.filter('filter', searchString);
+        }
     }
 
 });

@@ -1,30 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EmotionBundle\Service\Gateway;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 use Shopware\Bundle\EmotionBundle\Service\Gateway\Hydrator\EmotionElementHydrator;
 use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\FieldHelper;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
@@ -62,17 +63,17 @@ class EmotionElementGateway
     {
         $data = $this->getQuery($emotionIds)
             ->execute()
-            ->fetchAll(\PDO::FETCH_ASSOC);
+            ->fetchAll(PDO::FETCH_ASSOC);
 
         $elementIds = array_column($data, '__emotionElement_id');
 
         $elementConfigs = $this->getConfigQuery($elementIds, $context)
             ->execute()
-            ->fetchAll(\PDO::FETCH_GROUP);
+            ->fetchAll(PDO::FETCH_GROUP);
 
         $elementViewports = $this->getViewportsQuery($elementIds)
             ->execute()
-            ->fetchAll(\PDO::FETCH_GROUP);
+            ->fetchAll(PDO::FETCH_GROUP);
 
         $elements = [];
         foreach ($data as $row) {
@@ -80,12 +81,12 @@ class EmotionElementGateway
             $key = $row['__emotionElement_id'];
 
             $config = [];
-            if (array_key_exists($key, $elementConfigs)) {
+            if (\array_key_exists($key, $elementConfigs)) {
                 $config = $elementConfigs[$key];
             }
 
             $viewports = [];
-            if (array_key_exists($key, $elementViewports)) {
+            if (\array_key_exists($key, $elementViewports)) {
                 $viewports = $elementViewports[$key];
             }
 

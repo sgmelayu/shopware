@@ -1,56 +1,57 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Bundle\StoreFrontBundle;
 
-use Shopware\Bundle\StoreFrontBundle\Struct;
 use Shopware\Bundle\StoreFrontBundle\Struct\Media;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContext;
 use Shopware\Components\Routing\Context;
+use Shopware\Components\Routing\RouterInterface;
 use Shopware\Models\Category\Category;
 
 class CoverTest extends TestCase
 {
-    public function testProductWithOneImage()
+    public function testProductWithOneImage(): void
     {
         $this->resetContext();
         $number = 'Cover-Test';
         $context = $this->getContext();
-        $data = $this->getProduct($number, $context, null, 1);
-        $this->helper->createArticle($data);
+        $data = $this->getProduct($number, $context);
+        $this->helper->createProduct($data);
 
         $product = $this->helper->getListProduct($number, $context);
 
         $this->assertMediaFile('sasse-korn', $product->getCover());
     }
 
-    public function testProductWithMultipleImages()
+    public function testProductWithMultipleImages(): void
     {
         $this->resetContext();
         $number = 'Cover-Test-Multiple';
         $context = $this->getContext();
-        $this->helper->createArticle(
+        $this->helper->createProduct(
             $this->getProduct($number, $context, null, 10)
         );
 
@@ -59,7 +60,7 @@ class CoverTest extends TestCase
         $this->assertMediaFile('sasse-korn', $product->getCover());
     }
 
-    public function testProductList()
+    public function testProductList(): void
     {
         $this->resetContext();
         $number = 'Cover-Test-Listing';
@@ -78,8 +79,8 @@ class CoverTest extends TestCase
             ['main' => 1]
         );
 
-        $this->helper->createArticle($product1);
-        $this->helper->createArticle($product2);
+        $this->helper->createProduct($product1);
+        $this->helper->createProduct($product2);
 
         $products = $this->helper->getListProducts(
             [$number . '-1', $number . '-2'],
@@ -90,7 +91,7 @@ class CoverTest extends TestCase
 
         foreach ($products as $product) {
             $expected = 'test-spachtelmasse';
-            if ($product->getNumber() == $number . '-2') {
+            if ($product->getNumber() === $number . '-2') {
                 $expected = 'sasse-korn';
             }
 
@@ -108,14 +109,14 @@ class CoverTest extends TestCase
      * Expected:
      * - Each product variant use their own variant image as cover.
      */
-    public function testVariantImages()
+    public function testVariantImages(): void
     {
         $this->resetContext();
         $number = 'Variant-Cover-Test';
         $context = $this->getContext();
 
         $data = $this->getVariantImageProduct($number, $context);
-        $this->helper->createArticle($data);
+        $this->helper->createProduct($data);
 
         $variants = $this->helper->getListProducts(
             array_column($data['variants'], 'number'),
@@ -124,7 +125,7 @@ class CoverTest extends TestCase
 
         foreach ($variants as $variant) {
             $expected = 'bienen_teaser';
-            if ($variant->getNumber() == $data['variants'][0]['number']) {
+            if ($variant->getNumber() === $data['variants'][0]['number']) {
                 $expected = 'sasse-korn';
             }
 
@@ -142,13 +143,13 @@ class CoverTest extends TestCase
      * Excepted:
      * - Both variants has the preview image of the global product.
      */
-    public function testForceMainImage()
+    public function testForceMainImage(): void
     {
         $this->resetContext();
         $number = 'Force-Main-Cover-Test';
         $context = $this->getContext();
         $data = $this->getVariantImageProduct($number, $context);
-        $this->helper->createArticle($data);
+        $this->helper->createProduct($data);
 
         $variants = $this->helper->getListProducts(
             array_column($data['variants'], 'number'),
@@ -172,7 +173,7 @@ class CoverTest extends TestCase
      * - Variant 1 cover => configured variant image
      * - Variant 2 cover => Main image of the product.
      */
-    public function testFallbackImage()
+    public function testFallbackImage(): void
     {
         $this->resetContext();
         $number = 'Force-Main-Cover-Test';
@@ -180,7 +181,7 @@ class CoverTest extends TestCase
 
         $data = $this->getVariantImageProduct($number, $context);
         $data['variants'][0]['images'] = [];
-        $this->helper->createArticle($data);
+        $this->helper->createProduct($data);
 
         $variants = $this->helper->getListProducts(
             array_column($data['variants'], 'number'),
@@ -189,7 +190,7 @@ class CoverTest extends TestCase
 
         foreach ($variants as $variant) {
             $expected = 'bienen_teaser';
-            if ($variant->getNumber() == $data['variants'][0]['number']) {
+            if ($variant->getNumber() === $data['variants'][0]['number']) {
                 $expected = 'sasse-korn';
             }
 
@@ -197,12 +198,17 @@ class CoverTest extends TestCase
         }
     }
 
+    /**
+     * @param int $imageCount
+     *
+     * @return array<string, mixed>
+     */
     protected function getProduct(
-        $number,
+        string $number,
         ShopContext $context,
-        Category $category = null,
+        ?Category $category = null,
         $imageCount = 1
-    ) {
+    ): array {
         $data = parent::getProduct($number, $context, $category);
 
         $data['images'][] = $this->helper->getImageData(
@@ -217,9 +223,9 @@ class CoverTest extends TestCase
         return $data;
     }
 
-    private function assertMediaFile($expected, Struct\Media $media)
+    private function assertMediaFile(string $expected, ?Media $media): void
     {
-        static::assertInstanceOf(Media::class, $media);
+        static::assertNotNull($media);
         static::assertNotEmpty($media->getThumbnails());
         static::assertStringContainsString($expected, $media->getFile());
 
@@ -228,7 +234,10 @@ class CoverTest extends TestCase
         }
     }
 
-    private function getVariantImageProduct($number, ShopContext $context)
+    /**
+     * @return array<string, mixed>
+     */
+    private function getVariantImageProduct(string $number, ShopContext $context): array
     {
         $data = $this->getProduct($number, $context, null, 2);
 
@@ -247,10 +256,10 @@ class CoverTest extends TestCase
         return $data;
     }
 
-    private function resetContext()
+    private function resetContext(): void
     {
         // correct router context for url building
-        Shopware()->Container()->get(\Shopware\Components\Routing\RouterInterface::class)->setContext(
+        Shopware()->Container()->get(RouterInterface::class)->setContext(
             new Context(
                 'localhost',
                 Shopware()->Shop()->getBasePath(),

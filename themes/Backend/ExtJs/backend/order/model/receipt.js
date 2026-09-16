@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Order
@@ -40,36 +39,36 @@ Ext.define('Shopware.apps.Order.model.Receipt', {
      * Extends the standard Ext Model
      * @string
      */
-    extend:'Ext.data.Model',
+    extend: 'Ext.data.Model',
 
     /**
      * Unique identifier field
      * @string
      */
-    idProperty:'id',
+    idProperty: 'id',
 
     /**
      * The fields used for this model
      * @array
      */
-    fields:[
+    fields: [
         //{block name="backend/order/model/receipt/fields"}{/block}
-        { name: 'id', type:'int' },
-        { name: 'date', type:'date' },
-        { name: 'typeId', type:'int' },
-        { name: 'customerId', type:'int' },
-        { name: 'orderId', type:'int' },
-        { name: 'amount', type:'float' },
-        { name: 'documentId', type:'string' },
-        { name: 'hash', type:'string' },
-        { name: 'typeName', type:'string' },
-        { name: 'active', type:'boolean', defaultValue: false }
+        { name: 'id', type: 'int' },
+        { name: 'date', type: 'date' },
+        { name: 'typeId', type: 'int' },
+        { name: 'customerId', type: 'int' },
+        { name: 'orderId', type: 'int' },
+        { name: 'amount', type: 'float' },
+        { name: 'documentId', type: 'string' },
+        { name: 'hash', type: 'string' },
+        { name: 'typeName', type: 'string' },
+        { name: 'active', type: 'boolean', defaultValue: false }
     ],
     /**
      * @array
      */
-    associations:[
-        { type:'hasMany', model:'Shopware.apps.Base.model.DocType', name:'getDocType', associationKey:'type' }
+    associations: [
+        { type: 'hasMany', model: 'Shopware.apps.Base.model.DocType', name: 'getDocType', associationKey: 'type' }
     ]
 
 });

@@ -1,31 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Components\Cart;
 
 use Enlight\Event\SubscriberInterface;
 use Enlight_Components_Session_Namespace as Session;
+use Enlight_Controller_Action;
+use Enlight_Event_EventArgs;
 use Symfony\Component\HttpFoundation\Cookie;
 
 class PaymentTokenSubscriber implements SubscriberInterface
@@ -46,6 +48,9 @@ class PaymentTokenSubscriber implements SubscriberInterface
         $this->session = $session;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     public static function getSubscribedEvents(): array
     {
         return [
@@ -53,9 +58,9 @@ class PaymentTokenSubscriber implements SubscriberInterface
         ];
     }
 
-    public function onPreDispatchFrontend(\Enlight_Event_EventArgs $args): void
+    public function onPreDispatchFrontend(Enlight_Event_EventArgs $args): void
     {
-        /** @var \Enlight_Controller_Action $controller */
+        /** @var Enlight_Controller_Action $controller */
         $controller = $args->get('subject');
         $request = $controller->Request();
 
@@ -78,7 +83,7 @@ class PaymentTokenSubscriber implements SubscriberInterface
                     $restoreData->getSessionName(),
                     $restoreData->getValue(),
                     0,
-                    ini_get('session.cookie_path'),
+                    \ini_get('session.cookie_path'),
                     null,
                     $request->isSecure()
                 )

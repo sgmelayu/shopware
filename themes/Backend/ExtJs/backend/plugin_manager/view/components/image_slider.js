@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    PluginManager
@@ -163,9 +162,9 @@ Ext.define('Shopware.apps.PluginManager.view.components.ImageSlider', {
     createPreviewTemplate: function() {
         return new Ext.XTemplate(
             '{literal}',
-                '<tpl for=".">',
-                    '<img class="preview-image" src="{remoteLink}" />',
-                '</tpl>',
+            '<tpl for=".">',
+            '<img class="preview-image" src="{remoteLink}" />',
+            '</tpl>',
             '{/literal}'
         );
     },
@@ -257,7 +256,7 @@ Ext.define('Shopware.apps.PluginManager.view.components.ImageSlider', {
 
         var count = Math.ceil(store.getCount() / size);
 
-        for (var i=1; i<= count; i++) {
+        for (var i = 1; i <= count; i++) {
             items.push(
                 store.getRange(start, size + start - 1)
             );
@@ -282,14 +281,14 @@ Ext.define('Shopware.apps.PluginManager.view.components.ImageSlider', {
         if (direction == 1) {
             current = slider.getLayout().getActiveItem();
             current.getEl().slideOut('l', {
-                duration : 500
+                duration: 500
             });
 
             next = slider.getLayout().getNext();
             if (next === false) next = slider.items.items[0];
 
             next.getEl().slideIn('r', {
-                duration : 500,
+                duration: 500,
                 callback: function() {
                     slider.getLayout().setActiveItem(next);
                     me.running = false;
@@ -302,7 +301,7 @@ Ext.define('Shopware.apps.PluginManager.view.components.ImageSlider', {
         } else {
             current = slider.getLayout().getActiveItem();
             current.getEl().slideOut('r', {
-                duration : 500
+                duration: 500
             });
 
             next = slider.getLayout().getPrev();
@@ -312,7 +311,7 @@ Ext.define('Shopware.apps.PluginManager.view.components.ImageSlider', {
             }
 
             next.getEl().slideIn('l', {
-                duration : 500,
+                duration: 500,
                 callback: function() {
                     slider.getLayout().setActiveItem(next);
                     me.running = false;

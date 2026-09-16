@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Mail;
@@ -28,9 +28,12 @@ use DateTime;
 use DateTimeInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\QueryBuilder;
 use Shopware\Components\Model\ModelRepository;
+use Shopware\Components\Model\QueryBuilder;
 
+/**
+ * @extends ModelRepository<Log>
+ */
 class LogRepository extends ModelRepository implements LogRepositoryInterface
 {
     public const MIN_DATE = '2019-01-01T00:00:00+0000';
@@ -46,6 +49,9 @@ class LogRepository extends ModelRepository implements LogRepositoryInterface
      */
     private $maxDate;
 
+    /**
+     * @param ClassMetadata<Log> $class
+     */
     public function __construct(EntityManagerInterface $entityManager, ClassMetadata $class)
     {
         $this->minDate = new DateTime(self::MIN_DATE);
@@ -94,9 +100,7 @@ class LogRepository extends ModelRepository implements LogRepositoryInterface
     protected function addDateConstraint(QueryBuilder $qb, ?DateTimeInterface $since, ?DateTimeInterface $until): void
     {
         $qb->andWhere('log.sentAt BETWEEN :since AND :until')
-            ->setParameters([
-                'since' => $since ?: $this->minDate,
-                'until' => $until ?: $this->maxDate,
-            ]);
+            ->setParameter('since', $since ?: $this->minDate)
+            ->setParameter('until', $until ?: $this->maxDate);
     }
 }

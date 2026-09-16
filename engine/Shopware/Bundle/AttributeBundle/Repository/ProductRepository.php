@@ -1,35 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AttributeBundle\Repository;
 
 use Shopware\Bundle\AttributeBundle\Repository\Reader\ReaderInterface;
 use Shopware\Bundle\AttributeBundle\Repository\Searcher\SearcherInterface;
+use Shopware\Bundle\AttributeBundle\Service\TypeMappingInterface;
 use Shopware\Bundle\EsBackendBundle\EsAwareRepository;
 use Shopware\Bundle\ESIndexingBundle\LastIdQuery;
 use Shopware\Bundle\ESIndexingBundle\TextMappingInterface;
 use Shopware\Components\Model\ModelManager;
+use Shopware\Models\Article\Article;
+use Shopware\Models\Article\Detail;
 
 class ProductRepository extends GenericRepository implements EsAwareRepository
 {
@@ -54,9 +57,9 @@ class ProductRepository extends GenericRepository implements EsAwareRepository
      */
     public function supports($entity)
     {
-        return in_array($entity, [
-            \Shopware\Models\Article\Article::class,
-            \Shopware\Models\Article\Detail::class,
+        return \in_array($entity, [
+            Article::class,
+            Detail::class,
         ]);
     }
 
@@ -85,13 +88,13 @@ class ProductRepository extends GenericRepository implements EsAwareRepository
     {
         return [
             'properties' => [
-                'id' => ['type' => 'long'],
+                'id' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'number' => array_merge($this->textMapping->getKeywordField(), ['copy_to' => 'swag_all']),
-                'categoryIds' => ['type' => 'long'],
-                'variantId' => ['type' => 'long'],
-                'taxId' => ['type' => 'long'],
-                'articleId' => ['type' => 'long'],
-                'kind' => ['type' => 'long'],
+                'categoryIds' => TypeMappingInterface::MAPPING_LONG_FIELD,
+                'variantId' => TypeMappingInterface::MAPPING_LONG_FIELD,
+                'taxId' => TypeMappingInterface::MAPPING_LONG_FIELD,
+                'articleId' => TypeMappingInterface::MAPPING_LONG_FIELD,
+                'kind' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'name' => array_merge(
                     $this->textMapping->getTextField(),
                     [
@@ -101,13 +104,13 @@ class ProductRepository extends GenericRepository implements EsAwareRepository
                         'copy_to' => 'swag_all',
                     ]
                 ),
-                'inStock' => ['type' => 'long'],
+                'inStock' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'ean' => $this->textMapping->getKeywordField(),
                 'supplierNumber' => $this->textMapping->getKeywordField(),
                 'additionalText' => $this->textMapping->getTextField(),
-                'articleActive' => ['type' => 'boolean'],
-                'variantActive' => ['type' => 'boolean'],
-                'supplierId' => ['type' => 'long'],
+                'articleActive' => TypeMappingInterface::MAPPING_BOOLEAN_FIELD,
+                'variantActive' => TypeMappingInterface::MAPPING_BOOLEAN_FIELD,
+                'supplierId' => TypeMappingInterface::MAPPING_LONG_FIELD,
                 'supplierName' => array_merge(
                     $this->textMapping->getTextField(),
                     [
@@ -117,7 +120,7 @@ class ProductRepository extends GenericRepository implements EsAwareRepository
                         'copy_to' => 'swag_all',
                     ]
                 ),
-                'price' => ['type' => 'double'],
+                'price' => TypeMappingInterface::MAPPING_DOUBLE_FIELD,
 
                 'swag_all' => $this->textMapping->getTextField(),
             ],

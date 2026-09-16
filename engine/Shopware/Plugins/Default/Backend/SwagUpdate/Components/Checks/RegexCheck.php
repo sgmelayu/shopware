@@ -1,40 +1,38 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace ShopwarePlugins\SwagUpdate\Components\Checks;
 
-use Enlight_Components_Snippet_Namespace as SnippetNamespace;
+use InvalidArgumentException;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RegexIterator;
 use ShopwarePlugins\SwagUpdate\Components\CheckInterface;
 
 class RegexCheck implements CheckInterface
 {
-    const CHECK_TYPE = 'regex';
-
-    /**
-     * @var SnippetNamespace
-     */
-    private $namespace;
+    public const CHECK_TYPE = 'regex';
 
     /**
      * @var string
@@ -44,9 +42,8 @@ class RegexCheck implements CheckInterface
     /**
      * @param string $userLang
      */
-    public function __construct(SnippetNamespace $namespace, $userLang)
+    public function __construct($userLang)
     {
-        $this->namespace = $namespace;
         $this->userLang = $userLang;
     }
 
@@ -55,7 +52,7 @@ class RegexCheck implements CheckInterface
      */
     public function canHandle($requirement)
     {
-        return $requirement['type'] == self::CHECK_TYPE;
+        return $requirement['type'] === self::CHECK_TYPE;
     }
 
     /**
@@ -63,6 +60,10 @@ class RegexCheck implements CheckInterface
      */
     public function check($requirement)
     {
+        if (!\is_array($requirement['value'])) {
+            throw new InvalidArgumentException(__CLASS__ . ' needs an array as value for the requirement check');
+        }
+
         $results = [];
         foreach ($requirement['value']['directories'] as $dir) {
             $result = $this->scanDirectoryForRegex(
@@ -82,11 +83,10 @@ class RegexCheck implements CheckInterface
         $files = array_keys($results);
 
         return [
-                'type' => self::CHECK_TYPE,
-                'errorLevel' => $requirement['level'],
-                'description' => $requirement['description'],
-                'message' => sprintf($message, implode('<br>', $files)),
-            ];
+            'type' => self::CHECK_TYPE,
+            'errorLevel' => $requirement['level'],
+            'message' => \sprintf($message, implode('<br>', $files)),
+        ];
     }
 
     /**
@@ -101,15 +101,15 @@ class RegexCheck implements CheckInterface
     private function scanDirectoryForRegex($path, $regex, $regexFile = null)
     {
         // Iterate the given path recursively
-        $directoryIterator = new \RecursiveDirectoryIterator($path);
+        $directoryIterator = new RecursiveDirectoryIterator($path);
         // get a flat iterator
-        $iterator = new \RecursiveIteratorIterator($directoryIterator);
+        $iterator = new RecursiveIteratorIterator($directoryIterator);
 
         $results = [];
 
         // Allow files to be filtered out by name
         if (isset($regexFile) && !empty($regexFile)) {
-            $iterator = new \RegexIterator($iterator, $regexFile);
+            $iterator = new RegexIterator($iterator, $regexFile);
         }
 
         // Iterate the result, get file content, check for $regex matches
@@ -119,7 +119,7 @@ class RegexCheck implements CheckInterface
             }
 
             $realPath = $splFileInfo->getRealPath();
-            if (strpos($realPath, 'SwagUpdateCheck') !== false) {
+            if (str_contains($realPath, 'SwagUpdateCheck')) {
                 continue;
             }
 
@@ -144,7 +144,7 @@ class RegexCheck implements CheckInterface
     {
         $content = file_get_contents($file);
         if (preg_match_all($regex, $content, $matches)) {
-            return $matches;
+            return true;
         }
 
         return false;

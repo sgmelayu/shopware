@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Voucher;
 
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
@@ -39,7 +41,7 @@ class Voucher extends ModelEntity
     /**
      * INVERSE SIDE
      *
-     * @var \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Voucher\Code>
+     * @var ArrayCollection<Code>
      *
      * @ORM\OneToMany(targetEntity="Shopware\Models\Voucher\Code", mappedBy="voucher", orphanRemoval=true, cascade={"persist"})
      */
@@ -113,14 +115,14 @@ class Voucher extends ModelEntity
     private $bindToSupplier;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="valid_from", type="date", nullable=true)
      */
     private $validFrom;
 
     /**
-     * @var \DateTimeInterface|null
+     * @var DateTimeInterface|null
      *
      * @ORM\Column(name="valid_to", type="date", nullable=true)
      */
@@ -382,14 +384,14 @@ class Voucher extends ModelEntity
     /**
      * Setter Method to set the validFrom field from the Model
      *
-     * @param \DateTimeInterface|string|null $validFrom
+     * @param DateTimeInterface|string|null $validFrom
      *
      * @return Voucher
      */
     public function setValidFrom($validFrom)
     {
-        if (!$validFrom instanceof \DateTimeInterface && !empty($validFrom)) {
-            $validFrom = new \DateTime($validFrom);
+        if (!$validFrom instanceof DateTimeInterface && !empty($validFrom)) {
+            $validFrom = new DateTime($validFrom);
         }
         $this->validFrom = $validFrom;
 
@@ -399,7 +401,7 @@ class Voucher extends ModelEntity
     /**
      * Getter Method to get the ValidFrom field from the Model
      *
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getValidFrom()
     {
@@ -409,14 +411,14 @@ class Voucher extends ModelEntity
     /**
      * Setter Method to set the validTo field from the Model
      *
-     * @param \DateTimeInterface|string|null $validTo
+     * @param DateTimeInterface|string|null $validTo
      *
      * @return Voucher
      */
     public function setValidTo($validTo)
     {
-        if (!$validTo instanceof \DateTimeInterface && !empty($validTo)) {
-            $validTo = new \DateTime($validTo);
+        if (!$validTo instanceof DateTimeInterface && !empty($validTo)) {
+            $validTo = new DateTime($validTo);
         }
         $this->validTo = $validTo;
 
@@ -426,7 +428,7 @@ class Voucher extends ModelEntity
     /**
      * Getter Method to get the ValidTo field from the Model
      *
-     * @return \DateTimeInterface|null
+     * @return DateTimeInterface|null
      */
     public function getValidTo()
     {
@@ -650,7 +652,7 @@ class Voucher extends ModelEntity
     }
 
     /**
-     * @return \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Voucher\Code>
+     * @return ArrayCollection<Code>
      */
     public function getCodes()
     {
@@ -658,7 +660,7 @@ class Voucher extends ModelEntity
     }
 
     /**
-     * @param \Doctrine\Common\Collections\ArrayCollection<\Shopware\Models\Voucher\Code>|array|null $codes
+     * @param ArrayCollection<Code>|array|null $codes
      *
      * @return Voucher
      */

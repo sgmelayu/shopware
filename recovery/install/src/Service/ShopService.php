@@ -1,36 +1,39 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Install\Service;
 
+use Exception;
+use PDO;
+use RuntimeException;
 use Shopware\Recovery\Common\Service\UniqueIdGenerator;
 use Shopware\Recovery\Install\Struct\Shop;
 
 class ShopService
 {
     /**
-     * @var \PDO
+     * @var PDO
      */
     private $connection;
 
@@ -39,21 +42,21 @@ class ShopService
      */
     private $generator;
 
-    public function __construct(\PDO $connection, UniqueIdGenerator $generator)
+    public function __construct(PDO $connection, UniqueIdGenerator $generator)
     {
         $this->connection = $connection;
         $this->generator = $generator;
     }
 
     /**
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     public function updateShop(Shop $shop)
     {
         if (empty($shop->locale)
             || empty($shop->host)
         ) {
-            throw new \RuntimeException('Please fill in all required fields. (shop configuration)');
+            throw new RuntimeException('Please fill in all required fields. (shop configuration)');
         }
 
         try {
@@ -81,19 +84,19 @@ EOT;
                 $shop->basePath,
                 $shop->host,
             ]);
-        } catch (\Exception $e) {
-            throw new \RuntimeException($e->getMessage(), 0, $e);
+        } catch (Exception $e) {
+            throw new RuntimeException($e->getMessage(), 0, $e);
         }
     }
 
     /**
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
     public function updateConfig(Shop $shop)
     {
         // Do update on shop-configuration
         if (empty($shop->name) || empty($shop->email)) {
-            throw new \RuntimeException('Please fill in all required fields. (shop configuration#2)');
+            throw new RuntimeException('Please fill in all required fields. (shop configuration#2)');
         }
 
         $this->updateMailAddresses($shop);
@@ -114,7 +117,7 @@ EOT;
         $fetchLanguageId->execute([$locale]);
         $fetchLanguageId = $fetchLanguageId->fetchColumn();
         if (!$fetchLanguageId) {
-            throw new \RuntimeException('Language with id ' . $locale . ' not found');
+            throw new RuntimeException('Language with id ' . $locale . ' not found');
         }
 
         return (int) $fetchLanguageId;

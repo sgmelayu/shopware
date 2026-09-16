@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    MediaManager
@@ -82,9 +81,9 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
                 itemclick: me.onChangeMediaAlbum,
                 startBatchMoveMedia: me.moveMedias
 
-        /* {if {acl_is_allowed privilege=upload}} */
-                ,reload: me.onTreeLoad
-        /* {/if} */
+                /* {if {acl_is_allowed privilege=upload}} */
+                , reload: me.onTreeLoad
+                /* {/if} */
             },
             'mediamanager-media-view': {
                 editLabel: me.onEditLabel,
@@ -102,11 +101,11 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
             'mediamanager-media-view html5fileupload': {
                 uploadReady: me.onReload
             },
-        /* {if {acl_is_allowed privilege=upload}} */
+            /* {if {acl_is_allowed privilege=upload}} */
             'mediamanager-media-view filefield': {
                 change: me.onMediaUpload
             },
-        /* {/if} */
+            /* {/if} */
             'mediamanager-selection-window textfield[action=mediamanager-selection-window-searchfield]': {
                 change: me.onSearchMedia
             },
@@ -135,7 +134,7 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
         var me = this, validTypes = me.subApplication.validTypes,
             store = me.getStore('Media');
 
-        if(validTypes) {
+        if (validTypes) {
             var proxy = store.getProxy();
             proxy.extraParams.validTypes = me.setValidTypes();
         }
@@ -159,7 +158,7 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
         Ext.each(types, function(typ) {
             filters += typ + '|';
         });
-        filters = filters.substr(0, filters.length-1);
+        filters = filters.substr(0, filters.length - 1);
 
         return filters;
     },
@@ -202,7 +201,7 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
         }
         mediaView.mediaDropZone.requestURL = url;
 
-        if(treeNode.hasOwnProperty('get')) {
+        if (treeNode.hasOwnProperty('get')) {
             mediaView.mediaStore.getProxy().extraParams.albumID = treeNode.get('id');
 
             if (url.indexOf('?albumID=') !== -1) {
@@ -233,7 +232,7 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
         // Don't use store.clearFilter(), clearFilter() send an ajax request to reload the store.
         store.filters.clear();
         // Only one album available, so the search will only work in this album
-        if(childNodes.length === 1 && !store.getProxy().extraParams.albumID){
+        if (childNodes.length === 1 && !store.getProxy().extraParams.albumID){
             store.getProxy().extraParams.albumID = childNodes[0].getId();
         }
         store.currentPage = 1;
@@ -270,20 +269,20 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
         /* {/if} */
 
         // Set the delete button disabled if we change the album
-        if(mediaView.deleteBtn && !mediaView.deleteBtn.isDisabled()) {
+        if (mediaView.deleteBtn && !mediaView.deleteBtn.isDisabled()) {
             mediaView.deleteBtn.setDisabled(true);
         }
         proxy.extraParams = { albumID: record.get('id') };
 
         var validTypes = me.subApplication.validTypes;
-        if(validTypes) {
+        if (validTypes) {
             proxy.extraParams.validTypes = me.setValidTypes();
         }
         store.filters.clear();
         store.currentPage = 1;
         store.load();
 
-         // Re initial the plugin to fix the drag selector zone
+        // Re initial the plugin to fix the drag selector zone
         var dragSelector = mediaView.dataView.plugins[0];
         dragSelector.reInit();
     },
@@ -308,7 +307,8 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
                     me.deleteMedia();
                 }
             },
-        this);
+            this
+        );
     },
 
     /**
@@ -343,7 +343,7 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
         store.remove(selected);
         store.getProxy().batchActions = false;
         store.sync({
-            callback : function() {
+            callback: function() {
                 mediaView.setLoading(false);
                 store.load({
                     callback: function() {
@@ -398,17 +398,17 @@ Ext.define('Shopware.apps.MediaManager.controller.Media', {
         var me = this, view = me.getMediaView(),
             record;
 
-        if(view.deleteBtn) {
+        if (view.deleteBtn) {
             view.deleteBtn.setDisabled(!selection.length);
             view.replaceButton.setDisabled(!selection.length);
         }
 
-        if(!selection.length) {
+        if (!selection.length) {
             return false;
         }
         record = selection[0];
 
-        if(view.infoView) {
+        if (view.infoView) {
             view.infoView.update(record.data);
         }
     },

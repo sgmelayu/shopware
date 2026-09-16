@@ -4,27 +4,26 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Query\QueryBuilder as DBALQueryBuilder;
+use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\ORM\Tools\Pagination\Paginator;
 use Shopware\Components\Backend\GlobalSearch;
@@ -71,7 +70,7 @@ class Shopware_Controllers_Backend_Search extends Shopware_Controllers_Backend_E
         }
 
         $pagination = $this->getPaginator($builder);
-        $data = $pagination->getIterator()->getArrayCopy();
+        $data = iterator_to_array($pagination);
 
         $data = $this->hydrateSearchResult($entity, $data);
 
@@ -95,7 +94,7 @@ class Shopware_Controllers_Backend_Search extends Shopware_Controllers_Backend_E
         $term = mb_strtolower(trim($this->Request()->get('search')));
 
         $term = preg_replace('/[^\\w0-9]+/u', ' ', $term);
-        $term = trim(preg_replace('/\s+/', '%', $term), '%');
+        $term = trim((string) preg_replace('/\s+/', '%', $term), '%');
 
         if ($term === '') {
             return;
@@ -126,7 +125,6 @@ class Shopware_Controllers_Backend_Search extends Shopware_Controllers_Backend_E
      */
     public function createEntitySearchQuery($entity)
     {
-        /** @var QueryBuilder $query */
         $query = $this->get(ModelManager::class)->createQueryBuilder();
         $query->select('entity')
             ->from($entity, 'entity');
@@ -174,12 +172,9 @@ class Shopware_Controllers_Backend_Search extends Shopware_Controllers_Backend_E
     protected function getPaginator($builder)
     {
         $query = $builder->getQuery();
-        $query->setHydrationMode(\Doctrine\ORM\AbstractQuery::HYDRATE_ARRAY);
+        $query->setHydrationMode(AbstractQuery::HYDRATE_ARRAY);
 
-        /** @var ModelManager $entityManager */
-        $entityManager = $this->get(ModelManager::class);
-
-        return $entityManager->createPaginator($query);
+        return $this->get(ModelManager::class)->createPaginator($query);
     }
 
     /**
@@ -190,7 +185,7 @@ class Shopware_Controllers_Backend_Search extends Shopware_Controllers_Backend_E
     private function hydrateSearchResult(string $entity, array $data): array
     {
         $data = array_map(static function ($row) {
-            if (array_key_exists('_score', $row) && array_key_exists(0, $row)) {
+            if (\array_key_exists('_score', $row) && \array_key_exists(0, $row)) {
                 return $row[0];
             }
 
@@ -206,7 +201,6 @@ class Shopware_Controllers_Backend_Search extends Shopware_Controllers_Backend_E
 
     private function getEntitySearchFields(string $entity): array
     {
-        /** @var ModelManager $entityManager */
         $entityManager = $this->get(ModelManager::class);
         $metaData = $entityManager->getClassMetadata($entity);
 
@@ -215,7 +209,7 @@ class Shopware_Controllers_Backend_Search extends Shopware_Controllers_Backend_E
             static function ($field) use ($metaData) {
                 $type = $metaData->getTypeOfField($field);
 
-                return in_array($type, ['string', 'text', 'decimal', 'float']);
+                return \in_array($type, ['string', 'text', 'decimal', 'float']);
             }
         );
 
@@ -281,7 +275,6 @@ class Shopware_Controllers_Backend_Search extends Shopware_Controllers_Backend_E
      */
     private function getCategories(array $ids): array
     {
-        /** @var DBALQueryBuilder $query */
         $query = $this->get(Connection::class)->createQueryBuilder();
         $query->select(['id', 'description'])
             ->from('s_categories', 'category')

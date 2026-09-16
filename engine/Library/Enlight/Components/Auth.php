@@ -25,6 +25,7 @@
  *
  * @category   Enlight
  * @package    Enlight_Auth
+ *
  * @copyright  Copyright (c) 2011, shopware AG (http://www.shopware.de)
  * @license    http://enlight.de/license     New BSD License
  */
@@ -48,22 +49,21 @@ class Enlight_Components_Auth extends Zend_Auth
     /**
      * Sets the persistent storage handler
      *
-     * @param Zend_Auth_Adapter_Interface $adapter
      * @return Enlight_Components_Auth
      */
     public function setAdapter(Zend_Auth_Adapter_Interface $adapter)
     {
         $this->_adapter = $adapter;
+
         return $this;
     }
 
     /**
      * Returns the identity from storage or null if no identity is available
      *
-     * @param null|Zend_Auth_Adapter_Interface $adapter
      * @return Zend_Auth_Result
      */
-    public function authenticate(Zend_Auth_Adapter_Interface $adapter = null)
+    public function authenticate(?Zend_Auth_Adapter_Interface $adapter = null)
     {
         if ($adapter == null) {
             $adapter = $this->_adapter;
@@ -72,7 +72,9 @@ class Enlight_Components_Auth extends Zend_Auth
 
         if ($result->isValid() && method_exists($adapter, 'getResultRowObject')) {
             $user = $adapter->getResultRowObject();
-            $this->getStorage()->write($user);
+            if (\is_object($user)) {
+                $this->getStorage()->write($user);
+            }
         } else {
             $this->getStorage()->clear();
         }
@@ -83,10 +85,9 @@ class Enlight_Components_Auth extends Zend_Auth
     /**
      * Refreshes the auth object
      *
-     * @param null|Zend_Auth_Adapter_Interface $adapter
      * @return Zend_Auth_Result
      */
-    public function refresh(Zend_Auth_Adapter_Interface $adapter = null)
+    public function refresh(?Zend_Auth_Adapter_Interface $adapter = null)
     {
         if ($adapter == null) {
             $adapter = $this->_adapter;
@@ -105,11 +106,12 @@ class Enlight_Components_Auth extends Zend_Auth
      * Returns an instance of Enlight_Components_Auth
      *
      * @static
+     *
      * @return Enlight_Components_Auth
      */
     public static function getInstance()
     {
-        if (null === self::$_instance) {
+        if (self::$_instance === null) {
             self::$_instance = new self();
         }
 

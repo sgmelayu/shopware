@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Base
@@ -27,8 +26,8 @@
  * @author shopware AG
  */
 Ext.define('Shopware.apps.Base.view.element.Select', {
-    extend:'Ext.form.field.ComboBox',
-    alias:[
+    extend: 'Ext.form.field.ComboBox',
+    alias: [
         'widget.base-element-select',
         'widget.base-element-combo',
         'widget.base-element-combobox',
@@ -39,26 +38,26 @@ Ext.define('Shopware.apps.Base.view.element.Select', {
         'widget.config-element-comboremote'
     ],
 
-    queryMode:'local',
+    queryMode: 'local',
     forceSelection: false,
     editable: true,
     valueField: 'id',
     displayField: 'name',
     isCustomStore: false,
 
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
 
         if (me.controller && me.action) {
             //me.value = parseInt(me.value);
             me.store = new Ext.data.Store({
-                url:'{url controller=index}/' + me.controller + '/' + me.action,
-                autoLoad:true,
+                url: '{url controller=index}/' + me.controller + '/' + me.action,
+                autoLoad: true,
                 remoteFilter: true,
-                reader:new Ext.data.JsonReader({
-                    root:me.root || 'data',
-                    totalProperty:me.count || 'total',
-                    fields:me.fields
+                reader: new Ext.data.JsonReader({
+                    root: me.root || 'data',
+                    totalProperty: me.count || 'total',
+                    fields: me.fields
                 })
             });
             // Remove value field for reasons of compatibility
@@ -68,7 +67,7 @@ Ext.define('Shopware.apps.Base.view.element.Select', {
         if (typeof me.store === 'string' && me.store.indexOf('new ') !== -1) {
             eval('me.store = ' + me.store + ';');
             // if is no custom store remove value field for reasons of compatibility
-            if(!me.isCustomStore) {
+            if (!me.isCustomStore) {
                 me.valueField = me.displayField;
             }
         } else if (typeof me.store === 'string' && me.store.substring(0, 5) !== 'base.') {
@@ -84,13 +83,13 @@ Ext.define('Shopware.apps.Base.view.element.Select', {
         me.callParent(arguments);
     },
 
-    setValue:function (value) {
+    setValue: function (value) {
         var me = this;
 
         if (value !== null && !me.store.loading && me.store.getCount() == 0) {
             me.store.load({
-                callback:function () {
-                    if(me.store.getCount() > 0) {
+                callback: function () {
+                    if (me.store.getCount() > 0) {
                         me.setValue(value);
                     } else {
                         me.setValue(null);

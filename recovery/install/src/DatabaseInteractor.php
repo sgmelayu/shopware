@@ -1,29 +1,31 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Install;
 
+use Exception;
+use PDO;
 use Shopware\Recovery\Common\IOHelper;
 use Shopware\Recovery\Install\Service\DatabaseService;
 use Shopware\Recovery\Install\Struct\DatabaseConnectionInformation;
@@ -69,7 +71,7 @@ class DatabaseInteractor
     /**
      * @return string
      */
-    public function createDatabase(\PDO $connection)
+    public function createDatabase(PDO $connection)
     {
         $question = new Question('Please enter the name database to be created: ');
         $databaseName = $this->askQuestion($question);
@@ -85,7 +87,7 @@ class DatabaseInteractor
      *
      * @return bool
      */
-    public function continueWithExistingTables($databaseName, \PDO $pdo)
+    public function continueWithExistingTables($databaseName, PDO $pdo)
     {
         $service = new DatabaseService($pdo);
         $tableCount = $service->getTableCount();
@@ -94,7 +96,7 @@ class DatabaseInteractor
         }
 
         $question = new ConfirmationQuestion(
-            sprintf(
+            \sprintf(
                 'The database %s already contains %s tables. Continue? (yes/no) [no]',
                 $databaseName,
                 $tableCount
@@ -123,11 +125,11 @@ class DatabaseInteractor
     protected function askForDatabaseHostname(
         $defaultHostname
     ) {
-        $question = new Question(sprintf('Please enter database host (%s): ', $defaultHostname), $defaultHostname);
+        $question = new Question(\sprintf('Please enter database host (%s): ', $defaultHostname), $defaultHostname);
         $question->setValidator(
             function ($answer) {
                 if (trim($answer) === '') {
-                    throw new \Exception('The database user can not be empty');
+                    throw new Exception('The database user can not be empty');
                 }
 
                 return $answer;
@@ -150,13 +152,13 @@ class DatabaseInteractor
         if (empty($defaultUsername)) {
             $question = new Question('Please enter database user: ');
         } else {
-            $question = new Question(sprintf('Please enter database user (%s): ', $defaultUsername), $defaultUsername);
+            $question = new Question(\sprintf('Please enter database user (%s): ', $defaultUsername), $defaultUsername);
         }
 
         $question->setValidator(
             function ($answer) {
                 if (trim($answer) === '') {
-                    throw new \Exception('The database user can not be empty');
+                    throw new Exception('The database user can not be empty');
                 }
 
                 return $answer;
@@ -178,7 +180,7 @@ class DatabaseInteractor
         if (empty($defaultPassword)) {
             $question = new Question('Please enter database password: ');
         } else {
-            $question = new Question(sprintf('Please enter database password: (%s): ', $defaultPassword), $defaultPassword);
+            $question = new Question(\sprintf('Please enter database password: (%s): ', $defaultPassword), $defaultPassword);
         }
 
         $databaseUser = $this->askQuestion($question);
@@ -194,15 +196,15 @@ class DatabaseInteractor
     private function askForDatabasePort(
         $defaultPort
     ) {
-        $question = new Question(sprintf('Please enter database port (%s): ', $defaultPort), $defaultPort);
+        $question = new Question(\sprintf('Please enter database port (%s): ', $defaultPort), $defaultPort);
         $question->setValidator(
             function ($answer) {
                 if (trim($answer) === '') {
-                    throw new \Exception('The database port can not be empty');
+                    throw new Exception('The database port can not be empty');
                 }
 
                 if (!is_numeric($answer)) {
-                    throw new \Exception('The database port must be a number');
+                    throw new Exception('The database port must be a number');
                 }
 
                 return $answer;

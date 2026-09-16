@@ -1,25 +1,26 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Tests\Functional\Components\Plugin;
@@ -28,10 +29,11 @@ use DateTime;
 use Doctrine\DBAL\Connection;
 use PHPUnit\Framework\TestCase;
 use Shopware\Components\Model\ModelManager;
+use Shopware\Components\Plugin\Configuration\Layers\DefaultLayer;
+use Shopware\Components\Plugin\Configuration\Layers\SubShopLayer;
 use Shopware\Components\Plugin\Configuration\ReaderInterface;
 use Shopware\Components\Plugin\Configuration\WriterInterface;
 use Shopware\Models\Plugin\Plugin;
-use Shopware\Models\Shop\Shop;
 use Shopware\Tests\Functional\Traits\DatabaseTransactionBehaviour;
 
 class ConfigWriterTest extends TestCase
@@ -44,45 +46,19 @@ class ConfigWriterTest extends TestCase
 
     private const ELEMENT_DEFAULT_VALUE = 1;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var ModelManager
-     */
-    private $modelManager;
+    private ModelManager $modelManager;
 
-    /**
-     * @var int
-     */
-    private $configElementId;
+    private int $installationShopId;
 
-    /**
-     * @var int
-     */
-    private $installationShopId;
+    private int $subShopId;
 
-    /**
-     * @var int
-     */
-    private $subShopId;
+    private int $languageShopId;
 
-    /**
-     * @var int
-     */
-    private $languageShopId;
+    private WriterInterface $configWriter;
 
-    /**
-     * @var WriterInterface
-     */
-    private $configWriter;
-
-    /**
-     * @var ReaderInterface
-     */
-    private $configReader;
+    private ReaderInterface $configReader;
 
     public function setUp(): void
     {
@@ -105,13 +81,13 @@ class ConfigWriterTest extends TestCase
         ], [
             'added' => 'datetime',
         ]);
-        /** @var Plugin $plugin */
         $plugin = $this->modelManager->find(Plugin::class, $this->connection->lastInsertId());
+        static::assertInstanceOf(Plugin::class, $plugin);
 
         // setup plugin configuration
         $parentFormId = $this->connection
             ->executeQuery('SELECT id FROM s_core_config_forms WHERE `name` = ?', ['Core'])
-            ->fetchColumn();
+            ->fetchOne();
 
         $this->connection->insert('s_core_config_forms', [
             'name' => self::PLUGIN_NAME,
@@ -131,7 +107,6 @@ class ConfigWriterTest extends TestCase
             'position' => 0,
             'scope' => 1,
         ]);
-        $this->configElementId = $this->connection->lastInsertId();
 
         // setup shops
         // assume shop by id 1 exists
@@ -146,7 +121,7 @@ class ConfigWriterTest extends TestCase
             '`default`' => 0,
             'active' => 1,
         ]);
-        $this->subShopId = $this->connection->lastInsertId();
+        $this->subShopId = (int) $this->connection->lastInsertId();
 
         $this->connection->insert('s_core_shops', [
             'name' => 'Sub Shop',
@@ -158,13 +133,13 @@ class ConfigWriterTest extends TestCase
             'active' => 1,
             'main_id' => $this->subShopId,
         ]);
-        $this->languageShopId = $this->connection->lastInsertId();
+        $this->languageShopId = (int) $this->connection->lastInsertId();
 
         $this->configWriter = Shopware()->Container()->get(WriterInterface::class);
         $this->configReader = Shopware()->Container()->get(ReaderInterface::class);
     }
 
-    public function testWriteValueForInstallation()
+    public function testWriteValueForInstallation(): void
     {
         $this->configWriter->setByPluginName(
             self::PLUGIN_NAME,
@@ -173,17 +148,17 @@ class ConfigWriterTest extends TestCase
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME),
-            [self::NUMBER_CONFIGURATION_NAME => 2]
+            [self::NUMBER_CONFIGURATION_NAME => 2],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId),
-            [self::NUMBER_CONFIGURATION_NAME => 2]
+            [self::NUMBER_CONFIGURATION_NAME => 2],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId)
         );
     }
 
-    public function testWriteValueForSubShop()
+    public function testWriteValueForSubShop(): void
     {
         $this->configWriter->setByPluginName(
             self::PLUGIN_NAME,
@@ -192,22 +167,22 @@ class ConfigWriterTest extends TestCase
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->subShopId),
-            [self::NUMBER_CONFIGURATION_NAME => 2]
+            [self::NUMBER_CONFIGURATION_NAME => 2],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->subShopId)
         );
     }
 
-    public function testWriteValueForLanguageShop()
+    public function testWriteValueForLanguageShop(): void
     {
         $this->configWriter->setByPluginName(
             self::PLUGIN_NAME,
@@ -216,27 +191,27 @@ class ConfigWriterTest extends TestCase
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->subShopId),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->subShopId)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->languageShopId),
-            [self::NUMBER_CONFIGURATION_NAME => 2]
+            [self::NUMBER_CONFIGURATION_NAME => 2],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->languageShopId)
         );
     }
 
-    public function testWriteDefaultValueForSubShop()
+    public function testWriteDefaultValueForSubShop(): void
     {
         $this->configWriter->setByPluginName(
             self::PLUGIN_NAME,
@@ -251,27 +226,27 @@ class ConfigWriterTest extends TestCase
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME),
-            [self::NUMBER_CONFIGURATION_NAME => 2]
+            [self::NUMBER_CONFIGURATION_NAME => 2],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId),
-            [self::NUMBER_CONFIGURATION_NAME => 2]
+            [self::NUMBER_CONFIGURATION_NAME => 2],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->subShopId),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->subShopId)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->languageShopId),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->languageShopId)
         );
     }
 
-    public function testWriteDefaultValueForLanguageShop()
+    public function testWriteDefaultValueForLanguageShop(): void
     {
         $this->configWriter->setByPluginName(
             self::PLUGIN_NAME,
@@ -286,23 +261,39 @@ class ConfigWriterTest extends TestCase
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->installationShopId)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->subShopId),
-            [self::NUMBER_CONFIGURATION_NAME => 2]
+            [self::NUMBER_CONFIGURATION_NAME => 2],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->subShopId)
         );
 
         static::assertSame(
-            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->languageShopId),
-            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE]
+            [self::NUMBER_CONFIGURATION_NAME => self::ELEMENT_DEFAULT_VALUE],
+            $this->configReader->getByPluginName(self::PLUGIN_NAME, $this->languageShopId)
         );
+    }
+
+    public function testSubshopLayerCallsParentForDefaultShopConfig(): void
+    {
+        $subShopLayer = $this->getMockBuilder(SubShopLayer::class)
+            ->onlyMethods(['getParent'])
+            ->setConstructorArgs([
+                $this->connection,
+                $this->modelManager,
+                new DefaultLayer($this->connection),
+            ])
+            ->getMock();
+
+        $subShopLayer->expects(static::atLeastOnce())->method('getParent');
+
+        $subShopLayer->writeValues(self::PLUGIN_NAME, $this->installationShopId, []);
     }
 }

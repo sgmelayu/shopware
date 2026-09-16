@@ -1,29 +1,30 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Commands;
 
+use Exception;
 use Shopware\Bundle\PluginInstallerBundle\Service\InstallerService;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Models\Shop\Shop;
@@ -98,19 +99,17 @@ EOF
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        /** @var InstallerService $pluginManager */
-        $pluginManager = $this->container->get(\Shopware\Bundle\PluginInstallerBundle\Service\InstallerService::class);
+        $pluginManager = $this->container->get(InstallerService::class);
         $pluginName = $input->getArgument('plugin');
 
         try {
             $plugin = $pluginManager->getPluginByName($pluginName);
-        } catch (\Exception $e) {
-            $output->writeln(sprintf('Plugin by name "%s" was not found.', $pluginName));
+        } catch (Exception $e) {
+            $output->writeln(\sprintf('Plugin by name "%s" was not found.', $pluginName));
 
             return 1;
         }
-        /** @var ModelManager $em */
-        $em = $this->container->get(\Shopware\Components\Model\ModelManager::class);
+        $em = $this->container->get(ModelManager::class);
 
         $shops = null;
         $shopId = null;
@@ -127,7 +126,7 @@ EOF
             /** @var Shop|null $shop */
             $shop = $em->getRepository(Shop::class)->find($shopId);
             if (!$shop) {
-                $output->writeln(sprintf('Could not find shop with id %s.', $shopId));
+                $output->writeln(\sprintf('Could not find shop with id %s.', $shopId));
 
                 return 1;
             }
@@ -140,7 +139,7 @@ EOF
         foreach ($shops as $shop) {
             $config = $pluginManager->getPluginConfig($plugin, $shop);
 
-            $output->writeln(sprintf('Plugin configuration for Plugin %s and shop %s:', $pluginName, $shop->getName()));
+            $output->writeln(\sprintf('Plugin configuration for Plugin %s and shop %s:', $pluginName, $shop->getName()));
             $output->writeln(print_r($config, true));
         }
 

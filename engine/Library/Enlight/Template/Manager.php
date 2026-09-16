@@ -17,12 +17,13 @@
  * @license    http://enlight.de/license     New BSD License
  */
 
+use Shopware\Components\Theme;
+
 /**
  * The Enlight_Template_Manager is an extension of smarty to manually set the config in the class constructor.
  *
  * With the Enlight_Template_Manager it is not only possible to overwrite template files,
  * it is also possible to overwrite all the individual blocks within the template.
- *
  *
  * @license    http://enlight.de/license     New BSD License
  */
@@ -31,12 +32,12 @@ class Enlight_Template_Manager extends Smarty
     /**
      * Constant for the append parameter.
      */
-    const POSITION_APPEND = 'append';
+    public const POSITION_APPEND = 'append';
 
     /**
      * Constant for the prepend parameter.
      */
-    const POSITION_PREPEND = 'prepend';
+    public const POSITION_PREPEND = 'prepend';
 
     /**
      * The name of class used for templates
@@ -68,7 +69,7 @@ class Enlight_Template_Manager extends Smarty
             $backendOptions['cache_file_perm'] = 0666 & ~umask();
         }
 
-        if (is_string($backendOptions['cache_file_perm'])) {
+        if (\is_string($backendOptions['cache_file_perm'])) {
             $backendOptions['cache_file_perm'] = octdec($backendOptions['cache_file_perm']);
         }
 
@@ -76,7 +77,7 @@ class Enlight_Template_Manager extends Smarty
             $backendOptions['hashed_directory_perm'] = 0777 & ~umask();
         }
 
-        if (is_string($backendOptions['hashed_directory_perm'])) {
+        if (\is_string($backendOptions['hashed_directory_perm'])) {
             $backendOptions['hashed_directory_perm'] = octdec($backendOptions['hashed_directory_perm']);
         }
 
@@ -86,7 +87,7 @@ class Enlight_Template_Manager extends Smarty
         // Set default dirs
         $this->setTemplateDir('.' . DS . 'templates' . DS)
             ->setCompileDir('.' . DS . 'templates_c' . DS)
-            ->setPluginsDir([dirname(__FILE__) . '/Plugins/', SMARTY_PLUGINS_DIR])
+            ->setPluginsDir([\dirname(__FILE__) . '/Plugins/', SMARTY_PLUGINS_DIR])
             ->setCacheDir('.' . DS . 'cache' . DS)
             ->setConfigDir('.' . DS . 'configs' . DS);
 
@@ -176,7 +177,7 @@ class Enlight_Template_Manager extends Smarty
 
         // Filter all directories which includes the new shopware themes
         $themeDirectories = array_filter($template_dir, static function ($themeDir) {
-            return stripos($themeDir, '/Themes/Frontend/');
+            return (bool) stripos($themeDir, '/Themes/Frontend/');
         });
 
         // If no shopware theme assigned, we have to use the passed inheritance
@@ -208,9 +209,9 @@ class Enlight_Template_Manager extends Smarty
      */
     public function addTemplateDir($template_dir, $key = null, $position = null)
     {
-        if (is_array($template_dir)) {
+        if (\is_array($template_dir)) {
             foreach ($template_dir as $k => $v) {
-                $this->addTemplateDir($v, is_int($k) ? null : $k);
+                $this->addTemplateDir($v, \is_int($k) ? null : $k);
             }
 
             return $this;
@@ -237,7 +238,7 @@ class Enlight_Template_Manager extends Smarty
      * @param string   $templateDir
      * @param int|null $key
      *
-     * @return string
+     * @return string|false
      */
     public function resolveTemplateDir($templateDir, $key = null)
     {
@@ -248,13 +249,12 @@ class Enlight_Template_Manager extends Smarty
                 ['subject' => $this, 'key' => $key]
             );
         }
-        $templateDir = Enlight_Loader::isReadable($templateDir);
 
-        return $templateDir;
+        return Enlight_Loader::isReadable($templateDir);
     }
 
     /**
-     * @param \Enlight_Event_EventManager $eventManager
+     * @param Enlight_Event_EventManager $eventManager
      *
      * @return Enlight_Template_Manager
      */
@@ -304,7 +304,7 @@ class Enlight_Template_Manager extends Smarty
 
             $class = '\\Shopware\\Themes\\' . $name . '\\Theme';
 
-            /** @var \Shopware\Components\Theme $theme */
+            /** @var Theme $theme */
             $theme = new $class();
 
             if ($theme->injectBeforePlugins()) {

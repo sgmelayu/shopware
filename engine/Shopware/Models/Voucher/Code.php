@@ -1,31 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Models\Voucher;
 
 use Doctrine\ORM\Mapping as ORM;
 use Shopware\Components\Model\ModelEntity;
+use Shopware\Models\Customer\Customer;
 
 /**
  * Standard Code Model Entity
@@ -56,7 +57,7 @@ class Code extends ModelEntity
      *
      * @ORM\Column(name="userID", type="integer", nullable=true)
      */
-    private $customerId = null;
+    private $customerId;
 
     /**
      * @var string
@@ -73,17 +74,17 @@ class Code extends ModelEntity
     private $cashed = 0;
 
     /**
-     * @var \Shopware\Models\Voucher\Voucher
+     * @var Voucher
      *
      * @ORM\ManyToOne(targetEntity="Voucher", inversedBy="codes")
-     * @ORM\JoinColumn(name="voucherID", referencedColumnName="id")
+     * @ORM\JoinColumn(name="voucherID", referencedColumnName="id", nullable=false)
      */
     private $voucher;
 
     /**
-     * @var \Shopware\Models\Customer\Customer|null
+     * @var Customer|null
      *
-     * @ORM\OneToOne(targetEntity="\Shopware\Models\Customer\Customer")
+     * @ORM\ManyToOne(targetEntity="\Shopware\Models\Customer\Customer", inversedBy="codes")
      * @ORM\JoinColumn(name="userID", referencedColumnName="id")
      */
     private $customer;
@@ -177,7 +178,7 @@ class Code extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Voucher\Voucher
+     * @return Voucher
      */
     public function getVoucher()
     {
@@ -185,7 +186,7 @@ class Code extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Voucher\Voucher $voucher
+     * @param Voucher $voucher
      */
     public function setVoucher($voucher)
     {
@@ -193,7 +194,7 @@ class Code extends ModelEntity
     }
 
     /**
-     * @return \Shopware\Models\Customer\Customer|null
+     * @return Customer|null
      */
     public function getCustomer()
     {
@@ -201,7 +202,7 @@ class Code extends ModelEntity
     }
 
     /**
-     * @param \Shopware\Models\Customer\Customer $user
+     * @param Customer $user
      */
     public function setCustomer($user)
     {

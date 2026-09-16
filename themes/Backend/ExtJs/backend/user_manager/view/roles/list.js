@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    UserManager
@@ -128,14 +127,14 @@ Ext.define('Shopware.apps.UserManager.view.roles.List', {
             }
         }
         /* {if {acl_is_allowed privilege=delete}} */
-        ,{
+        , {
             xtype: 'actioncolumn',
             width: 50,
             items: [{
                 iconCls: 'sprite-minus-circle',
                 cls: 'delete',
                 tooltip: '{s name="roleslist/colactiondelete"}{/s}',
-                handler:function (view, rowIndex, colIndex, item) {
+                handler: function (view, rowIndex, colIndex, item) {
                     me.fireEvent('deleteRole', view, rowIndex, colIndex, item);
                 },
                 getClass: function(value, metaData, record) {
@@ -147,30 +146,28 @@ Ext.define('Shopware.apps.UserManager.view.roles.List', {
         }
         /* {/if} */];
 
-
         // Toolbar
         me.toolbar = Ext.create('Ext.toolbar.Toolbar', {
             dock: 'top',
             ui: 'shopware-ui',
             items: [
-        /* {if {acl_is_allowed privilege=create}} */
-            {
-                iconCls: 'sprite-plus-circle',
-                text: '{s name="roleslist/addrole"}{/s}',
-                action: 'addRole'
-            }
-        /* {/if} */
-            /* {if {acl_is_allowed privilege=delete}} */
-            ,{
-                iconCls: 'sprite-minus-circle',
-                text: '{s name="roleslist/deleterole"}{/s}',
-                disabled: true,
-                action: 'deleteRole'
-            }
+                /* {if {acl_is_allowed privilege=create}} */
+                {
+                    iconCls: 'sprite-plus-circle',
+                    text: '{s name="roleslist/addrole"}{/s}',
+                    action: 'addRole'
+                }
+                /* {/if} */
+                /* {if {acl_is_allowed privilege=delete}} */
+                , {
+                    iconCls: 'sprite-minus-circle',
+                    text: '{s name="roleslist/deleterole"}{/s}',
+                    disabled: true,
+                    action: 'deleteRole'
+                }
             /* {/if} */
             ]
         });
-
 
         me.dockedItems = Ext.clone(me.dockedItems);
         me.dockedItems.push(me.toolbar);

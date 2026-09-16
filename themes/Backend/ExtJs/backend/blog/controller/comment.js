@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Blog
@@ -39,15 +38,15 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
     /**
      * all references to get the elements by the applicable selector
      */
-    refs:[
-        { ref:'commentGrid', selector:'blog-blog-detail-comments-grid' },
-        { ref:'infoView', selector:'blog-blog-detail-comments-info_panel dataview[name=infoView]' },
-        { ref:'deleteCommentsButton', selector:'blog-blog-detail-comments button[action=deleteSelectedComments]' },
-        { ref:'acceptCommentsButton', selector:'blog-blog-detail-comments button[action=acceptSelectedComments]' }
+    refs: [
+        { ref: 'commentGrid', selector: 'blog-blog-detail-comments-grid' },
+        { ref: 'infoView', selector: 'blog-blog-detail-comments-info_panel dataview[name=infoView]' },
+        { ref: 'deleteCommentsButton', selector: 'blog-blog-detail-comments button[action=deleteSelectedComments]' },
+        { ref: 'acceptCommentsButton', selector: 'blog-blog-detail-comments button[action=acceptSelectedComments]' }
     ],
 
     /**
@@ -78,23 +77,23 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
      *
      * @return void
      */
-    init:function () {
+    init: function () {
         var me = this;
         me.control({
-            'blog-blog-detail-comments textfield[action=searchBlogComments]':{
-                change:me.onSearchComments
+            'blog-blog-detail-comments textfield[action=searchBlogComments]': {
+                change: me.onSearchComments
             },
-            'blog-blog-detail-comments-grid':{
+            'blog-blog-detail-comments-grid': {
                 deleteBlogComment: me.onDeleteSingleBlogComment,
                 acceptBlogComment: me.onAcceptSingleComment,
                 selectionChange: me.onSelectionChange,
                 itemclick: me.onGridRowClick
             },
-            'blog-blog-detail-comments button[action=deleteSelectedComments]':{
-                click:me.onDeleteMultipleBlogComments
+            'blog-blog-detail-comments button[action=deleteSelectedComments]': {
+                click: me.onDeleteMultipleBlogComments
             },
-            'blog-blog-detail-comments button[action=acceptSelectedComments]':{
-                click:me.onAcceptMultipleBlogComments
+            'blog-blog-detail-comments button[action=acceptSelectedComments]': {
+                click: me.onAcceptMultipleBlogComments
             }
         });
     },
@@ -106,13 +105,13 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
      * @param value
      * @return void
      */
-    onSearchComments:function (field, value) {
+    onSearchComments: function (field, value) {
         var me = this,
             searchString = Ext.String.trim(value),
             store = me.subApplication.commentStore;
         store.filters.clear();
         store.currentPage = 1;
-        store.filter('filter',searchString);
+        store.filter('filter', searchString);
     },
 
     /**
@@ -122,7 +121,7 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
      * @param selection
      * @return void
      */
-    onSelectionChange:function (sm, selections) {
+    onSelectionChange: function (sm, selections) {
         var me = this,
             deleteButton = me.getDeleteCommentsButton(),
             acceptButton = me.getAcceptCommentsButton();
@@ -130,8 +129,6 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
         deleteButton.setDisabled(!selections.length);
         acceptButton.setDisabled(!selections.length);
     },
-
-
 
     /**
      * Event listener which deletes a single blog based on the passed
@@ -141,34 +138,34 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
      * @param [integer] rowIndex - Position of the event
      * @return void
      */
-    onDeleteSingleBlogComment:function (grid, rowIndex) {
+    onDeleteSingleBlogComment: function (grid, rowIndex) {
         var me = this,
             store = me.subApplication.commentStore,
             record = store.getAt(rowIndex);
         store.currentPage = 1;
         // we do not just delete - we are polite and ask the user if he is sure.
         Ext.MessageBox.confirm(
-                me.snippets.confirmDeleteSingleBlogCommentTitle,
-                Ext.String.format(me.snippets.confirmDeleteSingleBlogComment, record.get('headline')), function (response) {
-                    if (response !== 'yes') {
-                        return false;
-                    }
-                    record.destroy({
-                        callback:function (data, operation) {
-                            var records = operation.getRecords(),
-                                    record = records[0],
-                                    rawData = record.getProxy().getReader().rawData;
+            me.snippets.confirmDeleteSingleBlogCommentTitle,
+            Ext.String.format(me.snippets.confirmDeleteSingleBlogComment, record.get('headline')), function (response) {
+                if (response !== 'yes') {
+                    return false;
+                }
+                record.destroy({
+                    callback: function (data, operation) {
+                        var records = operation.getRecords(),
+                            record = records[0],
+                            rawData = record.getProxy().getReader().rawData;
 
-                            if ( operation.success === true ) {
-                                Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleBlogCommentSuccess, me.snippets.growlMessage);
-                            } else {
-                                Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleBlogCommentError + rawData.errorMsg, me.snippets.growlMessage);
-                            }
-
-                            store.load();
+                        if ( operation.success === true ) {
+                            Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleBlogCommentSuccess, me.snippets.growlMessage);
+                        } else {
+                            Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleBlogCommentError + rawData.errorMsg, me.snippets.growlMessage);
                         }
-                    });
+
+                        store.load();
+                    }
                 });
+            });
 
     },
 
@@ -177,7 +174,7 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
      *
      * @return void
      */
-    onDeleteMultipleBlogComments:function () {
+    onDeleteMultipleBlogComments: function () {
         var me = this,
             grid = me.getCommentGrid(),
             sm = grid.getSelectionModel(),
@@ -197,7 +194,7 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
                 if (selection.length > 0) {
                     store.remove(selection);
                     store.save({
-                        callback:function (batch) {
+                        callback: function (batch) {
                             var rawData = batch.proxy.getReader().rawData;
                             if (rawData.success === true) {
                                 store.load();
@@ -232,7 +229,7 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
                     record = records[0],
                     rawData = record.getProxy().getReader().rawData;
 
-                if(operation.success){
+                if (operation.success){
                     Shopware.Notification.createGrowlMessage('', me.snippets.acceptSingleBlogCommentSuccess, me.snippets.growlMessage);
                     store.load();
                 } else {
@@ -247,13 +244,13 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
      *
      * @return void
      */
-    onAcceptMultipleBlogComments:function () {
+    onAcceptMultipleBlogComments: function () {
         var me = this,
-                grid = me.getCommentGrid(),
-                sm = grid.getSelectionModel(),
-                selection = sm.getSelection(),
-                store = me.subApplication.commentStore,
-                noOfElements = selection.length;
+            grid = me.getCommentGrid(),
+            sm = grid.getSelectionModel(),
+            selection = sm.getSelection(),
+            store = me.subApplication.commentStore,
+            noOfElements = selection.length;
 
         // Get the user to confirm the delete process
         Ext.MessageBox.confirm(
@@ -268,7 +265,7 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
                     });
 
                     store.save({
-                        callback:function (batch) {
+                        callback: function (batch) {
                             var rawData = batch.proxy.getReader().rawData;
                             if (rawData.success === true) {
                                 store.load();
@@ -295,7 +292,6 @@ Ext.define('Shopware.apps.Blog.controller.Comment', {
 
         infoView.update(record.data);
     }
-
 
 });
 //{/block}

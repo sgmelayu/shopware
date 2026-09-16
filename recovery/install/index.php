@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 $lockFile = __DIR__ . '/data/install.lock';
@@ -31,12 +31,12 @@ if (is_file($lockFile)) {
 }
 
 // Check the minimum required php version
-if (PHP_VERSION_ID < 70300) {
+if (PHP_VERSION_ID < 70400) {
     header('Content-type: text/html; charset=utf-8', true, 503);
     echo '<h2>Fehler</h2>';
-    echo 'Auf Ihrem Server läuft PHP version ' . PHP_VERSION . ', Shopware 5 benötigt mindestens PHP 7.3.0.';
+    echo 'Auf Ihrem Server läuft PHP version ' . PHP_VERSION . ', Shopware 5 benötigt mindestens PHP 7.4.0.';
     echo '<h2>Error</h2>';
-    echo 'Your server is running PHP version ' . PHP_VERSION . ' but Shopware 5 requires at least PHP 7.3.0.';
+    echo 'Your server is running PHP version ' . PHP_VERSION . ' but Shopware 5 requires at least PHP 7.4.0.';
     exit;
 }
 
@@ -59,7 +59,7 @@ if (PHP_SAPI === 'cli') {
     return $application->run($input);
 }
 
-//the execution time will be increased, because the import can take a while
+// the execution time will be increased, because the import can take a while
 ini_set('max_execution_time', 120);
 
 // Redirect to no mod rewrite path

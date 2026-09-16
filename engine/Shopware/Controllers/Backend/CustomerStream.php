@@ -1,38 +1,50 @@
 <?php
+
+declare(strict_types=1);
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\DBAL\Connection;
+use Shopware\Components\Api\Exception\NotFoundException;
 use Shopware\Components\Api\Resource\CustomerStream as CustomerStreamApi;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Models\CustomerStream\CustomerStream;
 use Shopware\Models\CustomerStream\CustomerStreamRepository;
+use Shopware\Models\CustomerStream\CustomerStreamRepositoryInterface;
 
+/**
+ * @extends Shopware_Controllers_Backend_Application<CustomerStream>
+ */
 class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_Backend_Application
 {
     protected $model = CustomerStream::class;
 
     public function delete($id)
     {
-        $this->getApiResource()->delete($id);
+        try {
+            $this->getApiResource()->delete((int) $id);
+        } catch (NotFoundException $e) {
+            return ['success' => false, 'error' => 'The passed id parameter exists no more.'];
+        }
 
         return ['success' => true];
     }
@@ -53,7 +65,7 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         }
 
         if ($data['id']) {
-            $entity = $this->getApiResource()->update($data['id'], $data);
+            $entity = $this->getApiResource()->update((int) $data['id'], $data);
         } else {
             $entity = $this->getApiResource()->create($data);
         }
@@ -62,21 +74,32 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         return ['success' => true, 'data' => $detail['data']];
     }
 
+    /**
+     * @return void
+     */
     public function getLastFullIndexTimeAction()
     {
-        $date = $this->container->get(\Shopware\Models\CustomerStream\CustomerStreamRepositoryInterface::class)
+        $date = $this->container->get(CustomerStreamRepositoryInterface::class)
             ->getLastFillIndexDate();
 
         $this->View()->assign('last_index_time', $date);
     }
 
+    /**
+     * @return void
+     */
     public function indexStreamAction()
     {
         $streamId = (int) $this->Request()->getParam('streamId');
         $total = (int) $this->Request()->getParam('total');
 
         $snippets = $this->container->get('snippets')->getNamespace('backend/customer/view/main');
-        $stream = $this->container->get(\Shopware\Components\Model\ModelManager::class)->find(CustomerStream::class, $streamId);
+        $stream = $this->container->get(ModelManager::class)->find(CustomerStream::class, $streamId);
+        if (!$stream instanceof CustomerStream) {
+            $this->View()->assign('success', false);
+
+            return;
+        }
 
         if ($stream->getFreezeUp()) {
             $this->View()->assign([
@@ -110,25 +133,34 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         $this->View()->assign([
             'success' => true,
             'finish' => false,
-            'text' => sprintf($snippets->get('refresh_stream'), $handled, $total),
+            'text' => \sprintf($snippets->get('refresh_stream'), $handled, $total),
             'progress' => $handled / $total,
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function getNotIndexedCountAction()
     {
-        $count = $this->container->get(\Shopware\Models\CustomerStream\CustomerStreamRepositoryInterface::class)->getNotIndexedCount();
+        $count = $this->container->get(CustomerStreamRepositoryInterface::class)->getNotIndexedCount();
 
         $this->View()->assign(['total' => $count]);
     }
 
+    /**
+     * @return void
+     */
     public function getCustomerCountAction()
     {
         $this->View()->assign([
-            'total' => $this->container->get(\Shopware\Models\CustomerStream\CustomerStreamRepositoryInterface::class)->getCustomerCount(),
+            'total' => $this->container->get(CustomerStreamRepositoryInterface::class)->getCustomerCount(),
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function buildSearchIndexAction()
     {
         $total = (int) $this->Request()->getParam('total');
@@ -161,25 +193,31 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
             'success' => true,
             'finish' => false,
             'params' => ['lastId' => (int) array_pop($ids)],
-            'text' => sprintf($snippets->get('refresh_customer'), $handled, $total),
+            'text' => \sprintf($snippets->get('refresh_customer'), $handled, $total),
             'progress' => $handled / $total,
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function loadStreamAction()
     {
-        /** @var Enlight_Controller_Request_Request $request */
         $request = $this->Request();
 
+        $streamId = $request->getParam('streamId');
+        if ($streamId !== null) {
+            $streamId = (int) $streamId;
+        }
         $result = $this->getApiResource()->getOne(
-            $request->getParam('streamId'),
+            $streamId,
             (int) $request->getParam('start', 0),
             (int) $request->getParam('limit', 50),
-            $request->getParam('conditions'),
-            $request->getParam('sorting')
+            $request->getParam('conditions', ''),
+            $request->getParam('sorting', '')
         );
 
-        $data = $this->container->get(\Shopware\Models\CustomerStream\CustomerStreamRepositoryInterface::class)->fetchBackendListing($result->getIds());
+        $data = $this->container->get(CustomerStreamRepositoryInterface::class)->fetchBackendListing($result->getIds());
 
         $this->View()->assign([
             'success' => true,
@@ -188,9 +226,12 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function loadChartAction()
     {
-        $chart = $this->container->get(\Shopware\Models\CustomerStream\CustomerStreamRepositoryInterface::class)
+        $chart = $this->container->get(CustomerStreamRepositoryInterface::class)
             ->fetchCustomerAmount(
                 $this->Request()->getParam('streamId'),
                 (int) $this->Request()->getParam('months', 12)
@@ -201,11 +242,14 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         ]);
     }
 
+    /**
+     * @return void
+     */
     public function addCustomerToStreamAction()
     {
         $streamId = (int) $this->Request()->getParam('streamId');
         $customerId = (int) $this->Request()->getParam('customerId');
-        $connection = $this->container->get(\Doctrine\DBAL\Connection::class);
+        $connection = $this->container->get(Connection::class);
 
         try {
             $connection->executeUpdate(
@@ -218,12 +262,15 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         }
     }
 
+    /**
+     * @return void
+     */
     public function removeCustomerFromStreamAction()
     {
         $streamId = (int) $this->Request()->getParam('streamId');
         $customerId = (int) $this->Request()->getParam('customerId');
 
-        $connection = $this->container->get(\Doctrine\DBAL\Connection::class);
+        $connection = $this->container->get(Connection::class);
 
         $connection->executeUpdate(
             'DELETE FROM s_customer_streams_mapping WHERE stream_id = :streamId AND customer_id = :customerId',
@@ -233,9 +280,12 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
         $this->View()->assign('success', true);
     }
 
+    /**
+     * @return void
+     */
     public function loadAmountPerStreamChartAction()
     {
-        $chart = $this->container->get(\Shopware\Models\CustomerStream\CustomerStreamRepositoryInterface::class)
+        $chart = $this->container->get(CustomerStreamRepositoryInterface::class)
             ->fetchAmountPerStreamChart();
 
         $this->View()->assign('data', array_values($chart));
@@ -258,7 +308,7 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
     {
         $resource = $this->getApiResource();
 
-        return $resource->getList($offset, $limit, $filter, $sort);
+        return $resource->getList($offset ?? 0, $limit ?? 25, $filter, $sort);
     }
 
     /**
@@ -266,6 +316,6 @@ class Shopware_Controllers_Backend_CustomerStream extends Shopware_Controllers_B
      */
     protected function getApiResource()
     {
-        return $this->container->get(\Shopware\Components\Api\Resource\CustomerStream::class);
+        return $this->container->get(CustomerStreamApi::class);
     }
 }

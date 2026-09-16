@@ -1,30 +1,32 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Doctrine\DBAL\Connection;
 use Shopware\Bundle\AttributeBundle\Service\CrudServiceInterface;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Translation\ObjectTranslator;
+use Shopware\Models\Shop\Locale as ShopLocale;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -58,8 +60,13 @@ class Shopware_Components_Translation
 
         // Determine how to query the current language
         if ($container->initialized('auth') && $container->get('auth')->hasIdentity()) {
-            $locale = $container->get('auth')->getIdentity()->locale;
-        } elseif ($container->has('shop')) {
+            $identity = $container->get('auth')->getIdentity();
+            if (isset($identity->locale)) {
+                $locale = $identity->locale;
+            } elseif (isset($identity->localeID)) {
+                $locale = $container->get(ModelManager::class)->getRepository(ShopLocale::class)->find($identity->localeID);
+            }
+        } elseif ($container->initialized('shop')) {
             $locale = $container->get('shop')->getLocale();
         }
 
@@ -93,7 +100,7 @@ class Shopware_Components_Translation
             }
         }
         foreach ($tmp as $tmpKey => $value) {
-            if (!is_string($value)) {
+            if (!\is_string($value)) {
                 continue;
             }
             if (trim($value) === '') {
@@ -123,7 +130,7 @@ class Shopware_Components_Translation
     {
         $tmp = unserialize($data, ['allowed_classes' => false]);
         if ($tmp === false) {
-            $tmp = unserialize(utf8_decode($data), ['allowed_classes' => false]);
+            $tmp = unserialize(mb_convert_encoding($data, 'ISO-8859-1', 'UTF-8'), ['allowed_classes' => false]);
         }
         if ($tmp === false) {
             return [];
@@ -172,7 +179,7 @@ class Shopware_Components_Translation
             ->setParameter(':language', $language);
 
         $data = $query->execute()
-            ->fetch(\PDO::FETCH_COLUMN);
+            ->fetch(PDO::FETCH_COLUMN);
 
         return $this->unFilterData($type, $data, $merge ? $key : null);
     }
@@ -232,7 +239,7 @@ class Shopware_Components_Translation
                 ->setParameter('objectType', $type);
         }
         if ($key) {
-            if (is_array($key)) {
+            if (\is_array($key)) {
                 $queryBuilder
                     ->andWhere('t.objectkey IN (:objectKey)')
                     ->setParameter('objectKey', $key, Connection::PARAM_INT_ARRAY);
@@ -283,7 +290,7 @@ class Shopware_Components_Translation
                 // We need something like array_merge_recursive, but that also
                 // recursively merges elements with int keys.
                 foreach ($translationFallback as $translationKey => $data) {
-                    if (array_key_exists($translationKey, $translationData)) {
+                    if (\array_key_exists($translationKey, $translationData)) {
                         $translationData[$translationKey] += $data;
                     } else {
                         $translationData[$translationKey] = $data;
@@ -337,7 +344,7 @@ class Shopware_Components_Translation
         $requiredKeys = ['objectdata', 'objectlanguage', 'objecttype', 'objectkey'];
 
         foreach ($data as $translation) {
-            if (count(array_intersect_key(array_flip($requiredKeys), $translation)) !== count($requiredKeys)) {
+            if (\count(array_intersect_key(array_flip($requiredKeys), $translation)) !== \count($requiredKeys)) {
                 continue;
             }
 
@@ -366,7 +373,7 @@ class Shopware_Components_Translation
             $type = 'article';
             $data = array_merge(
                 $this->read($language, $type, $key),
-                $data
+                $data ?? []
             );
         }
 
@@ -417,7 +424,7 @@ class Shopware_Components_Translation
     }
 
     /**
-     * Translates an order by translating it's document types, payment and dispatch methods.
+     * Translates an order by translating its document types, payment and dispatch methods.
      */
     public function translateOrders(array $orders, ?int $language = null, ?int $fallback = null): array
     {
@@ -433,7 +440,7 @@ class Shopware_Components_Translation
             if (isset($order['payment'])) {
                 $paymentMethods[$order['payment']['id']] = $order['payment'];
             }
-            if (array_key_exists('documents', $order)) {
+            if (\array_key_exists('documents', $order)) {
                 foreach ($order['documents'] as $documentIndex => $document) {
                     if (!$document['type']) {
                         continue;
@@ -450,8 +457,9 @@ class Shopware_Components_Translation
 
         // Save the translated objects
         foreach ($orders as &$order) {
-            $orderDocuments = $order['documents'];
-            for ($documentCounter = 0, $orderDocumentsCount = count($orderDocuments); $documentCounter < $orderDocumentsCount; ++$documentCounter) {
+            $orderDocuments = isset($order['documents']) && \is_array($order['documents']) ? $order['documents'] : [];
+
+            for ($documentCounter = 0, $orderDocumentsCount = \count($orderDocuments); $documentCounter < $orderDocumentsCount; ++$documentCounter) {
                 $type = $orderDocuments[$documentCounter]['type'];
                 $order['documents'][$documentCounter]['type'] = $translatedDocumentTypes[$type['id']];
             }
@@ -585,11 +593,11 @@ class Shopware_Components_Translation
      */
     protected function filterText($text)
     {
-        trigger_error(sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
+        trigger_error(\sprintf('%s:%s is deprecated since Shopware 5.6 and will be removed with 5.7. Will be removed without replacement.', __CLASS__, __METHOD__), E_USER_DEPRECATED);
 
         $text = html_entity_decode($text);
         $text = preg_replace('!<[^>]*?>!', ' ', $text);
-        $text = str_replace(chr(0xa0), ' ', $text);
+        $text = str_replace(\chr(0xA0), ' ', $text);
         $text = preg_replace('/\s\s+/', ' ', $text);
         $text = htmlspecialchars($text);
         $text = trim($text);
@@ -602,7 +610,7 @@ class Shopware_Components_Translation
      *
      * @param string $type
      *
-     * @return array|bool
+     * @return array|false
      */
     protected function getMapping($type)
     {
@@ -658,7 +666,7 @@ class Shopware_Components_Translation
      * @param int    $articleId
      * @param string $data
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected function fixArticleTranslation($languageId, $articleId, $data)
     {
@@ -680,15 +688,15 @@ class Shopware_Components_Translation
         );
 
         foreach ($fallbacks as $id) {
-            //check if fallback ids contains an individual translation
+            // check if fallback ids contains an individual translation
             $existQuery->execute([':language' => $id, ':articleId' => $articleId]);
             $exist = $existQuery->fetch(PDO::FETCH_COLUMN);
 
-            //if shop translation of fallback exists, skip
+            // if shop translation of fallback exists, skip
             if ($exist) {
                 continue;
             }
-            //add fallback translation to s_articles_translation for search requests.
+            // add fallback translation to s_articles_translation for search requests.
             $this->addProductTranslation($articleId, $id, $data);
         }
     }
@@ -696,7 +704,7 @@ class Shopware_Components_Translation
     private function prepareArticleData(string $data): array
     {
         $data = unserialize($data, ['allowed_classes' => false]);
-        if (!empty($data['txtlangbeschreibung']) && strlen($data['txtlangbeschreibung']) > 1000) {
+        if (!empty($data['txtlangbeschreibung']) && \strlen($data['txtlangbeschreibung']) > 1000) {
             $data['txtlangbeschreibung'] = substr(strip_tags($data['txtlangbeschreibung']), 0, 1000);
         }
 
@@ -717,7 +725,7 @@ class Shopware_Components_Translation
             $column = str_replace(CrudServiceInterface::EXT_JS_PREFIX, '', $column);
 
             unset($data[$key]);
-            if (in_array($column, $columns)) {
+            if (\in_array($column, $columns)) {
                 $data[$column] = $value;
             }
         }

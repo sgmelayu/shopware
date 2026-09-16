@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Emotion
@@ -134,9 +133,9 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
         var me = this;
 
         return Ext.create('Ext.selection.CheckboxModel', {
-            listeners:{
+            listeners: {
                 // Unlocks the save button if the user has checked at least one checkbox
-                selectionchange:function (sm, selections) {
+                selectionchange: function (sm, selections) {
                     me.fireEvent('selectionChange', selections);
                 }
             }
@@ -200,7 +199,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
             draggable: false,
             sortable: false,
             groupable: false
-        },{
+        }, {
             header: '{s name="list/visibility_in_categories"}{/s}',
             dataIndex: 'listingVisibility',
             width: 115,
@@ -257,7 +256,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
                 /*{if {acl_is_allowed privilege=delete}}*/
                 {
                     iconCls: 'sprite-minus-circle',
-                    tooltip:'{s name="list/action_column/delete"}Delete shopping world{/s}',
+                    tooltip: '{s name="list/action_column/delete"}Delete shopping world{/s}',
                     handler: function (view, rowIndex, colIndex, item, opts, record) {
                         me.fireEvent('deleteemotion', record);
                     }
@@ -266,7 +265,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
                 /*{if {acl_is_allowed privilege=update}}*/
                 {
                     iconCls: 'sprite-pencil',
-                    tooltip:'{s name="list/action_column/edit"}Edit shopping world{/s}',
+                    tooltip: '{s name="list/action_column/edit"}Edit shopping world{/s}',
                     handler: function(view, rowIndex, colIndex) {
                         me.fireEvent('editemotion', me, view, rowIndex, colIndex);
                     }
@@ -274,7 +273,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
                 /*{/if}*/
                 {
                     iconCls: 'sprite-globe--arrow',
-                    tooltip:'{s name="list/action_column/preview"}Preview shopping world{/s}',
+                    tooltip: '{s name="list/action_column/preview"}Preview shopping world{/s}',
                     handler: function(view, rowIndex) {
                         var listStore = view.getStore(),
                             emotionId = listStore.getAt(rowIndex).get('id');
@@ -284,7 +283,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
                 },
                 {
                     iconCls: 'sprite-drive-download',
-                    tooltip:'{s name="list/action_column/export"}Export shopping world{/s}',
+                    tooltip: '{s name="list/action_column/export"}Export shopping world{/s}',
                     handler: function(view, rowIndex) {
                         var listStore = view.getStore(),
                             emotionId = listStore.getAt(rowIndex).get('id');
@@ -294,7 +293,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
                 }
             ]
         },
-            me.createCopyDropdown()
+        me.createCopyDropdown()
         ];
     },
 
@@ -377,12 +376,11 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
      */
     nameColumn: function(value, metaData, record) {
         if (record.get('isLandingPage') && !record.get('parentId')) {
-            return '<strong>'+value+'</strong>';
+            return '<strong>' + value + '</strong>';
         } else {
             return value;
         }
     },
-
 
     /**
      * Column renderer function for the emotion type column.
@@ -391,14 +389,14 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
      * @param [string] record   - The whole data model
      */
     typeColumn: function(value, metaData, record) {
-        if(!record) {
+        if (!record) {
             return false;
         }
 
         var type = '{s name="grid/renderer/emotion"}Emotion{/s}';
 
         // Type detection
-        if(record.get('isLandingPage')) {
+        if (record.get('isLandingPage')) {
             type = '{s name="grid/renderer/landingpage"}Landingpage{/s}'
         }
 
@@ -439,7 +437,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
     },
 
     deviceColumn: function(value, metaData, record) {
-        if(!record) {
+        if (!record) {
             return false;
         }
 
@@ -447,27 +445,27 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
             iconStyling = 'width:16px; height:16px; display:inline-block; margin-right:5px;';
 
         var snippets = {
-                desktop: '{s name="grid/renderer/desktop"}For desktop{/s}',
-                tabletLandscape: '{s name="grid/renderer/tabletLandscape"}For tablet landscape{/s}',
-                tablet: '{s name="grid/renderer/tablet"}For tablet{/s}',
-                mobileLandscape: '{s name="grid/renderer/mobileLandscape"}For mobile landscape{/s}',
-                mobile: '{s name="grid/renderer/mobile"}For mobile{/s}'
+            desktop: '{s name="grid/renderer/desktop"}For desktop{/s}',
+            tabletLandscape: '{s name="grid/renderer/tabletLandscape"}For tablet landscape{/s}',
+            tablet: '{s name="grid/renderer/tablet"}For tablet{/s}',
+            mobileLandscape: '{s name="grid/renderer/mobileLandscape"}For mobile landscape{/s}',
+            mobile: '{s name="grid/renderer/mobile"}For mobile{/s}'
         };
 
         // Device detection
-        if(value.indexOf('0') >= 0) {
+        if (value.indexOf('0') >= 0) {
             devices += '<div class="sprite-imac" style="' + iconStyling + '" title="' + snippets.desktop + '">&nbsp;</div>';
         }
-        if(value.indexOf('1') >= 0) {
+        if (value.indexOf('1') >= 0) {
             devices += '<div class="sprite-ipad--landscape" style="' + iconStyling + '" title="' + snippets.tabletLandscape + '">&nbsp;</div>';
         }
-        if(value.indexOf('2') >= 0) {
+        if (value.indexOf('2') >= 0) {
             devices += '<div class="sprite-ipad--portrait" style="' + iconStyling + '" title="' + snippets.tablet + '">&nbsp;</div>';
         }
-        if(value.indexOf('3') >= 0) {
+        if (value.indexOf('3') >= 0) {
             devices += '<div class="sprite-iphone--landscape" style="' + iconStyling + '" title="' + snippets.mobileLandscape + '">&nbsp;</div>';
         }
-        if(value.indexOf('4') >= 0) {
+        if (value.indexOf('4') >= 0) {
             devices += '<div class="sprite-iphone--portrait" style="' + iconStyling + '" title="' + snippets.mobile + '">&nbsp;</div>';
         }
 
@@ -496,7 +494,7 @@ Ext.define('Shopware.apps.Emotion.view.list.Grid', {
         if (!value) {
             cls = 'sprite-cross-small';
         }
-        return '<div class="'+ cls +'" style="width: 16px; height: 16px; margin-left: 9px;">&nbsp;</div>';
+        return '<div class="' + cls + '" style="width: 16px; height: 16px; margin-left: 9px;">&nbsp;</div>';
     },
 
     /**

@@ -38,8 +38,7 @@ class Enlight_Components_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql
     protected $dbalConnection;
 
     /**
-     * @param Connection $connection
-     * @param array      $config
+     * @param array $config
      *
      * @return self
      */
@@ -60,9 +59,9 @@ class Enlight_Components_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql
      * @param string|Zend_Db_Select $sql  the SQL statement with placeholders
      * @param array                 $bind an array of data to bind to the placeholders
      *
-     * @throws Zend_Db_Adapter_Exception to re-throw PDOException
+     * @throws Zend_Db_Statement_Exception to re-throw PDOException
      *
-     * @return Zend_Db_Statement_Pdo|false
+     * @return Zend_Db_Statement_Pdo
      */
     public function query($sql, $bind = [])
     {
@@ -70,7 +69,7 @@ class Enlight_Components_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql
             $bind = $sql->getBind();
         }
 
-        if (!is_array($bind)) {
+        if (!\is_array($bind)) {
             $bind = [$bind];
         }
 
@@ -104,8 +103,6 @@ class Enlight_Components_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql
      * Alias for query.
      *
      * @param string $query
-     * @param array  $params
-     * @param array  $types
      *
      * @return Zend_Db_Statement_Pdo
      */
@@ -143,6 +140,37 @@ class Enlight_Components_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql
     }
 
     /**
+     * Begin a transaction.
+     * Opening a zend connection and a dbalconnection results in a fatal error, so we use the doctrine transaction levels
+     *
+     * @return void
+     */
+    protected function _beginTransaction()
+    {
+        $this->dbalConnection->beginTransaction();
+    }
+
+    /**
+     * Commit a transaction.
+     *
+     * @return void
+     */
+    protected function _commit()
+    {
+        $this->dbalConnection->commit();
+    }
+
+    /**
+     * Roll-back a transaction.
+     *
+     * @return void
+     */
+    protected function _rollBack()
+    {
+        $this->dbalConnection->rollBack();
+    }
+
+    /**
      * Creates a PDO object and connects to the database.
      *
      * @throws Zend_Db_Adapter_Exception
@@ -155,7 +183,7 @@ class Enlight_Components_Db_Adapter_Pdo_Mysql extends Zend_Db_Adapter_Pdo_Mysql
         }
 
         if (!$this->dbalConnection) {
-            throw new RuntimeException(sprintf('Class can only be constructed using %s::createFromDbalConnectionAndConfig().', __CLASS__));
+            throw new RuntimeException(\sprintf('Class can only be constructed using %s::createFromDbalConnectionAndConfig().', __CLASS__));
         }
 
         $this->_connection = $this->dbalConnection->getWrappedConnection();

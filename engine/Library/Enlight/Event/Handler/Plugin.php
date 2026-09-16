@@ -25,24 +25,27 @@
  *
  * @category   Enlight
  * @package    Enlight_Event
+ *
  * @copyright  Copyright (c) 2011, shopware AG (http://www.shopware.de)
  * @license    http://enlight.de/license     New BSD License
  */
 class Enlight_Event_Handler_Plugin extends Enlight_Event_Handler
 {
     /**
-     * @var string Contains the event listener.
+     * @var string contains the event listener
      */
     protected $listener;
 
     /**
-     * @var Enlight_Plugin_Namespace Contains an instance of the Enlight_Plugin_Namespace.
+     * @var Enlight_Plugin_Namespace contains an instance of the Enlight_Plugin_Namespace
      */
     protected $namespace;
 
     /**
-     * @var Enlight_Plugin_Bootstrap|string Contains an instance
-     * of the Enlight_Plugin_Bootstrap or the plugin name.
+     * @deprecated Will be only `string` starting from Shopware 5.8
+     *
+     * @var Enlight_Plugin_Bootstrap|string contains an instance
+     *                                      of the Enlight_Plugin_Bootstrap or the plugin name
      */
     protected $plugin;
 
@@ -50,12 +53,15 @@ class Enlight_Event_Handler_Plugin extends Enlight_Event_Handler
      * The Enlight_Event_Handler_Plugin class constructor expects the event name.
      * All parameters are set in the internal properties.
      *
-     * @throws  Enlight_Event_Exception
-     * @param   string                   $event
-     * @param   Enlight_Plugin_Namespace $namespace
-     * @param   Enlight_Plugin_Bootstrap $plugin
-     * @param   string                   $listener
-     * @param   integer                  $position
+     * @deprecated The parameter $plugin will only accept `string` starting from Shopware 5.8
+     *
+     * @param string                          $event
+     * @param Enlight_Plugin_Namespace        $namespace
+     * @param Enlight_Plugin_Bootstrap|string $plugin
+     * @param string                          $listener
+     * @param int                             $position
+     *
+     * @throws Enlight_Event_Exception
      */
     public function __construct($event, $namespace = null, $plugin = null, $listener = null, $position = null)
     {
@@ -74,12 +80,15 @@ class Enlight_Event_Handler_Plugin extends Enlight_Event_Handler
 
     /**
      * Setter method for the internal plugin property.
-     * @param   $plugin Enlight_Plugin_Bootstrap|string
-     * @return  Enlight_Event_Handler_Plugin
+     *
+     * @param mixed $plugin Enlight_Plugin_Bootstrap|string
+     *
+     * @return Enlight_Event_Handler_Plugin
      */
     public function setPlugin($plugin)
     {
         $this->plugin = $plugin;
+
         return $this;
     }
 
@@ -87,24 +96,35 @@ class Enlight_Event_Handler_Plugin extends Enlight_Event_Handler
      * Getter method for the internal plugin property. If the plugin property is a string,
      * enlight determines the plugin object over the namespace.
      *
-     * @return  Enlight_Plugin_Bootstrap
+     * @return ?Enlight_Plugin_Bootstrap
      */
     public function Plugin()
     {
-        if (!$this->plugin instanceof Enlight_Plugin_Bootstrap) {
-            $plugin = $this->namespace->get($this->plugin);
+        // In the past always `null` was returned if $this->plugin was of instance `Enlight_Plugin_Bootstrap`
+        // therefore this bug is replicated here, can be removed once the type has been fixed to `string`
+        if ($this->plugin instanceof Enlight_Plugin_Bootstrap) {
+            return null;
         }
+
+        $plugin = $this->namespace->get($this->plugin);
+        if (!$plugin instanceof Enlight_Plugin_Bootstrap) {
+            return null;
+        }
+
         return $plugin;
     }
 
     /**
      * Setter method for the internal listener property.
-     * @param   string $listener
-     * @return  Enlight_Event_Handler_Plugin
+     *
+     * @param string $listener
+     *
+     * @return Enlight_Event_Handler_Plugin
      */
     public function setListener($listener)
     {
         $this->listener = $listener;
+
         return $this;
     }
 
@@ -118,44 +138,47 @@ class Enlight_Event_Handler_Plugin extends Enlight_Event_Handler
 
     /**
      * Setter method for the internal namespace property.
-     * @param   Enlight_Plugin_Namespace $namespace
-     * @return  Enlight_Event_Handler_Plugin
+     *
+     * @return Enlight_Event_Handler_Plugin
      */
     public function setNamespace(Enlight_Plugin_Namespace $namespace)
     {
         $this->namespace = $namespace;
+
         return $this;
     }
 
     /**
      * Executes the listener on the plugin with the given Enlight_Event_EventArgs.
-     * @param   Enlight_Event_EventArgs $args
-     * @throws  Enlight_Exception
-     * @return  mixed
+     *
+     * @throws Enlight_Exception
      */
     public function execute(Enlight_Event_EventArgs $args)
     {
         $plugin = $this->Plugin();
-        if (!method_exists($plugin, $this->listener)) {
+        if ($plugin === null || !method_exists($plugin, $this->listener)) {
             $name = $this->plugin instanceof Enlight_Plugin_Bootstrap ? $this->plugin->getName() : $this->plugin;
             trigger_error('Listener "' . $this->listener . '" in "' . $name . '" is not callable.', E_USER_ERROR);
-            //throw new Enlight_Exception('Listener "' . $this->listener . '" in "' . $name . '" is not callable.');
+
+            // throw new Enlight_Exception('Listener "' . $this->listener . '" in "' . $name . '" is not callable.');
             return;
         }
+
         return $this->Plugin()->{$this->listener}($args);
     }
 
     /**
      * Returns the plugin handler properties as an array.
+     *
      * @return array
      */
     public function toArray()
     {
-        return array(
+        return [
             'name' => $this->name,
             'position' => $this->position,
             'plugin' => $this->plugin instanceof Enlight_Plugin_Bootstrap ? $this->plugin->getName() : $this->plugin,
-            'listener' => $this->listener
-        );
+            'listener' => $this->listener,
+        ];
     }
 }

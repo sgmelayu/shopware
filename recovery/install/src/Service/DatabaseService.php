@@ -1,37 +1,43 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Install\Service;
 
+use Exception;
+use InvalidArgumentException;
+use LogicException;
+use PDO;
+use RuntimeException;
+
 class DatabaseService
 {
     /**
-     * @var \PDO
+     * @var PDO
      */
     private $connection;
 
-    public function __construct(\PDO $connection)
+    public function __construct(PDO $connection)
     {
         $this->connection = $connection;
     }
@@ -43,9 +49,9 @@ class DatabaseService
      * @param string $charset   Database charset (default utf8)
      * @param string $collation Database collation (default utf8_unicode_ci)
      *
-     * @throws \InvalidArgumentException width code 1 if the charset parameter is incorrect
-     * @throws \InvalidArgumentException width code 2 if the collation parameter is incorrect
-     * @throws \RuntimeException         If the selected user has insufficient privileges to CREATE/ALTER the database
+     * @throws InvalidArgumentException width code 1 if the charset parameter is incorrect
+     * @throws InvalidArgumentException width code 2 if the collation parameter is incorrect
+     * @throws RuntimeException         If the selected user has insufficient privileges to CREATE/ALTER the database
      *
      * @return int Amount of affected rows by the \PDO::exec method
      */
@@ -61,11 +67,11 @@ class DatabaseService
         $collation = preg_replace($regex, '', trim($collation));
 
         if (empty($charset)) {
-            throw new \InvalidArgumentException('Must specify charset', 1);
+            throw new InvalidArgumentException('Must specify charset', 1);
         }
 
         if (empty($collation)) {
-            throw new \InvalidArgumentException('Must specify collation', 2);
+            throw new InvalidArgumentException('Must specify collation', 2);
         }
 
         $isSuper = $this->isSuperUser();
@@ -78,9 +84,9 @@ class DatabaseService
         if (!$isSuper && !$dbExists) {
             try {
                 $this->checkPrivilegeOnSchema($name, 'CREATE');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $msg = "Database \"$name\" does not exists, additionally you have no privilege to create said database";
-                throw new \RuntimeException($msg);
+                throw new RuntimeException($msg);
             }
         }
 
@@ -92,14 +98,14 @@ class DatabaseService
         if (!$isSuper && $dbExists) {
             try {
                 $this->checkPrivilegeOnSchema($name, 'ALTER');
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $msg = "Your user has not enough privileges for database \"$name\" the ALTER privilege is required";
-                throw new \RuntimeException($msg);
+                throw new RuntimeException($msg);
             }
         }
 
         return $this->connection->exec(
-            sprintf(
+            \sprintf(
                 '%s DATABASE `%s` CHARACTER SET `%s` COLLATE `%s`',
                 $dbExists ? 'ALTER' : 'CREATE',
                 $name,
@@ -124,7 +130,7 @@ class DatabaseService
         $stmt->bindValue(':name', $databaseName);
         $stmt->execute();
 
-        return $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -133,28 +139,28 @@ class DatabaseService
      * @param string       $schema      name of the schema/database
      * @param string|array $permissions A string with the permission to check or an array with permissions to check
      *
-     * @throws \InvalidArgumentException If any of the passed permissions is incorrect
-     * @throws \LogicException           if the permission was not found
+     * @throws InvalidArgumentException If any of the passed permissions is incorrect
+     * @throws LogicException           if the permission was not found
      */
     public function checkPrivilegeOnSchema($schema, $permissions)
     {
         $schema = trim($schema);
 
         if (empty($schema)) {
-            throw new \InvalidArgumentException('Schema name can not be empty');
+            throw new InvalidArgumentException('Schema name can not be empty');
         }
 
-        if (!is_string($permissions) && !is_array($permissions)) {
-            $msg = sprintf('String or array expected, got: %s', gettype($permissions));
-            throw new \InvalidArgumentException($msg);
+        if (!\is_string($permissions) && !\is_array($permissions)) {
+            $msg = \sprintf('String or array expected, got: %s', \gettype($permissions));
+            throw new InvalidArgumentException($msg);
         }
 
-        if (!is_array($permissions)) {
+        if (!\is_array($permissions)) {
             $permissions = [$permissions];
         }
 
         if (empty($permissions)) {
-            throw new \InvalidArgumentException('No permissions passed to be checked');
+            throw new InvalidArgumentException('No permissions passed to be checked');
         }
 
         /*
@@ -164,14 +170,14 @@ class DatabaseService
          */
 
         foreach ($permissions as $key => $permission) {
-            if (!is_string($permission)) {
-                throw new \InvalidArgumentException("At array key $key: Argument is not a string");
+            if (!\is_string($permission)) {
+                throw new InvalidArgumentException("At array key $key: Argument is not a string");
             }
 
             $permission = trim($permission);
 
             if (empty($permission)) {
-                throw new \InvalidArgumentException("At array key $key: Given permission can not be an empty string");
+                throw new InvalidArgumentException("At array key $key: Given permission can not be an empty string");
             }
 
             $sql = <<<'EOL'
@@ -189,10 +195,10 @@ EOL;
 
             $stmt->execute();
 
-            $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$result) {
-                throw new \LogicException("Current user has no \"$permission\" on the selected schema: \"$schema\"");
+                throw new LogicException("Current user has no \"$permission\" on the selected schema: \"$schema\"");
             }
         }
     }
@@ -202,7 +208,7 @@ EOL;
      *
      * @see self::checkUserPrivileges
      *
-     * @throws \Exception
+     * @throws Exception
      *
      * @return bool true The current user is a super user
      */
@@ -212,9 +218,9 @@ EOL;
             $this->checkUserPrivileges('SUPER');
 
             return true;
-        } catch (\LogicException $e) {
+        } catch (LogicException $e) {
             return false;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             throw $e;
         }
     }
@@ -224,32 +230,32 @@ EOL;
      *
      * @param string|array $privileges A string (to check for one privilege) or an array (to check for multiple)
      *
-     * @throws \LogicException if the privilege has not been found
+     * @throws LogicException if the privilege has not been found
      */
     public function checkUserPrivileges($privileges)
     {
-        if (!is_string($privileges) && !is_array($privileges)) {
-            $msg = sprintf('String or array expected, got: %s', gettype($privileges));
-            throw new \InvalidArgumentException($msg);
+        if (!\is_string($privileges) && !\is_array($privileges)) {
+            $msg = \sprintf('String or array expected, got: %s', \gettype($privileges));
+            throw new InvalidArgumentException($msg);
         }
 
-        if (!is_array($privileges)) {
+        if (!\is_array($privileges)) {
             $privileges = [$privileges];
         }
 
         if (empty($privileges)) {
-            throw new \InvalidArgumentException('No privileges passed to be checked');
+            throw new InvalidArgumentException('No privileges passed to be checked');
         }
 
         foreach ($privileges as $key => $privilege) {
-            if (!is_string($privilege)) {
-                throw new \InvalidArgumentException("At array key $key: Argument is not a string");
+            if (!\is_string($privilege)) {
+                throw new InvalidArgumentException("At array key $key: Argument is not a string");
             }
 
             $privilege = trim($privilege);
 
             if (empty($privilege)) {
-                throw new \InvalidArgumentException("At array key $key: Given privilege can not be an empty string");
+                throw new InvalidArgumentException("At array key $key: Given privilege can not be an empty string");
             }
 
             $sql = <<<'EOL'
@@ -263,8 +269,8 @@ EOL;
             $stmt->bindValue(':privilege', $privilege);
             $stmt->execute();
 
-            if (!$stmt->fetch(\PDO::FETCH_ASSOC)) {
-                throw new \LogicException("Current MySQL user has no privilege named \"$privilege\"");
+            if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
+                throw new LogicException("Current MySQL user has no privilege named \"$privilege\"");
             }
         }
     }
@@ -284,7 +290,7 @@ EOL;
     {
         $tables = $this->connection->query('SHOW TABLES')->fetchAll();
 
-        return count($tables);
+        return \count($tables);
     }
 
     /**
@@ -300,9 +306,11 @@ EOL;
 
         if ($omit) {
             // IN parameters string creation (?,?,?,?)
-            $in = substr(str_repeat('?,', count($omit)), 0, -1);
+            $in = substr(str_repeat('?,', \count($omit)), 0, -1);
             $sql .= " WHERE SCHEMA_NAME NOT IN($in)";
         }
+
+        $sql .= ' ORDER BY name';
 
         $stmt = $this->connection->prepare($sql);
 
@@ -312,7 +320,7 @@ EOL;
 
         $stmt->execute();
 
-        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 
     /**
@@ -324,7 +332,7 @@ EOL;
             $this->connection->query('SELECT * FROM s_schema_version')->fetchAll();
 
             return true;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
     }

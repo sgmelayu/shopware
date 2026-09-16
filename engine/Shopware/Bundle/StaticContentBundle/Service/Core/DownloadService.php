@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StaticContentBundle\Service\Core;
@@ -29,6 +29,7 @@ use League\Flysystem\Adapter\Local;
 use League\Flysystem\FileNotFoundException;
 use League\Flysystem\Filesystem;
 use League\Flysystem\FilesystemInterface;
+use RuntimeException;
 use Shopware\Bundle\StaticContentBundle\Service\DownloadServiceInterface;
 use Shopware\Components\Filesystem\PublicUrlGeneratorInterface;
 use Shopware_Components_Config;
@@ -91,7 +92,7 @@ class DownloadService implements DownloadServiceInterface
 
         if ($this->canServedLocal($filesystem, $downloadStrategy)) {
             $publicUrl = $this->publicUrlGenerator->generateUrl($location);
-            $path = parse_url($publicUrl, PHP_URL_PATH);
+            $path = (string) parse_url($publicUrl, PHP_URL_PATH);
             switch ($downloadStrategy) {
                 case 0:
                     $response->setRedirect($publicUrl);
@@ -99,12 +100,12 @@ class DownloadService implements DownloadServiceInterface
                 case 2:
                     $location = $this->privateFilesystemRoot . '/' . $location;
                     $response->headers->set('content-type', 'application/octet-stream');
-                    $response->headers->set('content-disposition', sprintf('attachment; filename="%s"', basename($location)));
+                    $response->headers->set('content-disposition', \sprintf('attachment; filename="%s"', basename($location)));
                     $response->headers->set('x-sendfile', $location);
                     break;
                 case 3:
                     $response->headers->set('content-type', 'application/octet-stream');
-                    $response->headers->set('content-disposition', sprintf('attachment; filename="%s"', basename($location)));
+                    $response->headers->set('content-disposition', \sprintf('attachment; filename="%s"', basename($location)));
                     $response->headers->set('x-accel-redirect', $path);
                     break;
             }
@@ -115,26 +116,36 @@ class DownloadService implements DownloadServiceInterface
         @set_time_limit(0);
 
         $response->headers->set('content-type', $mimeType);
-        $response->headers->set('content-disposition', sprintf('attachment; filename="%s"', basename($location)));
+        $response->headers->set('content-disposition', \sprintf('attachment; filename="%s"', basename($location)));
         $response->headers->set('content-length', $meta['size']);
         $response->headers->set('content-transfer-encoding', 'binary');
         $response->sendHeaders();
 
         $upstream = $filesystem->readStream($location);
+        if (!\is_resource($upstream)) {
+            throw new RuntimeException(\sprintf('Could not read stream from: %s', $location));
+        }
         $downstream = fopen('php://output', 'wb');
+        if (!\is_resource($downstream)) {
+            throw new RuntimeException('Could not create temp stream');
+        }
 
         if (!$this->unitTestMode) {
             ob_end_clean();
         }
 
         while (!feof($upstream)) {
-            fwrite($downstream, fread($upstream, 4096));
+            $read = fread($upstream, 4096);
+            if (!\is_string($read)) {
+                continue;
+            }
+            fwrite($downstream, $read);
             flush();
         }
     }
 
     private function canServedLocal(FilesystemInterface $filesystem, int $downloadStrategy): bool
     {
-        return $filesystem instanceof Filesystem && $filesystem->getAdapter() instanceof Local && in_array($downloadStrategy, [0, 2, 3], true);
+        return $filesystem instanceof Filesystem && $filesystem->getAdapter() instanceof Local && \in_array($downloadStrategy, [0, 2, 3], true);
     }
 }

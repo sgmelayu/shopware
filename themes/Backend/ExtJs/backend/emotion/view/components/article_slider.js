@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Emotion
@@ -74,20 +73,20 @@ Ext.define('Shopware.apps.Emotion.view.components.ArticleSlider', {
         me.categoryFilter.allowBlank = true;
         me.streamSelection.hide();
 
-        if(!me.articleType.getValue()) {
+        if (!me.articleType.getValue()) {
             me.maxCountField.hide();
             me.categoryFilter.hide();
             me.articleGrid.hide();
             me.variantGrid.hide();
         }
-        if(me.articleType.getValue() === 'selected_article') {
+        if (me.articleType.getValue() === 'selected_article') {
             me.maxCountField.hide();
             me.categoryFilter.hide();
             me.variantGrid.hide();
             me.articleGrid.show();
             me.streamSelection.allowBlank = true;
             me.categoryFilter.allowBlank = true;
-        } else if(me.articleType.getValue() === 'selected_variant') {
+        } else if (me.articleType.getValue() === 'selected_variant') {
             me.maxCountField.hide();
             me.categoryFilter.hide();
             me.articleGrid.hide();
@@ -206,24 +205,24 @@ Ext.define('Shopware.apps.Emotion.view.components.ArticleSlider', {
             checkboxes = me.query('checkbox');
 
         Ext.each(numberfields, function(field) {
-            if(field.getName() === 'article_slider_max_number') {
+            if (field.getName() === 'article_slider_max_number') {
                 me.maxCountField = field;
-                if(!field.getValue()) {
+                if (!field.getValue()) {
                     field.setValue(25);
                 }
             }
 
-            if(field.getName() === 'article_slider_rotatespeed') {
+            if (field.getName() === 'article_slider_rotatespeed') {
                 me.rotateSpeed = field;
             }
 
-            if(!field.getValue()) {
+            if (!field.getValue()) {
                 field.setValue(500);
             }
         });
 
         Ext.each(checkboxes, function(field) {
-            if(field.getName() === 'article_slider_rotation') {
+            if (field.getName() === 'article_slider_rotation') {
                 me.rotation = field;
             }
         });

@@ -1,28 +1,29 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 use Shopware\Models\Banner\Banner;
+use Shopware\Models\Tracking\Banner as TrackingBanner;
 
 class Shopware_Controllers_Frontend_Tracking extends Enlight_Controller_Action
 {
@@ -40,7 +41,7 @@ class Shopware_Controllers_Frontend_Tracking extends Enlight_Controller_Action
      */
     public function preDispatch()
     {
-        Shopware()->Plugins()->Controller()->ViewRenderer()->setNoRender();
+        Shopware()->Front()->Plugins()->ViewRenderer()->setNoRender();
     }
 
     /**
@@ -55,18 +56,17 @@ class Shopware_Controllers_Frontend_Tracking extends Enlight_Controller_Action
         if ($bannerId === null) {
             return false;
         }
-        /** @var \Shopware\Models\Banner\Repository $bannerMgn */
-        $bannerMgn = Shopware()->Models()->getRepository(Banner::class);
-        $banner = $bannerMgn->findOneBy(['id' => $bannerId]);
+
+        /** @var Banner|null $banner */
+        $banner = $this->get('models')->getRepository(Banner::class)->findOneBy(['id' => $bannerId]);
         if ($banner === null) {
             return false;
         }
-        /** @var \Shopware\Models\Tracking\Repository $statRepository */
-        $statRepository = Shopware()->Models()->getRepository('\Shopware\Models\Tracking\Banner');
 
-        $bannerStatistics = $statRepository->getOrCreateBannerStatsModel($bannerId);
+        $trackingRepo = $this->get('models')->getRepository(TrackingBanner::class);
+        $bannerStatistics = $trackingRepo->getOrCreateBannerStatsModel($bannerId);
         $bannerStatistics->increaseClicks();
-        Shopware()->Models()->flush($bannerStatistics);
+        $this->get('models')->flush($bannerStatistics);
         // Save
         $jumpTarget = $banner->getLink();
         if (!empty($jumpTarget)) {
@@ -89,11 +89,10 @@ class Shopware_Controllers_Frontend_Tracking extends Enlight_Controller_Action
         }
 
         try {
-            /** @var \Shopware\Models\Tracking\Repository $statRepository */
-            $statRepository = Shopware()->Models()->getRepository('\Shopware\Models\Tracking\Banner');
+            $statRepository = $this->get('models')->getRepository(TrackingBanner::class);
             $bannerStatistics = $statRepository->getOrCreateBannerStatsModel($bannerId);
             $bannerStatistics->increaseViews();
-            Shopware()->Models()->flush($bannerStatistics);
+            $this->get('models')->flush($bannerStatistics);
         } catch (Exception $e) {
             return false;
         }

@@ -1,63 +1,53 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
+use PDO;
 use Shopware\Bundle\StoreFrontBundle\Gateway\CustomSortingGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\CustomListingHydrator;
 use Shopware\Bundle\StoreFrontBundle\Struct\Search\CustomSorting;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
+use Shopware_Components_Config;
 
 class CustomSortingGateway implements CustomSortingGatewayInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
-    /**
-     * @var FieldHelper
-     */
-    private $fieldHelper;
+    private FieldHelper $fieldHelper;
 
-    /**
-     * @var CustomListingHydrator
-     */
-    private $hydrator;
+    private CustomListingHydrator $hydrator;
 
-    /**
-     * @var \Shopware_Components_Config
-     */
-    private $config;
+    private Shopware_Components_Config $config;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
         CustomListingHydrator $hydrator,
-        \Shopware_Components_Config $config
+        Shopware_Components_Config $config
     ) {
         $this->connection = $connection;
         $this->fieldHelper = $fieldHelper;
@@ -75,9 +65,7 @@ class CustomSortingGateway implements CustomSortingGatewayInterface
         $query->andWhere('customSorting.id IN (:ids)');
         $query->setParameter(':ids', $ids, Connection::PARAM_INT_ARRAY);
 
-        $sortings = $this->hydrate(
-            $query->execute()->fetchAll(\PDO::FETCH_ASSOC)
-        );
+        $sortings = $this->hydrate($query->execute()->fetchAll(PDO::FETCH_ASSOC));
 
         return $this->getAndSortElementsByIds($ids, $sortings);
     }
@@ -89,7 +77,6 @@ class CustomSortingGateway implements CustomSortingGatewayInterface
     {
         $mapping = $this->getCategoryMapping($categoryIds);
 
-        /** @var int[] $ids */
         $ids = array_merge(...array_values($mapping));
 
         $sortings = $this->getList(
@@ -99,8 +86,6 @@ class CustomSortingGateway implements CustomSortingGatewayInterface
 
         $categorySortings = [];
 
-        /** @var int $categoryId */
-        /** @var int[] $sortingIds */
         foreach ($mapping as $categoryId => $sortingIds) {
             $categorySortings[$categoryId] = $this->getAndSortElementsByIds(
                 $sortingIds,
@@ -124,26 +109,25 @@ class CustomSortingGateway implements CustomSortingGatewayInterface
      *
      * @return int[]
      */
-    private function getAllCategorySortingIds()
+    private function getAllCategorySortingIds(): array
     {
         $query = $this->connection->createQueryBuilder();
         $query->select('id');
         $query->from('s_search_custom_sorting', 'customSorting');
         $query->andWhere('customSorting.display_in_categories = 1');
         $query->addOrderBy('customSorting.position', 'ASC');
-        $ids = $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        $ids = $query->execute()->fetchAll(PDO::FETCH_COLUMN);
 
         $default = $this->config->get('defaultListingSorting', 1);
+        $ids = array_unique(array_merge([$default], $ids));
 
-        return array_unique(array_merge([$default], $ids));
+        return array_map('\intval', $ids);
     }
 
     /**
      * Returns the base query to select the custom sorting data.
-     *
-     * @return QueryBuilder
      */
-    private function createQuery(ShopContextInterface $context)
+    private function createQuery(ShopContextInterface $context): QueryBuilder
     {
         $query = $this->connection->createQueryBuilder();
         $query->select($this->fieldHelper->getCustomSortingFields());
@@ -155,9 +139,11 @@ class CustomSortingGateway implements CustomSortingGatewayInterface
     }
 
     /**
-     * @return CustomSorting[]
+     * @param array<string, mixed> $data
+     *
+     * @return array<int, CustomSorting>
      */
-    private function hydrate(array $data)
+    private function hydrate(array $data): array
     {
         $sortings = [];
         foreach ($data as $row) {
@@ -169,12 +155,12 @@ class CustomSortingGateway implements CustomSortingGatewayInterface
     }
 
     /**
-     * @param int[]           $sortingIds
-     * @param CustomSorting[] $sortings
+     * @param int[]                     $sortingIds
+     * @param array<int, CustomSorting> $sortings
      *
-     * @return CustomSorting[] indexed by id
+     * @return array<int, CustomSorting> indexed by id
      */
-    private function getAndSortElementsByIds(array $sortingIds, array $sortings)
+    private function getAndSortElementsByIds(array $sortingIds, array $sortings): array
     {
         $filtered = [];
         foreach ($sortingIds as $sortingId) {
@@ -189,9 +175,9 @@ class CustomSortingGateway implements CustomSortingGatewayInterface
     /**
      * @param int[] $categoryIds
      *
-     * @return array<string, string[]> indexed by id
+     * @return array<int, int[]> indexed by id
      */
-    private function getCategoryMapping(array $categoryIds)
+    private function getCategoryMapping(array $categoryIds): array
     {
         $query = $this->connection->createQueryBuilder();
         $query->select(['id', 'sorting_ids'])
@@ -199,20 +185,19 @@ class CustomSortingGateway implements CustomSortingGatewayInterface
             ->where('categories.id IN (:ids)')
             ->setParameter(':ids', $categoryIds, Connection::PARAM_INT_ARRAY);
 
-        $mapping = $query->execute()->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $mapping = $query->execute()->fetchAll(PDO::FETCH_KEY_PAIR);
 
         $allSortingIds = [];
-        $hasEmpty = count(array_filter($mapping)) !== count($mapping);
-        if ($hasEmpty) {
+        if (\count(array_filter($mapping)) !== \count($mapping)) {
             $allSortingIds = $this->getAllCategorySortingIds();
         }
 
         return array_map(
             function ($ids) use ($allSortingIds) {
-                $ids = array_filter(explode('|', $ids));
+                $ids = array_filter(explode('|', $ids ?? ''));
 
                 if (!empty($ids)) {
-                    return $ids;
+                    return array_map('\intval', $ids);
                 }
 
                 return $allSortingIds;

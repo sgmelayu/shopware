@@ -1,33 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\AccountBundle\Service\Validator;
 
-use Shopware\Bundle\StoreFrontBundle\Service\ContextServiceInterface;
 use Shopware\Components\Api\Exception\ValidationException;
 use Shopware\Models\Customer\Address;
 use Shopware\Models\Customer\Customer;
+use Shopware_Components_Config;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validator\ContextualValidatorInterface;
@@ -35,33 +35,17 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 class AddressValidator implements AddressValidatorInterface
 {
-    /**
-     * @var ValidatorInterface
-     */
-    private $validator;
+    private ValidatorInterface $validator;
 
-    /**
-     * @var ContextServiceInterface
-     */
-    private $context;
+    private Shopware_Components_Config $config;
 
-    /**
-     * @var \Shopware_Components_Config
-     */
-    private $config;
-
-    /**
-     * @var ContextualValidatorInterface
-     */
-    private $validationContext;
+    private ?ContextualValidatorInterface $validationContext = null;
 
     public function __construct(
         ValidatorInterface $validator,
-        ContextServiceInterface $context,
-        \Shopware_Components_Config $config
+        Shopware_Components_Config $config
     ) {
         $this->validator = $validator;
-        $this->context = $context;
         $this->config = $config;
     }
 
@@ -75,7 +59,9 @@ class AddressValidator implements AddressValidatorInterface
         $additional = $address->getAdditional();
         $customerType = !empty($additional['customer_type']) ? $additional['customer_type'] : null;
 
-        $this->validateField('salutation', $address->getSalutation(), [new NotBlank()]);
+        if ($this->config->get('shopSalutationRequired')) {
+            $this->validateField('salutation', $address->getSalutation(), [new NotBlank()]);
+        }
         $this->validateField('firstname', $address->getFirstname(), [new NotBlank()]);
         $this->validateField('lastname', $address->getLastname(), [new NotBlank()]);
         $this->validateField('street', $address->getStreet(), [new NotBlank()]);
@@ -98,7 +84,7 @@ class AddressValidator implements AddressValidatorInterface
             }
         }
 
-        if ($this->validationContext->getViolations()->count()) {
+        if ($this->validationContext && $this->validationContext->getViolations()->count()) {
             throw new ValidationException($this->validationContext->getViolations());
         }
     }
@@ -118,19 +104,20 @@ class AddressValidator implements AddressValidatorInterface
     }
 
     /**
-     * @param string        $property
-     * @param string|object $value
-     * @param Constraint[]  $constraints
+     * @param string|object|null $value
+     * @param Constraint[]       $constraints
      */
-    private function validateField($property, $value, $constraints)
+    private function validateField(string $property, $value, array $constraints): void
     {
-        $this->validationContext->atPath($property)->validate($value, $constraints);
+        if ($this->validationContext !== null) {
+            $this->validationContext->atPath($property)->validate($value, $constraints);
+        }
     }
 
     /**
      * @return Constraint[]
      */
-    private function getPhoneConstraints()
+    private function getPhoneConstraints(): array
     {
         $constraints = [];
 
@@ -144,7 +131,7 @@ class AddressValidator implements AddressValidatorInterface
     /**
      * @return Constraint[]
      */
-    private function getAdditionalAddressline1Constraints()
+    private function getAdditionalAddressline1Constraints(): array
     {
         $constraints = [];
 
@@ -158,7 +145,7 @@ class AddressValidator implements AddressValidatorInterface
     /**
      * @return Constraint[]
      */
-    private function getAdditionalAddressline2Constraints()
+    private function getAdditionalAddressline2Constraints(): array
     {
         $constraints = [];
 

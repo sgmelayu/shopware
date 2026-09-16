@@ -1,30 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Recovery\Install;
 
+use ErrorException;
+use RuntimeException;
 use Shopware\Recovery\Install\Service\TranslationService;
+use SimpleXMLElement;
 
 class Requirements
 {
@@ -44,7 +47,7 @@ class Requirements
     public function __construct($sourceFile, TranslationService $translations)
     {
         if (!is_readable($sourceFile)) {
-            throw new \RuntimeException(sprintf('Cannot read requirements file in %s.', $sourceFile));
+            throw new RuntimeException(\sprintf('Cannot read requirements file in %s.', $sourceFile));
         }
 
         $this->sourceFile = $sourceFile;
@@ -117,14 +120,14 @@ class Requirements
     /**
      * Returns the check list
      *
-     * @return \SimpleXMLElement[]
+     * @return SimpleXMLElement[]
      */
     private function runChecks()
     {
         $xmlObject = simplexml_load_file($this->sourceFile);
 
-        if (!is_object($xmlObject->requirements)) {
-            throw new \RuntimeException('Requirements XML file is not valid.');
+        if (!\is_object($xmlObject->requirements)) {
+            throw new RuntimeException('Requirements XML file is not valid.');
         }
 
         foreach ($xmlObject->requirement as $requirement) {
@@ -153,11 +156,11 @@ class Requirements
         $m = 'check' . str_replace(' ', '', ucwords(str_replace(['_', '.'], ' ', $name)));
         if (method_exists($this, $m)) {
             return $this->$m();
-        } elseif (extension_loaded($name)) {
+        } elseif (\extension_loaded($name)) {
             return true;
-        } elseif (function_exists($name)) {
+        } elseif (\function_exists($name)) {
             return true;
-        } elseif (($value = ini_get($name)) !== null) {
+        } elseif (($value = \ini_get($name)) !== null) {
             if (strtolower($value) == 'off' || (is_numeric($value) && $value == 0)) {
                 return false;
             } elseif (strtolower($value) == 'on' || (is_numeric($value) && $value == 1)) {
@@ -224,7 +227,7 @@ class Requirements
      */
     private function checkOpcache()
     {
-        if (!extension_loaded('Zend OPcache')) {
+        if (!\extension_loaded('Zend OPcache')) {
             return [];
         }
 
@@ -232,10 +235,10 @@ class Requirements
             'name' => 'opcache.use_cwd',
             'group' => 'core',
             'required' => 1,
-            'version' => ini_get('opcache.use_cwd'),
-            'result' => ini_get('opcache.use_cwd'),
+            'version' => \ini_get('opcache.use_cwd'),
+            'result' => \ini_get('opcache.use_cwd'),
             'notice' => '',
-            'check' => $this->compare('opcache.use_cwd', ini_get('opcache.use_cwd'), '1'),
+            'check' => $this->compare('opcache.use_cwd', \ini_get('opcache.use_cwd'), '1'),
             'error' => '',
         ]];
 
@@ -245,14 +248,14 @@ class Requirements
                     'name' => 'opcache.validate_root',
                     'group' => 'core',
                     'required' => 1,
-                    'version' => ini_get('opcache.validate_root'),
-                    'result' => ini_get('opcache.validate_root'),
+                    'version' => \ini_get('opcache.validate_root'),
+                    'result' => \ini_get('opcache.validate_root'),
                     'notice' => '',
-                    'check' => $this->compare('opcache.validate_root', ini_get('opcache.validate_root'), '1'),
+                    'check' => $this->compare('opcache.validate_root', \ini_get('opcache.validate_root'), '1'),
                     'error' => '',
                 ];
             }
-        } catch (\ErrorException $x) {
+        } catch (ErrorException $x) {
             // Systems that have an 'open_basedir' defined might not allow an access of '/'
         }
 
@@ -266,11 +269,11 @@ class Requirements
      */
     private function checkCurl()
     {
-        if (function_exists('curl_version')) {
+        if (\function_exists('curl_version')) {
             $curl = curl_version();
 
             return $curl['version'];
-        } elseif (function_exists('curl_init')) {
+        } elseif (\function_exists('curl_init')) {
             return true;
         }
 
@@ -284,7 +287,7 @@ class Requirements
      */
     private function checkLibXml()
     {
-        if (defined('LIBXML_DOTTED_VERSION')) {
+        if (\defined('LIBXML_DOTTED_VERSION')) {
             return LIBXML_DOTTED_VERSION;
         }
 
@@ -298,7 +301,7 @@ class Requirements
      */
     private function checkGd()
     {
-        if (function_exists('gd_info')) {
+        if (\function_exists('gd_info')) {
             $gd = gd_info();
             if (preg_match('#[0-9.]+#', $gd['GD Version'], $match)) {
                 if (substr_count($match[0], '.') == 1) {
@@ -321,7 +324,7 @@ class Requirements
      */
     private function checkGdJpg()
     {
-        if (function_exists('gd_info')) {
+        if (\function_exists('gd_info')) {
             $gd = gd_info();
 
             return !empty($gd['JPEG Support']) || !empty($gd['JPG Support']);
@@ -337,7 +340,7 @@ class Requirements
      */
     private function checkFreetype()
     {
-        if (function_exists('gd_info')) {
+        if (\function_exists('gd_info')) {
             $gd = gd_info();
 
             return !empty($gd['FreeType Support']);
@@ -353,9 +356,9 @@ class Requirements
      */
     private function checkSessionSavePath()
     {
-        if (function_exists('session_save_path')) {
+        if (\function_exists('session_save_path')) {
             return (bool) session_save_path();
-        } elseif (ini_get('session.save_path')) {
+        } elseif (\ini_get('session.save_path')) {
             return true;
         }
 
@@ -369,7 +372,7 @@ class Requirements
      */
     private function checkSuhosinGetMaxValueLength()
     {
-        $length = (int) ini_get('suhosin.get.max_value_length');
+        $length = (int) \ini_get('suhosin.get.max_value_length');
         if ($length === 0) {
             return 2000;
         }
@@ -423,8 +426,8 @@ class Requirements
             /* @noinspection PhpMissingBreakStatementInspection */
             case 'g':
                 $val *= 1024;
-            /* @noinspection PhpMissingBreakStatementInspection */
-            // no break
+                /* @noinspection PhpMissingBreakStatementInspection */
+                // no break
             case 'm':
                 $val *= 1024;
                 // no break
@@ -478,7 +481,8 @@ class Requirements
     private function encodeSize($bytes)
     {
         $types = ['B', 'KB', 'MB', 'GB', 'TB'];
-        for ($i = 0; $bytes >= 1024 && $i < (count($types) - 1); $bytes /= 1024, $i++);
+        for ($i = 0; $bytes >= 1024 && $i < (\count($types) - 1); $bytes /= 1024, $i++) {
+        }
 
         return round($bytes, 2) . ' ' . $types[$i];
     }
@@ -493,7 +497,7 @@ class Requirements
             $maxCompatibleVersion = str_replace('.99', '', $check['maxCompatibleVersion']);
             $key = 'requirements_php_max_compatible_version';
 
-            $check['notice'] = sprintf($this->translations->translate($key), $maxCompatibleVersion);
+            $check['notice'] = \sprintf($this->translations->translate($key), $maxCompatibleVersion);
         }
 
         return $check;

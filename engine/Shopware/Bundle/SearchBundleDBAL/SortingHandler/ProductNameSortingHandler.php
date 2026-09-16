@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\SortingHandler;
@@ -32,11 +32,11 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class ProductNameSortingHandler implements SortingHandlerInterface
 {
-    const TRANSLATION = 'productTranslationName';
+    public const TRANSLATION = 'productTranslationName';
 
-    const TRANSLATION_NAME = self::TRANSLATION . '.name';
+    public const TRANSLATION_NAME = self::TRANSLATION . '.name';
 
-    const PRODUCT = 'product';
+    public const PRODUCT = 'product';
 
     /**
      * {@inheritdoc}
@@ -54,7 +54,23 @@ class ProductNameSortingHandler implements SortingHandlerInterface
         QueryBuilder $query,
         ShopContextInterface $context
     ) {
-        /* @var ProductNameSorting $sorting */
+        $this->addSorting($sorting, $query, $context);
+    }
+
+    /**
+     * @param string $condition
+     * @param string $expression1
+     * @param string $expression2
+     *
+     * @return string
+     */
+    protected static function exprIf($condition, $expression1, $expression2)
+    {
+        return " if (($condition),($expression1),($expression2)) ";
+    }
+
+    private function addSorting(ProductNameSorting $sorting, QueryBuilder $query, ShopContextInterface $context): void
+    {
         $query->leftJoin(
             self::PRODUCT,
             's_articles_translations',
@@ -75,17 +91,5 @@ class ProductNameSortingHandler implements SortingHandlerInterface
             ),
             $sorting->getDirection()
         );
-    }
-
-    /**
-     * @param string $condition
-     * @param string $expression1
-     * @param string $expression2
-     *
-     * @return string
-     */
-    protected static function exprIf($condition, $expression1, $expression2)
-    {
-        return " if (($condition),($expression1),($expression2)) ";
     }
 }

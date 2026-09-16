@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Emotion
@@ -84,7 +83,7 @@ Ext.define('Shopware.apps.Emotion.view.components.BannerSlider', {
             numberfields =  me.query('numberfield');
 
         Ext.each(numberfields, function(field) {
-            if(!field.getValue()) {
+            if (!field.getValue()) {
                 field.setValue(500);
             }
         });
@@ -164,7 +163,7 @@ Ext.define('Shopware.apps.Emotion.view.components.BannerSlider', {
             header: '&#009868;',
             width: 24,
             hideable: false,
-            renderer : me.renderSorthandleColumn
+            renderer: me.renderSorthandleColumn
         }, {
             dataIndex: 'path',
             header: snippets.path,
@@ -318,13 +317,13 @@ Ext.define('Shopware.apps.Emotion.view.components.BannerSlider', {
             elementStore = me.getSettings('record').get('data'), bannerSlider;
 
         Ext.each(elementStore, function(element) {
-            if(element.key === 'banner_slider') {
+            if (element.key === 'banner_slider') {
                 bannerSlider = element;
                 return false;
             }
         });
 
-        if(bannerSlider && bannerSlider.value) {
+        if (bannerSlider && bannerSlider.value) {
             Ext.each(bannerSlider.value, function(item) {
                 me.bannerStore.add(Ext.create('Shopware.apps.Emotion.model.BannerSlider', item));
             });

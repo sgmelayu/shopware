@@ -1,63 +1,54 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\MailBundle\Service;
 
 use Doctrine\DBAL\Connection;
 use Enlight_Components_Mail;
+use Exception;
+use PDO;
 use Shopware\Bundle\MailBundle\Service\Filter\AdministrativeMailFilter;
 use Shopware\Bundle\MailBundle\Service\Filter\MailFilterInterface;
-use Shopware\Models\Mail\Contact;
 use Shopware\Models\Mail\Log;
-use Shopware\Models\Order\Document\Document;
 
 class LogService implements LogServiceInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
+
+    private LogEntryBuilderInterface $entryBuilder;
 
     /**
-     * @var LogEntryBuilderInterface
+     * @var Log[]
      */
-    private $entryBuilder;
-
-    /**
-     * @var Log[]|array
-     */
-    private $entries;
+    private array $entries;
 
     /**
      * @var MailFilterInterface[]
      */
-    private $filters;
+    private iterable $filters;
 
-    /**
-     * @var bool
-     */
-    private $flushError = false;
+    private bool $flushError = false;
 
     public function __construct(Connection $connection, LogEntryBuilderInterface $entryBuilder, iterable $filters)
     {
@@ -102,14 +93,13 @@ class LogService implements LogServiceInterface
                     'order_id' => $entry->getOrder() ? $entry->getOrder()->getId() : null,
                     'shop_id' => $entry->getShop() ? $entry->getShop()->getId() : null,
                     'subject' => $entry->getSubject(),
-                    'sender' => $entry->getSender(),
+                    'sender' => (string) $entry->getSender(),
                     'sent_at' => $entry->getSentAt()->format('Y-m-d H:i:s'),
                     'content_html' => $entry->getContentHtml(),
                     'content_text' => $entry->getContentText(),
                 ]);
                 $mailLogId = (int) $this->connection->lastInsertId();
 
-                /** @var Document $document */
                 foreach ($entry->getDocuments() as $document) {
                     $this->connection->insert('s_mail_log_document', [
                         'log_id' => $mailLogId,
@@ -117,19 +107,18 @@ class LogService implements LogServiceInterface
                     ]);
                 }
 
-                /** @var Contact $recipient */
                 foreach ($entry->getRecipients() as $recipient) {
                     $mail = mb_strtolower(trim($recipient->getMailAddress()));
 
                     $this->connection->insert('s_mail_log_recipient', [
                         'log_id' => $mailLogId,
-                        'contact_id' => $recipient->getId() ?: $contacts[$mail],
+                        'contact_id' => $recipient->getId() ?: (int) $contacts[$mail],
                     ]);
                 }
             }
 
             $this->connection->commit();
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $this->connection->rollback();
             throw $exception;
         }
@@ -145,7 +134,7 @@ class LogService implements LogServiceInterface
         if ($mail->getAssociation(AdministrativeMailFilter::ADMINISTRATIVE_MAIL)) {
             try {
                 $this->flush();
-            } catch (\Exception $exception) {
+            } catch (Exception $exception) {
                 /*
                  * flush() could throw exceptions, which would otherwise be caught by Monolog again.
                  * This is a precaution to prevent an infinite loop.
@@ -160,7 +149,6 @@ class LogService implements LogServiceInterface
         $recipients = [];
 
         foreach ($this->entries as $entry) {
-            /** @var Contact $recipient */
             foreach ($entry->getRecipients() as $recipient) {
                 if ($recipient->getId()) {
                     continue;
@@ -171,12 +159,15 @@ class LogService implements LogServiceInterface
         }
 
         $recipients = array_unique(array_filter(array_map('trim', $recipients)));
+        if (empty($recipients)) {
+            return [];
+        }
 
         $sql = 'SELECT LOWER(mail_address), id FROM s_mail_log_contact WHERE mail_address IN (:addresses)';
-        $foundRecipients = $this->connection->executeQuery($sql, ['addresses' => $recipients])->fetchAll(\PDO::FETCH_KEY_PAIR);
+        $foundRecipients = $this->connection->executeQuery($sql, ['addresses' => $recipients])->fetchAll(PDO::FETCH_KEY_PAIR);
 
         foreach ($recipients as $recipient) {
-            if (array_key_exists($recipient, $foundRecipients)) {
+            if (\array_key_exists($recipient, $foundRecipients)) {
                 continue;
             }
 

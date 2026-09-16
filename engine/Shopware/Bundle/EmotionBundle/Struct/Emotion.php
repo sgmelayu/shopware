@@ -1,35 +1,39 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\EmotionBundle\Struct;
 
+use DateTimeInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Category;
 use Shopware\Bundle\StoreFrontBundle\Struct\Extendable;
 use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
+use Shopware\Components\ObjectJsonSerializeTraitDeprecated;
 
 class Emotion extends Extendable
 {
+    use ObjectJsonSerializeTraitDeprecated;
+
     /**
      * @var int
      */
@@ -71,12 +75,12 @@ class Emotion extends Extendable
     protected $rows;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface|null
      */
     protected $validFrom;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface|null
      */
     protected $validTo;
 
@@ -111,12 +115,12 @@ class Emotion extends Extendable
     protected $seoDescription;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface|null
      */
     protected $createDate;
 
     /**
-     * @var \DateTimeInterface
+     * @var DateTimeInterface|null
      */
     protected $modifiedDate;
 
@@ -126,7 +130,7 @@ class Emotion extends Extendable
     protected $templateId;
 
     /**
-     * @var int[]
+     * @var array<int>
      */
     protected $devices;
 
@@ -146,7 +150,7 @@ class Emotion extends Extendable
     protected $position;
 
     /**
-     * @var int
+     * @var int|null
      */
     protected $parentId;
 
@@ -166,7 +170,7 @@ class Emotion extends Extendable
     protected $elements = [];
 
     /**
-     * @var int[]
+     * @var array<int>
      */
     protected $categoryIds = [];
 
@@ -181,7 +185,7 @@ class Emotion extends Extendable
     protected $template;
 
     /**
-     * @var int[]
+     * @var array<int>
      */
     protected $shopIds = [];
 
@@ -255,7 +259,7 @@ class Emotion extends Extendable
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface|null
      */
     public function getValidFrom()
     {
@@ -263,7 +267,7 @@ class Emotion extends Extendable
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface|null
      */
     public function getValidTo()
     {
@@ -319,7 +323,7 @@ class Emotion extends Extendable
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface|null
      */
     public function getCreateDate()
     {
@@ -327,7 +331,7 @@ class Emotion extends Extendable
     }
 
     /**
-     * @return \DateTimeInterface
+     * @return DateTimeInterface|null
      */
     public function getModifiedDate()
     {
@@ -343,7 +347,7 @@ class Emotion extends Extendable
     }
 
     /**
-     * @return int[]
+     * @return array<int>
      */
     public function getDevices()
     {
@@ -375,7 +379,7 @@ class Emotion extends Extendable
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getParentId()
     {
@@ -384,6 +388,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $id
+     *
+     * @return void
      */
     public function setId($id)
     {
@@ -392,6 +398,8 @@ class Emotion extends Extendable
 
     /**
      * @param bool $active
+     *
+     * @return void
      */
     public function setActive($active)
     {
@@ -400,6 +408,8 @@ class Emotion extends Extendable
 
     /**
      * @param string $name
+     *
+     * @return void
      */
     public function setName($name)
     {
@@ -408,6 +418,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $cols
+     *
+     * @return void
      */
     public function setCols($cols)
     {
@@ -416,6 +428,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $cellSpacing
+     *
+     * @return void
      */
     public function setCellSpacing($cellSpacing)
     {
@@ -424,6 +438,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $cellHeight
+     *
+     * @return void
      */
     public function setCellHeight($cellHeight)
     {
@@ -432,6 +448,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $articleHeight
+     *
+     * @return void
      */
     public function setArticleHeight($articleHeight)
     {
@@ -440,6 +458,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $rows
+     *
+     * @return void
      */
     public function setRows($rows)
     {
@@ -447,7 +467,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param \DateTimeInterface $validFrom
+     * @param DateTimeInterface|null $validFrom
+     *
+     * @return void
      */
     public function setValidFrom($validFrom)
     {
@@ -455,7 +477,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param \DateTimeInterface $validTo
+     * @param DateTimeInterface|null $validTo
+     *
+     * @return void
      */
     public function setValidTo($validTo)
     {
@@ -464,6 +488,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $userId
+     *
+     * @return void
      */
     public function setUserId($userId)
     {
@@ -472,6 +498,8 @@ class Emotion extends Extendable
 
     /**
      * @param bool $showListing
+     *
+     * @return void
      */
     public function setShowListing($showListing)
     {
@@ -480,6 +508,8 @@ class Emotion extends Extendable
 
     /**
      * @param bool $isLandingPage
+     *
+     * @return void
      */
     public function setIsLandingPage($isLandingPage)
     {
@@ -488,6 +518,8 @@ class Emotion extends Extendable
 
     /**
      * @param string $seoTitle
+     *
+     * @return void
      */
     public function setSeoTitle($seoTitle)
     {
@@ -496,6 +528,8 @@ class Emotion extends Extendable
 
     /**
      * @param string $seoKeywords
+     *
+     * @return void
      */
     public function setSeoKeywords($seoKeywords)
     {
@@ -504,6 +538,8 @@ class Emotion extends Extendable
 
     /**
      * @param string $seoDescription
+     *
+     * @return void
      */
     public function setSeoDescription($seoDescription)
     {
@@ -511,7 +547,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param \DateTimeInterface $createDate
+     * @param DateTimeInterface|null $createDate
+     *
+     * @return void
      */
     public function setCreateDate($createDate)
     {
@@ -519,7 +557,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param \DateTimeInterface $modifiedDate
+     * @param DateTimeInterface|null $modifiedDate
+     *
+     * @return void
      */
     public function setModifiedDate($modifiedDate)
     {
@@ -528,6 +568,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $templateId
+     *
+     * @return void
      */
     public function setTemplateId($templateId)
     {
@@ -535,7 +577,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param int[] $devices
+     * @param array<int> $devices
+     *
+     * @return void
      */
     public function setDevices($devices)
     {
@@ -544,6 +588,8 @@ class Emotion extends Extendable
 
     /**
      * @param bool $fullscreen
+     *
+     * @return void
      */
     public function setFullscreen($fullscreen)
     {
@@ -552,6 +598,8 @@ class Emotion extends Extendable
 
     /**
      * @param string $mode
+     *
+     * @return void
      */
     public function setMode($mode)
     {
@@ -560,6 +608,8 @@ class Emotion extends Extendable
 
     /**
      * @param int $position
+     *
+     * @return void
      */
     public function setPosition($position)
     {
@@ -567,7 +617,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param int $parentId
+     * @param int|null $parentId
+     *
+     * @return void
      */
     public function setParentId($parentId)
     {
@@ -584,6 +636,8 @@ class Emotion extends Extendable
 
     /**
      * @param Element[] $elements
+     *
+     * @return void
      */
     public function setElements(array $elements)
     {
@@ -600,6 +654,8 @@ class Emotion extends Extendable
 
     /**
      * @param Category[] $categories
+     *
+     * @return void
      */
     public function setCategories(array $categories)
     {
@@ -614,13 +670,16 @@ class Emotion extends Extendable
         return $this->template;
     }
 
+    /**
+     * @return void
+     */
     public function setTemplate(EmotionTemplate $template)
     {
         $this->template = $template;
     }
 
     /**
-     * @return \Shopware\Bundle\StoreFrontBundle\Struct\Shop[]
+     * @return Shop[]
      */
     public function getShops()
     {
@@ -628,7 +687,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param \Shopware\Bundle\StoreFrontBundle\Struct\Shop[] $shops
+     * @param Shop[] $shops
+     *
+     * @return void
      */
     public function setShops(array $shops)
     {
@@ -636,7 +697,7 @@ class Emotion extends Extendable
     }
 
     /**
-     * @return int[]
+     * @return array<int>
      */
     public function getCategoryIds()
     {
@@ -644,7 +705,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param int[] $categoryIds
+     * @param array<int> $categoryIds
+     *
+     * @return void
      */
     public function setCategoryIds(array $categoryIds)
     {
@@ -652,7 +715,7 @@ class Emotion extends Extendable
     }
 
     /**
-     * @return int[]
+     * @return array<int>
      */
     public function getShopIds()
     {
@@ -660,7 +723,9 @@ class Emotion extends Extendable
     }
 
     /**
-     * @param int[] $shopIds
+     * @param array<int> $shopIds
+     *
+     * @return void
      */
     public function setShopIds(array $shopIds)
     {
@@ -677,6 +742,8 @@ class Emotion extends Extendable
 
     /**
      * @param bool $isPreview
+     *
+     * @return void
      */
     public function setIsPreview($isPreview)
     {
@@ -693,17 +760,11 @@ class Emotion extends Extendable
 
     /**
      * @param string $previewSecret
+     *
+     * @return void
      */
     public function setPreviewSecret($previewSecret)
     {
         $this->previewSecret = $previewSecret;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function jsonSerialize()
-    {
-        return get_object_vars($this);
     }
 }

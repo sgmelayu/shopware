@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -63,15 +62,15 @@ Ext.define('Shopware.apps.Article.view.statistics.List', {
      */
     snippets: {
         title: '{s name="statistic/title"}Overview{/s}',
-        columns:{
+        columns: {
             date: '{s name="statistic/list/column/date"}Date{/s}',
             revenue: '{s name="statistic/list/column/revenue"}Revenue{/s}',
             orders: '{s name="statistic/list/column/orders"}Orders{/s}'
         },
-        toolbar:{
-            from:'{s name="statistic/list/toolbar/from"}From{/s}',
-            to:'{s name="statistic/list/toolbar/to"}To{/s}',
-            filter:'{s name="statistic/list/toolbar/filter"}Filter{/s}'
+        toolbar: {
+            from: '{s name="statistic/list/toolbar/from"}From{/s}',
+            to: '{s name="statistic/list/toolbar/to"}To{/s}',
+            filter: '{s name="statistic/list/toolbar/filter"}Filter{/s}'
         }
     },
 
@@ -98,15 +97,15 @@ Ext.define('Shopware.apps.Article.view.statistics.List', {
      *
      * @return void
      */
-    registerEvents:function () {
+    registerEvents: function () {
         this.addEvents(
-                /**
-                 * Event will be fired when the user clicks the delete button in the toolbar or
-                 * use the action column of the grid to remove one or multiple statistics
-                 * @event deleteEsd
-                 * @param [array] Record - The selected records
-                 */
-                'dateChange'
+            /**
+             * Event will be fired when the user clicks the delete button in the toolbar or
+             * use the action column of the grid to remove one or multiple statistics
+             * @event deleteEsd
+             * @param [array] Record - The selected records
+             */
+            'dateChange'
         );
     },
 
@@ -150,8 +149,8 @@ Ext.define('Shopware.apps.Article.view.statistics.List', {
      */
     getToolbar: function () {
         var me   = this,
-        theFirst = new Date(),
-        today    = new Date();
+            theFirst = new Date(),
+            today    = new Date();
 
         theFirst.setDate(1);
 
@@ -172,7 +171,7 @@ Ext.define('Shopware.apps.Article.view.statistics.List', {
         var filterButton = Ext.create('Ext.button.Button', {
             text: me.snippets.toolbar.filter,
             cls: 'small secondary',
-            scope : this,
+            scope: this,
             handler: function() {
                 me.fireEvent('dateChange', me.fromDate.getValue(), me.toDate.getValue());
             }

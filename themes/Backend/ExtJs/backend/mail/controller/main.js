@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Mail
@@ -88,16 +87,16 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
         duplicateTitle: '{s name="message_duplicate_title"}Duplicate template{/s}',
         duplicateMessage: '{s name="message_duplicate_message"}Are you sure you want to duplicate the selected template?{/s}',
 
-        duplicateSuccessfullTitle :'{s name="message_duplicate_successfull_title"}Successful{/s}',
+        duplicateSuccessfullTitle: '{s name="message_duplicate_successfull_title"}Successful{/s}',
         duplicateSuccessfullMessage: '{s name="message_duplicate_successfull_message"}The email template has been duplicated.{/s}',
 
         multipleDeleteTitle: '{s name="message_delete_multiple_title"}Delete selected templates{/s}',
         multipleDeleteMessage: '{s name="message_delete_multiple_message"}Are you sure you want to delete all selected templates?{/s}',
 
-        sendmailSuccessfullTitle :'{s name="message_sendmail_successfull_title"}Successful{/s}',
+        sendmailSuccessfullTitle: '{s name="message_sendmail_successfull_title"}Successful{/s}',
         sendmailSuccessfullMessage: '{s name="message_sendmail_successfull_message"}Email has been sent.{/s}',
 
-        sendmailFailureTitle :'{s name="message_sendmail_failure_title"}Failure{/s}',
+        sendmailFailureTitle: '{s name="message_sendmail_failure_title"}Failure{/s}',
         sendmailFailureMessage: '{s name="message_sendmail_failure_message"}Email could not be sent. Errormessage:{/s}',
 
         growlMessage: '{s name="growlMessage"}Mail{/s}'
@@ -121,38 +120,38 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
 
         me.control({
             'mail-main-navigation': {
-                itemclick:       me.onItemClick,
+                itemclick: me.onItemClick,
                 beforeitemclick: me.onBeforeItemClick,
-                beforeselect:    me.onBeforeSelect,
-                checkchange:     me.onCheckChange
+                beforeselect: me.onBeforeSelect,
+                checkchange: me.onCheckChange
             },
 
-            'mail-main-window button[action=mail-window-add]' : {
+            'mail-main-window button[action=mail-window-add]': {
                 click: me.onAddMail
             },
 
-            'mail-main-window button[action=mail-window-copy]' : {
+            'mail-main-window button[action=mail-window-copy]': {
                 click: me.onCopyMail
             },
 
-            'mail-main-window button[action=mail-window-delete]' : {
+            'mail-main-window button[action=mail-window-delete]': {
                 click: me.onDelete
             },
 
-            'mail-main-window button[action=mail-window-reset]' : {
+            'mail-main-window button[action=mail-window-reset]': {
                 click: me.onReset
             },
 
-            'mail-main-window button[action=mail-window-save]' : {
+            'mail-main-window button[action=mail-window-save]': {
                 click: me.onSave
             },
 
-            'mail-main-window textfield[action=search]' : {
+            'mail-main-window textfield[action=search]': {
                 change: me.onSearch
             },
 
             'mail-main-form': {
-                dirtychange:    me.onDirtyChange
+                dirtychange: me.onDirtyChange
             },
 
             'mail-main-form tabpanel': {
@@ -160,13 +159,13 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
             },
 
             'mail-main-contentEditor': {
-                showPreview:  me.onShowPreview,
+                showPreview: me.onShowPreview,
                 sendTestMail: me.onSendTestMail
             }
         });
 
         me.mainWindow = me.getView('main.Window').create({
-            treeStore:       me.getStore('Tree'),
+            treeStore: me.getStore('Tree'),
             attachmentStore: me.getStore('Attachment')
         });
 
@@ -232,7 +231,6 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
         return false;
     },
 
-
     /**
      * @event click
      * @param [object] btn - the btn that fired the event
@@ -297,7 +295,6 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
 
                     formPanel.getForm().reset();
 
-
                     infoPanel.updateContext(records[0].get('contextPath'));
 
                     me.getPreviewBtn().setDisabled(false);
@@ -309,7 +306,6 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
             }
         });
     },
-
 
     /**
      * Resets the form
@@ -390,7 +386,7 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
                     }
 
                     Ext.create('Enlight.app.Window', {
-                        title : '{s name="title"}Email templates{/s}',
+                        title: '{s name="title"}Email templates{/s}',
                         autoScroll: true,
                         subApplication: me.subApplication,
                         subApp: me.subApplication,
@@ -540,7 +536,7 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
      */
     onCheckChange: function(node, checked) {
         /*{if !{acl_is_allowed privilege=create} && !{acl_is_allowed privilege=update}}*/
-            return;
+        return;
         /*{/if}*/
 
         var me           = this,
@@ -565,7 +561,7 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
      */
     onDirtyChange: function(form, dirty) {
         /*{if !{acl_is_allowed privilege=create} && !{acl_is_allowed privilege=update}}*/
-            return;
+        return;
         /*{/if}*/
 
         var me           = this,
@@ -580,7 +576,7 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
      */
     setupState: function() {
         /*{if !{acl_is_allowed privilege=create} && !{acl_is_allowed privilege=update}}*/
-            return;
+        return;
         /*{/if}*/
 
         var me        = this,
@@ -625,7 +621,6 @@ Ext.define('Shopware.apps.Mail.controller.Main', {
             }
         });
     },
-
 
     /**
      * Reloads attachments

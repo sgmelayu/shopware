@@ -1,31 +1,34 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Shopware\Models\Article\Article;
+use Shopware\Models\Article\Repository as ProductRepository;
 use Shopware\Models\Article\Supplier;
 use Shopware\Models\Category\Category;
 use Shopware\Models\ProductFeed\ProductFeed;
+use Shopware\Models\Shop\Repository as ShopRepository;
 use Shopware\Models\Shop\Shop;
 
 /**
@@ -38,12 +41,12 @@ use Shopware\Models\Shop\Shop;
 class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Backend_ExtJs
 {
     /**
-     * @var \Shopware\Models\Article\Repository
+     * @var ProductRepository
      */
     protected $articleRepository;
 
     /**
-     * @var \Shopware\Models\Shop\Repository
+     * @var ShopRepository
      */
     protected $shopRepository;
 
@@ -53,15 +56,14 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
     public function getFeedsAction()
     {
         try {
-            /** @var \Shopware\Models\ProductFeed\Repository $repository */
-            $repository = Shopware()->Models()->getRepository(ProductFeed::class);
+            $repository = $this->get('models')->getRepository(ProductFeed::class);
             $dataQuery = $repository->getListQuery(
                 $this->Request()->getParam('sort', []),
                 $this->Request()->getParam('start'),
                 $this->Request()->getParam('limit')
             );
 
-            $totalCount = Shopware()->Models()->getQueryCount($dataQuery);
+            $totalCount = $this->get('models')->getQueryCount($dataQuery);
             $feeds = $dataQuery->getArrayResult();
 
             $this->View()->assign(['success' => true, 'data' => $feeds, 'totalCount' => $totalCount]);
@@ -93,7 +95,7 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
 
         $dataQuery = $this->getArticleRepository()
                           ->getSuppliersWithExcludedIdsQuery($usedIds, $filter, $offset, $limit);
-        $total = Shopware()->Models()->getQueryCount($dataQuery);
+        $total = $this->get('models')->getQueryCount($dataQuery);
 
         $data = $dataQuery->getArrayResult();
 
@@ -111,7 +113,7 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
         $data = $shopQuery->getArrayResult();
 
         // Return the data and total count
-        $this->View()->assign(['success' => true, 'data' => $data, 'total' => count($data)]);
+        $this->View()->assign(['success' => true, 'data' => $data, 'total' => \count($data)]);
     }
 
     /**
@@ -127,7 +129,7 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
 
         $dataQuery = $this->getArticleRepository()
                           ->getArticlesWithExcludedIdsQuery($usedIds, $filter, $offset, $limit);
-        $total = Shopware()->Models()->getQueryCount($dataQuery);
+        $total = $this->get('models')->getQueryCount($dataQuery);
         $data = $dataQuery->getArrayResult();
 
         // Return the data and total count
@@ -143,11 +145,11 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
     {
         $params = $this->Request()->getParams();
 
-        $feedId = $params['id'];
+        $feedId = $params['id'] ?? null;
         if (!empty($feedId)) {
             // Edit Product Feed
             /** @var ProductFeed $productFeed */
-            $productFeed = Shopware()->Models()->getRepository(ProductFeed::class)->find($feedId);
+            $productFeed = $this->get('models')->getRepository(ProductFeed::class)->find($feedId);
             // Clear all previous associations
             $productFeed->getCategories()->clear();
             $productFeed->getSuppliers()->clear();
@@ -194,14 +196,17 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
         $productFeed->setLastChange(new DateTime());
 
         // Clear feed cache
-        $cacheDir = $this->container->getParameter('kernel.cache_dir');
-        $cacheDir .= '/productexport/';
+        $cacheDir = $this->container->getParameter('shopware.product_export.cache_dir');
+        if (!\is_string($cacheDir)) {
+            throw new RuntimeException('Parameter shopware.product_export.cache_dir has to be an string');
+        }
+
         if (!is_dir($cacheDir)) {
             if (@mkdir($cacheDir, 0777, true) === false) {
-                throw new \RuntimeException(sprintf("Unable to create the %s directory (%s)\n", 'Productexport', $cacheDir));
+                throw new RuntimeException(\sprintf("Unable to create the %s directory (%s)\n", 'Productexport', $cacheDir));
             }
         } elseif (!is_writable($cacheDir)) {
-            throw new \RuntimeException(sprintf("Unable to write in the %s directory (%s)\n", 'Productexport', $cacheDir));
+            throw new RuntimeException(\sprintf("Unable to write in the %s directory (%s)\n", 'Productexport', $cacheDir));
         }
 
         $fileName = $productFeed->getHash() . '_' . $productFeed->getFileName();
@@ -212,8 +217,8 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
         $productFeed->setCacheRefreshed('2000-01-01');
 
         try {
-            Shopware()->Models()->persist($productFeed);
-            Shopware()->Models()->flush();
+            $this->get('models')->persist($productFeed);
+            $this->get('models')->flush();
 
             $data = $this->getFeed($productFeed->getId());
             $this->View()->assign(['success' => true, 'data' => $data]);
@@ -228,10 +233,10 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
     public function deleteFeedAction()
     {
         try {
-            /** @var \Shopware\Models\ProductFeed\ProductFeed $model */
-            $model = Shopware()->Models()->getRepository(ProductFeed::class)->find($this->Request()->id);
-            Shopware()->Models()->remove($model);
-            Shopware()->Models()->flush();
+            /** @var ProductFeed $model */
+            $model = $this->get('models')->getRepository(ProductFeed::class)->find($this->Request()->id);
+            $this->get('models')->remove($model);
+            $this->get('models')->flush();
             $this->View()->assign(['success' => true, 'data' => $this->Request()->getParams()]);
         } catch (Exception $e) {
             $this->View()->assign(['success' => false, 'errorMsg' => $e->getMessage()]);
@@ -242,18 +247,18 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
      * helper method to prepare the association request data to save it directly
      * into the model via fromArray
      *
-     * @param string $paramString
-     * @param string $modelName
-     * @param array  $params
+     * @param string       $paramString
+     * @param class-string $modelName
+     * @param array        $params
      *
-     * @return \Doctrine\Common\Collections\ArrayCollection
+     * @return ArrayCollection
      */
     public function prepareAssociationDataForSaving($paramString, $modelName, $params)
     {
-        $collection = new \Doctrine\Common\Collections\ArrayCollection();
+        $collection = new ArrayCollection();
         if (!empty($params[$paramString])) {
             foreach ($params[$paramString] as $param) {
-                $model = Shopware()->Models()->find($modelName, $param['id']);
+                $model = $this->get('models')->find($modelName, $param['id']);
                 $collection->add($model);
             }
         }
@@ -285,12 +290,12 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
     /**
      * Helper function to get access to the shop repository.
      *
-     * @return \Shopware\Models\Shop\Repository
+     * @return ShopRepository
      */
     private function getShopRepository()
     {
         if ($this->shopRepository === null) {
-            $this->shopRepository = Shopware()->Models()->getRepository(Shop::class);
+            $this->shopRepository = $this->get('models')->getRepository(Shop::class);
         }
 
         return $this->shopRepository;
@@ -299,12 +304,12 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
     /**
      * Helper function to get access to the article repository.
      *
-     * @return \Shopware\Models\Article\Repository
+     * @return ProductRepository
      */
     private function getArticleRepository()
     {
         if ($this->articleRepository === null) {
-            $this->articleRepository = Shopware()->Models()->getRepository(Article::class);
+            $this->articleRepository = $this->get('models')->getRepository(Article::class);
         }
 
         return $this->articleRepository;
@@ -317,8 +322,7 @@ class Shopware_Controllers_Backend_ProductFeed extends Shopware_Controllers_Back
      */
     private function getFeed($id)
     {
-        /** @var \Shopware\Models\ProductFeed\Repository $repository */
-        $repository = Shopware()->Models()->getRepository(ProductFeed::class);
+        $repository = $this->get('models')->getRepository(ProductFeed::class);
         $dataQuery = $repository->getDetailQuery($id);
         $feed = $dataQuery->getArrayResult();
 

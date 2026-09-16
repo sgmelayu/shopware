@@ -1,52 +1,50 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Gateway\DBAL;
 
 use Doctrine\DBAL\Connection;
-use Shopware\Bundle\StoreFrontBundle\Struct;
+use PDO;
+use Shopware\Bundle\StoreFrontBundle\Gateway\DBAL\Hydrator\PriceHydrator;
+use Shopware\Bundle\StoreFrontBundle\Struct\BaseProduct;
+use Shopware\Bundle\StoreFrontBundle\Struct\Customer\Group;
+use Shopware_Components_Config;
 
 /**
  * NOTICE:  When doing changes on this file, please remember to do those changes in the CheapestPriceGateway as well!
  */
 class CheapestPriceESGateway extends CheapestPriceGateway
 {
-    /**
-     * @var \Shopware_Components_Config
-     */
-    private $config;
+    private Shopware_Components_Config $config;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(
         Connection $connection,
         FieldHelper $fieldHelper,
-        Hydrator\PriceHydrator $priceHydrator,
-        \Shopware_Components_Config $config
+        PriceHydrator $priceHydrator,
+        Shopware_Components_Config $config
     ) {
         parent::__construct($connection, $fieldHelper, $priceHydrator, $config);
         $this->connection = $connection;
@@ -58,11 +56,11 @@ class CheapestPriceESGateway extends CheapestPriceGateway
      * This method misses the laststock subquery where-condition as laststock-products would be indexed without prices otherwise
      * what would lead to broken price filters when ES is used
      *
-     * @param Struct\BaseProduct[] $products
+     * @param BaseProduct[] $products
      *
-     * @return array
+     * @return array<int>
      */
-    protected function getCheapestPriceIds($products, Struct\Customer\Group $customerGroup)
+    protected function getCheapestPriceIds($products, Group $customerGroup)
     {
         $ids = [];
         foreach ($products as $product) {
@@ -146,8 +144,6 @@ class CheapestPriceESGateway extends CheapestPriceGateway
             ->groupBy('outerPrices.articleID')
             ->having('priceId IS NOT NULL');
 
-        $statement = $query->execute();
-
-        return $statement->fetchAll(\PDO::FETCH_COLUMN);
+        return $query->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 }

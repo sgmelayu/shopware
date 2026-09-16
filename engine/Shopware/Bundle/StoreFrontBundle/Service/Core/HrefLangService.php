@@ -1,25 +1,25 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service\Core;
@@ -29,6 +29,7 @@ use Shopware\Bundle\StoreFrontBundle\Service\HrefLangServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\HrefLang;
 use Shopware\Bundle\StoreFrontBundle\Struct\Shop;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
+use Shopware\Components\Model\Exception\ModelNotFoundException;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Routing\Context;
 use Shopware\Components\Routing\RouterInterface;
@@ -37,38 +38,28 @@ use Shopware_Components_Config as Config;
 
 class HrefLangService implements HrefLangServiceInterface
 {
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
+
+    private RouterInterface $rewriteRouter;
+
+    private RouterInterface $defaultRouter;
+
+    private Config $config;
 
     /**
-     * @var RouterInterface
+     * @var array<int, Context>
      */
-    private $rewriteRouter;
+    private array $contextCache = [];
 
-    /**
-     * @var RouterInterface
-     */
-    private $defaultRouter;
+    private ModelManager $modelManager;
 
-    /**
-     * @var Config
-     */
-    private $config;
-
-    /**
-     * @var array
-     */
-    private $contextCache = [];
-
-    /**
-     * @var ModelManager
-     */
-    private $modelManager;
-
-    public function __construct(Connection $connection, RouterInterface $rewriteRouter, RouterInterface $defaultRouter, Config $config, ModelManager $modelManager)
-    {
+    public function __construct(
+        Connection $connection,
+        RouterInterface $rewriteRouter,
+        RouterInterface $defaultRouter,
+        Config $config,
+        ModelManager $modelManager
+    ) {
         $this->connection = $connection;
         $this->rewriteRouter = $rewriteRouter;
         $this->config = $config;
@@ -84,13 +75,13 @@ class HrefLangService implements HrefLangServiceInterface
         $shops = $this->getLanguageShops($contextService->getShop());
         $config = clone $this->config;
 
-        if (count($shops) === 1) {
+        if (\count($shops) === 1) {
             return [];
         }
 
         $hrefs = [];
 
-        foreach ($shops as $key => $languageShop) {
+        foreach ($shops as $languageShop) {
             $shop = $this->getDetachedShop($languageShop['id']);
 
             $config->setShop($shop);
@@ -99,7 +90,7 @@ class HrefLangService implements HrefLangServiceInterface
             $href->setShopId($languageShop['id']);
             $href->setLocale($languageShop['locale']);
             $routingContext = $this->getContext($shop, $config);
-            $href->setLink($this->filterUrl($this->rewriteRouter->assemble($parameters, $routingContext), $parameters));
+            $href->setLink($this->filterUrl((string) $this->rewriteRouter->assemble($parameters, $routingContext), $parameters));
 
             if (!$config->get('hrefLangCountry')) {
                 $href->setLocale(explode('-', $languageShop['locale'])[0]);
@@ -116,7 +107,7 @@ class HrefLangService implements HrefLangServiceInterface
             $hrefs[] = $href;
         }
 
-        if (count($hrefs) === 1) {
+        if (\count($hrefs) === 1) {
             return [];
         }
 
@@ -124,7 +115,8 @@ class HrefLangService implements HrefLangServiceInterface
     }
 
     /**
-     * @param string $url
+     * @param array<string, mixed> $parameters
+     * @param string               $url
      *
      * @return bool
      */
@@ -144,7 +136,8 @@ class HrefLangService implements HrefLangServiceInterface
     }
 
     /**
-     * @param string $url
+     * @param array<string, mixed> $parameters
+     * @param string               $url
      *
      * @return string
      */
@@ -165,6 +158,8 @@ class HrefLangService implements HrefLangServiceInterface
     }
 
     /**
+     * @param array<string, mixed> $parameters
+     *
      * @return bool
      */
     protected function isCategoryLink(array $parameters)
@@ -176,9 +171,9 @@ class HrefLangService implements HrefLangServiceInterface
     }
 
     /**
-     * @return array
+     * @return array<array{id: int, locale: string}>
      */
-    private function getLanguageShops(Shop $shop)
+    private function getLanguageShops(Shop $shop): array
     {
         $parentId = $shop->getParentId() ?: $shop->getId();
 
@@ -195,10 +190,7 @@ class HrefLangService implements HrefLangServiceInterface
             ->fetchAll();
     }
 
-    /**
-     * @return Context
-     */
-    private function getContext(ShopModel $shop, Config $config)
+    private function getContext(ShopModel $shop, Config $config): Context
     {
         if (!isset($this->contextCache[$shop->getId()])) {
             $this->contextCache[$shop->getId()] = Context::createFromShop($shop, $config);
@@ -209,13 +201,25 @@ class HrefLangService implements HrefLangServiceInterface
 
     private function getDetachedShop(int $languageShopId): ShopModel
     {
-        return $this->modelManager->getRepository(ShopModel::class)->getById($languageShopId);
+        $shopModel = $this->modelManager->getRepository(ShopModel::class)->getById($languageShopId);
+        if ($shopModel === null) {
+            throw new ModelNotFoundException(ShopModel::class, $languageShopId);
+        }
+
+        return $shopModel;
     }
 
+    /**
+     * @param array<string, mixed> $parameters
+     */
     private function isUrlHome(array $parameters): bool
     {
         if (!$parameters) {
             return true;
+        }
+
+        if (!isset($parameters['controller'], $parameters['action'])) {
+            return false;
         }
 
         if ($parameters['controller'] === 'index' && $parameters['action'] === 'index') {

@@ -1,46 +1,42 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\StoreFrontBundle\Service\Core;
 
 use Doctrine\DBAL\Connection;
+use PDO;
 use Shopware\Bundle\StoreFrontBundle\Gateway\CountryGatewayInterface;
 use Shopware\Bundle\StoreFrontBundle\Service\LocationServiceInterface;
 use Shopware\Bundle\StoreFrontBundle\Struct\Country;
+use Shopware\Bundle\StoreFrontBundle\Struct\Country\State;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
 class LocationService implements LocationServiceInterface
 {
-    /**
-     * @var CountryGatewayInterface
-     */
-    private $gateway;
+    private CountryGatewayInterface $gateway;
 
-    /**
-     * @var Connection
-     */
-    private $connection;
+    private Connection $connection;
 
     public function __construct(CountryGatewayInterface $gateway, Connection $connection)
     {
@@ -48,11 +44,6 @@ class LocationService implements LocationServiceInterface
         $this->connection = $connection;
     }
 
-    /**
-     * Returns all available countries for the provided shop context
-     *
-     * @return Country[] indexed by id
-     */
     public function getCountries(ShopContextInterface $context)
     {
         $ids = $this->getCountryIds();
@@ -81,23 +72,23 @@ class LocationService implements LocationServiceInterface
     /**
      * @return int[]
      */
-    private function getCountryIds()
+    private function getCountryIds(): array
     {
         $query = $this->connection->createQueryBuilder();
         $query->select('id');
         $query->from('s_core_countries', 'country');
 
-        return $query->execute()->fetchAll(\PDO::FETCH_COLUMN);
+        return $query->execute()->fetchAll(PDO::FETCH_COLUMN);
     }
 
     /**
-     * @param Country\State[] $countryStates
+     * @param State[] $countryStates
      *
-     * @return Country\State[]
+     * @return State[]
      */
-    private function sortStates($countryStates)
+    private function sortStates(array $countryStates): array
     {
-        uasort($countryStates, function (Country\State $a, Country\State $b) {
+        uasort($countryStates, function (State $a, State $b) {
             if ($a->getPosition() == $b->getPosition()) {
                 return strnatcasecmp($a->getName(), $b->getName());
             }
@@ -109,11 +100,11 @@ class LocationService implements LocationServiceInterface
     }
 
     /**
-     * @param Country[] $countries
+     * @param array<int, Country> $countries
      *
-     * @return Country[]
+     * @return array<int, Country>
      */
-    private function sortCountries($countries)
+    private function sortCountries(array $countries): array
     {
         uasort($countries, function (Country $a, Country $b) {
             if ($a->getPosition() == $b->getPosition()) {

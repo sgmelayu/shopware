@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 /**
@@ -69,6 +68,7 @@ Ext.define('Shopware.apps.FirstRunWizard.view.main.PayPal', {
             this.createStartCard(),
             this.createInstallCard(),
             this.createConfigurationCard(),
+            this.createConfigurationPostponedCard(),
             this.createDoneCard(),
             this.createErrorCard()
         );
@@ -135,6 +135,8 @@ Ext.define('Shopware.apps.FirstRunWizard.view.main.PayPal', {
     },
 
     /**
+     * @deprecated v5.8.0 This will be removed with the next minor version without replacement.
+     *
      * @returns { Ext.container.Container }
      */
     createConfigurationCard: function () {
@@ -174,14 +176,6 @@ Ext.define('Shopware.apps.FirstRunWizard.view.main.PayPal', {
                     inputValue: true,
                     uncheckedValue: false
                 }, {
-                    xtype: 'checkbox',
-                    name: 'payPalPlus',
-                    fieldLabel: '{s name="pay_pal/configuration/plus/label"}{/s}',
-                    inputValue: true,
-                    uncheckedValue: false,
-                    helpTitle: '{s name="pay_pal/configuration/plus/label"}{/s}',
-                    helpText: '{s name="pay_pal/configuration/plus/help_text"}{/s}',
-                }, {
                     xtype: 'button',
                     text: '{s name="pay_pal/configuration/save/text"}{/s}',
                     cls: 'primary',
@@ -199,6 +193,23 @@ Ext.define('Shopware.apps.FirstRunWizard.view.main.PayPal', {
             itemId: 'configuration',
             items: [
                 me.form,
+            ]
+        });
+    },
+
+    createConfigurationPostponedCard: function () {
+        var me = this;
+
+        return Ext.create('Ext.container.Container', {
+            itemId: 'configuration_postponed',
+            items: [
+                {
+                    xtype: 'container',
+                    html: '<h1>{s name="pay_pal/configuration_postponed/headline"}{/s}</h1><p>{s name="pay_pal/configuration_postponed/instructions"}{/s}</p>',
+                    style: {
+                        marginBottom: '10px'
+                    }
+                }
             ]
         });
     },

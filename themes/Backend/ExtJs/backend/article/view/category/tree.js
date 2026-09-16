@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Article
@@ -39,12 +38,12 @@ Ext.define('Shopware.apps.Article.view.category.Tree', {
      * Define that the billing field set is an extension of the Ext.form.FieldSet
      * @string
      */
-    extend:'Ext.tree.Panel',
+    extend: 'Ext.tree.Panel',
     /**
      * List of short aliases for class names. Most useful for defining xtypes for widgets.
      * @string
      */
-    alias:'widget.article-category-tree',
+    alias: 'widget.article-category-tree',
     /**
      * Set css class for this component
      * @string
@@ -54,7 +53,7 @@ Ext.define('Shopware.apps.Article.view.category.Tree', {
      * Contains all snippets for the view component
      * @object
      */
-    snippets:{
+    snippets: {
         title: '{s name="category/tree/title"}Category{/s}',
         tooltip: '{s name="category/tree/tooltip"}Add category{/s}'
     },
@@ -92,7 +91,7 @@ Ext.define('Shopware.apps.Article.view.category.Tree', {
         plugins: {
             ptype: 'treeviewdragdrop',
             ddGroup: 'Category',
-            dragText : '{s name="category/tree/drag_text"}[0] selected node [1]{/s}',
+            dragText: '{s name="category/tree/drag_text"}[0] selected node [1]{/s}',
             enableDrop: true,
             copy: true
         }
@@ -108,7 +107,7 @@ Ext.define('Shopware.apps.Article.view.category.Tree', {
      *
      * @return void
      */
-    initComponent:function () {
+    initComponent: function () {
         var me = this;
         me.title = me.snippets.title;
         me.columns = me.getColumns();
@@ -137,7 +136,7 @@ Ext.define('Shopware.apps.Article.view.category.Tree', {
      * @return array
      */
     getColumns: function() {
-       var me = this;
+        var me = this;
 
         return [
             {
@@ -146,7 +145,7 @@ Ext.define('Shopware.apps.Article.view.category.Tree', {
                 flex: 2,
                 sortable: true,
                 dataIndex: 'name'
-            },{
+            }, {
                 xtype: 'actioncolumn',
                 width: 30,
                 items: [{

@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Window
@@ -141,7 +140,7 @@ Ext.define('Shopware.window.plugin.Hud', {
             extEl = Ext.get(el.getEl().dom);
 
         // Check if the hudStore is defined
-        if(!me.hudStore || Ext.isEmpty(me.hudStore)) {
+        if (!me.hudStore || Ext.isEmpty(me.hudStore)) {
             Ext.Error.raise(me.hudStoreErrorMessage(me.$className));
             return false;
         }
@@ -176,7 +175,7 @@ Ext.define('Shopware.window.plugin.Hud', {
                 }
             },
 
-            updateIndexes : function(startIndex, endIndex) {
+            updateIndexes: function(startIndex, endIndex) {
                 var ns = this.all.elements,
                     records = this.store.getRange(),
                     tmpRecords = [],
@@ -193,7 +192,7 @@ Ext.define('Shopware.window.plugin.Hud', {
 
                 startIndex = startIndex || 0;
                 endIndex = endIndex || ((endIndex === 0) ? 0 : (ns.length - 1));
-                for(i = startIndex, j = startIndex - 1; i <= endIndex; i++){
+                for (i = startIndex, j = startIndex - 1; i <= endIndex; i++){
                     if (Ext.fly(ns[i]).is('.x-library-element')) {
                         j++;
                     }
@@ -227,7 +226,7 @@ Ext.define('Shopware.window.plugin.Hud', {
         });
 
         // Hide the libary panel on start up
-        if(!me.hudShow) {
+        if (!me.hudShow) {
             me.libraryPnl.hide();
         }
 
@@ -262,18 +261,18 @@ Ext.define('Shopware.window.plugin.Hud', {
                     id, attr, i;
 
                 var proxy = view.dragZone.proxy;
-                if(!proxy.getEl().hasCls(Ext.baseCSSPrefix + 'shopware-dd-proxy')) {
+                if (!proxy.getEl().hasCls(Ext.baseCSSPrefix + 'shopware-dd-proxy')) {
                     proxy.getEl().addCls(Ext.baseCSSPrefix + 'shopware-dd-proxy')
                 }
 
-                if(!source || !element) { return false; }
+                if (!source || !element) { return false; }
 
                 id = ~~(1 * element.getAttribute('data-componentId'));
 
-                if(!id) {
-                    for(i in element.dom.attributes) {
+                if (!id) {
+                    for (i in element.dom.attributes) {
                         attr = element.dom.attributes[i];
-                        if(attr.name == 'data-componentid') {
+                        if (attr.name == 'data-componentid') {
                             id = parseInt(attr.value, 10);
                             break;
                         }
@@ -307,7 +306,7 @@ Ext.define('Shopware.window.plugin.Hud', {
                 var source = event.getTarget(view.itemSelector, 10), element = Ext.get(source);
 
                 // We need to remove the dragged cls from the element by hand to prevent displaying issues
-                if(draggedElement && draggedElement.hasCls('dragged')) {
+                if (draggedElement && draggedElement.hasCls('dragged')) {
                     Ext.defer(function() {
                         draggedElement.removeCls('dragged');
                     }, 50);
@@ -361,7 +360,7 @@ Ext.define('Shopware.window.plugin.Hud', {
                         panel = parent.parent().child('.x-library-inner-panel')
 
                     Ext.suspendLayouts();
-                    if(panel.isVisible()) {
+                    if (panel.isVisible()) {
                         el.addCls('inactive');
                         el.removeCls('active');
                         panel.setStyle('display', 'none');

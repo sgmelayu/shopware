@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    ProductFeed
@@ -41,7 +40,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
 
     /**
      * Required sub-controller for this controller
@@ -53,12 +52,12 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
     /**
      * all references to get the elements by the applicable selector
      */
-    refs:[
-        { ref:'productFeedWindow', selector:'product_feed-feed-window' },
-        { ref:'productFeedSaveButton', selector:'product_feed-feed-window button[action=save]' },
-        { ref:'productFeedUpdateButton', selector:'product_feed-feed-window button[action=update]' },
-        { ref:'categoryTree', selector : 'product_feed-feed-tab-category treepanel' },
-        { ref:'attributeForm', selector: 'product_feed-feed-window shopware-attribute-form' }
+    refs: [
+        { ref: 'productFeedWindow', selector: 'product_feed-feed-window' },
+        { ref: 'productFeedSaveButton', selector: 'product_feed-feed-window button[action=save]' },
+        { ref: 'productFeedUpdateButton', selector: 'product_feed-feed-window button[action=update]' },
+        { ref: 'categoryTree', selector: 'product_feed-feed-tab-category treepanel' },
+        { ref: 'attributeForm', selector: 'product_feed-feed-window shopware-attribute-form' }
     ],
 
     /**
@@ -82,7 +81,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      *
      * @return void
      */
-    init:function () {
+    init: function () {
         var me = this;
 
         me.control({
@@ -92,23 +91,23 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
                 duplicateColumn: me.onDuplicateItem,
                 executeFeed: me.onExecuteFeed
             },
-            'product_feed-feed-list button[action=add]':{
-                click:me.onCreateFeed
+            'product_feed-feed-list button[action=add]': {
+                click: me.onCreateFeed
             },
-            'product_feed-feed-tab-supplier textfield[action=searchSupplier]':{
-                change:me.onSearchSupplier
+            'product_feed-feed-tab-supplier textfield[action=searchSupplier]': {
+                change: me.onSearchSupplier
             },
-            'product_feed-feed-tab-article textfield[action=searchArticles]':{
-                change:me.onSearchArticle
+            'product_feed-feed-tab-article textfield[action=searchArticles]': {
+                change: me.onSearchArticle
             },
-            'product_feed-feed-window button[action=save]':{
-                click:me.onSave
+            'product_feed-feed-window button[action=save]': {
+                click: me.onSave
             },
-            'product_feed-feed-window button[action=update]':{
-                click:me.onUpdate
+            'product_feed-feed-window button[action=update]': {
+                click: me.onUpdate
             },
-            'product_feed-feed-window':{
-                beforeclose:me.onBeforeCloseWindow
+            'product_feed-feed-window': {
+                beforeclose: me.onBeforeCloseWindow
             }
         });
     },
@@ -120,7 +119,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * @param [object] store - the feed detail store
      * @return void
      */
-    onCreateFeed:function () {
+    onCreateFeed: function () {
 
         var me = this,
             model = Ext.create('Shopware.apps.ProductFeed.model.Detail');
@@ -128,7 +127,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
         //reset the detail Record
         me.detailRecord = null;
 
-        model.set("hash",me.createRandomHash());
+        model.set("hash", me.createRandomHash());
         me.getView('feed.Window').create({
             record: model,
             supplierStore: me.subApplication.supplierStore,
@@ -150,17 +149,17 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * @param [integer] rowIndex - The row number
      * @return void
      */
-    onEditItem:function (view, rowIndex) {
+    onEditItem: function (view, rowIndex) {
         var me = this,
             store = me.subApplication.detailStore,
             record = me.subApplication.listStore.getAt(rowIndex);
 
         store.getProxy().extraParams = {
-            feedId:record.get("id")
+            feedId: record.get("id")
         };
         store.load({
-            scope:this,
-            callback:function (records) {
+            scope: this,
+            callback: function (records) {
                 me.detailRecord = records[0];
                 me.getView('feed.Window').create({
                     record: me.detailRecord,
@@ -184,14 +183,14 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * @param [integer] rowIndex - The row number
      * @return void
      */
-    onExecuteFeed:function (view, rowIndex) {
+    onExecuteFeed: function (view, rowIndex) {
         var me = this,
             record = me.getStore('List').getAt(rowIndex);
-            window.open(
-                    '{url controller=export}' + '/index/'+record.get('fileName')
-                            +'?feedID='+record.get('id')
-                            +'&hash='+ record.get('hash')
-            );
+        window.open(
+            '{url controller=export}' + '/index/' + record.get('fileName') +
+                '?feedID=' + record.get('id') +
+                '&hash=' + record.get('hash')
+        );
     },
 
     /**
@@ -203,19 +202,19 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * @param [integer] rowIndex - The row number
      * @return void
      */
-    onDuplicateItem:function (view, rowIndex) {
+    onDuplicateItem: function (view, rowIndex) {
         var me = this,
-                store = me.subApplication.detailStore,
-                record = me.subApplication.listStore.getAt(rowIndex);
+            store = me.subApplication.detailStore,
+            record = me.subApplication.listStore.getAt(rowIndex);
 
         store.getProxy().extraParams = {
-            feedId:record.get("id")
+            feedId: record.get("id")
         };
         store.load({
-            scope:this,
-            callback:function (records) {
+            scope: this,
+            callback: function (records) {
                 me.detailRecord = records[0];
-                me.detailRecord.set("hash",me.createRandomHash());
+                me.detailRecord.set("hash", me.createRandomHash());
                 me.detailRecord.data.id = '';
                 //reset the id
                 store.getProxy().extraParams = {};
@@ -240,7 +239,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * @param [integer] rowIndex - Position of the event
      * @return void
      */
-    onDeleteSingleItem:function (grid, rowIndex) {
+    onDeleteSingleItem: function (grid, rowIndex) {
         var me = this,
             store = grid.getStore(),
             record = store.getAt(rowIndex);
@@ -248,22 +247,22 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
         Ext.MessageBox.confirm(
             me.snippets.confirmDeleteSingleItem,
             Ext.String.format(me.snippets.confirmDeleteSingle, record.get('name')), function (response) {
-            if (response !== 'yes') {
-                return false;
-            }
-            store.remove(record);
-            store.save({
-                callback: function (self,operation) {
-                    if (operation.success) {
-                        store.load();
-                        Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleItemSuccess, me.snippets.growlMessage);
-                        me.getProductFeedWindow().destroy();
-                    } else {
-                        Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleItemError, me.snippets.growlMessage);
-                    }
+                if (response !== 'yes') {
+                    return false;
                 }
+                store.remove(record);
+                store.save({
+                    callback: function (self, operation) {
+                        if (operation.success) {
+                            store.load();
+                            Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleItemSuccess, me.snippets.growlMessage);
+                            me.getProductFeedWindow().destroy();
+                        } else {
+                            Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleItemError, me.snippets.growlMessage);
+                        }
+                    }
+                });
             });
-        });
 
     },
 
@@ -274,7 +273,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * @param value
      * @return void
      */
-    onSearchSupplier:function (field, value) {
+    onSearchSupplier: function (field, value) {
         var me = this,
             searchString = Ext.String.trim(value),
             store = me.getStore('Supplier');
@@ -289,7 +288,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * @param value
      * @return void
      */
-    onSearchArticle:function (field, value) {
+    onSearchArticle: function (field, value) {
         var me = this,
             searchString = Ext.String.trim(value),
             store = me.getStore('Article');
@@ -337,25 +336,25 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
         form.updateRecord(record);
 
         var tree = me.getCategoryTree(),
-        checked = tree.getChecked(),
-        categories = record.getCategories();
+            checked = tree.getChecked(),
+            categories = record.getCategories();
 
         categories.removeAll();
         categories.add(checked);
 
         record.save({
-            callback: function (self,operation) {
+            callback: function (self, operation) {
                 if (operation.success) {
                     listStore.load();
                     var response = Ext.JSON.decode(operation.response.responseText);
                     var data = response.data;
                     attributeForm.saveAttribute(data.id);
-                    Shopware.Notification.createGrowlMessage('',me.snippets.onSaveChangesSuccess, me.snippets.growlMessage);
-                    if(!Ext.isDefined(keepOpened) || !keepOpened){
+                    Shopware.Notification.createGrowlMessage('', me.snippets.onSaveChangesSuccess, me.snippets.growlMessage);
+                    if (!Ext.isDefined(keepOpened) || !keepOpened){
                         me.getProductFeedWindow().destroy();
                     }
                 } else {
-                    Shopware.Notification.createGrowlMessage('',me.snippets.onSaveChangesError, me.snippets.growlMessage);
+                    Shopware.Notification.createGrowlMessage('', me.snippets.onSaveChangesError, me.snippets.growlMessage);
                 }
             }
         });
@@ -369,7 +368,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
         var me = this,
             ids = [],
             selectedTreeItemCounter = 0;
-        if(me.detailRecord) {
+        if (me.detailRecord) {
             var lockedCategoriesStore =  me.detailRecord.getCategories();
             lockedCategoriesStore.each(function(element) {
                 ids.push(element.get('id'));
@@ -377,23 +376,23 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
         }
         //expand tree
         Ext.Ajax.request({
-            url:'{url controller="Category" action="getIdPath"}',
+            url: '{url controller="Category" action="getIdPath"}',
             params: { 'categoryIds[]': ids },
             success: function(result){
-                if(!result.responseText) {
+                if (!result.responseText) {
                     return ;
                 }
                 result =  Ext.JSON.decode(result.responseText);
                 var resultCount = result.data.length;
                 Ext.each(result.data, function(item) {
                     tree.expandPath('/1' + item, 'id', '/', function (records) {
-                            selectedTreeItemCounter++;
-                            if(selectedTreeItemCounter == resultCount) {
-                                //tree completely expanded
-                                me.getProductFeedSaveButton().enable();
-                                me.getProductFeedUpdateButton().enable();
-                            }
+                        selectedTreeItemCounter++;
+                        if (selectedTreeItemCounter == resultCount) {
+                            //tree completely expanded
+                            me.getProductFeedSaveButton().enable();
+                            me.getProductFeedUpdateButton().enable();
                         }
+                    }
                     );
                 });
             }
@@ -407,7 +406,7 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      * @param [object] btn - pressed Ext.button.Button
      * @return void
      */
-    onBeforeCloseWindow:function () {
+    onBeforeCloseWindow: function () {
         this.getStore("List").load();
     },
 
@@ -416,11 +415,11 @@ Ext.define('Shopware.apps.ProductFeed.controller.Feed', {
      *
      * @return string
      */
-    createRandomHash:function () {
+    createRandomHash: function () {
         var chars = "abcdef1234567890",
             pass = "";
         for (var x = 0; x < 32; x++) {
-            pass += chars.charAt(Math.floor((Math.random()*chars.length)));
+            pass += chars.charAt(Math.floor((Math.random() * chars.length)));
         }
         return pass;
     }

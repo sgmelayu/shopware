@@ -2,23 +2,22 @@
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  *
  * @category   Shopware
  * @package    Voucher
@@ -41,20 +40,20 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      * Extend from the standard ExtJS 4
      * @string
      */
-    extend:'Ext.app.Controller',
+    extend: 'Ext.app.Controller',
     /**
      * all references to get the elements by the applicable selector
      */
-    refs:[
-        { ref:'grid', selector:'voucher-voucher-list' },
-        { ref:'codesGrid', selector:'voucher-code-list' },
-        { ref:'formModusComboBox', selector:'voucher-voucher-base_configuration combobox[name=modus]' },
-        { ref:'textFieldVoucherCode', selector:'voucher-voucher-base_configuration textfield[name=voucherCode]' },
-        { ref:'hiddenFieldId', selector:'voucher-voucher-base_configuration hidden[name=id]' },
-        { ref:'voucherBaseConfiguration', selector:'window voucher-voucher-base_configuration' },
-        { ref:'numberFieldRedeemablePerCustomer', selector:'voucher-voucher-base_configuration numberfield[name=numOrder]' },
-        { ref:'numberFieldVoucherCount', selector:'voucher-voucher-base_configuration numberfield[name=numberOfUnits]' },
-        { ref:'attributeForm', selector:'voucher-voucher-window shopware-attribute-form' }
+    refs: [
+        { ref: 'grid', selector: 'voucher-voucher-list' },
+        { ref: 'codesGrid', selector: 'voucher-code-list' },
+        { ref: 'formModusComboBox', selector: 'voucher-voucher-base_configuration combobox[name=modus]' },
+        { ref: 'textFieldVoucherCode', selector: 'voucher-voucher-base_configuration textfield[name=voucherCode]' },
+        { ref: 'hiddenFieldId', selector: 'voucher-voucher-base_configuration hidden[name=id]' },
+        { ref: 'voucherBaseConfiguration', selector: 'window voucher-voucher-base_configuration' },
+        { ref: 'numberFieldRedeemablePerCustomer', selector: 'voucher-voucher-base_configuration numberfield[name=numOrder]' },
+        { ref: 'numberFieldVoucherCount', selector: 'voucher-voucher-base_configuration numberfield[name=numberOfUnits]' },
+        { ref: 'attributeForm', selector: 'voucher-voucher-window shopware-attribute-form' }
     ],
 
     /**
@@ -81,18 +80,18 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      *
      * @return void
      */
-    init:function () {
+    init: function () {
         var me = this;
 
         me.control({
-            'voucher-voucher-list button[action=add]':{
-                click:me.onCreateVoucher
+            'voucher-voucher-list button[action=add]': {
+                click: me.onCreateVoucher
             },
-            'voucher-voucher-list textfield[action=searchVoucher]':{
-                change:me.onSearchVoucher
+            'voucher-voucher-list textfield[action=searchVoucher]': {
+                change: me.onSearchVoucher
             },
-            'voucher-voucher-list button[action=deleteVoucher]':{
-                click:me.onDeleteMultipleVouchers
+            'voucher-voucher-list button[action=deleteVoucher]': {
+                click: me.onDeleteMultipleVouchers
             },
             'voucher-voucher-list': {
                 deleteColumn: me.onDeleteSingleVoucher,
@@ -100,10 +99,10 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
                 duplicateColumn: me.onDuplicateVoucher
             },
             'voucher-voucher-base_configuration combobox[name=modus]': {
-                select:me.onSelectModus
+                select: me.onSelectModus
             },
-            'voucher-voucher-window':{
-                beforeclose:me.onBeforeCloseBaseConfigurationWindow
+            'voucher-voucher-window': {
+                beforeclose: me.onBeforeCloseBaseConfigurationWindow
             },
             'voucher-voucher-base_configuration button[action=save]': {
                 click: me.onSaveVoucher
@@ -117,14 +116,14 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      * @param [object] store - the voucher detail store
      * @return void
      */
-    onCreateVoucher:function () {
+    onCreateVoucher: function () {
         var me = this,
             store = me.getStore('Detail'),
             model = Ext.create('Shopware.apps.Voucher.model.Detail');
 
         //reset the store to create a new voucher
         store.getProxy().extraParams = {
-            voucherID:''
+            voucherID: ''
         };
         me.getView('voucher.Window').create({
             record: model,
@@ -143,7 +142,7 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      * @param [integer] rowIndex - The row number
      * @return void
      */
-    onEditVoucher:function (view, rowIndex) {
+    onEditVoucher: function (view, rowIndex) {
         var me = this,
             record = me.getStore('List').getAt(rowIndex);
 
@@ -164,14 +163,19 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
         };
 
         store.load({
-            scope:this,
-            callback:function (records, operation, success) {
+            scope: this,
+            callback: function (records, operation, success) {
                 var record = records[0],
-                    mode = record.data.modus;
+                    mode = record.data.modus,
+                    codeStore = me.getStore('Code');
+
+                codeStore.filters.clear();
+                codeStore.clearData();
+                codeStore.currentPage = 1;
 
                 me.getView('voucher.Window').create({
                     record: record,
-                    codeStore: me.getStore('Code'),
+                    codeStore: codeStore,
                     taxStore: me.getStore('Tax')
                 });
 
@@ -192,18 +196,18 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      * @param [integer] rowIndex - The row number
      * @return void
      */
-    onDuplicateVoucher:function (view, rowIndex) {
+    onDuplicateVoucher: function (view, rowIndex) {
         var me = this,
             store = me.getStore('Detail'),
             record = me.getStore('List').getAt(rowIndex);
 
         store.getProxy().extraParams = {
-            voucherID:record.data.id
+            voucherID: record.data.id
         };
 
         store.load({
-            scope:this,
-            callback:function (records, operation, success) {
+            scope: this,
+            callback: function (records, operation, success) {
                 var record = records[0],
                     mode = record.data.modus;
 
@@ -216,7 +220,7 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
                 record.data.id = '';
 
                 store.getProxy().extraParams = {
-                    voucherID:''
+                    voucherID: ''
                 };
 
                 me.getView('voucher.Window').create({
@@ -236,13 +240,13 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      * @param value
      * @return void
      */
-    onSearchVoucher:function (field, value) {
+    onSearchVoucher: function (field, value) {
         var me = this,
             searchString = Ext.String.trim(value),
             store = me.getStore('List');
         store.filters.clear();
         store.currentPage = 1;
-        store.filter('filter',searchString);
+        store.filter('filter', searchString);
     },
     /**
      * Event listener which deletes a single voucher based on the passed
@@ -252,38 +256,38 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      * @param [integer] rowIndex - Position of the event
      * @return void
      */
-    onDeleteSingleVoucher:function (grid, rowIndex) {
+    onDeleteSingleVoucher: function (grid, rowIndex) {
         var me = this,
-                store = grid.getStore(),
-                voucherGrid = me.getGrid(),
-                record = store.getAt(rowIndex);
+            store = grid.getStore(),
+            voucherGrid = me.getGrid(),
+            record = store.getAt(rowIndex);
         // we do not just delete - we are polite and ask the user if he is sure.
         Ext.MessageBox.confirm(
             me.snippets.confirmDeleteSingleVoucherTitle,
             Ext.String.format(me.snippets.confirmDeleteSingleVoucher, record.get('description')), function (response) {
-            if (response !== 'yes') {
-                return false;
-            }
+                if (response !== 'yes') {
+                    return false;
+                }
 
-            voucherGrid.setLoading(true);
-            store.remove(record);
-            try {
-                store.save({
-                    callback: function (batch) {
-                        var rawData = batch.proxy.getReader().rawData;
-                        if (rawData.success === true) {
-                            Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleVoucherSuccess, me.snippets.growlMessage);
+                voucherGrid.setLoading(true);
+                store.remove(record);
+                try {
+                    store.save({
+                        callback: function (batch) {
+                            var rawData = batch.proxy.getReader().rawData;
+                            if (rawData.success === true) {
+                                Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleVoucherSuccess, me.snippets.growlMessage);
+                            }
+                            voucherGrid.setLoading(false);
+                            store.load();
+
                         }
-                        voucherGrid.setLoading(false);
-                        store.load();
+                    });
+                } catch (e) {
+                    Shopware.Notification.createGrowlMessage('', me.snippets.deleteSingleVoucherError + e.message, me.snippets.growlMessage);
+                }
 
-                    }
-                });
-            } catch (e) {
-                Shopware.Notification.createGrowlMessage('',me.snippets.deleteSingleVoucherError + e.message, me.snippets.growlMessage);
-            }
-
-        });
+            });
 
     },
 
@@ -292,38 +296,38 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      *
      * @return void
      */
-    onDeleteMultipleVouchers:function () {
+    onDeleteMultipleVouchers: function () {
         var me = this,
-                grid = me.getGrid(),
-                sm = grid.getSelectionModel(),
-                selection = sm.getSelection(),
-                store = grid.getStore(),
-                noOfElements = selection.length;
+            grid = me.getGrid(),
+            sm = grid.getSelectionModel(),
+            selection = sm.getSelection(),
+            store = grid.getStore(),
+            noOfElements = selection.length;
 
         // Get the user to confirm the delete process
         Ext.MessageBox.confirm(
-                me.snippets.confirmDeleteSingleVoucherTitle,
-                Ext.String.format(me.snippets.confirmDeleteMultipleVoucher, noOfElements), function (response) {
-            if (response !== 'yes') {
-                return false;
-            }
-            if (selection.length > 0)
-                grid.setLoading(true);{
-                store.remove(selection);
-                store.save({
-                    callback: function(batch) {
-                        var rawData = batch.proxy.getReader().rawData;
-                        if (rawData.success === true) {
-                            Shopware.Notification.createGrowlMessage('',me.snippets.deleteMultipleVoucherSuccess, me.snippets.growlMessage);
-                        } else {
-                            Shopware.Notification.createGrowlMessage('',me.snippets.deleteMultipleVoucherError + rawData.errorMsg, me.snippets.growlMessage);
+            me.snippets.confirmDeleteSingleVoucherTitle,
+            Ext.String.format(me.snippets.confirmDeleteMultipleVoucher, noOfElements), function (response) {
+                if (response !== 'yes') {
+                    return false;
+                }
+                if (selection.length > 0)
+                    grid.setLoading(true);{
+                    store.remove(selection);
+                    store.save({
+                        callback: function(batch) {
+                            var rawData = batch.proxy.getReader().rawData;
+                            if (rawData.success === true) {
+                                Shopware.Notification.createGrowlMessage('', me.snippets.deleteMultipleVoucherSuccess, me.snippets.growlMessage);
+                            } else {
+                                Shopware.Notification.createGrowlMessage('', me.snippets.deleteMultipleVoucherError + rawData.errorMsg, me.snippets.growlMessage);
+                            }
+                            grid.setLoading(false);
+                            store.load();
                         }
-                        grid.setLoading(false);
-                        store.load();
-                    }
-                });
-            }
-        })
+                    });
+                }
+            })
     },
 
     /**
@@ -355,7 +359,7 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
         record.set('bindToSupplier', values.bindToSupplier);
 
         record.save({
-            callback: function (self,operation) {
+            callback: function (self, operation) {
                 if (operation.success) {
                     var response = Ext.JSON.decode(operation.response.responseText);
                     var data = response.data;
@@ -365,12 +369,12 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
                         attributeForm.loadAttribute(data.id);
                     });
 
-                    Shopware.Notification.createGrowlMessage('',me.snippets.onSaveVoucherSuccess, me.snippets.growlMessage);
+                    Shopware.Notification.createGrowlMessage('', me.snippets.onSaveVoucherSuccess, me.snippets.growlMessage);
                     if (self.data.modus) {
                         me.getCodesGrid().enable();
                     }
                 } else {
-                    Shopware.Notification.createGrowlMessage('',me.snippets.onSaveVoucherError, me.snippets.growlMessage);
+                    Shopware.Notification.createGrowlMessage('', me.snippets.onSaveVoucherError, me.snippets.growlMessage);
                     me.getStore("List").load();
                 }
             }
@@ -383,7 +387,7 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      * @param [object] btn - pressed Ext.button.Button
      * @return void
      */
-    onBeforeCloseBaseConfigurationWindow:function () {
+    onBeforeCloseBaseConfigurationWindow: function () {
         this.getStore("List").load();
     },
     /**
@@ -393,7 +397,7 @@ Ext.define('Shopware.apps.Voucher.controller.Voucher', {
      * @param combo
      * @param selectedRecords
      */
-    onSelectModus:function (combo, selectedRecords) {
+    onSelectModus: function (combo, selectedRecords) {
         var me = this,
             selectedRecord = selectedRecords[0],
             mode = selectedRecord.data.id;

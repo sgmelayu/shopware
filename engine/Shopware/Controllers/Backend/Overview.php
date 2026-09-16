@@ -1,32 +1,33 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 class Shopware_Controllers_Backend_Overview extends Shopware_Controllers_Backend_ExtJs
 {
     public function getOrderSummaryAction()
     {
-        $startDate = $this->Request()->getParam('fromDate', date('Y-m-d', mktime(0, 0, 0, (int) date('m'), 1, (int) date('Y'))));
+        $timeStamp = (int) mktime(0, 0, 0, (int) date('m'), 1, (int) date('Y'));
+        $startDate = $this->Request()->getParam('fromDate', date('Y-m-d', $timeStamp));
         $endDate = $this->Request()->getParam('toDate', date('Y-m-d'));
 
         $sql = '
@@ -104,7 +105,7 @@ class Shopware_Controllers_Backend_Overview extends Shopware_Controllers_Backend
         $this->View()->assign([
             'success' => true,
             'data' => $orders,
-            'total' => count($orders),
+            'total' => \count($orders),
         ]);
     }
 

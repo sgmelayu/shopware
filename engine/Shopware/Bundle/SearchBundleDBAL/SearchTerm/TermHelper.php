@@ -1,33 +1,35 @@
 <?php
+
 /**
  * Shopware 5
  * Copyright (c) shopware AG
  *
- * According to our dual licensing model, this program can be used either
- * under the terms of the GNU Affero General Public License, version 3,
- * or under a proprietary license.
+ * According to our licensing model, this program can be used
+ * under the terms of the GNU Affero General Public License, version 3.
  *
  * The texts of the GNU Affero General Public License with an additional
- * permission and of our proprietary license can be found at and
- * in the LICENSE file you have received along with this program.
+ * permission can be found at and in the LICENSE file you have received
+ * along with this program.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Affero General Public License for more details.
  *
  * "Shopware" is a registered trademark of shopware AG.
  * The licensing of the program under the AGPLv3 does not imply a
- * trademark license. Therefore any rights, title and interest in
- * our trademarks remain entirely with us.
+ * trademark license. Therefore, any rights, title and interest in
+ * our trademarks remain entirely with the shopware AG.
  */
 
 namespace Shopware\Bundle\SearchBundleDBAL\SearchTerm;
 
+use Shopware_Components_Config;
+
 class TermHelper implements TermHelperInterface
 {
     /**
-     * @var \Shopware_Components_Config
+     * @var Shopware_Components_Config
      */
     private $config;
 
@@ -47,10 +49,10 @@ class TermHelper implements TermHelperInterface
     private $replaceNonLetters;
 
     /**
-     * @param \Shopware_Components_Config $config
-     * @param bool                        $useBadWords
-     * @param bool                        $replaceUmlauts
-     * @param bool                        $replaceNonLetters
+     * @param Shopware_Components_Config $config
+     * @param bool                       $useBadWords
+     * @param bool                       $replaceUmlauts
+     * @param bool                       $replaceNonLetters
      */
     public function __construct($config, $useBadWords = true, $replaceUmlauts = true, $replaceNonLetters = true)
     {
@@ -69,6 +71,9 @@ class TermHelper implements TermHelperInterface
      */
     public function splitTerm($string)
     {
+        if (empty($string)) {
+            return [];
+        }
         if ($this->replaceUmlauts) {
             $string = str_replace(
                 ['Ü', 'ü', 'ä', 'Ä', 'ö', 'Ö', 'ß'],
@@ -81,13 +86,16 @@ class TermHelper implements TermHelperInterface
 
         if ($this->replaceNonLetters) {
             // Remove not required chars from string
-            $string = trim(preg_replace("/[^\pL_0-9]/u", ' ', $string));
+            $string = trim((string) preg_replace("/[^\pL_0-9]/u", ' ', $string));
         }
 
         // Parse string into array
         $wordsTmp = preg_split('/ /', $string, -1, PREG_SPLIT_NO_EMPTY);
+        if (!\is_array($wordsTmp)) {
+            return [];
+        }
 
-        if (count($wordsTmp)) {
+        if (\count($wordsTmp)) {
             $words = array_unique($wordsTmp);
         } elseif (!empty($string)) {
             $words = [$string];
@@ -105,13 +113,11 @@ class TermHelper implements TermHelperInterface
 
     /**
      * Filter out bad keywords before starting search
-     *
-     * @return array|bool
      */
-    private function filterBadWordsFromString(array $words)
+    private function filterBadWordsFromString(array $words): array
     {
-        if (!count($words) || !is_array($words)) {
-            return false;
+        if (\count($words) === 0) {
+            return [];
         }
 
         $result = [];
@@ -127,25 +133,21 @@ class TermHelper implements TermHelperInterface
 
     /**
      * Check if a keyword is on blacklist or not
-     *
-     * @param string $word
-     *
-     * @return bool
      */
-    private function filterBadWordFromString($word)
+    private function filterBadWordFromString(string $word): bool
     {
         static $badWords;
 
         if (!isset($badWords)) {
             $badWords = preg_split(
                 "#[\s,;]+#msi",
-                $this->config->get('badwords'),
+                $this->config->get('badwords') ?? '',
                 -1,
                 PREG_SPLIT_NO_EMPTY
             );
         }
 
-        if (in_array((string) $word, $badWords)) {
+        if (\in_array($word, $badWords, true)) {
             return false;
         }
 
